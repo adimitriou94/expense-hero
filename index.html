@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-pending">
+
+<!-- AUTH / CHAT ID SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-bg-orb auth-bg-orb-a"></div>
+  <div class="auth-bg-orb auth-bg-orb-b"></div>
+
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Expense Tracker</h1>
+        <p>Σύνδεση με Telegram Chat ID</p>
+      </div>
+    </div>
+
+    <div class="auth-hero">
+      <span class="auth-pill">Private finance dashboard</span>
+      <h2>Βάλε το Chat ID σου για να φορτώσουν τα έξοδά σου.</h2>
+      <p>
+        Το app θα το αποθηκεύσει τοπικά στη συσκευή σου, ώστε να μη χρειάζεται να το ξαναβάζεις κάθε φορά.
+      </p>
+    </div>
+
+    <form class="auth-form" onsubmit="connectWithChatId(event)">
+      <label for="chatIdInput">Telegram Chat ID</label>
+      <div class="auth-input-wrap">
+        <span>#</span>
+        <input
+          type="text"
+          id="chatIdInput"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="π.χ. 123456789"
+        >
+      </div>
+
+      <div class="auth-error" id="authError"></div>
+
+      <button type="submit" class="auth-submit" id="authSubmitBtn">
+        Σύνδεση
+      </button>
+    </form>
+
+    <div class="auth-help auth-steps">
+      <strong>Πώς βρίσκω το Chat ID μου;</strong>
+    
+      <div class="auth-step-list">
+        <div class="auth-step">
+          <span>1</span>
+          <p>Άνοιξε το Telegram bot του Expense Tracker.</p>
+        </div>
+    
+        <div class="auth-step">
+          <span>2</span>
+          <p>Πάτα <strong>Start</strong> αν είναι η πρώτη φορά.</p>
+        </div>
+    
+        <div class="auth-step">
+          <span>3</span>
+          <p>Στείλε την εντολή <code>/id</code>.</p>
+        </div>
+    
+        <div class="auth-step">
+          <span>4</span>
+          <p>Αντέγραψε το Chat ID και βάλ’ το εδώ.</p>
+        </div>
+      </div>
+    
+      <div class="auth-actions">
+        <a class="auth-telegram-btn" href="https://t.me/myexpense_hero_tracker_bot" target="_blank">
+          Άνοιγμα Telegram Bot
+        </a>
+    
+        <button type="button" class="auth-copy-btn" onclick="copyTelegramCommand()">
+          Αντιγραφή /id
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="appRoot">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Expense Tracker</h1>
+        <p>Future Bento Dashboard</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="month-nav">
+        <button onclick="chMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
+        <span class="month-label" id="mLabel"></span>
+        <button onclick="chMonth(1)" aria-label="Επόμενος μήνας">›</button>
+      </div>
+
+      <button class="ghost-btn hide-sm" onclick="switchChatId()">Αλλαγή ID</button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <main class="view active" id="vDash">
+    <section class="dashboard-grid">
+
+      <!-- HERO -->
+      <div class="bento-card hero-card">
+        <div class="hero-glow"></div>
+
+        <div class="hero-top">
+          <div>
+            <div class="eyebrow">Μηνιαία εικόνα</div>
+            <h2>Υπόλοιπο μήνα</h2>
+            <div class="hero-balance" id="dBalance">€0,00</div>
+          </div>
+
+          <button class="hero-edit" onclick="openModal('income')">
+            Αλλαγή εισοδήματος ✎
+          </button>
+        </div>
+
+        <div class="hero-income-row">
+          <div>
+            <span>Καθαρό μηνιαίο εισόδημα</span>
+            <strong id="dIncome">€0,00</strong>
+          </div>
+          <div>
+            <span>Πρόοδος εξόδων</span>
+            <strong id="dPct">0%</strong>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-track">
+            <div class="progress-fill" id="dBar"></div>
+          </div>
+          <div class="progress-labels">
+            <span>Χρησιμοποιημένο</span>
+            <span id="dSpent">€0,00 / €0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK STATS -->
+      <div class="bento-card stat-widget stat-fixed">
+        <div class="widget-icon red">🏠</div>
+        <div class="stat-label">Πάγια</div>
+        <div class="stat-value red" id="sFixed">€0</div>
+      </div>
+
+      <div class="bento-card stat-widget stat-cards">
+        <div class="widget-icon blue">💳</div>
+        <div class="stat-label">Κάρτες</div>
+        <div class="stat-value blue" id="sCC">€0</div>
+      </div>
+
+      <div class="bento-card stat-widget stat-daily">
+        <div class="widget-icon amber">🧾</div>
+        <div class="stat-label">Ημερήσια</div>
+        <div class="stat-value amber" id="sDaily">€0</div>
+      </div>
+
+      <div class="bento-card stat-widget stat-remain">
+        <div class="widget-icon teal">✅</div>
+        <div class="stat-label">Υπόλοιπο</div>
+        <div class="stat-value teal" id="sRemain">€0</div>
+      </div>
+
+      <!-- FIXED EXPENSES -->
+      <section class="bento-card list-widget fixed-list-widget">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-dot red-dot"></div>
+            <div>
+              <div class="section-title">Πάγια έξοδα</div>
+              <div class="section-subtitle">
+                <span class="global-badge">🔒 Σταθερά</span>
+                <span id="cFixed"></span>
+              </div>
+            </div>
+          </div>
+
+          <button class="section-add" onclick="openModal('fixed')">+ Προσθήκη</button>
+        </div>
+
+        <div class="expense-list" id="lFixed"></div>
+      </section>
+
+      <!-- DAILY EXPENSES -->
+      <section class="bento-card list-widget daily-list-widget">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-dot amber-dot"></div>
+            <div>
+              <div class="section-title">Ημερήσια έξοδα</div>
+              <div class="section-subtitle" id="cDaily"></div>
+            </div>
+          </div>
+
+          <button class="section-add" onclick="openModal('daily')">+ Προσθήκη</button>
+        </div>
+
+        <div class="expense-list" id="lDaily"></div>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- CARDS -->
+  <main class="view" id="vCards">
+    <section class="page-grid">
+      <div class="page-hero bento-card">
+        <div>
+          <div class="eyebrow">Debt planner</div>
+          <h2>Πιστωτικές κάρτες & δάνεια</h2>
+          <p>Η δόση εμφανίζεται αυτόματα στα πάγια και αφαιρείται από το υπόλοιπο.</p>
+        </div>
+        <button class="section-add primary-add" onclick="openModal('cc')">+ Κάρτα</button>
+      </div>
+
+      <div id="ccList"></div>
+      <div id="ccSummary"></div>
+      <div id="ccPlanAnalysis"></div>
+    </section>
+  </main>
+
+  <!-- ADVISOR -->
+  <main class="view" id="vAdvisor">
+    <section class="page-grid">
+      <div class="page-hero bento-card advisor-page-hero">
+        <div>
+          <div class="eyebrow">Financial intelligence</div>
+          <h2>Οικονομικός σύμβουλος</h2>
+          <p>Ανάλυση budget, κανόνες οικονομικής υγείας και προτάσεις με βάση τα δεδομένα σου.</p>
+        </div>
+      </div>
+
+      <div id="advContent"></div>
+    </section>
+  </main>
+
+  <!-- STATS -->
+  <main class="view" id="vStats">
+    <section class="page-grid">
+      <div class="chart-container">
+        <div class="chart-title">Κατανομή εξόδων ανά κατηγορία</div>
+      
+        <div class="donut-layout">
+          <div class="donut-chart" id="chartCatDonut">
+            <div class="donut-center">
+              <span>Σύνολο</span>
+              <strong id="chartCatTotal">€0,00</strong>
+            </div>
+          </div>
+      
+          <div class="donut-legend" id="chartCat"></div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-title">Ημερήσια έξοδα ανά ημέρα</div>
+        <div class="bar-chart" id="chartDay"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ARCHIVE -->
+  <main class="view" id="vArchive">
+    <section class="page-grid">
+      <div class="page-hero bento-card">
+        <div>
+          <div class="eyebrow">History</div>
+          <h2>Αρχείο μηνών</h2>
+          <p>Δες προηγούμενους μήνες και σύγκρινε έξοδα / υπόλοιπα.</p>
+        </div>
+      </div>
+
+      <div id="archList"></div>
+    </section>
+  </main>
+
+  <!-- SETTINGS -->
+  <main class="view" id="vSettings">
+    <section class="settings-grid">
+
+      <div class="settings-card">
+        <div class="chart-title">📥 Telegram Συγχρονισμός</div>
+        <p>Τραβάει τα έξοδα που έστειλες στο Telegram Bot.</p>
+        <button class="btn btn-primary" id="syncBtn" onclick="syncFromTelegram()">📥 Συγχρονισμός</button>
+        <div id="syncStatus" style="display:none;margin-top:12px"></div>
+      </div>
+
+      <div class="settings-card">
+        <div class="chart-title">Εξαγωγή / Εισαγωγή</div>
+        <p>Backup JSON αρχείο.</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="doExport()">⬇ Εξαγωγή</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('impFile').click()">⬆ Εισαγωγή</button>
+          <input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(event)">
+        </div>
+      </div>
+
+      <div class="settings-card danger-zone">
+        <div class="chart-title">Διαγραφή</div>
+        <p>Διαγραφή όλων των τοπικών δεδομένων και επανασύνδεση.</p>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="switchChatId()">Αλλαγή Chat ID</button>
+          <button class="btn btn-danger" onclick="doReset()">🗑 Διαγραφή όλων</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal('daily')" aria-label="Νέο έξοδο">+</button>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-v="vDash" onclick="go('vDash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+
+    <button class="nav-btn" data-v="vCards" onclick="go('vCards',this)">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span>Κάρτες</span>
+    </button>
+
+    <button class="nav-btn" data-v="vAdvisor" onclick="go('vAdvisor',this)">
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Σύμβουλος</span>
+    </button>
+
+    <button class="nav-btn" data-v="vStats" onclick="go('vStats',this)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Στατιστικά</span>
+    </button>
+
+    <button class="nav-btn" data-v="vArchive" onclick="go('vArchive',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+      <span>Αρχείο</span>
+    </button>
+
+    <button class="nav-btn" data-v="vSettings" onclick="go('vSettings',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <span>Ρυθμίσεις</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="mDaily">
+  <div class="modal">
+    <h2 id="mDailyTitle">Ημερήσιο έξοδο<button class="modal-close" onclick="closeM()">×</button></h2>
+
+    <div class="form-group">
+      <label>Περιγραφή</label>
+      <input type="text" id="fDN" placeholder="π.χ. Σούπερ μάρκετ">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ποσό (€)</label>
+        <input type="number" id="fDA" placeholder="0.00" step="0.01" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>Κατηγορία</label>
+        <select id="fDC">
+          <option value="Τρόφιμα">🛒 Τρόφιμα</option>
+          <option value="Καφέδες">☕ Καφέδες</option>
+          <option value="Μεταφορά">🚗 Μεταφορά</option>
+          <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
+          <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
+          <option value="Υγεία">🏥 Υγεία</option>
+          <option value="Ρούχα">👕 Ρούχα</option>
+          <option value="Δάνεια">🏦 Δάνεια</option>
+          <option value="Συνδρομές">📱 Συνδρομές</option>
+          <option value="Άλλο">📌 Άλλο</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Ημερομηνία</label>
+      <input type="date" id="fDD">
+    </div>
+
+    <input type="hidden" id="fDID">
+    <button class="btn btn-primary btn-block" id="btnDaily" onclick="saveDaily()">Αποθήκευση</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mFixed">
+  <div class="modal">
+    <h2 id="mFixedTitle">🔒 Πάγιο έξοδο<button class="modal-close" onclick="closeM()">×</button></h2>
+    <p class="modal-note">Ισχύει σε <strong>κάθε μήνα</strong> αυτόματα.</p>
+
+    <div class="form-group">
+      <label>Περιγραφή</label>
+      <input type="text" id="fFN" placeholder="π.χ. Ενοίκιο">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ποσό (€)</label>
+        <input type="number" id="fFA" placeholder="0.00" step="0.01" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>Κατηγορία</label>
+        <select id="fFC">
+          <option value="Στέγαση">🏠 Στέγαση</option>
+          <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
+          <option value="Συνδρομές">📱 Συνδρομές</option>
+          <option value="Μεταφορά">🚗 Μεταφορά</option>
+          <option value="Δάνεια">🏦 Δάνεια</option>
+          <option value="Υγεία">🏥 Υγεία</option>
+          <option value="Άλλο">📌 Άλλο</option>
+        </select>
+      </div>
+    </div>
+
+    <input type="hidden" id="fFID">
+    <button class="btn btn-primary btn-block" id="btnFixed" onclick="saveFixed()">Αποθήκευση</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mIncome">
+  <div class="modal">
+    <h2>Καθαρό εισόδημα<button class="modal-close" onclick="closeM()">×</button></h2>
+
+    <div class="form-group">
+      <label>Μηνιαίο καθαρό εισόδημα (€)</label>
+      <input type="number" id="fInc" placeholder="0.00" step="0.01" min="0">
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="saveIncome()">Αποθήκευση</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mCC">
+  <div class="modal">
+    <h2 id="mCCTitle">💳 Πιστωτική κάρτα<button class="modal-close" onclick="closeM()">×</button></h2>
+
+    <div class="form-group">
+      <label>Όνομα</label>
+      <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Συνολικό χρέος (€)</label>
+        <input type="number" id="fCCB" placeholder="0.00" step="0.01" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>Ετήσιο επιτόκιο (%)</label>
+        <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ελάχιστη δόση (€)</label>
+        <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>Πιστωτικό όριο (€)</label>
+        <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <input type="hidden" id="fCCID">
+    <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="cards.js"></script>
+<script src="sync.js"></script>
+<script src="advisor.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+// ===== CREDIT CARDS MODULE =====
+
+function rCC(){
+  const cards=D.creditCards||[];
+  if(cards.length===0){
+    $('ccList').innerHTML='<div class="chart-container"><p style="text-align:center;color:var(--text3);font-size:13px">Δεν υπάρχουν κάρτες. Πάτα «+ Κάρτα».</p></div>';
+    $('ccSummary').innerHTML='';$('ccPlanAnalysis').innerHTML='';return;
+  }
+  const fxS=fixedTotal();
+  let h='';
+  cards.forEach((c,idx)=>{
+    const pct=c.limit>0?Math.min(100,Math.round(c.balance/c.limit*100)):0;
+    const mi=c.balance*(c.rate/100/12);
+    const bc=pct>80?'var(--red)':pct>50?'var(--amber)':'var(--teal)';
+    const pay=c.chosenPay||c.minPay||0;
+    const maxPay=Math.max(Math.floor(c.minPay)+1,Math.min(Math.ceil(c.balance>0?c.balance:1),Math.ceil(D.income-fxS)));
+
+    h+='<div class="cc-card"><div class="cc-head"><div class="cc-icon">💳</div><div class="cc-info"><div class="cc-name">'+esc(c.name)+'</div><div class="cc-meta">Επιτόκιο '+c.rate+'% · Ελάχ. '+fmt(c.minPay)+'</div></div><div class="cc-actions"><button class="edit-btn" onclick="editCC(\''+c.id+'\')" title="Επεξεργασία">✎</button><button class="del-btn" onclick="delCC(\''+c.id+'\')" title="Διαγραφή">×</button></div></div>';
+    h+='<div class="cc-body">';
+    h+='<div class="cc-row"><span class="lb">Χρέος</span><span class="vl" style="color:var(--red)">'+fmt(c.balance)+'</span></div>';
+    if(c.limit>0)h+='<div class="cc-row"><span class="lb">Όριο</span><span class="vl">'+fmt(c.limit)+'</span></div>';
+    h+='<div class="cc-row"><span class="lb">Μηνιαίος τόκος</span><span class="vl" style="color:var(--amber)">~'+fmt(mi)+'</span></div>';
+    if(c.limit>0){h+='<div class="cc-bar"><div class="cc-bar-info"><span>Χρήση ορίου</span><span>'+pct+'%</span></div><div class="cc-bar-track"><div class="cc-bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></div>';}
+    if(c.balance>0){
+      h+='<div class="pay-planner"><h4>📋 Δόση αποπληρωμής</h4>';
+      h+='<div class="slider-row"><span style="font-size:12px;color:var(--text3)">Δόση:</span>';
+      h+='<input type="range" min="'+Math.max(1,Math.floor(c.minPay))+'" max="'+Math.max(maxPay,Math.floor(c.minPay)+1)+'" value="'+Math.floor(pay)+'" step="5" oninput="updatePay('+idx+',this.value)">';
+      h+='<span class="slider-val" id="payVal'+idx+'">'+fmt(pay)+'</span></div>';
+      h+='<div class="pay-result" id="payResult'+idx+'"></div>';
+      h+='<div id="payFeasibility'+idx+'"></div></div>';
+    }
+    h+='</div></div>';
+  });
+  $('ccList').innerHTML=h;
+  cards.forEach((c,idx)=>{if(c.balance>0) calcPay(idx)});
+  rCCSummary();
+  rCCPlanAnalysis();
+}
+
+// Calculate payoff for a card
+function calcPayoff(balance, rate, payment){
+  const mr=rate/100/12;
+  const mi=balance*mr;
+  if(payment<=mi) return {months:999,totalPaid:0,totalInterest:0,impossible:true};
+  let bal=balance, months=0, tp=0;
+  while(bal>0.01 && months<600){
+    const i=bal*mr;
+    const p=Math.min(payment,bal+i);
+    bal=bal+i-p; tp+=p; months++;
+  }
+  return {months,totalPaid:tp,totalInterest:tp-balance,impossible:months>=600};
+}
+
+function calcPay(idx){
+  const c=D.creditCards[idx];
+  const pay=c.chosenPay||c.minPay||0;
+  const mr=c.rate/100/12, mi=c.balance*mr;
+  const fxS=fixedTotal();
+  const tOther=D.creditCards.reduce((s,cc,i)=>i!==idx?s+(cc.balance>0?(cc.chosenPay||cc.minPay||0):0):s,0);
+  const freeAfter=D.income-fxS-tOther-pay;
+
+  const res=calcPayoff(c.balance,c.rate,pay);
+  let rh='';
+  if(res.impossible && pay<=mi){
+    rh='<div style="color:var(--red);font-weight:500">⚠️ Η δόση δεν καλύπτει τον τόκο ('+fmt(mi)+'). Το χρέος αυξάνεται!</div>';
+  } else if(res.impossible){
+    rh='<div style="color:var(--red)">Δεν θα εξοφληθεί σε λογικό χρόνο.</div>';
+  } else {
+    rh='Εξόφληση σε <strong>'+Math.floor(res.months/12)+'χ '+res.months%12+'μ</strong> · Σύνολο: <strong>'+fmt(res.totalPaid)+'</strong> (τόκοι: <strong style="color:var(--red)">'+fmt(res.totalInterest)+'</strong>)';
+    if(pay>c.minPay){
+      const minRes=calcPayoff(c.balance,c.rate,c.minPay);
+      if(!minRes.impossible && minRes.totalPaid>res.totalPaid){
+        rh+='<br><span style="color:var(--teal)">💰 Γλιτώνεις ~'+fmt(minRes.totalPaid-res.totalPaid)+' σε τόκους vs ελάχιστη!</span>';
+      }
+    }
+  }
+  const el=$('payResult'+idx);if(el)el.innerHTML=rh;
+
+  let fh='';
+  if(freeAfter<0) fh='<div class="feasibility bad">🚫 <div><strong>Μη εφικτό!</strong> Λείπουν '+fmt(Math.abs(freeAfter))+'.</div></div>';
+  else if(freeAfter<150) fh='<div class="feasibility tight">⚡ <div><strong>Πολύ σφιχτά.</strong> Μένουν '+fmt(freeAfter)+'.</div></div>';
+  else if(freeAfter<400) fh='<div class="feasibility tight">📊 <div><strong>Εφικτό αλλά tight.</strong> Μένουν '+fmt(freeAfter)+'.</div></div>';
+  else fh='<div class="feasibility ok">✅ <div><strong>Εφικτό!</strong> Μένουν '+fmt(freeAfter)+'.</div></div>';
+  const fl=$('payFeasibility'+idx);if(fl)fl.innerHTML=fh;
+}
+
+function updatePay(idx,val){
+  D.creditCards[idx].chosenPay=parseInt(val);save();
+  const el=$('payVal'+idx);if(el)el.textContent=fmt(parseInt(val));
+  calcPay(idx);
+  rCCSummary();
+  rCCPlanAnalysis();
+  $('sCC').textContent=fmt(ccPayTotal());
+  const bal=D.income-fixedTotal()-ccPayTotal()-dailyTotal();
+  $('sRemain').textContent=fmt(bal);
+  $('sRemain').className='stat-value '+(bal>=0?'teal':'red');
+}
+
+function rCCSummary(){
+  const cards=(D.creditCards||[]).filter(c=>c.balance>0);
+  if(cards.length===0){$('ccSummary').innerHTML='';return}
+  const tDebt=cards.reduce((s,c)=>s+c.balance,0);
+  const tPay=cards.reduce((s,c)=>s+(c.chosenPay||c.minPay||0),0);
+  const fxS=fixedTotal();
+  const afterAll=D.income-fxS-tPay;
+
+  let sm='<div class="adv-card blue" style="margin-top:16px"><h3>📊 Σύνολο</h3>';
+  sm+='<div class="cc-row"><span class="lb">Συνολικό χρέος</span><span class="vl" style="color:var(--red)">'+fmt(tDebt)+'</span></div>';
+  sm+='<div class="cc-row"><span class="lb">Δόσεις/μήνα</span><span class="vl">'+fmt(tPay)+'</span></div>';
+  sm+='<div class="cc-row" style="padding-top:10px;margin-top:10px;border-top:1px solid #f0ede6"><span class="lb"><strong>Μένει για ημερήσια</strong></span><span class="vl" style="color:'+(afterAll>=0?'var(--teal)':'var(--red)')+'"><strong>'+fmt(afterAll)+'</strong></span></div>';
+  if(afterAll<0)sm+='<div class="tip red" style="margin-top:12px">⚠️ Ξεπερνάς τα διαθέσιμα κατά '+fmt(Math.abs(afterAll))+'.</div>';
+  else if(afterAll<200)sm+='<div class="tip amber" style="margin-top:12px">⚡ Μόνο '+fmt(afterAll)+' για ημερήσια.</div>';
+  else sm+='<div class="tip green" style="margin-top:12px">✅ '+fmt(afterAll)+' για ημερήσια.</div>';
+  sm+='</div>';
+  $('ccSummary').innerHTML=sm;
+}
+
+// ===== DETAILED PLAN ANALYSIS =====
+function rCCPlanAnalysis(){
+  const cards=(D.creditCards||[]).filter(c=>c.balance>0);
+  if(cards.length===0){$('ccPlanAnalysis').innerHTML='';return}
+
+  const fxS=fixedTotal();
+  const tPay=cards.reduce((s,c)=>s+(c.chosenPay||c.minPay||0),0);
+  const tDebt=cards.reduce((s,c)=>s+c.balance,0);
+  const afterAll=D.income-fxS-tPay;
+
+  // Score calculation (0-100)
+  let score=50;
+  // Feasibility
+  if(afterAll<0) score-=30;
+  else if(afterAll<150) score-=15;
+  else if(afterAll>=400) score+=10;
+  // Are payments above minimum?
+  cards.forEach(c=>{
+    const pay=c.chosenPay||c.minPay||0;
+    const mi=c.balance*(c.rate/100/12);
+    if(pay<=mi) score-=20;
+    else if(pay>=c.minPay*2) score+=10;
+    else if(pay>c.minPay) score+=5;
+  });
+  // DTI check
+  const dti=D.income>0?tPay/D.income*100:0;
+  if(dti>36) score-=15;
+  else if(dti<=20) score+=10;
+  score=Math.max(0,Math.min(100,score));
+
+  const sClass=score>=70?'good':score>=40?'ok':'bad';
+  const sLabel=score>=70?'Καλό πλάνο':score>=40?'Χρειάζεται βελτίωση':'Προβληματικό';
+
+  let h='<div class="adv-card" style="margin-top:16px;border-left-color:var(--purple)"><h3>📝 Αξιολόγηση πλάνου δόσεων</h3>';
+
+  // Score gauge
+  h+='<div class="score-gauge"><div class="score-circle '+sClass+'">'+score+'</div><div class="score-info"><strong>'+sLabel+'</strong>';
+  if(score>=70) h+='Οι δόσεις σου είναι ρεαλιστικές και θα εξοφλήσεις σε λογικό χρόνο.';
+  else if(score>=40) h+='Υπάρχουν σημεία που μπορείς να βελτιώσεις — δες τις λεπτομέρειες.';
+  else h+='Το πλάνο έχει σοβαρά προβλήματα. Χρειάζεται αλλαγή.';
+  h+='</div></div>';
+
+  // Per-card timeline
+  h+='<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">Αναλυτικά ανά κάρτα:</div>';
+  let longestMonths=0;
+  cards.forEach(c=>{
+    const pay=c.chosenPay||c.minPay||0;
+    const res=calcPayoff(c.balance,c.rate,pay);
+    if(res.months>longestMonths) longestMonths=res.months;
+    const minRes=calcPayoff(c.balance,c.rate,c.minPay);
+    h+='<div style="padding:12px 0;border-bottom:1px solid #f0ede6">';
+    h+='<div style="display:flex;justify-content:space-between;font-size:13px"><strong>'+esc(c.name)+'</strong><span style="font-family:var(--mono);font-weight:600;color:var(--blue)">'+fmt(pay)+'/μήνα</span></div>';
+    if(res.impossible){
+      h+='<div style="color:var(--red);font-size:12px;margin-top:4px">⚠️ Δεν εξοφλείται με αυτή τη δόση</div>';
+    } else {
+      h+='<div style="font-size:12px;color:var(--text2);margin-top:4px">⏱ '+Math.floor(res.months/12)+'χ '+res.months%12+'μ · Τόκοι: <span style="color:var(--red)">'+fmt(res.totalInterest)+'</span>';
+      if(!minRes.impossible && pay>c.minPay){
+        h+=' · <span style="color:var(--teal)">Εξοικονόμηση: '+fmt(minRes.totalInterest-res.totalInterest)+'</span>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+
+  // Total summary
+  const totalInterest=cards.reduce((s,c)=>{const r=calcPayoff(c.balance,c.rate,c.chosenPay||c.minPay||0);return s+(r.impossible?0:r.totalInterest)},0);
+  if(longestMonths<600){
+    h+='<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border-radius:var(--radius-sm)">';
+    h+='<div style="font-size:13px;color:var(--text2)">Θα είσαι <strong style="color:var(--teal)">ελεύθερος χρεών</strong> σε <strong>'+Math.floor(longestMonths/12)+' χρόνια '+longestMonths%12+' μήνες</strong></div>';
+    h+='<div style="font-size:12px;color:var(--text3);margin-top:4px">Συνολικοί τόκοι: <strong style="color:var(--red)">'+fmt(totalInterest)+'</strong> ('+Math.round(totalInterest/tDebt*100)+'% επί του χρέους)</div>';
+    h+='</div>';
+  }
+
+  // Strategy tips
+  if(cards.length>1){
+    const byRate=[...cards].sort((a,b)=>b.rate-a.rate);
+    const byBal=[...cards].sort((a,b)=>a.balance-b.balance);
+    h+='<div class="tip purple" style="margin-top:12px"><strong>💡 Avalanche (λιγότεροι τόκοι):</strong> Ρίξε extra στην «'+esc(byRate[0].name)+'» ('+byRate[0].rate+'%). Ελάχιστο στις υπόλοιπες.</div>';
+    h+='<div class="tip green" style="margin-top:8px"><strong>🎯 Snowball (ψυχολογική ώθηση):</strong> Εξόφλησε πρώτα «'+esc(byBal[0].name)+'» ('+fmt(byBal[0].balance)+') — μικρότερο χρέος, γρήγορη νίκη.</div>';
+  }
+
+  h+='</div>';
+  $('ccPlanAnalysis').innerHTML=h;
+}
+
+// ===== CC MODALS =====
+function editCC(id){const c=D.creditCards.find(x=>x.id===id);if(!c)return;closeM();$('mCC').classList.add('active');$('mCCTitle').innerHTML='✎ Επεξεργασία<button class="modal-close" onclick="closeM()">×</button>';$('fCCN').value=c.name;$('fCCB').value=c.balance;$('fCCR').value=c.rate;$('fCCM').value=c.minPay;$('fCCL').value=c.limit;$('fCCID').value=id;$('btnCC').textContent='Ενημέρωση';$('fCCN').focus()}
+function saveCC(){
+  const n=$('fCCN').value.trim(),id=$('fCCID').value;
+  if(!n){$('fCCN').style.borderColor='var(--red)';return}
+  const obj={name:n,balance:parseFloat($('fCCB').value)||0,rate:parseFloat($('fCCR').value)||0,minPay:parseFloat($('fCCM').value)||0,limit:parseFloat($('fCCL').value)||0};
+  if(id){const c=D.creditCards.find(x=>x.id===id);if(c){const op=c.chosenPay;Object.assign(c,obj);c.chosenPay=op||obj.minPay}}
+  else{obj.id=gid();obj.chosenPay=obj.minPay;D.creditCards.push(obj)}
+  save();closeM();render();
+}
+function delCC(id){if(!confirm('Διαγραφή κάρτας;'))return;D.creditCards=D.creditCards.filter(c=>c.id!==id);save();render()}
