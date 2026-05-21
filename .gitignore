@@ -4,3 +4,18 @@ config.js
 # Γενικά
 .DS_Store
 Thumbs.db
+
+# Cloudflare / Workers
+.wrangler/
+worker.js
+telegram-worker.js
+
+# Environment
+.env
+.env.local
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
