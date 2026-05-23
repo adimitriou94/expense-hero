@@ -195,16 +195,15 @@ function refreshComputedIncome(){
 
 function save(){return saveToSupabase()}
 
-function copyTelegramCommand(){
-  navigator.clipboard.writeText('/id')
-  .then(()=>{
-    showMiniToast('✅ Το /id αντιγράφηκε');
-  })
-  .catch(()=>{
-    showMiniToast('❌ Δεν έγινε αντιγραφή','error');
-  });
+function copyTelegramCommand(command='/id'){
+  navigator.clipboard.writeText(command)
+    .then(()=>{
+      showMiniToast(`✅ Το ${command} αντιγράφηκε`);
+    })
+    .catch(()=>{
+      showMiniToast('❌ Δεν έγινε αντιγραφή','error');
+    });
 }
-
 // ===== BULK SELECT / DELETE =====
 function toggleSelectMode(type){
   selectionMode[type]=!selectionMode[type];
@@ -1950,7 +1949,7 @@ async function saveTelegramChatId(ev){
     await new Promise(r=>setTimeout(r,1400));
 
     window.location.reload();
-    
+
     return;
 
   }catch(e){

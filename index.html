@@ -34,7 +34,7 @@
       <span class="auth-pill">Private finance dashboard</span>
       <h2>Συνδέσου με Google για να φορτώσουν τα δεδομένα σου με ασφάλεια.</h2>
       <p>
-        Μετά τη σύνδεση θα συνδέσεις μία φορά το Telegram σου για να λειτουργεί ο συγχρονισμός.
+        Μετά τη σύνδεση θα συνδέσεις μία φορά το Telegram σου. Θα χρειαστείς το Chat ID και έναν κωδικό σύνδεσης από το bot.
       </p>
     </div>
 
@@ -82,43 +82,30 @@
         </button>
       </form>
 
-      <div class="auth-help auth-steps">
-        <strong>Πώς βρίσκω το Chat ID μου;</strong>
-
-        <div class="auth-step-list">
-          <div class="auth-step">
-            <span>1</span>
-            <p>Άνοιξε το Telegram bot του Expense Tracker.</p>
-          </div>
-
-          <div class="auth-step">
-            <span>2</span>
-            <p>Πάτα <strong>Start</strong> αν είναι η πρώτη φορά.</p>
-          </div>
-
-          <div class="auth-step">
-            <span>3</span>
-            <p>Στείλε <code>/id</code> για Chat ID και <code>/code</code> για κωδικό σύνδεσης.</p>
-          </div>
-
-          <div class="auth-step">
-            <span>4</span>
-            <p>Αντέγραψε το Chat ID και βάλ’ το εδώ.</p>
-          </div>
-        </div>
-
-        <div class="auth-actions">
-          <a class="auth-telegram-btn" href="https://t.me/myexpense_hero_tracker_bot" target="_blank">
-            Άνοιγμα Telegram Bot
+      <div class="auth-help auth-compact-help">
+        <div class="auth-help-title">Σύνδεση Telegram</div>
+      
+        <p>
+          Στο bot στείλε <code>/id</code> για Chat ID και <code>/code</code> για κωδικό.
+          Για όλες τις εντολές στείλε <code>/help</code>.
+        </p>
+      
+        <a class="auth-telegram-btn full" href="https://t.me/myexpense_hero_tracker_bot" target="_blank">
+          Άνοιγμα Telegram Bot
+        </a>
+      
+        <p class="auth-small-note">
+          Από PC χωρίς Telegram, άνοιξε
+          <a href="https://web.telegram.org/" target="_blank" rel="noopener">
+            Telegram Web
           </a>
-
-          <button type="button" class="auth-copy-btn" onclick="copyTelegramCommand()">
-            Αντιγραφή /id
-          </button>
-        </div>
+          και αναζήτησε το bot
+          <strong>@myexpense_hero_tracker_bot</strong>
+          ή χρησιμοποίησε το κινητό σου.
+        </p>
       </div>
 
-      <button type="button" class="auth-logout-btn" onclick="signOutUser()">
+      <button type="button" class="auth-logout-btn auth-logout-card-btn" onclick="signOutUser()">
         Αποσύνδεση
       </button>
     </div>

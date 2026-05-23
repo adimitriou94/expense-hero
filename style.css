@@ -174,7 +174,7 @@ body.auth-pending .fab{
 }
 
 .auth-hero{
-  margin-bottom:24px;
+  margin-bottom:18px;
 }
 
 .auth-pill{
@@ -209,6 +209,14 @@ body.auth-pending .fab{
   font-weight:700;
   color:var(--text2);
   margin-bottom:8px;
+}
+
+.auth-form .auth-submit{
+  margin-top:18px;
+}
+
+.auth-form{
+  margin-top:12px;
 }
 
 .auth-input-wrap{
@@ -2357,6 +2365,7 @@ body.auth-pending .fab{
   color:var(--text2);
   font-size:13px;
   font-weight:700;
+  margin-top:0;
 }
 
 .auth-logout-btn{
@@ -2622,4 +2631,89 @@ body.auth-pending .fab{
 
 .mini-toast.error{
   background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.auth-telegram-btn.secondary{
+  background:#f1f5f9;
+  color:#334155;
+}
+
+.auth-card{
+  max-height:92vh;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+
+.auth-card::-webkit-scrollbar{
+  display:none;
+}
+
+.auth-help{
+  max-height:260px;
+  overflow-y:auto;
+}
+
+.auth-small-note{
+  margin-top:12px;
+  font-size:12px;
+  color:var(--text2);
+  line-height:1.5;
+}
+
+.auth-small-note a{
+  color:#2563eb;
+  font-weight:800;
+  text-decoration:none;
+}
+
+.auth-small-note a:hover{
+  text-decoration:underline;
+}
+
+.auth-compact-help{
+  margin-top:18px;
+  padding:16px;
+  border-radius:18px;
+}
+
+.auth-help-title{
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.auth-compact-help p{
+  margin:0 0 12px;
+  font-size:14px;
+  line-height:1.55;
+  color:var(--text2);
+}
+
+.auth-compact-help code{
+  padding:3px 7px;
+  border-radius:8px;
+  background:rgba(79,70,229,.10);
+  color:#3730a3;
+  font-weight:800;
+}
+
+.auth-telegram-btn.full{
+  width:100%;
+  justify-content:center;
+}
+
+.auth-logout-card-btn{
+  width:100%;
+  margin-top:18px;
+  height:48px;
+  border:none;
+  border-radius:16px;
+  background:#f1f5f9;
+  color:#64748b;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.auth-logout-card-btn:hover{
+  background:#e2e8f0;
+  color:#334155;
 }
