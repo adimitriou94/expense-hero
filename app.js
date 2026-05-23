@@ -1802,7 +1802,16 @@ async function initApp(){
   authBooting=true;
 
   try{
-    const {data:{session},error}=await supabaseClient.auth.getSession();
+    let {data:{session},error}=await supabaseClient.auth.getSession();
+
+    if(!session && window.location.search.includes('code=')){
+      await new Promise(resolve=>setTimeout(resolve,800));
+
+      const retry=await supabaseClient.auth.getSession();
+
+      session=retry.data?.session||null;
+      error=retry.error;
+    }
 
     if(error)throw error;
 
