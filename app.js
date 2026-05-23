@@ -67,6 +67,7 @@ let currentUser=null;
 let currentProfile=null;
 let authBooting=false;
 let changingTelegramId=false;
+let pendingAuthEvent=null;
 let selectionMode = { fixed:false, daily:false };
 let selectedFixed = new Set();
 let selectedDaily = new Set();
@@ -1852,11 +1853,31 @@ async function initApp(){
     renderAuthState();
   }finally{
     authBooting=false;
+  
+    if(pendingAuthEvent && !currentUser){
+      const pending=pendingAuthEvent;
+      pendingAuthEvent=null;
+  
+      setTimeout(()=>{
+        supabaseClient.auth.getSession().then(({data})=>{
+          if(data?.session){
+            currentSession=data.session;
+            currentUser=data.session.user;
+            initApp();
+          }
+        });
+      },300);
+    }
   }
 }
 
 supabaseClient.auth.onAuthStateChange(async (event,session)=>{
-  if(authBooting)return;
+  if(authBooting){
+    if(event==='SIGNED_IN' && session){
+      pendingAuthEvent={event,session};
+    }
+    return;
+  }
 
   currentSession=session;
   currentUser=session?.user||null;
