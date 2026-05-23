@@ -1804,13 +1804,22 @@ async function initApp(){
   try{
     let {data:{session},error}=await supabaseClient.auth.getSession();
 
-    if(!session && window.location.search.includes('code=')){
-      await new Promise(resolve=>setTimeout(resolve,800));
+    if(!session){
+      await new Promise(resolve=>setTimeout(resolve,1000));
 
       const retry=await supabaseClient.auth.getSession();
 
       session=retry.data?.session||null;
       error=retry.error;
+    }
+
+    if(!session){
+      await new Promise(resolve=>setTimeout(resolve,1500));
+
+      const retry2=await supabaseClient.auth.getSession();
+
+      session=retry2.data?.session||null;
+      error=retry2.error;
     }
 
     if(error)throw error;
