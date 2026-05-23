@@ -22,7 +22,7 @@ const supabaseClient = window.supabase.createClient(
     auth:{
       persistSession:true,
       autoRefreshToken:true,
-      detectSessionInUrl:true,
+      detectSessionInUrl:false,
       storage:authStorage,
       storageKey:'expense-hero-auth',
       flowType:'pkce'
@@ -1799,29 +1799,39 @@ function cleanOAuthUrl(){
   }
 }
 
+async function handleOAuthCallback(){
+  const url=new URL(window.location.href);
+  const code=url.searchParams.get('code');
+
+  if(!code)return null;
+
+  const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
+
+  cleanOAuthUrl();
+
+  if(error){
+    console.error('OAuth exchange failed:',error);
+    throw error;
+  }
+
+  return data?.session||null;
+}
+
 async function initApp(){
   authBooting=true;
-
   try{
-    let {data:{session},error}=await supabaseClient.auth.getSession();
+    let callbackSession=await handleOAuthCallback();
+
+    let session=callbackSession;
 
     if(!session){
-      await new Promise(resolve=>setTimeout(resolve,1000));
+      const result=await supabaseClient.auth.getSession();
 
-      const retry=await supabaseClient.auth.getSession();
+      if(result.error)throw result.error;
 
-      session=retry.data?.session||null;
-      error=retry.error;
+      session=result.data?.session||null;
     }
 
-    if(!session){
-      await new Promise(resolve=>setTimeout(resolve,1500));
-
-      const retry2=await supabaseClient.auth.getSession();
-
-      session=retry2.data?.session||null;
-      error=retry2.error;
-    }
 
     if(error)throw error;
 
@@ -1872,12 +1882,7 @@ async function initApp(){
 }
 
 supabaseClient.auth.onAuthStateChange(async (event,session)=>{
-  if(authBooting){
-    if(event==='SIGNED_IN' && session){
-      pendingAuthEvent={event,session};
-    }
-    return;
-  }
+  if(authBooting)return;
 
   currentSession=session;
   currentUser=session?.user||null;
