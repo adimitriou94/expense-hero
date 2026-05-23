@@ -1819,8 +1819,9 @@ async function handleOAuthCallback(){
 
 async function initApp(){
   authBooting=true;
+
   try{
-    let callbackSession=await handleOAuthCallback();
+    const callbackSession=await handleOAuthCallback();
 
     let session=callbackSession;
 
@@ -1831,9 +1832,6 @@ async function initApp(){
 
       session=result.data?.session||null;
     }
-
-
-    if(error)throw error;
 
     currentSession=session;
     currentUser=session?.user||null;
@@ -1861,23 +1859,9 @@ async function initApp(){
     console.error('Init error:',e);
     showAuth('Σφάλμα φόρτωσης: '+e.message);
     renderAuthState();
+
   }finally{
     authBooting=false;
-  
-    if(pendingAuthEvent && !currentUser){
-      const pending=pendingAuthEvent;
-      pendingAuthEvent=null;
-  
-      setTimeout(()=>{
-        supabaseClient.auth.getSession().then(({data})=>{
-          if(data?.session){
-            currentSession=data.session;
-            currentUser=data.session.user;
-            initApp();
-          }
-        });
-      },300);
-    }
   }
 }
 
