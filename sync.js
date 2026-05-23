@@ -598,6 +598,9 @@ async function confirmSync(...messageIds){
     statusEl.className='sync-status error';
     statusEl.textContent='❌ Δεν αποθηκεύτηκε: '+err.message;
 
-    alert('Δεν αποθηκεύτηκε σωστά. Το popup θα μείνει ανοιχτό για να ξαναδοκιμάσεις.');
+    showMiniToast(
+      '❌ Δεν αποθηκεύτηκε σωστά',
+      'error'
+    );
   }
 }

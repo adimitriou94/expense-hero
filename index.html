@@ -64,6 +64,19 @@
           >
         </div>
 
+        <label for="telegramCodeInput">Κωδικός σύνδεσης</label>
+        <div class="auth-input-wrap">
+          <span>🔐</span>
+          <input
+            type="text"
+            id="telegramCodeInput"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="6"
+            placeholder="π.χ. 482913"
+          >
+        </div>
+
         <button type="submit" class="auth-submit" id="authSubmitBtn">
           Σύνδεση Telegram
         </button>
@@ -85,7 +98,7 @@
 
           <div class="auth-step">
             <span>3</span>
-            <p>Στείλε την εντολή <code>/id</code>.</p>
+            <p>Στείλε <code>/id</code> για Chat ID και <code>/code</code> για κωδικό σύνδεσης.</p>
           </div>
 
           <div class="auth-step">
@@ -169,6 +182,33 @@
           <div>
             <span>Πρόοδος εξόδων</span>
             <strong id="dPct">0%</strong>
+          </div>
+        </div>
+
+        <div class="quick-add-box">
+          <div class="quick-add-label">
+            ⚡ Γρήγορη καταχώρηση
+          </div>
+        
+          <div class="quick-add-row">
+            <input
+              type="text"
+              id="quickAddInput"
+              placeholder="π.χ. καφές 3 ticket"
+              autocomplete="off"
+            >
+        
+            <button type="button" class="quick-voice-btn" id="quickVoiceBtn" onclick="startQuickVoice()">
+              🎤
+            </button>
+            
+            <button type="button" onclick="quickAddExpense()">
+              Προσθήκη
+            </button>
+          </div>
+        
+          <div class="quick-add-hint">
+            καφές 3 • σούπερ μάρκετ 25 • φαγητό 12 ticket
           </div>
         </div>
 
@@ -707,9 +747,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=31"></script>
 <script src="cards.js"></script>
-<script src="sync.js?v=21"></script>
+<script src="sync.js?v=22"></script>
 <script src="advisor.js"></script>
 
 </body>

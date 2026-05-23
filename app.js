@@ -197,8 +197,12 @@ function save(){return saveToSupabase()}
 
 function copyTelegramCommand(){
   navigator.clipboard.writeText('/id')
-    .then(()=>alert('Η εντολή /id αντιγράφηκε. Άνοιξε το Telegram bot και κάνε επικόλληση.'))
-    .catch(()=>alert('Δεν έγινε αντιγραφή. Γράψε χειροκίνητα /id στο Telegram bot.'));
+  .then(()=>{
+    showMiniToast('✅ Το /id αντιγράφηκε');
+  })
+  .catch(()=>{
+    showMiniToast('❌ Δεν έγινε αντιγραφή','error');
+  });
 }
 
 // ===== BULK SELECT / DELETE =====
@@ -274,7 +278,7 @@ async function bulkDelete(type){
   const set=type==='fixed'?selectedFixed:selectedDaily;
 
   if(set.size===0){
-    alert('Δεν έχεις επιλέξει εγγραφές.');
+    showMiniToast('Δεν έχεις επιλέξει εγγραφές','error');
     return;
   }
 
@@ -305,9 +309,32 @@ async function bulkDelete(type){
 
   }catch(e){
     console.error('Bulk delete error:',e);
-    alert('Σφάλμα μαζικής διαγραφής: '+e.message);
+    showMiniToast(
+      '❌ Σφάλμα μαζικής διαγραφής',
+      'error'
+    );
   }
 }
+
+function showMiniToast(message,type='success'){
+  let el=$('miniToast');
+
+  if(!el){
+    el=document.createElement('div');
+    el.id='miniToast';
+    el.className='mini-toast';
+    document.body.appendChild(el);
+  }
+
+  el.textContent=message;
+  el.className='mini-toast '+type+' show';
+
+  clearTimeout(window.miniToastTimer);
+  window.miniToastTimer=setTimeout(()=>{
+    el.classList.remove('show');
+  },2500);
+}
+
 // ===== SUPABASE DATA OPERATIONS =====
 async function fetchAllData(userId){
   try{
@@ -528,7 +555,10 @@ async function saveToSupabase(){
 
   }catch(e){
     console.error('Save error:',e);
-    alert('Σφάλμα αποθήκευσης: '+e.message);
+    showMiniToast(
+      '❌ Σφάλμα αποθήκευσης',
+      'error'
+    );
     throw e;
   }
 }
@@ -1001,7 +1031,10 @@ async function saveIncomeSource(){
   }
 
   if(!userId){
-    alert('Δεν υπάρχει συνδεδεμένο Telegram ID.');
+    showMiniToast(
+      '❌ Δεν βρέθηκε Telegram σύνδεση',
+      'error'
+    );
     return;
   }
 
@@ -1041,7 +1074,10 @@ async function saveIncomeSource(){
 
   }catch(e){
     console.error('saveIncomeSource failed:',e);
-    alert('Save failed: '+e.message);
+    showMiniToast(
+      '❌ Αποτυχία αποθήκευσης',
+      'error'
+    );
 
   }finally{
     if(btn){
@@ -1064,7 +1100,10 @@ async function deleteIncomeSource(id){
 
   }catch(e){
     console.error('deleteIncomeSource failed:',e);
-    alert('Σφάλμα διαγραφής: '+e.message);
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
   }
 }
 
@@ -1312,6 +1351,8 @@ async function saveDailyExpenseRow(userId,expense){
   }
 }
 
+
+
 async function saveDaily(){
   const n=$('fDN').value.trim();
   const a=parseFloat($('fDA').value);
@@ -1334,7 +1375,10 @@ async function saveDaily(){
   }
 
   if(!userId){
-    alert('Δεν υπάρχει συνδεδεμένο Telegram ID.');
+    showMiniToast(
+      '❌ Σύνδεσε πρώτα το Telegram',
+      'error'
+    );
     return;
   }
 
@@ -1386,7 +1430,10 @@ async function saveDaily(){
 
   }catch(e){
     console.error('saveDaily failed:',e);
-    alert('Save failed: '+e.message);
+    showMiniToast(
+      '❌ Αποτυχία αποθήκευσης',
+      'error'
+    );
 
   }finally{
     if(btn){
@@ -1429,7 +1476,10 @@ async function saveFixed(){
   }
 
   if(!userId){
-    alert('Δεν υπάρχει συνδεδεμένο Telegram ID.');
+    showMiniToast(
+      '❌ Σύνδεσε πρώτα το Telegram',
+      'error'
+    );
     return;
   }
 
@@ -1469,7 +1519,10 @@ async function saveFixed(){
 
   }catch(e){
     console.error('saveFixed failed:',e);
-    alert('Save failed: '+e.message);
+    showMiniToast(
+      '❌ Αποτυχία αποθήκευσης',
+      'error'
+    );
 
   }finally{
     if(btn){
@@ -1503,7 +1556,167 @@ async function delExp(t,id){
 
   }catch(e){
     console.error('Delete error:',e);
-    alert('Σφάλμα διαγραφής: '+e.message);
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
+  }
+}
+
+let quickVoiceRecognition=null;
+let quickVoiceListening=false;
+
+function getSpeechRecognition(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function setQuickVoiceState(isListening){
+  quickVoiceListening=isListening;
+
+  const btn=$('quickVoiceBtn');
+  if(!btn)return;
+
+  btn.textContent=isListening?'⏹️':'🎤';
+  btn.classList.toggle('listening',isListening);
+}
+
+function startQuickVoice(){
+  const Recognition=getSpeechRecognition();
+
+  if(!Recognition){
+    showMiniToast(
+      '❌ Ο browser δεν υποστηρίζει voice input',
+      'error'
+    );
+    return;
+  }
+
+  if(quickVoiceListening && quickVoiceRecognition){
+    quickVoiceRecognition.stop();
+    return;
+  }
+
+  const input=$('quickAddInput');
+
+  quickVoiceRecognition=new Recognition();
+  quickVoiceRecognition.lang='el-GR';
+  quickVoiceRecognition.interimResults=false;
+  quickVoiceRecognition.maxAlternatives=1;
+  quickVoiceRecognition.continuous=false;
+
+  quickVoiceRecognition.onstart=()=>{
+    setQuickVoiceState(true);
+  };
+
+  quickVoiceRecognition.onresult=e=>{
+    const text=e.results?.[0]?.[0]?.transcript||'';
+
+    if(input && text){
+      input.value=text;
+      input.focus();
+    }
+  };
+
+  quickVoiceRecognition.onerror=e=>{
+    console.warn('Voice recognition error:',e.error);
+
+    if(e.error==='not-allowed'){
+
+      showMiniToast(
+        '❌ Δεν δόθηκε άδεια μικροφώνου',
+        'error'
+      );
+    
+    }else{
+    
+      showMiniToast(
+        '❌ Δεν μπόρεσα να ακούσω καθαρά',
+        'error'
+      );
+    }
+  };
+
+  quickVoiceRecognition.onend=()=>{
+    setQuickVoiceState(false);
+  };
+
+  quickVoiceRecognition.start();
+}
+
+async function quickAddExpense(){
+  const input=$('quickAddInput');
+  const text=(input?.value||'').trim();
+
+  if(!text){
+    input?.focus();
+    return;
+  }
+
+  if(typeof parseExpense!=='function'){
+
+    showMiniToast(
+      '❌ Ο parser δεν είναι διαθέσιμος',
+      'error'
+    );
+  
+    return;
+  }
+  
+  const parsed=parseExpense(text);
+  
+  if(!parsed){
+  
+    showMiniToast(
+      '❌ Δεν αναγνωρίστηκε ποσό',
+      'error'
+    );
+  
+    input?.focus();
+    return;
+  }
+  
+  const userId=localStorage.getItem(SK);
+  
+  if(!userId){
+  
+    showMiniToast(
+      '❌ Σύνδεσε πρώτα το Telegram',
+      'error'
+    );
+  
+    return;
+  }
+
+  const expense={
+    id:gid(),
+    name:parsed.name,
+    amount:parsed.amount,
+    category:parsed.category,
+    date:parsed.date||new Date().toISOString().split('T')[0],
+    paymentSourceId:parsed.paymentSourceId||'',
+    paymentSourceName:parsed.paymentSourceName||'',
+    paymentSourceType:parsed.paymentSourceType||''
+  };
+
+  const monthKey=expense.date.substring(0,7);
+  ensM(monthKey);
+
+  try{
+    D.months[monthKey].daily.push(expense);
+
+    await saveDailyExpenseRow(userId,expense);
+
+    input.value='';
+    curM=monthKey;
+
+    render();
+    showMiniToast('✅ Το έξοδο προστέθηκε');
+
+  }catch(e){
+    D.months[monthKey].daily=D.months[monthKey].daily.filter(x=>x.id!==expense.id);
+
+    console.error('quickAddExpense failed:',e);
+    showMiniToast('❌ Σφάλμα γρήγορης καταχώρησης','error');
   }
 }
 
@@ -1520,7 +1733,10 @@ function doImport(ev){
       const d=JSON.parse(e.target.result);
 
       if(!d.months && !d.fixedExpenses){
-        alert('Μη έγκυρο αρχείο');
+        showMiniToast(
+          '❌ Μη έγκυρο αρχείο',
+          'error'
+        );
         return;
       }
 
@@ -1536,11 +1752,14 @@ function doImport(ev){
       await saveToSupabase();
 
       render();
-      alert('✅ Επιτυχία!');
+      showMiniToast('✅ Η εισαγωγή ολοκληρώθηκε');
 
     }catch(err){
       console.error('Import error:',err);
-      alert('Σφάλμα: '+err.message);
+      showMiniToast(
+        '❌ Σφάλμα εισαγωγής',
+        'error'
+      );
     }
   };
 
@@ -1552,11 +1771,21 @@ function doReset(){if(confirm('Διαγραφή ΟΛΩΝ;')&&confirm('Σίγου
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeM();
+
   if(e.key==='Enter'){
-    if($('authScreen')&&document.body.classList.contains('auth-pending')){
-      if(document.activeElement&&document.activeElement.id==='chatIdInput')connectWithChatId(e);
+
+    if(document.activeElement&&document.activeElement.id==='quickAddInput'){
+      quickAddExpense();
       return;
     }
+
+    if($('authScreen')&&document.body.classList.contains('auth-pending')){
+      if(document.activeElement&&document.activeElement.id==='chatIdInput'){
+        connectWithChatId(e);
+      }
+      return;
+    }
+
     if($('mDaily').classList.contains('active'))saveDaily();
     if($('mFixed').classList.contains('active'))saveFixed();
     if($('mCC').classList.contains('active'))saveCC();
@@ -1636,8 +1865,11 @@ async function saveTelegramChatId(ev){
   if(ev)ev.preventDefault();
 
   const input=$('chatIdInput');
+  const codeInput=$('telegramCodeInput');
   const err=$('authError');
+
   const chatId=(input?.value||'').trim();
+  const code=(codeInput?.value||'').trim();
 
   if(err)err.textContent='';
 
@@ -1658,37 +1890,91 @@ async function saveTelegramChatId(ev){
     return;
   }
 
+  if(!code){
+    if(err)err.textContent='Βάλε τον κωδικό σύνδεσης από το Telegram.';
+    codeInput?.focus();
+    return;
+  }
+
+  if(!/^\d{6}$/.test(code)){
+    if(err)err.textContent='Ο κωδικός πρέπει να είναι 6 ψηφία.';
+    codeInput?.focus();
+    return;
+  }
+
   setAuthLoading(true);
 
   try{
-    const meta=currentUser.user_metadata||{};
+    const token=currentSession?.access_token;
 
-    const {data,error}=await supabaseClient
-      .from('profiles')
-      .upsert({
-        user_id:currentUser.id,
-        email:currentUser.email||'',
-        full_name:meta.full_name||meta.name||'',
-        avatar_url:meta.avatar_url||meta.picture||'',
-        telegram_chat_id:chatId,
-        updated_at:new Date().toISOString()
-      },{onConflict:'user_id'})
-      .select('*')
-      .single();
+    if(!token){
+      throw new Error('Δεν υπάρχει ενεργό session.');
+    }
 
-    if(error)throw error;
+    const workerUrl=(CONFIG.WORKER_URL||'').replace(/\/+$/,'');
+    const verifyUrl=`${workerUrl}/verify-link`;
 
-    currentProfile=data;
+    console.log('verify-link url:', `${workerUrl}/verify-link`);
+
+    const res=await fetch(verifyUrl,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:'Bearer '+token
+      },
+      body:JSON.stringify({
+        chat_id:chatId,
+        code
+      })
+    });
+
+    const data=await res.json();
+
+    if(!res.ok || data.error){
+      throw new Error(data.error||'Verification failed');
+    }
+
+    currentProfile=data.profile;
     changingTelegramId=false;
     localStorage.setItem(SK,chatId);
 
-    await loadUserData(chatId);
+    const btn=$('authSubmitBtn');
+
+    if(btn){
+      btn.disabled=true;
+      btn.innerHTML='⏳ Σύνδεση...';
+    }
+
+    showMiniToast('✅ Το Telegram συνδέθηκε');
+
+    await new Promise(r=>setTimeout(r,1400));
+
+    window.location.reload();
+    
+    return;
 
   }catch(e){
     console.error('saveTelegramChatId error:',e);
-    if(err)err.textContent='Σφάλμα αποθήκευσης Chat ID: '+(e.message||JSON.stringify(e));
+
+    if(err){
+      err.textContent='Δεν έγινε επιβεβαίωση. Έλεγξε Chat ID και κωδικό.';
+    }
   }finally{
     setAuthLoading(false);
+  }
+}
+
+function showApp(){
+  document.body.classList.remove('auth-pending');
+
+  const auth=$('authScreen');
+
+  if(auth){
+    auth.classList.add('auth-hidden');
+    auth.style.display='none';
+    auth.style.pointerEvents='none';
+    auth.style.opacity='0';
+    auth.style.visibility='hidden';
   }
 }
 
@@ -1805,16 +2091,49 @@ async function handleOAuthCallback(){
 
   if(!code)return null;
 
-  const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
+  try{
+    const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
 
-  cleanOAuthUrl();
+    cleanOAuthUrl();
 
-  if(error){
-    console.error('OAuth exchange failed:',error);
-    throw error;
+    if(error){
+      console.error('OAuth exchange failed:',error);
+      return null;
+    }
+
+    return data?.session||null;
+
+  }catch(e){
+    console.error('OAuth exchange failed:',e);
+
+    cleanOAuthUrl();
+
+    return null;
   }
+}
 
-  return data?.session||null;
+async function saveTelegramLinkRequest(row, env) {
+  const res = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/telegram_link_requests`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        chat_id: row.chat_id,
+        code: row.code
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error('Telegram link request insert failed: ' + txt);
+  }
 }
 
 async function initApp(){

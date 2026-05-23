@@ -2512,3 +2512,114 @@ body.auth-pending .fab{
   border-radius:999px;
   background:var(--teal);
 }
+
+.quick-add-box{
+  margin-top:24px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:20px;
+  backdrop-filter:blur(10px);
+}
+
+.quick-add-label{
+  font-size:.9rem;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:12px;
+}
+
+.quick-add-row{
+  display:flex;
+  gap:12px;
+}
+
+.quick-add-row input{
+  flex:1;
+  border:none;
+  outline:none;
+  border-radius:14px;
+  padding:14px 16px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:1rem;
+}
+
+.quick-add-row input::placeholder{
+  color:rgba(255,255,255,.55);
+}
+
+.quick-add-row button{
+  border:none;
+  border-radius:14px;
+  padding:0 18px;
+  font-weight:700;
+  cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  color:#fff;
+}
+
+.quick-add-hint{
+  margin-top:10px;
+  font-size:.82rem;
+  color:rgba(255,255,255,.6);
+}
+
+@media(max-width:768px){
+  .quick-add-row{
+    flex-direction:column;
+  }
+
+  .quick-add-row button{
+    height:48px;
+  }
+}
+
+.quick-voice-btn{
+  width:48px;
+  min-width:48px;
+  padding:0;
+  font-size:18px;
+}
+
+.quick-voice-btn.listening{
+  background:linear-gradient(135deg,#ef4444,#f97316);
+  animation:pulseVoice 1s infinite;
+}
+
+@keyframes pulseVoice{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+  100%{transform:scale(1)}
+}
+
+.mini-toast{
+  position:fixed;
+  left:50%;
+  bottom:92px;
+  transform:translateX(-50%) translateY(20px);
+  z-index:3000;
+  padding:13px 18px;
+  border-radius:999px;
+  background:#111827;
+  color:white;
+  font-weight:800;
+  font-size:14px;
+  box-shadow:0 18px 45px rgba(15,23,42,.28);
+  opacity:0;
+  pointer-events:none;
+  transition:.22s ease;
+}
+
+.mini-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+.mini-toast.success{
+  background:linear-gradient(135deg,#10b981,#059669);
+}
+
+.mini-toast.error{
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+}
