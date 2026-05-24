@@ -1818,24 +1818,34 @@ async function signInWithGoogle(){
 }
 
 async function signOutUser(){
+  try{
+    await supabaseClient.auth.signOut({
+      scope:'global'
+    });
+  }catch(e){
+    console.warn('Supabase signOut failed:',e);
+  }
 
   try{
-    supabaseClient.auth.signOut().catch(()=>{});
-  }catch{}
+    localStorage.removeItem(SK);
+    localStorage.removeItem('expense-hero-auth');
+    localStorage.removeItem('expense-hero-auth-code-verifier');
 
-  localStorage.removeItem(SK);
-  localStorage.removeItem('expense-hero-auth');
-  localStorage.removeItem('expense-hero-auth-code-verifier');
+    Object.keys(localStorage)
+      .filter(k=>k.startsWith('sb-') || k.includes('supabase'))
+      .forEach(k=>localStorage.removeItem(k));
 
-  Object.keys(localStorage)
-    .filter(k=>k.startsWith('sb-') || k.includes('supabase'))
-    .forEach(k=>localStorage.removeItem(k));
+    sessionStorage.clear();
+
+  }catch(e){
+    console.warn('Storage cleanup failed:',e);
+  }
 
   currentSession=null;
   currentUser=null;
   currentProfile=null;
 
-  window.location.reload();
+  window.location.href=window.location.origin+window.location.pathname;
 }
 
 async function getOrCreateProfile(user){
