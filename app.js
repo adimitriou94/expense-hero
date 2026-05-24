@@ -281,7 +281,13 @@ async function bulkDelete(type){
     return;
   }
 
-  if(!confirm(`Διαγραφή ${set.size} εγγραφών;`))return;
+  const confirmed=await showConfirmModal({
+    title:'Μαζική διαγραφή',
+    message:`Θέλεις να διαγράψεις ${set.size} εγγραφές;`,
+    confirmText:'Διαγραφή'
+  });
+  
+  if(!confirmed)return;
 
   const ids=[...set];
   const table=type==='fixed'?'fixed_expenses':'expenses';
@@ -305,6 +311,8 @@ async function bulkDelete(type){
     }
 
     render();
+
+    showMiniToast('✅ Οι εγγραφές διαγράφηκαν');
 
   }catch(e){
     console.error('Bulk delete error:',e);
@@ -333,6 +341,53 @@ function showMiniToast(message,type='success'){
     el.classList.remove('show');
   },2500);
 }
+
+let confirmResolver=null;
+
+function showConfirmModal({
+  title='Επιβεβαίωση',
+  message='Είσαι σίγουρος;',
+  confirmText='Συνέχεια',
+  cancelText='Ακύρωση'
+}={}){
+
+  return new Promise(resolve=>{
+
+    confirmResolver=resolve;
+
+    $('confirmTitle').textContent=title;
+    $('confirmMessage').textContent=message;
+
+    $('confirmCancelBtn').textContent=cancelText;
+    $('confirmConfirmBtn').textContent=confirmText;
+
+    $('confirmOverlay').classList.add('active');
+  });
+}
+
+function closeConfirmModal(result=false){
+
+  $('confirmOverlay').classList.remove('active');
+
+  if(confirmResolver){
+    confirmResolver(result);
+    confirmResolver=null;
+  }
+}
+
+$('confirmCancelBtn')?.addEventListener('click',()=>{
+  closeConfirmModal(false);
+});
+
+$('confirmConfirmBtn')?.addEventListener('click',()=>{
+  closeConfirmModal(true);
+});
+
+$('confirmOverlay')?.addEventListener('click',e=>{
+  if(e.target.id==='confirmOverlay'){
+    closeConfirmModal(false);
+  }
+});
 
 // ===== SUPABASE DATA OPERATIONS =====
 async function fetchAllData(userId){
@@ -1087,7 +1142,14 @@ async function saveIncomeSource(){
 }
 
 async function deleteIncomeSource(id){
-  if(!confirm('Διαγραφή πηγής εισοδήματος;'))return;
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή εισοδήματος',
+    message:'Θέλεις να διαγράψεις αυτή την πηγή εισοδήματος;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
 
   try{
     await deleteIncomeSourceRow(id);
@@ -1097,8 +1159,11 @@ async function deleteIncomeSource(id){
     refreshComputedIncome();
     render();
 
+    showMiniToast('✅ Η πηγή εισοδήματος διαγράφηκε');
+
   }catch(e){
     console.error('deleteIncomeSource failed:',e);
+
     showMiniToast(
       '❌ Σφάλμα διαγραφής',
       'error'
@@ -1538,7 +1603,14 @@ async function deleteExpenseRow(type,id){
 }
 
 async function delExp(t,id){
-  if(!confirm('Διαγραφή;'))return;
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή εξόδου',
+    message:'Θέλεις να διαγράψεις αυτή την εγγραφή;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
 
   try{
     await deleteExpenseRow(t,id);
@@ -1553,8 +1625,11 @@ async function delExp(t,id){
 
     render();
 
+    showMiniToast('✅ Η εγγραφή διαγράφηκε');
+
   }catch(e){
     console.error('Delete error:',e);
+
     showMiniToast(
       '❌ Σφάλμα διαγραφής',
       'error'
@@ -1766,7 +1841,44 @@ function doImport(ev){
   ev.target.value='';
 }
 
-function doReset(){if(confirm('Διαγραφή ΟΛΩΝ;')&&confirm('Σίγουρα;')){localStorage.removeItem(SK);location.reload()}}
+async function doReset(){
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή δεδομένων',
+    message:'Θέλεις να διαγράψεις όλα τα δεδομένα σου;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
+
+  const doubleConfirmed=await showConfirmModal({
+    title:'Τελική επιβεβαίωση',
+    message:'Η ενέργεια δεν αναιρείται.',
+    confirmText:'Οριστική διαγραφή'
+  });
+
+  if(!doubleConfirmed)return;
+
+  try{
+
+    localStorage.removeItem(SK);
+
+    showMiniToast('✅ Τα δεδομένα διαγράφηκαν');
+
+    setTimeout(()=>{
+      location.reload();
+    },900);
+
+  }catch(e){
+
+    console.error('Reset failed:',e);
+
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
+  }
+}
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeM();

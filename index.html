@@ -452,7 +452,9 @@
         <div class="btn-group">
           <button class="btn btn-secondary" onclick="switchChatId()">Αλλαγή Telegram λογαριασμού</button>
           <button class="btn btn-secondary" onclick="signOutUser()">Αποσύνδεση</button>
-          <button class="btn btn-danger" onclick="doReset()">🗑 Διαγραφή όλων</button>
+          <!--
+<button class="btn btn-danger" onclick="doReset()">🗑 Διαγραφή όλων</button>
+-->
         </div>
       </div>
 
@@ -729,6 +731,29 @@
     <button class="btn btn-primary btn-block" id="btnIncomeSource" onclick="saveIncomeSource()">
       Αποθήκευση
     </button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-icon">⚠️</div>
+
+    <h3 id="confirmTitle">Επιβεβαίωση</h3>
+
+    <p id="confirmMessage">
+      Είσαι σίγουρος;
+    </p>
+
+    <div class="confirm-actions">
+      <button type="button" class="confirm-cancel" id="confirmCancelBtn">
+        Ακύρωση
+      </button>
+
+      <button type="button" class="confirm-confirm" id="confirmConfirmBtn">
+        Συνέχεια
+      </button>
+    </div>
   </div>
 </div>
 

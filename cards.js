@@ -211,4 +211,32 @@ function saveCC(){
   else{obj.id=gid();obj.chosenPay=obj.minPay;D.creditCards.push(obj)}
   save();closeM();render();
 }
-function delCC(id){if(!confirm('Διαγραφή κάρτας;'))return;D.creditCards=D.creditCards.filter(c=>c.id!==id);save();render()}
+async function delCC(id){
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή κάρτας',
+    message:'Θέλεις να διαγράψεις αυτή την κάρτα;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
+
+  try{
+
+    D.creditCards=D.creditCards.filter(c=>c.id!==id);
+
+    save();
+    render();
+
+    showMiniToast('✅ Η κάρτα διαγράφηκε');
+
+  }catch(e){
+
+    console.error('Delete CC failed:',e);
+
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
+  }
+}
