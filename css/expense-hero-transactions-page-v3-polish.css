@@ -1,0 +1,315 @@
+/* =========================================
+   TRANSACTIONS PAGE — DESKTOP POLISH V3
+   Depends on:
+   - expense-hero-dashboard-redesign-v10-desktop-dashboard-final.css
+   - expense-hero-dashboard-slim-transactions-v2.css
+========================================= */
+
+@media (min-width: 1024px) {
+
+  /* Page rhythm */
+  #vTransactions .transactions-page {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+    max-width: 1180px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Compact premium hero */
+  #vTransactions .transactions-hero {
+    position: relative !important;
+    min-height: 178px !important;
+    padding: 30px 34px !important;
+    border-radius: 34px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    background:
+      radial-gradient(circle at 88% 18%, rgba(116,92,255,.18), transparent 34%),
+      radial-gradient(circle at 12% 92%, rgba(16,185,129,.14), transparent 32%),
+      rgba(255,255,255,.86) !important;
+    border: 1px solid rgba(120,130,180,.10) !important;
+    box-shadow: 0 18px 54px rgba(15,23,42,.07) !important;
+  }
+
+  #vTransactions .transactions-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(90,100,140,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,100,140,.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+  }
+
+  #vTransactions .transactions-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  #vTransactions .transactions-hero .eyebrow {
+    color: #5f54ff !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    letter-spacing: .14em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+  }
+
+  #vTransactions .transactions-hero h2 {
+    font-size: 42px !important;
+    line-height: 1 !important;
+    font-weight: 950 !important;
+    letter-spacing: -.06em !important;
+    color: #101827 !important;
+    margin: 0 !important;
+  }
+
+  #vTransactions .transactions-hero p {
+    margin-top: 12px !important;
+    max-width: 620px !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    font-weight: 600 !important;
+    color: #6b7890 !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add,
+  #vTransactions .transactions-hero .section-add {
+    height: 48px !important;
+    padding: 0 20px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #121826, #5947f5) !important;
+    color: white !important;
+    font-weight: 900 !important;
+    box-shadow: 0 16px 34px rgba(79,70,255,.24) !important;
+    border: none !important;
+  }
+
+  /* Visual filter/search strip — works if existing controls exist */
+  #vTransactions .transactions-toolbar,
+  #vTransactions .filter-row,
+  #vTransactions .sync-toolbar,
+  #vTransactions .toolbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    border-radius: 24px !important;
+    background: rgba(255,255,255,.72) !important;
+    border: 1px solid rgba(120,130,180,.10) !important;
+    box-shadow: 0 12px 34px rgba(15,23,42,.05) !important;
+  }
+
+  #vTransactions .transactions-toolbar input,
+  #vTransactions .filter-row input,
+  #vTransactions .toolbar input {
+    min-height: 46px !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(120,130,180,.14) !important;
+    background: rgba(248,250,255,.82) !important;
+    padding: 0 16px !important;
+    font-weight: 700 !important;
+    color: #101827 !important;
+  }
+
+  #vTransactions .filter-pill,
+  #vTransactions .global-badge,
+  #vTransactions .btn-secondary {
+    border-radius: 14px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    background: rgba(116,92,255,.08) !important;
+    color: #5548f5 !important;
+    border: 1px solid rgba(116,92,255,.10) !important;
+  }
+
+  /* Lists layout */
+  #vTransactions .transactions-list-card {
+    padding: 0 !important;
+    border-radius: 34px !important;
+    overflow: hidden !important;
+    background: rgba(255,255,255,.88) !important;
+    border: 1px solid rgba(120,130,180,.10) !important;
+    box-shadow: 0 18px 54px rgba(15,23,42,.065) !important;
+  }
+
+  #vTransactions .transactions-list-card .section-header,
+  #vTransactions .transactions-list-card .modern-list-header {
+    min-height: 82px !important;
+    padding: 22px 28px !important;
+    border-bottom: 1px solid rgba(120,130,180,.10) !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,255,.72)) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  #vTransactions .transactions-list-card .section-title {
+    font-size: 24px !important;
+    font-weight: 950 !important;
+    letter-spacing: -.045em !important;
+    color: #101827 !important;
+  }
+
+  #vTransactions .transactions-list-card .section-subtitle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: 6px !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    color: #91a0b8 !important;
+  }
+
+  #vTransactions .transactions-list-card .section-add {
+    height: 42px !important;
+    padding: 0 16px !important;
+    border-radius: 15px !important;
+    background: #101827 !important;
+    color: white !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    border: none !important;
+    box-shadow: 0 12px 26px rgba(15,23,42,.14) !important;
+  }
+
+  #vTransactions .transactions-list-card .expense-list {
+    padding: 18px 22px 22px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Date group headers inside daily list */
+  #vTransactions .date-group,
+  #vTransactions .daily-group,
+  #vTransactions .day-group {
+    margin-top: 16px !important;
+  }
+
+  #vTransactions .date-label,
+  #vTransactions .day-label,
+  #vTransactions .daily-date {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin: 18px 4px 10px !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #64748b !important;
+    letter-spacing: -.01em !important;
+  }
+
+  /* Rows */
+  #vTransactions .expense-item,
+  #vTransactions .fixed-item,
+  #vTransactions .daily-item,
+  #vTransactions .expense-row {
+    min-height: 72px !important;
+    padding: 12px 15px !important;
+    margin-bottom: 10px !important;
+    border-radius: 21px !important;
+    background: rgba(255,255,255,.78) !important;
+    border: 1px solid rgba(120,130,180,.10) !important;
+    box-shadow: none !important;
+    transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      background .18s ease,
+      border-color .18s ease !important;
+  }
+
+  #vTransactions .expense-item:hover,
+  #vTransactions .fixed-item:hover,
+  #vTransactions .daily-item:hover,
+  #vTransactions .expense-row:hover {
+    transform: translateY(-1px) !important;
+    background: #fff !important;
+    border-color: rgba(116,92,255,.16) !important;
+    box-shadow: 0 12px 28px rgba(40,50,90,.075) !important;
+  }
+
+  #vTransactions .expense-icon,
+  #vTransactions .icon,
+  #vTransactions .expense-item > div:first-child:not(.expense-info) {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 15px !important;
+    flex: 0 0 46px !important;
+  }
+
+  #vTransactions .expense-item h4,
+  #vTransactions .expense-row h4,
+  #vTransactions .fixed-item h4,
+  #vTransactions .daily-item h4 {
+    font-size: 16px !important;
+    line-height: 1.15 !important;
+    font-weight: 900 !important;
+    color: #101827 !important;
+    letter-spacing: -.025em !important;
+  }
+
+  #vTransactions .expense-item p,
+  #vTransactions .expense-row p,
+  #vTransactions .fixed-item p,
+  #vTransactions .daily-item p {
+    margin-top: 4px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #91a0b8 !important;
+  }
+
+  #vTransactions .expense-amount,
+  #vTransactions .amount,
+  #vTransactions .vl {
+    font-size: 16px !important;
+    font-weight: 950 !important;
+    letter-spacing: -.025em !important;
+    font-family: var(--mono) !important;
+  }
+
+  #vTransactions .edit-btn,
+  #vTransactions .del-btn,
+  #vTransactions .expense-actions button {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 11px !important;
+    background: rgba(116,92,255,.075) !important;
+    color: #65738c !important;
+    border: none !important;
+    transition: all .18s ease !important;
+  }
+
+  #vTransactions .edit-btn:hover,
+  #vTransactions .del-btn:hover,
+  #vTransactions .expense-actions button:hover {
+    background: rgba(116,92,255,.14) !important;
+    color: #4f46ff !important;
+    transform: scale(1.04) !important;
+  }
+
+  /* Empty states */
+  #vTransactions .empty,
+  #vTransactions .mini-empty {
+    padding: 28px !important;
+    border-radius: 22px !important;
+    background: rgba(248,250,255,.72) !important;
+    border: 1px dashed rgba(120,130,180,.22) !important;
+    color: #7a879d !important;
+    font-weight: 750 !important;
+    text-align: center !important;
+  }
+}
+
+/* Mobile: keep it safe and let base mobile styles handle layout for now */
+@media (max-width: 1023px) {
+  #vTransactions .transactions-hero {
+    padding: 20px !important;
+  }
+}

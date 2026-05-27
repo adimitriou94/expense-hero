@@ -1,0 +1,432 @@
+/* =========================================
+   EXPENSE HERO — QUICK ADD FINAL SPLIT
+   Dashboard = minimal capture
+   FAB (+) = full add flow
+   Load after expense-hero-mobile-nav-v7.css
+========================================= */
+
+/* Global toast position: above mobile dock */
+.mini-toast,
+.quick-toast,
+.success-toast,
+.error-toast {
+  bottom: 150px !important;
+  z-index: 20000 !important;
+}
+
+/* =====================================================
+   1. DASHBOARD QUICK ADD — MINIMAL ONLY
+   input + voice + tiny chips
+===================================================== */
+
+.modern-quick-add-card {
+  overflow: hidden !important;
+}
+
+.modern-quick-add-card .modern-quick-add-box {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.modern-quick-add-card .modern-quick-add-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 52px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.modern-quick-add-card #quickAddInput {
+  width: 100% !important;
+  height: 52px !important;
+  min-width: 0 !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(130,140,190,.13) !important;
+  background: rgba(255,255,255,.82) !important;
+  color: #172033 !important;
+  padding: 0 16px !important;
+  font-size: 15px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.modern-quick-add-card #quickAddInput:focus {
+  background: #fff !important;
+  border-color: rgba(91,79,255,.34) !important;
+  box-shadow: 0 0 0 4px rgba(91,79,255,.08) !important;
+}
+
+.modern-quick-add-card #quickVoiceBtn {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  padding: 0 !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(130,140,190,.13) !important;
+  background: rgba(255,255,255,.88) !important;
+  color: #5b4fe9 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+}
+
+/* Hide any dashboard full-flow elements, even if old HTML/CSS remains cached */
+.modern-quick-add-card #quickAddPreview,
+.modern-quick-add-card #quickAddError,
+.modern-quick-add-card .smart-quick-preview,
+.modern-quick-add-card .quick-add-error,
+.modern-quick-add-card .smart-quick-repeat,
+.modern-quick-add-card .modern-add-btn,
+.modern-quick-add-card .quick-add-submit {
+  display: none !important;
+}
+
+/* Static tiny chips */
+.dashboard-quick-static-chips,
+.modern-quick-add-card .modern-quick-hints {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  margin-top: 11px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.dashboard-quick-static-chips button,
+.modern-quick-add-card .modern-quick-hints button,
+.modern-quick-add-card .modern-quick-hints span {
+  appearance: none !important;
+  border: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: rgba(99,91,255,.075) !important;
+  color: #5b55d9 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+.dashboard-quick-static-chips button:active {
+  transform: scale(.97);
+}
+
+/* =====================================================
+   2. FAB QUICK SHEET — FULL EXPERIENCE
+===================================================== */
+
+.quick-sheet-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  background: rgba(15,23,42,.42) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+
+  opacity: 0 !important;
+  pointer-events: none !important;
+
+  transition: opacity .24s ease !important;
+}
+
+.quick-sheet-overlay.active,
+.quick-sheet-overlay.open {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.quick-sheet {
+  width: 100% !important;
+  max-width: 430px !important;
+
+  margin: 0 auto !important;
+  padding: 10px 18px calc(24px + env(safe-area-inset-bottom)) !important;
+
+  border-radius: 30px 30px 0 0 !important;
+
+  background: rgba(255,255,255,.97) !important;
+  border: 1px solid rgba(255,255,255,.78) !important;
+
+  box-shadow: 0 -18px 54px rgba(15,23,42,.22) !important;
+
+  transform: translateY(110%) !important;
+  transition: transform .28s cubic-bezier(.2,.8,.2,1) !important;
+
+  overflow: hidden !important;
+}
+
+.quick-sheet-overlay.active .quick-sheet,
+.quick-sheet-overlay.open .quick-sheet {
+  transform: translateY(0) !important;
+}
+
+.quick-sheet-handle {
+  width: 42px !important;
+  height: 5px !important;
+  margin: 0 auto 18px !important;
+  border-radius: 999px !important;
+  background: #d7deea !important;
+}
+
+.quick-sheet-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  margin-bottom: 18px !important;
+}
+
+.quick-sheet-kicker {
+  margin-bottom: 6px !important;
+  color: #635bff !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: .15em !important;
+  text-transform: uppercase !important;
+}
+
+.quick-sheet-header h2 {
+  margin: 0 !important;
+  color: #111827 !important;
+  font-size: 30px !important;
+  line-height: .98 !important;
+  font-weight: 950 !important;
+  letter-spacing: -.06em !important;
+}
+
+.quick-sheet-header p {
+  margin: 8px 0 0 !important;
+  color: #66738c !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.quick-sheet-close {
+  appearance: none !important;
+  border: 0 !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 16px !important;
+  background: #f1f5f9 !important;
+  color: #66738c !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.quick-sheet-input-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 54px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+#quickAddSheetInput {
+  width: 100% !important;
+  height: 56px !important;
+  min-width: 0 !important;
+  border: 1px solid rgba(130,140,190,.16) !important;
+  border-radius: 18px !important;
+  background: rgba(248,250,252,.94) !important;
+  color: #111827 !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+  outline: none !important;
+}
+
+#quickAddSheetInput:focus {
+  border-color: rgba(91,79,255,.42) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(91,79,255,.10) !important;
+}
+
+.quick-sheet-voice {
+  appearance: none !important;
+  border: 1px solid rgba(130,140,190,.16) !important;
+  width: 54px !important;
+  height: 56px !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,.90) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+}
+
+/* Preview only inside sheet */
+.quick-sheet .smart-quick-preview {
+  display: none !important;
+  margin-top: 14px !important;
+}
+
+.quick-sheet .smart-quick-preview.visible,
+.quick-sheet .smart-quick-preview.is-visible,
+.quick-sheet .smart-quick-preview:not(:empty) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,.86) !important;
+  border: 1px solid rgba(130,140,190,.12) !important;
+  box-shadow: 0 10px 28px rgba(15,23,42,.05) !important;
+}
+
+.smart-preview-icon {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg,rgba(99,91,255,.12),rgba(20,184,166,.10)) !important;
+}
+
+.smart-preview-main {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.smart-preview-main strong {
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #111827 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.smart-preview-main span {
+  display: block !important;
+  margin-top: 2px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #7b89a3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.smart-preview-amount {
+  font-family: var(--mono, monospace) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #ef4444 !important;
+  white-space: nowrap !important;
+}
+
+/* Sheet error */
+.quick-sheet .quick-add-error {
+  margin-top: 14px !important;
+  padding: 13px 14px !important;
+  border-radius: 18px !important;
+  background: #fff4f4 !important;
+  border: 1px solid rgba(239,68,68,.14) !important;
+  color: #dc2626 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.quick-sheet .quick-add-error.hidden,
+.quick-sheet .quick-add-error:empty {
+  display: none !important;
+}
+
+.quick-sheet-examples {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+}
+
+.quick-sheet-examples button {
+  appearance: none !important;
+  border: 0 !important;
+  min-height: 36px !important;
+  padding: 0 13px !important;
+  border-radius: 999px !important;
+  background: rgba(91,79,255,.10) !important;
+  color: #5145cd !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+/* CTA fixed */
+.quick-sheet-submit {
+  appearance: none !important;
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  margin-top: 18px !important;
+  padding: 0 18px !important;
+
+  border: 0 !important;
+  border-radius: 18px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  background: linear-gradient(135deg,#151a33,#5b4fff) !important;
+  color: #fff !important;
+
+  font-size: 16px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+
+  box-shadow: 0 16px 34px rgba(91,79,255,.28) !important;
+}
+
+.quick-sheet-submit:disabled {
+  opacity: .45 !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
+/* Auth / desktop safeguards */
+body.auth-pending .quick-sheet-overlay {
+  display: none !important;
+}
+
+@media (min-width: 769px) {
+  .quick-sheet-overlay {
+    align-items: center !important;
+    padding: 24px !important;
+  }
+
+  .quick-sheet {
+    border-radius: 30px !important;
+    padding: 12px 24px 24px !important;
+    transform: translateY(20px) scale(.98) !important;
+  }
+
+  .quick-sheet-overlay.active .quick-sheet,
+  .quick-sheet-overlay.open .quick-sheet {
+    transform: translateY(0) scale(1) !important;
+  }
+}

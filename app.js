@@ -686,6 +686,9 @@ function render(){
 
   renderFixedList();
   renderDailyList();
+  renderDashboardPreview();
+  renderMobileCategoryInsights();
+  if(typeof renderQuickRepeatChips==='function') renderQuickRepeatChips();
   if($('incomeList')) renderIncomePage();
 
   rStats();
@@ -744,6 +747,100 @@ function renderFixedList(){
   $('lFixed').innerHTML=html;
 }
 
+
+let mobileTransactionFilter='all';
+
+function setMobileTransactionFilter(filter='all'){
+  mobileTransactionFilter=filter;
+  document.querySelectorAll('[data-mobile-transaction-filter]').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.mobileTransactionFilter===filter);
+  });
+  renderDailyList();
+}
+
+function mobileTransactionMatchesFilter(e){
+  const filter=mobileTransactionFilter||'all';
+  if(filter==='all' || filter==='expense') return true;
+
+  const dateStr=String(e.date||'');
+  if(!dateStr) return true;
+
+  const today=new Date();
+  const itemDate=new Date(dateStr+'T12:00:00');
+
+  if(filter==='today'){
+    return dateStr===today.toISOString().split('T')[0];
+  }
+
+  if(filter==='week'){
+    const diff=(today-itemDate)/(1000*60*60*24);
+    return diff>=0 && diff<=7;
+  }
+
+  return true;
+}
+
+function mobileTransactionMatchesSearch(e){
+  const input=document.getElementById('mobileTransactionSearch');
+  const q=(input?.value||'').trim().toLowerCase();
+  if(!q)return true;
+
+  return [e.name,e.category,e.paymentSourceName,e.date]
+    .filter(Boolean)
+    .some(v=>String(v).toLowerCase().includes(q));
+}
+
+function getExpenseByTypeAndId(type,id){
+  if(type==='fixed') return (D.fixedExpenses||[]).find(x=>x.id===id);
+  const m=D.months[curM]||{daily:[]};
+  return (m.daily||[]).find(x=>x.id===id);
+}
+
+function showMobileTransactionDetail(type,id){
+  if(window.innerWidth>768)return;
+  const e=getExpenseByTypeAndId(type,id);
+  if(!e)return;
+
+  const overlay=document.getElementById('mobileTransactionDetail');
+  const content=document.getElementById('mobileTransactionDetailContent');
+  if(!overlay || !content)return;
+
+  const icon=CEMO[e.category]||'📌';
+  const dateText=e.date ? new Date(e.date+'T12:00:00').toLocaleDateString('el-GR',{day:'2-digit',month:'long',year:'numeric'}) : '-';
+  const payText=e.paymentSourceName || (type==='fixed'?'Σταθερό έξοδο':'Κάρτα / budget');
+
+  content.innerHTML=`
+    <div class="mobile-transaction-detail-top">
+      <div class="mobile-transaction-detail-icon">${icon}</div>
+      <div class="mobile-transaction-detail-title">${esc(e.name)}</div>
+      <div class="mobile-transaction-detail-amount">-${fmt(e.amount)}</div>
+      <div class="mobile-transaction-detail-meta">${esc(e.category||'Άλλο')}</div>
+    </div>
+
+    <div class="mobile-transaction-detail-list">
+      <div class="mobile-transaction-detail-row"><span>Ημερομηνία</span><span>${dateText}</span></div>
+      <div class="mobile-transaction-detail-row"><span>Κατηγορία</span><span>${esc(e.category||'Άλλο')}</span></div>
+      <div class="mobile-transaction-detail-row"><span>Πληρωμή</span><span>${esc(payText)}</span></div>
+      <div class="mobile-transaction-detail-row"><span>Τύπος</span><span>${type==='fixed'?'Πάγιο':'Ημερήσιο'}</span></div>
+    </div>
+
+    <div class="mobile-transaction-detail-actions">
+      <button class="mobile-detail-edit" onclick="closeMobileTransactionDetail();editExp('${type}','${id}')">✎ Επεξεργασία</button>
+      <button class="mobile-detail-delete" onclick="closeMobileTransactionDetail();delExp('${type}','${id}')">🗑 Διαγραφή</button>
+    </div>
+    <button class="mobile-detail-close" onclick="closeMobileTransactionDetail()">Κλείσιμο</button>
+  `;
+
+  overlay.classList.add('active');
+  document.body.classList.add('sheet-open');
+}
+
+function closeMobileTransactionDetail(){
+  const overlay=document.getElementById('mobileTransactionDetail');
+  overlay?.classList.remove('active');
+  document.body.classList.remove('sheet-open');
+}
+
 function renderDailyList(){
   const m=D.months[curM]||{daily:[]};
 
@@ -773,10 +870,27 @@ function renderDailyList(){
 
   const grouped={};
 
-  [...m.daily].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).forEach(e=>{
-    if(!grouped[e.date]) grouped[e.date]=[];
-    grouped[e.date].push(e);
-  });
+  [...m.daily]
+    .filter(e=>mobileTransactionMatchesSearch(e) && mobileTransactionMatchesFilter(e))
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id||'').localeCompare(String(a.id||'')))
+    .forEach(e=>{
+      if(!grouped[e.date]) grouped[e.date]=[];
+      grouped[e.date].push(e);
+    });
+
+  if(Object.keys(grouped).length===0){
+    $('lDaily').innerHTML=`
+      <div class="empty">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <path d="M7.5 4.21l4.5 2.6 4.5-2.6"/>
+          <path d="M7.5 19.79V14.6L3 12"/>
+          <path d="M21 12l-4.5 2.6v5.19"/>
+        </svg>
+        Δεν υπάρχουν κινήσεις με αυτά τα φίλτρα.
+      </div>`;
+    return;
+  }
 
   let html='';
 
@@ -797,6 +911,109 @@ function renderDailyList(){
 }
 
 
+function renderMobileCategoryInsights(){
+  const donut = $('mobileCategoryDonut');
+  const list = $('mobileCategoryList');
+  const totalEl = $('mobileCategoryTotal');
+
+  if(!donut || !list || !totalEl) return;
+
+  const m = D.months[curM] || {daily:[]};
+  const totals = {};
+
+  (m.daily || []).forEach(e=>{
+    const cat = e.category || 'Άλλο';
+    totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
+  });
+
+  const rows = Object.entries(totals)
+    .map(([category,total])=>({category,total}))
+    .filter(x=>x.total>0)
+    .sort((a,b)=>b.total-a.total)
+    .slice(0,5);
+
+  const total = rows.reduce((s,x)=>s+x.total,0);
+  totalEl.textContent = fmt(total);
+
+  if(total<=0 || rows.length===0){
+    donut.style.background = 'conic-gradient(#eef2ff 0deg 360deg)';
+    list.innerHTML = `
+      <div class="mobile-category-empty">
+        Δεν υπάρχουν ημερήσια έξοδα για γράφημα ακόμα.
+      </div>
+    `;
+    return;
+  }
+
+  let start = 0;
+  const segments = rows.map(row=>{
+    const pct = row.total / total;
+    const end = start + pct * 360;
+    const color = CCLR[row.category] || '#8b5cf6';
+    const segment = `${color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
+    start = end;
+    return segment;
+  });
+
+  if(start < 360){
+    segments.push(`#e8edf7 ${start.toFixed(2)}deg 360deg`);
+  }
+
+  donut.style.background = `conic-gradient(${segments.join(',')})`;
+
+  list.innerHTML = rows.map(row=>{
+    const pct = Math.round((row.total / total) * 100);
+    const color = CCLR[row.category] || '#8b5cf6';
+    return `
+      <div class="mobile-category-row">
+        <span class="mobile-category-dot" style="background:${color}"></span>
+        <span class="mobile-category-name">${esc(row.category)}</span>
+        <span class="mobile-category-pct">${pct}%</span>
+        <strong>${fmt(row.total)}</strong>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDashboardPreview(){
+  const el = $('dashRecentList');
+  if(!el)return;
+
+  const m = D.months[curM] || {daily:[]};
+  const recent = [...(m.daily || [])]
+    .sort((a,b)=>
+      String(b.date || '').localeCompare(String(a.date || '')) ||
+      String(b.id || '').localeCompare(String(a.id || ''))
+    )
+    .slice(0,5);
+
+  if(recent.length === 0){
+    el.innerHTML = `
+      <div class="empty mini-empty">
+        Δεν υπάρχουν πρόσφατες κινήσεις για αυτόν τον μήνα.
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = recent.map(e => `
+    <div class="dashboard-preview-row">
+      <div class="expense-icon ${CCLS[e.category] || 'cat-other'}">
+        ${CEMO[e.category] || '📌'}
+      </div>
+
+      <div class="dashboard-preview-info">
+        <strong>${esc(e.name)}</strong>
+        <span>${esc(e.category)} · ${e.date || ''}</span>
+      </div>
+
+      <div class="dashboard-preview-amount">
+        -${fmt(e.amount)}
+      </div>
+    </div>
+  `).join('');
+}
+
 function paymentSourceExists(id){
   if(!id)return true;
 
@@ -811,7 +1028,7 @@ function eRow(e,t){
   const showSelect=selectionMode[t];
 
   return `
-    <div class="expense-item fadeIn ${isSelected?'selected-row':''}">
+    <div class="expense-item fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${t}','${e.id}')`:''}">
       ${showSelect?`
         <label class="select-box">
           <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('${t}','${e.id}',this.checked)">
@@ -835,7 +1052,7 @@ function eRow(e,t){
       <div class="expense-amount" style="${cl}">${fmt(e.amount)}</div>
 
       ${!showSelect?`
-        <div class="expense-actions">
+        <div class="expense-actions" onclick="event.stopPropagation()">
           <button class="edit-btn" onclick="editExp('${t}','${e.id}')" title="Επεξεργασία">✎</button>
           <button class="del-btn" onclick="delExp('${t}','${e.id}')" title="Διαγραφή">×</button>
         </div>`:''}
@@ -973,7 +1190,7 @@ function renderIncomeList(){
 
         <div class="income-source-amount">${fmt(i.amount)}</div>
 
-        <div class="expense-actions">
+        <div class="expense-actions" onclick="event.stopPropagation()">
           <button class="edit-btn" onclick="editIncomeSource('${i.id}')">✎</button>
           <button class="del-btn" onclick="deleteIncomeSource('${i.id}')">×</button>
         </div>
@@ -1654,7 +1871,7 @@ function setQuickVoiceState(isListening){
   btn.classList.toggle('listening',isListening);
 }
 
-function startQuickVoice(){
+function startQuickVoice(targetInputId='quickAddInput'){
   const Recognition=getSpeechRecognition();
 
   if(!Recognition){
@@ -1670,7 +1887,7 @@ function startQuickVoice(){
     return;
   }
 
-  const input=$('quickAddInput');
+  const input=$(targetInputId) || $('quickAddInput');
 
   quickVoiceRecognition=new Recognition();
   quickVoiceRecognition.lang='el-GR';
@@ -1687,6 +1904,7 @@ function startQuickVoice(){
 
     if(input && text){
       input.value=text;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
       input.focus();
     }
   };
@@ -1717,55 +1935,102 @@ function startQuickVoice(){
   quickVoiceRecognition.start();
 }
 
-async function quickAddExpense(){
-  const input=$('quickAddInput');
+function setQuickAddInlineError(message,targetId='quickAddError'){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  el.classList.add('visible');
+  el.classList.remove('hidden');
+
+  el.innerHTML=`
+    <span class="quick-add-error-icon">⚠️</span>
+    <span>${esc(message)}</span>
+  `;
+}
+
+function clearQuickAddInlineError(targetId='quickAddError'){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  el.classList.remove('visible');
+  el.classList.add('hidden');
+  el.innerHTML='';
+}
+
+function getQuickAddParsed(text){
+  const value=(text||'').trim();
+  if(!value)return null;
+
+  if(typeof quickAddPreviewData==='function'){
+    return quickAddPreviewData(value);
+  }
+
+  if(typeof parseExpense==='function'){
+    try{
+      return parseExpense(value);
+    }catch(e){
+      console.warn('quick add parser failed',e);
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function quickAddExpense(sourceInputId='quickAddInput',options={}){
+  const input=$(sourceInputId) || $('quickAddInput');
   const text=(input?.value||'').trim();
+  const isSheet=sourceInputId==='quickAddSheetInput';
+  const errorTarget=options.errorTarget || (isSheet ? 'quickAddSheetError' : null);
+  const fallbackToSheet=!!options.fallbackToSheet;
+
+  if(errorTarget) clearQuickAddInlineError(errorTarget);
 
   if(!text){
     input?.focus();
-    return;
+    return false;
   }
 
-  if(typeof parseExpense!=='function'){
+  const parsed=getQuickAddParsed(text);
+  const invalidMessage='Δεν βρέθηκε έγκυρο ποσό. Δοκίμασε π.χ. “καφές 3”.';
 
-    showMiniToast(
-      '❌ Ο parser δεν είναι διαθέσιμος',
-      'error'
-    );
-  
-    return;
-  }
-  
-  const parsed=parseExpense(text);
-  
-  if(!parsed){
-  
-    showMiniToast(
-      '❌ Δεν αναγνωρίστηκε ποσό',
-      'error'
-    );
-  
+  if(!parsed || !Number(parsed.amount)){
+    if(fallbackToSheet && !isSheet && typeof openQuickAddSheet==='function'){
+      openQuickAddSheet(text,invalidMessage);
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      return false;
+    }
+
+    if(errorTarget){
+      setQuickAddInlineError(invalidMessage,errorTarget);
+    }else{
+      showMiniToast('⚠️ Γράψε ποσό, π.χ. καφές 3','error');
+    }
+
     input?.focus();
-    return;
+    return false;
   }
-  
+
   const userId=localStorage.getItem(SK);
-  
+
   if(!userId){
-  
-    showMiniToast(
-      '❌ Σύνδεσε πρώτα το Telegram',
-      'error'
-    );
-  
-    return;
+    const message='Σύνδεσε πρώτα το Telegram/Google για να αποθηκευτεί το έξοδο.';
+
+    if(errorTarget){
+      setQuickAddInlineError(message,errorTarget);
+    }else{
+      showMiniToast('❌ Δεν υπάρχει ενεργή σύνδεση','error');
+    }
+
+    return false;
   }
 
   const expense={
     id:gid(),
-    name:parsed.name,
-    amount:parsed.amount,
-    category:parsed.category,
+    name:parsed.name || 'Έξοδο',
+    amount:Number(parsed.amount)||0,
+    category:parsed.category || 'Άλλο',
     date:parsed.date||new Date().toISOString().split('T')[0],
     paymentSourceId:parsed.paymentSourceId||'',
     paymentSourceName:parsed.paymentSourceName||'',
@@ -1781,16 +2046,28 @@ async function quickAddExpense(){
     await saveDailyExpenseRow(userId,expense);
 
     input.value='';
+    input.dispatchEvent(new Event('input',{bubbles:true}));
     curM=monthKey;
+
+    if(errorTarget) clearQuickAddInlineError(errorTarget);
 
     render();
     showMiniToast('✅ Το έξοδο προστέθηκε');
+
+    return true;
 
   }catch(e){
     D.months[monthKey].daily=D.months[monthKey].daily.filter(x=>x.id!==expense.id);
 
     console.error('quickAddExpense failed:',e);
-    showMiniToast('❌ Σφάλμα γρήγορης καταχώρησης','error');
+
+    if(errorTarget){
+      setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.',errorTarget);
+    }else{
+      showMiniToast('❌ Δεν μπόρεσα να αποθηκεύσω το έξοδο','error');
+    }
+
+    return false;
   }
 }
 
@@ -1886,7 +2163,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
 
     if(document.activeElement&&document.activeElement.id==='quickAddInput'){
-      quickAddExpense();
+      quickAddExpense('quickAddInput',{fallbackToSheet:true});
       return;
     }
 
@@ -1906,7 +2183,22 @@ document.addEventListener('keydown',e=>{
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeM()}));
 ['fDN','fDA','fFN','fFA','fCCN'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',function(){this.style.borderColor=''})});
 
-function go(v,b){document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));const target=$(v);if(target)target.classList.add('active');document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));if(b)b.classList.add('active')}
+function go(v,b){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+
+  const target=$(v);
+  if(target)target.classList.add('active');
+
+  const mobileMoreViews=new Set(['vCards','vAdvisor','vStats','vArchive','vSettings']);
+  const activeNavView=mobileMoreViews.has(v) ? 'vMore' : v;
+
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll(`.nav-btn[data-v="${activeNavView}"]`).forEach(el=>el.classList.add('active'));
+
+  if(b && b.classList && b.classList.contains('nav-btn')){
+    b.classList.add('active');
+  }
+}
 function chMonth(d){const[y,mo]=curM.split('-').map(Number);let nm=mo+d,ny=y;if(nm>12){nm=1;ny++}if(nm<1){nm=12;ny--}curM=ny+'-'+String(nm).padStart(2,'0');ensM(curM);render()}
 function goM(k){curM=k;ensM(k);go('vDash',document.querySelector('[data-v="vDash"]'));render()}
 
@@ -2343,4 +2635,1093 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
     renderAuthState();
   }
 });
+
+function quickAddFallbackParse(text){
+  const raw=(text||'').trim();
+  const amountMatch=raw.match(/(\d+[,.]?\d*)/);
+  if(!amountMatch)return null;
+
+  const amount=Number(amountMatch[1].replace(',','.'))||0;
+  if(amount<=0)return null;
+
+  const name=raw.replace(amountMatch[0],'').replace(/\b(ticket|voucher|κάρτα|card|μετρητά|cash)\b/gi,'').trim() || 'Έξοδο';
+  const lower=raw.toLowerCase();
+
+  let category='Άλλο';
+  if(/καφ|coffee/.test(lower)) category='Καφέδες';
+  else if(/σουπερ|super|market|μάρκετ|ψώνια/.test(lower)) category='Τρόφιμα';
+  else if(/φαγη|food|burger|pizza|πίτσα|σουβλ/.test(lower)) category='Φαγητό έξω';
+  else if(/βενζ|καυσ|ταξι|taxi|μεταφ/.test(lower)) category='Μεταφορά';
+
+  let paymentSourceName='';
+  if(/ticket|voucher/.test(lower)) paymentSourceName='Ticket';
+  else if(/καρτα|κάρτα|card/.test(lower)) paymentSourceName='Κάρτα';
+  else if(/cash|μετρη/.test(lower)) paymentSourceName='Μετρητά';
+
+  return {name,amount,category,paymentSourceName};
+}
+
+function quickAddPreviewData(text){
+  const value=(text||'').trim();
+  if(!value)return null;
+
+  if(typeof parseExpense==='function'){
+    try{
+      const parsed=parseExpense(value);
+      if(parsed)return parsed;
+    }catch(e){
+      console.warn('quick preview parser failed',e);
+    }
+  }
+
+  return quickAddFallbackParse(value);
+}
+
+function renderSmartQuickPreview(targetId,text){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  const value=(text||'').trim();
+  const parsed=quickAddPreviewData(value);
+
+  if(!value){
+    el.classList.remove('visible','invalid');
+    el.innerHTML='';
+    return;
+  }
+
+  if(!parsed){
+    el.classList.add('visible','invalid');
+    el.innerHTML=`
+      <div class="smart-preview-icon">?</div>
+      <div class="smart-preview-main">
+        <strong>Δεν βρήκα ποσό</strong>
+        <span>Δοκίμασε κάτι σαν “καφές 3”</span>
+      </div>
+    `;
+    return;
+  }
+
+  const icon=(typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌';
+  const amount=(typeof fmt==='function') ? fmt(parsed.amount) : `€${Number(parsed.amount||0).toFixed(2)}`;
+  const payment=parsed.paymentSourceName || 'Budget';
+
+  el.classList.add('visible');
+  el.classList.remove('invalid');
+  el.innerHTML=`
+    <div class="smart-preview-icon">${icon}</div>
+    <div class="smart-preview-main">
+      <strong>${esc(parsed.name || 'Έξοδο')}</strong>
+      <span>${esc(parsed.category || 'Άλλο')} · ${esc(payment)}</span>
+    </div>
+    <div class="smart-preview-amount">-${amount}</div>
+  `;
+}
+
+function renderQuickRepeatChips(){
+  const el=document.getElementById('quickRepeatChips');
+  if(!el || typeof D==='undefined' || typeof curM==='undefined')return;
+
+  const daily=(D.months[curM]?.daily || [])
+    .slice()
+    .sort((a,b)=>String(b.id||'').localeCompare(String(a.id||'')))
+    .slice(0,3);
+
+  if(daily.length===0){
+    el.innerHTML='';
+    return;
+  }
+
+  el.innerHTML=daily.map(e=>{
+    const text=`${e.name} ${String(Number(e.amount)||0).replace('.',',')}`;
+    return `<button type="button" onclick="fillQuickAdd('${esc(text)}')">+ ${esc(e.name)} ${fmt(e.amount)}</button>`;
+  }).join('');
+}
+
+function fillQuickAdd(text){
+  const input=document.getElementById('quickAddInput');
+  if(!input)return;
+  input.value=text;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+}
+
+function setupQuickAddMobileState(){
+  const input=document.getElementById('quickAddInput');
+
+  if(input){
+    const sync=()=>{
+      // Dashboard quick add is intentionally minimal:
+      // input + voice + chips only. No preview, no inline error, no large submit button.
+    };
+
+    input.addEventListener('input',sync);
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        e.stopPropagation();
+        quickAddExpense('quickAddInput',{fallbackToSheet:true});
+      }
+    });
+    sync();
+  }
+
+  const sheetInput=document.getElementById('quickAddSheetInput');
+  const sheetSubmit=document.getElementById('quickAddSheetSubmit');
+
+  if(sheetInput){
+    const syncSheet=()=>{
+      const hasValue=sheetInput.value.trim().length>0;
+      sheetSubmit?.classList.toggle('is-visible',hasValue);
+      renderSmartQuickPreview('quickAddSheetPreview',sheetInput.value);
+      if(hasValue) clearQuickAddInlineError('quickAddSheetError');
+    };
+
+    sheetInput.addEventListener('input',syncSheet);
+    sheetInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        e.stopPropagation();
+        submitQuickAddSheet();
+      }
+    });
+    syncSheet();
+  }
+
+  renderQuickRepeatChips();
+}
+
+function openQuickAddSheet(prefill='',errorMessage=''){
+  const sheet=document.getElementById('quickAddSheet');
+  const input=document.getElementById('quickAddSheetInput');
+  if(!sheet)return;
+
+  sheet.classList.add('active');
+  document.body.classList.add('quick-sheet-open');
+
+  if(input && typeof prefill==='string' && prefill.trim()){
+    input.value=prefill.trim();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  clearQuickAddInlineError('quickAddSheetError');
+
+  if(errorMessage){
+    setQuickAddInlineError(errorMessage,'quickAddSheetError');
+  }
+
+  setTimeout(()=>input?.focus(),120);
+}
+
+function closeQuickAddSheet(event){
+  if(event && event.target && event.target.id!=='quickAddSheet')return;
+
+  const sheet=document.getElementById('quickAddSheet');
+  sheet?.classList.remove('active');
+  document.body.classList.remove('quick-sheet-open');
+}
+
+function fillQuickAddSheet(text){
+  const input=document.getElementById('quickAddSheetInput');
+  if(!input)return;
+  input.value=text;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+}
+
+async function submitQuickAddSheet(){
+  const sheetInput=document.getElementById('quickAddSheetInput');
+
+  clearQuickAddInlineError('quickAddSheetError');
+
+  const text=(sheetInput?.value || '').trim();
+
+  if(!text){
+    sheetInput?.focus();
+    return false;
+  }
+
+  const saved=await quickAddExpense('quickAddSheetInput',{errorTarget:'quickAddSheetError'});
+
+  if(!saved){
+    return false;
+  }
+
+  if(sheetInput){
+    sheetInput.value='';
+    sheetInput.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  closeQuickAddSheet();
+  return true;
+}
+
+document.addEventListener('DOMContentLoaded', setupQuickAddMobileState);
 // initApp() is called from advisor.js
+
+// ===== ADD CENTER V1 — Quick / Αναλυτικό tabs =====
+function addCenterToday(){
+  return new Date().toISOString().split('T')[0];
+}
+
+function fillAddCenterPaymentSources(selectedId=''){
+  const el=document.getElementById('acDPay');
+  if(!el)return;
+
+  const sources=(typeof availablePaymentSources==='function')
+    ? availablePaymentSources()
+    : [];
+
+  el.innerHTML=`
+    <option value="">Κανονικό budget</option>
+    ${sources.map(s=>`
+      <option value="${esc(s.id)}" ${s.id===selectedId?'selected':''}>${esc(s.name)}</option>
+    `).join('')}
+  `;
+
+  if(selectedId){
+    el.value=selectedId;
+  }
+
+  renderAddCenterPaymentPicker();
+  syncAddCenterPaymentPicker();
+}
+
+function paymentSourceLabelById(id){
+  if(!id)return 'Κανονικό budget';
+
+  const source=(typeof paymentSourceById==='function')
+    ? paymentSourceById(id)
+    : (D.incomeSources||[]).find(s=>s.id===id);
+
+  return source?.name || 'Πηγή πληρωμής';
+}
+
+function paymentSourceIconById(id){
+  if(!id)return '💶';
+
+  const source=(typeof paymentSourceById==='function')
+    ? paymentSourceById(id)
+    : (D.incomeSources||[]).find(s=>s.id===id);
+
+  if(source?.restriction && source.restriction!=='none')return '🎫';
+  if(source?.isSavings)return '🏦';
+  if(source?.incomeType==='card')return '💳';
+  return '💰';
+}
+
+function closeAddCenterPaymentPicker(){
+  const list=document.getElementById('acDPayCustomList');
+  const btn=document.getElementById('acDPayCustom');
+  list?.classList.remove('active');
+  btn?.classList.remove('active');
+  btn?.setAttribute('aria-expanded','false');
+}
+
+function renderAddCenterPaymentPicker(){
+  const list=document.getElementById('acDPayCustomList');
+  const select=document.getElementById('acDPay');
+  if(!list || !select)return;
+
+  const options=[...select.options].map(option=>({
+    id:option.value,
+    label:option.textContent || 'Πηγή πληρωμής'
+  }));
+
+  list.innerHTML=options.map(option=>`
+    <button type="button" data-payment-id="${esc(option.id)}" onclick="selectAddCenterPaymentSource('${esc(option.id)}')">
+      <span>${paymentSourceIconById(option.id)}</span>
+      <strong>${esc(option.label)}</strong>
+    </button>
+  `).join('');
+}
+
+function syncAddCenterPaymentPicker(){
+  const select=document.getElementById('acDPay');
+  const text=document.getElementById('acDPayCustomText');
+  const icon=document.getElementById('acDPayCustomIcon');
+  const list=document.getElementById('acDPayCustomList');
+  if(!select)return;
+
+  const value=select.value || '';
+  if(text)text.textContent=paymentSourceLabelById(value);
+  if(icon)icon.textContent=paymentSourceIconById(value);
+
+  list?.querySelectorAll('button').forEach(btn=>{
+    btn.classList.toggle('active',(btn.dataset.paymentId||'')===value);
+  });
+}
+
+function toggleAddCenterPaymentPicker(event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  closeAddCenterCategoryPicker();
+
+  const list=document.getElementById('acDPayCustomList');
+  const btn=document.getElementById('acDPayCustom');
+  if(!list || !btn)return;
+
+  const open=!list.classList.contains('active');
+  list.classList.toggle('active',open);
+  btn.classList.toggle('active',open);
+  btn.setAttribute('aria-expanded',String(open));
+}
+
+function selectAddCenterPaymentSource(id=''){
+  const select=document.getElementById('acDPay');
+  if(!select)return;
+
+  select.value=id;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+  syncAddCenterPaymentPicker();
+  closeAddCenterPaymentPicker();
+  clearQuickAddInlineError('addCenterManualError');
+}
+
+function addCenterCategoryEmoji(category){
+  if(typeof CEMO!=='undefined' && CEMO[category])return CEMO[category];
+
+  return {
+    'Τρόφιμα':'🛒',
+    'Καφέδες':'☕',
+    'Μεταφορά':'🚗',
+    'Ψυχαγωγία':'🎭',
+    'Φαγητό έξω':'🍕',
+    'Λογαριασμοί':'💡',
+    'Υγεία':'🏥',
+    'Ρούχα':'👕',
+    'Δάνεια':'🏦',
+    'Συνδρομές':'📱',
+    'Άλλο':'📌'
+  }[category] || '📌';
+}
+
+function closeAddCenterCategoryPicker(){
+  const list=document.getElementById('acDCCustomList');
+  const btn=document.getElementById('acDCCustom');
+  list?.classList.remove('active');
+  btn?.classList.remove('active');
+  btn?.setAttribute('aria-expanded','false');
+}
+
+function syncAddCenterCategoryPicker(){
+  const select=document.getElementById('acDC');
+  const text=document.getElementById('acDCCustomText');
+  const icon=document.getElementById('acDCCustomIcon');
+  const list=document.getElementById('acDCCustomList');
+  if(!select)return;
+
+  const value=select.value || 'Τρόφιμα';
+  if(text)text.textContent=value;
+  if(icon)icon.textContent=addCenterCategoryEmoji(value);
+
+  list?.querySelectorAll('button').forEach(btn=>{
+    const isActive=(btn.textContent || '').includes(value);
+    btn.classList.toggle('active',isActive);
+  });
+}
+
+function toggleAddCenterCategoryPicker(event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  closeAddCenterPaymentPicker();
+
+  const list=document.getElementById('acDCCustomList');
+  const btn=document.getElementById('acDCCustom');
+  if(!list || !btn)return;
+
+  const open=!list.classList.contains('active');
+  list.classList.toggle('active',open);
+  btn.classList.toggle('active',open);
+  btn.setAttribute('aria-expanded',String(open));
+}
+
+function selectAddCenterCategory(category){
+  const select=document.getElementById('acDC');
+  if(!select)return;
+
+  select.value=category;
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+  syncAddCenterCategoryPicker();
+  closeAddCenterCategoryPicker();
+  clearQuickAddInlineError('addCenterManualError');
+}
+
+function resetAddCenterManualForm(){
+  const name=document.getElementById('acDN');
+  const amount=document.getElementById('acDA');
+  const cat=document.getElementById('acDC');
+  const date=document.getElementById('acDD');
+  const notes=document.getElementById('acDNotes');
+
+  if(name)name.value='';
+  if(amount)amount.value='';
+  if(cat)cat.value='Τρόφιμα';
+  syncAddCenterCategoryPicker();
+  closeAddCenterCategoryPicker();
+  closeAddCenterPaymentPicker();
+  if(date)date.value=addCenterToday();
+  if(notes)notes.value='';
+
+  fillAddCenterPaymentSources('');
+  clearQuickAddInlineError('addCenterManualError');
+}
+
+function switchAddCenterTab(tab='quick'){
+  const quickTab=document.getElementById('addCenterQuickTab');
+  const manualTab=document.getElementById('addCenterManualTab');
+  const quickPanel=document.getElementById('addCenterQuickPanel');
+  const manualPanel=document.getElementById('addCenterManualPanel');
+  const isManual=tab==='manual';
+
+  quickTab?.classList.toggle('active',!isManual);
+  manualTab?.classList.toggle('active',isManual);
+  quickPanel?.classList.toggle('active',!isManual);
+  manualPanel?.classList.toggle('active',isManual);
+
+  quickTab?.setAttribute('aria-selected',String(!isManual));
+  manualTab?.setAttribute('aria-selected',String(isManual));
+
+  setTimeout(()=>{
+    if(isManual){
+      document.getElementById('acDN')?.focus();
+    }else{
+      document.getElementById('quickAddSheetInput')?.focus();
+    }
+  },80);
+}
+
+function renderAddCenterRecentChips(){
+  const el=document.getElementById('addCenterRecentChips');
+  if(!el || typeof D==='undefined' || typeof curM==='undefined')return;
+
+  const daily=(D.months?.[curM]?.daily || [])
+    .slice()
+    .sort((a,b)=>String(b.id||'').localeCompare(String(a.id||'')))
+    .slice(0,3);
+
+  if(daily.length===0){
+    el.innerHTML='<span class="add-center-empty-chip">Δεν υπάρχουν πρόσφατα</span>';
+    return;
+  }
+
+  el.innerHTML=daily.map(e=>{
+    const amountText=String(Number(e.amount)||0).replace('.',',');
+    const text=`${e.name} ${amountText}`;
+    return `<button type="button" onclick="fillQuickAddSheet('${esc(text)}')">+ ${esc(e.name)} ${fmt(e.amount)}</button>`;
+  }).join('');
+}
+
+function openAddCenterSheet(tab='quick',prefill='',errorMessage=''){
+  const sheet=document.getElementById('addCenterSheet') || document.getElementById('quickAddSheet');
+  const input=document.getElementById('quickAddSheetInput');
+  if(!sheet)return;
+
+  sheet.classList.add('active');
+  document.body.classList.add('quick-sheet-open','add-center-open');
+
+  resetAddCenterManualForm();
+  renderAddCenterRecentChips();
+  switchAddCenterTab(tab==='manual'?'manual':'quick');
+
+  if(input && typeof prefill==='string' && prefill.trim()){
+    input.value=prefill.trim();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  clearQuickAddInlineError('quickAddSheetError');
+
+  if(errorMessage){
+    setQuickAddInlineError(errorMessage,'quickAddSheetError');
+  }
+
+  setTimeout(()=>{
+    if(tab==='manual') document.getElementById('acDN')?.focus();
+    else input?.focus();
+  },140);
+}
+
+function closeAddCenterSheet(event){
+  if(event && event.target && event.target.id!=='addCenterSheet')return;
+
+  const sheet=document.getElementById('addCenterSheet');
+  sheet?.classList.remove('active');
+  closeAddCenterCategoryPicker();
+  closeAddCenterPaymentPicker();
+  document.body.classList.remove('quick-sheet-open','add-center-open');
+}
+
+// Backwards compatibility: old calls still open the new Add Center on Quick tab.
+function openQuickAddSheet(prefill='',errorMessage=''){
+  openAddCenterSheet('quick',prefill,errorMessage);
+}
+
+function closeQuickAddSheet(event){
+  closeAddCenterSheet(event);
+}
+
+async function saveAddCenterManualExpense(){
+  const nameEl=document.getElementById('acDN');
+  const amountEl=document.getElementById('acDA');
+  const catEl=document.getElementById('acDC');
+  const payEl=document.getElementById('acDPay');
+  const dateEl=document.getElementById('acDD');
+  const btn=document.getElementById('addCenterManualSubmit');
+
+  clearQuickAddInlineError('addCenterManualError');
+
+  const name=(nameEl?.value||'').trim();
+  const amount=parseFloat(String(amountEl?.value||'').replace(',','.'));
+  const category=catEl?.value||'Άλλο';
+  const paymentSourceId=payEl?.value||'';
+  const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
+  const date=dateEl?.value||addCenterToday();
+  const userId=localStorage.getItem(SK);
+
+  if(!name){
+    setQuickAddInlineError('Συμπλήρωσε τίτλο εξόδου.','addCenterManualError');
+    nameEl?.focus();
+    return false;
+  }
+
+  if(!amount || amount<=0){
+    setQuickAddInlineError('Συμπλήρωσε έγκυρο ποσό.','addCenterManualError');
+    amountEl?.focus();
+    return false;
+  }
+
+  if(!userId){
+    setQuickAddInlineError('Δεν υπάρχει ενεργή σύνδεση.','addCenterManualError');
+    return false;
+  }
+
+  const expense={
+    id:gid(),
+    name,
+    amount,
+    category,
+    date,
+    paymentSourceId,
+    paymentSourceName:paymentSource?.name||'',
+    paymentSourceType:paymentSource?.incomeType||''
+  };
+
+  const monthKey=date.substring(0,7);
+  ensM(monthKey);
+  D.months[monthKey].daily.push(expense);
+
+  try{
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='Αποθήκευση...';
+    }
+
+    await saveDailyExpenseRow(userId,expense);
+    curM=monthKey;
+    render();
+    closeAddCenterSheet();
+    showMiniToast('✅ Το έξοδο αποθηκεύτηκε');
+    return true;
+
+  }catch(e){
+    D.months[monthKey].daily=D.months[monthKey].daily.filter(x=>x.id!==expense.id);
+    console.error('saveAddCenterManualExpense failed:',e);
+    setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.','addCenterManualError');
+    return false;
+
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Αποθήκευση εξόδου';
+    }
+  }
+}
+
+function setupAddCenterState(){
+  syncAddCenterCategoryPicker();
+
+  const manualFields=['acDN','acDA','acDC','acDPay','acDD','acDNotes'];
+  manualFields.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',()=>clearQuickAddInlineError('addCenterManualError'));
+    el.addEventListener('change',()=>clearQuickAddInlineError('addCenterManualError'));
+  });
+
+  document.addEventListener('click',e=>{
+    const list=document.getElementById('acDCCustomList');
+    const btn=document.getElementById('acDCCustom');
+    if(!list?.classList.contains('active'))return;
+    if(list.contains(e.target) || btn?.contains(e.target))return;
+    closeAddCenterCategoryPicker();
+    closeAddCenterPaymentPicker();
+  });
+
+  document.addEventListener('keydown',e=>{
+    const sheet=document.getElementById('addCenterSheet');
+    if(e.key==='Escape' && sheet?.classList.contains('active')){
+      closeAddCenterSheet();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', setupAddCenterState);
+
+
+// Compatibility helpers: any page-level add button should open the shared Add Center.
+function openAddCenter(tab='quick', prefill='', errorMessage=''){
+  return openAddCenterSheet(tab, prefill, errorMessage);
+}
+
+function openDailyAddCenter(){
+  return openAddCenterSheet('manual');
+}
+
+
+/* ============================================================
+   TRANSACTIONS COMPLETE V3 — mobile management layer
+   - Details sheet actions
+   - Edit through shared Add Center
+   - Duplicate prefill
+   - Premium delete confirmation
+   - Better mobile date grouping
+   ============================================================ */
+
+let txCompleteDetailState = null;
+let addCenterEditState = null;
+
+function txCompleteTodayISO(){
+  return new Date().toISOString().split('T')[0];
+}
+
+function txCompleteDateLabel(dateStr){
+  if(!dateStr)return 'Χωρίς ημερομηνία';
+  const d=new Date(dateStr+'T12:00:00');
+  const today=txCompleteTodayISO();
+  const y=new Date();
+  y.setDate(y.getDate()-1);
+  const yesterday=y.toISOString().split('T')[0];
+
+  if(dateStr===today)return 'Σήμερα';
+  if(dateStr===yesterday)return 'Χθες';
+
+  return d.toLocaleDateString('el-GR',{
+    weekday:'long',
+    day:'2-digit',
+    month:'long'
+  });
+}
+
+function txCompleteLongDate(dateStr){
+  if(!dateStr)return '-';
+  return new Date(dateStr+'T12:00:00').toLocaleDateString('el-GR',{
+    weekday:'long',
+    day:'2-digit',
+    month:'long',
+    year:'numeric'
+  });
+}
+
+function txCompleteFindDailyById(id){
+  let found=null;
+  Object.values(D.months||{}).forEach(m=>{
+    const x=(m.daily||[]).find(e=>e.id===id);
+    if(x)found=x;
+  });
+  return found;
+}
+
+function txCompleteFindByTypeAndId(type,id){
+  if(type==='fixed')return (D.fixedExpenses||[]).find(e=>e.id===id)||null;
+  return txCompleteFindDailyById(id);
+}
+
+function txCompletePaymentText(e,type){
+  if(type==='fixed')return 'Σταθερό έξοδο';
+  if(e.paymentSourceName)return e.paymentSourceName;
+  return 'Budget / Μετρητά';
+}
+
+function txCompleteFillManualForm(e,{edit=false}={}){
+  if(!e)return;
+
+  const nameEl=document.getElementById('acDN');
+  const amountEl=document.getElementById('acDA');
+  const catEl=document.getElementById('acDC');
+  const payEl=document.getElementById('acDPay');
+  const dateEl=document.getElementById('acDD');
+  const notesEl=document.getElementById('acDNotes');
+  const submit=document.getElementById('addCenterManualSubmit');
+
+  if(nameEl)nameEl.value=e.name||'';
+  if(amountEl)amountEl.value=Number(e.amount||0);
+  if(catEl)catEl.value=e.category||'Άλλο';
+  if(payEl)payEl.value=e.paymentSourceId||'';
+  if(dateEl)dateEl.value=e.date||addCenterToday();
+  if(notesEl)notesEl.value=e.notes||'';
+
+  if(typeof syncAddCenterCategoryPicker==='function')syncAddCenterCategoryPicker();
+  if(typeof syncAddCenterPaymentPicker==='function')syncAddCenterPaymentPicker();
+
+  if(submit){
+    submit.textContent=edit?'Ενημέρωση εξόδου':'Αποθήκευση εξόδου';
+  }
+}
+
+function txCompleteOpenManualForEdit(type,id){
+  const e=txCompleteFindByTypeAndId(type,id);
+  if(!e)return;
+
+  closeMobileTransactionDetail();
+
+  if(type==='fixed'){
+    // Fixed expenses keep the existing fixed-expense edit modal for now.
+    return txCompleteLegacyEditExp ? txCompleteLegacyEditExp(type,id) : undefined;
+  }
+
+  addCenterEditState={type,id};
+  openAddCenterSheet('manual');
+
+  setTimeout(()=>{
+    txCompleteFillManualForm(e,{edit:true});
+    document.getElementById('acDN')?.focus();
+  },80);
+}
+
+function txCompleteOpenManualForDuplicate(type,id){
+  const e=txCompleteFindByTypeAndId(type,id);
+  if(!e)return;
+
+  closeMobileTransactionDetail();
+
+  const copy={
+    ...e,
+    id:'',
+    date:txCompleteTodayISO()
+  };
+
+  addCenterEditState=null;
+  openAddCenterSheet('manual');
+
+  setTimeout(()=>{
+    txCompleteFillManualForm(copy,{edit:false});
+    showMiniToast('Έτοιμο αντίγραφο για αποθήκευση');
+    document.getElementById('acDN')?.focus();
+  },80);
+}
+
+async function txCompleteDeleteWithConfirm(type,id){
+  const e=txCompleteFindByTypeAndId(type,id);
+  if(!e)return;
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή κίνησης',
+    message:`Θέλεις να διαγράψεις το «${e.name}»;`,
+    confirmText:'Διαγραφή',
+    cancelText:'Άκυρο'
+  });
+
+  if(!confirmed)return;
+
+  closeMobileTransactionDetail();
+
+  try{
+    await deleteExpenseRow(type,id);
+
+    if(type==='fixed'){
+      D.fixedExpenses=(D.fixedExpenses||[]).filter(x=>x.id!==id);
+    }else{
+      Object.values(D.months||{}).forEach(m=>{
+        m.daily=(m.daily||[]).filter(x=>x.id!==id);
+      });
+    }
+
+    render();
+    showMiniToast('✅ Η κίνηση διαγράφηκε');
+  }catch(err){
+    console.error('txCompleteDeleteWithConfirm failed:',err);
+    showMiniToast('❌ Δεν έγινε διαγραφή','error');
+  }
+}
+
+function showMobileTransactionDetail(type,id){
+  if(window.innerWidth>768){
+    return (type==='fixed') ? editExp(type,id) : undefined;
+  }
+
+  const e=txCompleteFindByTypeAndId(type,id);
+  if(!e)return;
+
+  txCompleteDetailState={type,id};
+
+  const overlay=document.getElementById('mobileTransactionDetail');
+  const content=document.getElementById('mobileTransactionDetailContent');
+  if(!overlay || !content)return;
+
+  const icon=CEMO[e.category]||'📌';
+  const payText=txCompletePaymentText(e,type);
+  const category=e.category||'Άλλο';
+  const amount=Number(e.amount)||0;
+
+  content.innerHTML=`
+    <div class="tx-v3-detail-head">
+      <button class="tx-v3-sheet-close" type="button" onclick="closeMobileTransactionDetail()">×</button>
+      <div class="tx-v3-detail-icon ${CCLS[category]||'cat-other'}">${icon}</div>
+      <div class="tx-v3-detail-kicker">${type==='fixed'?'Πάγιο':'Ημερήσιο έξοδο'}</div>
+      <h3>${esc(e.name)}</h3>
+      <div class="tx-v3-detail-amount">-${fmt(amount)}</div>
+      <div class="tx-v3-detail-subtitle">${esc(category)} · ${esc(payText)}</div>
+    </div>
+
+    <div class="tx-v3-detail-grid">
+      <div class="tx-v3-info-tile">
+        <span>Ημερομηνία</span>
+        <strong>${txCompleteLongDate(e.date)}</strong>
+      </div>
+      <div class="tx-v3-info-tile">
+        <span>Κατηγορία</span>
+        <strong>${esc(category)}</strong>
+      </div>
+      <div class="tx-v3-info-tile">
+        <span>Πληρωμή</span>
+        <strong>${esc(payText)}</strong>
+      </div>
+      <div class="tx-v3-info-tile">
+        <span>ID</span>
+        <strong>${esc(String(e.id||'').slice(0,8))}</strong>
+      </div>
+    </div>
+
+    <div class="tx-v3-detail-actions">
+      <button type="button" class="tx-v3-action primary" onclick="txCompleteOpenManualForEdit('${type}','${id}')">✎ Επεξεργασία</button>
+      <button type="button" class="tx-v3-action secondary" onclick="txCompleteOpenManualForDuplicate('${type}','${id}')">⧉ Αντιγραφή</button>
+      <button type="button" class="tx-v3-action danger" onclick="txCompleteDeleteWithConfirm('${type}','${id}')">🗑 Διαγραφή</button>
+    </div>
+  `;
+
+  overlay.classList.add('active');
+  document.body.classList.add('sheet-open');
+}
+
+function closeMobileTransactionDetail(){
+  const overlay=document.getElementById('mobileTransactionDetail');
+  overlay?.classList.remove('active');
+  document.body.classList.remove('sheet-open');
+  txCompleteDetailState=null;
+}
+
+function txCompleteDailyRow(e){
+  const category=e.category||'Άλλο';
+  const c=CCLS[category]||'cat-other';
+  const em=CEMO[category]||'📌';
+  const pay=e.paymentSourceName ? ` · ${esc(e.paymentSourceName)}` : '';
+  const isSelected=selectedDaily.has(e.id);
+  const showSelect=selectionMode.daily;
+
+  return `
+    <div class="expense-item tx-v3-row fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('daily','${e.id}')`:''}">
+      ${showSelect?`
+        <label class="select-box" onclick="event.stopPropagation()">
+          <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('daily','${e.id}',this.checked)">
+        </label>`:''}
+      <div class="expense-icon ${c}">${em}</div>
+      <div class="expense-info">
+        <div class="expense-name">${esc(e.name)}</div>
+        <div class="expense-cat">${esc(category)}${pay}</div>
+      </div>
+      <div class="tx-v3-row-right">
+        <div class="expense-amount">-${fmt(e.amount)}</div>
+        <span>Άνοιγμα</span>
+      </div>
+    </div>`;
+}
+
+function renderDailyList(){
+  const m=D.months[curM]||{daily:[]};
+  const countEl=$('cDaily');
+  const listEl=$('lDaily');
+  if(!countEl || !listEl)return;
+
+  countEl.innerHTML=`
+    ${m.daily.length} εγγραφές
+    <button class="mini-action" onclick="toggleSelectMode('daily')">${selectionMode.daily?'Άκυρο':'Επιλογή'}</button>
+    ${selectionMode.daily?`
+      <button class="mini-action" onclick="selectAllVisible('daily')">Όλα</button>
+      <button class="mini-action" onclick="clearSelected('daily')">Κανένα</button>
+      <button class="mini-action danger" onclick="bulkDelete('daily')">Διαγραφή</button>
+    `:''}
+  `;
+
+  if((m.daily||[]).length===0){
+    listEl.innerHTML=`
+      <div class="empty tx-v3-empty">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Δεν έχεις κινήσεις ακόμα. Πάτα το + για νέα καταχώρηση.
+      </div>`;
+    return;
+  }
+
+  const filtered=[...(m.daily||[])]
+    .filter(e=>mobileTransactionMatchesSearch(e) && mobileTransactionMatchesFilter(e))
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || String(b.id||'').localeCompare(String(a.id||'')));
+
+  if(filtered.length===0){
+    listEl.innerHTML=`
+      <div class="empty tx-v3-empty">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+        Δεν υπάρχουν κινήσεις με αυτά τα φίλτρα.
+      </div>`;
+    return;
+  }
+
+  const grouped={};
+  filtered.forEach(e=>{
+    const key=e.date||'no-date';
+    if(!grouped[key])grouped[key]=[];
+    grouped[key].push(e);
+  });
+
+  let html='';
+  Object.keys(grouped).sort().reverse().forEach(dt=>{
+    const dayTotal=grouped[dt].reduce((s,e)=>s+(Number(e.amount)||0),0);
+    html+=`
+      <div class="day-header tx-v3-day-header">
+        <div>
+          <span>${txCompleteDateLabel(dt)}</span>
+          <small>${grouped[dt].length} κινήσεις</small>
+        </div>
+        <span class="day-total">-${fmt(dayTotal)}</span>
+      </div>`;
+    grouped[dt].forEach(e=>html+=txCompleteDailyRow(e));
+  });
+
+  listEl.innerHTML=html;
+}
+
+const txCompleteLegacyEditExp = typeof editExp==='function' ? editExp : null;
+function editExp(t,id){
+  if(t==='daily' && window.innerWidth<=768){
+    return txCompleteOpenManualForEdit(t,id);
+  }
+  return txCompleteLegacyEditExp ? txCompleteLegacyEditExp(t,id) : undefined;
+}
+
+function closeAddCenterSheet(event){
+  if(event && event.target && event.target.id!=='addCenterSheet')return;
+
+  addCenterEditState=null;
+
+  const submit=document.getElementById('addCenterManualSubmit');
+  if(submit)submit.textContent='Αποθήκευση εξόδου';
+
+  const sheet=document.getElementById('addCenterSheet');
+  sheet?.classList.remove('active');
+
+  if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
+  if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
+
+  document.body.classList.remove('quick-sheet-open','add-center-open');
+}
+
+async function saveAddCenterManualExpense(){
+  const nameEl=document.getElementById('acDN');
+  const amountEl=document.getElementById('acDA');
+  const catEl=document.getElementById('acDC');
+  const payEl=document.getElementById('acDPay');
+  const dateEl=document.getElementById('acDD');
+  const btn=document.getElementById('addCenterManualSubmit');
+
+  clearQuickAddInlineError('addCenterManualError');
+
+  const name=(nameEl?.value||'').trim();
+  const amount=parseFloat(String(amountEl?.value||'').replace(',','.'));
+  const category=catEl?.value||'Άλλο';
+  const paymentSourceId=payEl?.value||'';
+  const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
+  const date=dateEl?.value||addCenterToday();
+  const userId=localStorage.getItem(SK);
+  const editing=addCenterEditState?.type==='daily';
+  const id=editing ? addCenterEditState.id : gid();
+
+  if(!name){
+    setQuickAddInlineError('Συμπλήρωσε τίτλο εξόδου.','addCenterManualError');
+    nameEl?.focus();
+    return false;
+  }
+
+  if(!amount || amount<=0){
+    setQuickAddInlineError('Συμπλήρωσε έγκυρο ποσό.','addCenterManualError');
+    amountEl?.focus();
+    return false;
+  }
+
+  if(!userId){
+    setQuickAddInlineError('Δεν υπάρχει ενεργή σύνδεση.','addCenterManualError');
+    return false;
+  }
+
+  const expense={
+    id,
+    name,
+    amount,
+    category,
+    date,
+    paymentSourceId,
+    paymentSourceName:paymentSource?.name||'',
+    paymentSourceType:paymentSource?.incomeType||''
+  };
+
+  const monthKey=date.substring(0,7);
+  ensM(monthKey);
+
+  // Optimistic local update. For edits, remove the old copy from every month first.
+  if(editing){
+    Object.values(D.months||{}).forEach(m=>{
+      m.daily=(m.daily||[]).filter(x=>x.id!==id);
+    });
+  }
+
+  D.months[monthKey].daily.push(expense);
+
+  try{
+    if(btn){
+      btn.disabled=true;
+      btn.textContent=editing?'Ενημέρωση...':'Αποθήκευση...';
+    }
+
+    await saveDailyExpenseRow(userId,expense);
+    curM=monthKey;
+    addCenterEditState=null;
+    render();
+    closeAddCenterSheet();
+    showMiniToast(editing?'✅ Η κίνηση ενημερώθηκε':'✅ Το έξοδο αποθηκεύτηκε');
+    return true;
+
+  }catch(e){
+    console.error('saveAddCenterManualExpense v3 failed:',e);
+    // Safest recovery: reload canonical data if possible.
+    try{
+      await fetchAllData(userId);
+      render();
+    }catch(reloadErr){
+      console.error('Reload after save failure failed:',reloadErr);
+    }
+    setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.','addCenterManualError');
+    return false;
+
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent=addCenterEditState?'Ενημέρωση εξόδου':'Αποθήκευση εξόδου';
+    }
+  }
+}

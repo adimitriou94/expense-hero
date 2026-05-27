@@ -1,0 +1,88 @@
+/* ============================================================
+   VARIABLES.CSS — Design tokens
+   ============================================================ */
+
+:root {
+
+  /* ===== BRAND / ACCENT ===== */
+  --accent:        #534AB7;
+  --accent-light:  #EEEDFE;
+  --accent-mid:    #7F77DD;
+  --accent-dark:   #3C3489;
+  --accent-deeper: #26215C;
+
+  /* ===== HERO GRADIENTS ===== */
+  --hero-gradient:  linear-gradient(145deg, #1a1450 0%, #2d2573 40%, #3a2f8a 70%, #26215C 100%);
+  --hero-glow-1:    rgba(127,119,221,.4);
+  --hero-glow-2:    rgba(83,74,183,.25);
+
+  /* ===== NEUTRALS ===== */
+  --bg:     #f4f6fb;
+  --bg2:    #ffffff;
+  --bg3:    #edf0f7;
+
+  --text:   #0f172a;
+  --text2:  #64748b;
+  --text3:  #94a3b8;
+
+  --border:  #e2e5ed;
+  --border2: #d1d5db;
+
+  /* ===== SEMANTIC COLORS ===== */
+  --teal:        #10b981;
+  --teal-light:  #dff8ef;
+  --teal-dark:   #065f46;
+
+  --red:         #ef4444;
+  --red-light:   #fee2e2;
+  --red-dark:    #991b1b;
+
+  --amber:       #f59e0b;
+  --amber-light: #fef3c7;
+  --amber-dark:  #92400e;
+
+  --blue:        #3b82f6;
+  --blue-light:  #dbeafe;
+  --blue-dark:   #1e40af;
+
+  --purple:      #8b5cf6;
+  --purple-light:#ede9fe;
+  --purple-dark: #5b21b6;
+
+  /* ===== TYPOGRAPHY ===== */
+  --font: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+
+  /* ===== RADIUS ===== */
+  --radius:    22px;
+  --radius-sm: 14px;
+  --radius-xs: 8px;
+  --radius-pill: 999px;
+
+  /* ===== SHADOWS ===== */
+  --shadow:       0 16px 48px rgba(15,23,42,.09);
+  --shadow-soft:  0 8px 24px rgba(15,23,42,.06);
+  --shadow-card:  0 2px 8px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+  --shadow-float: 0 12px 36px rgba(83,74,183,.18);
+
+  /* ===== TRANSITIONS ===== */
+  --t-fast:   .15s cubic-bezier(.4,0,.2,1);
+  --t-normal: .25s cubic-bezier(.4,0,.2,1);
+  --t-slow:   .4s cubic-bezier(.4,0,.2,1);
+  --t-spring: .5s cubic-bezier(.34,1.56,.64,1);
+
+  /* ===== MOBILE LAYOUT ===== */
+  --bottom-nav-height:  64px;
+  --header-height:      58px;
+  --safe-bottom:        env(safe-area-inset-bottom, 0px);
+  --safe-top:           env(safe-area-inset-top, 0px);
+
+  /* ===== Z-INDEX SCALE ===== */
+  --z-base:     1;
+  --z-header:   100;
+  --z-nav:      200;
+  --z-fab:      300;
+  --z-modal:    400;
+  --z-toast:    500;
+  --z-auth:     1000;
+}

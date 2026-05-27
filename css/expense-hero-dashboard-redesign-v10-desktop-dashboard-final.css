@@ -1,0 +1,2546 @@
+
+/* ============================================================
+   EXPENSE HERO — DASHBOARD REDESIGN V1
+   Scope: dashboard only. Does not change Supabase/Telegram/app logic.
+   Add this file AFTER desktop.css.
+   ============================================================ */
+
+:root{
+  --dash-bg:#f6f7fb;
+  --dash-surface:rgba(255,255,255,.82);
+  --dash-surface-solid:#ffffff;
+  --dash-ink:#101828;
+  --dash-muted:#667085;
+  --dash-soft:#eef2f7;
+  --dash-line:rgba(16,24,40,.08);
+  --dash-purple:#6d5dfc;
+  --dash-lilac:#8b7cff;
+  --dash-cyan:#22d3ee;
+  --dash-green:#12b981;
+  --dash-orange:#f59e0b;
+  --dash-red:#ef4444;
+  --dash-shadow:0 20px 60px rgba(16,24,40,.10);
+  --dash-shadow-soft:0 10px 28px rgba(16,24,40,.07);
+}
+
+body:not(.auth-pending){
+  background:
+    radial-gradient(circle at 10% 0%,rgba(109,93,252,.14),transparent 34%),
+    radial-gradient(circle at 95% 12%,rgba(34,211,238,.12),transparent 28%),
+    linear-gradient(180deg,#fbfcff 0%,var(--dash-bg) 46%,#eef2f7 100%);
+}
+
+/* hide the old dashboard-grid rules only for the new dashboard */
+.modern-dashboard-shell{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+}
+
+.modern-dashboard-main,
+.modern-dashboard-side,
+.modern-dashboard-lists{
+  min-width:0;
+}
+
+.modern-dashboard-topline{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:2px 2px 0;
+}
+
+.modern-kicker{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  margin-bottom:6px;
+  color:var(--dash-purple);
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.13em;
+}
+
+.modern-dashboard-topline h2{
+  font-size:28px;
+  line-height:1;
+  letter-spacing:-1.2px;
+  color:var(--dash-ink);
+  margin:0;
+}
+
+.modern-dashboard-topline p{
+  margin-top:8px;
+  max-width:540px;
+  color:var(--dash-muted);
+  font-size:14px;
+  line-height:1.45;
+}
+
+.modern-month-chip{
+  border:none;
+  white-space:nowrap;
+  border-radius:999px;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:var(--dash-shadow-soft);
+  color:var(--dash-ink);
+  padding:10px 13px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.modern-hero-card{
+  margin-top:16px;
+  min-height:292px;
+  padding:24px;
+  border-radius:34px;
+  background:
+    radial-gradient(circle at 88% 12%,rgba(34,211,238,.50),transparent 30%),
+    radial-gradient(circle at 10% 90%,rgba(139,124,255,.46),transparent 34%),
+    linear-gradient(145deg,#111827 0%,#25215f 45%,#6d5dfc 100%) !important;
+  box-shadow:0 26px 70px rgba(49,46,129,.28);
+  overflow:hidden;
+}
+
+.modern-hero-pattern{
+  position:absolute;
+  inset:0;
+  opacity:.16;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.16) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(90deg,transparent,black 18%,black 82%,transparent);
+}
+
+.modern-hero-header{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.modern-hero-card .eyebrow{
+  color:rgba(255,255,255,.62);
+  font-size:11px;
+  letter-spacing:.15em;
+}
+
+.modern-hero-card .hero-balance{
+  margin-top:8px;
+  font-size:46px;
+  line-height:.96;
+  letter-spacing:-3px;
+  font-family:var(--font);
+  font-weight:900;
+  color:#fff !important;
+  text-shadow:0 12px 32px rgba(0,0,0,.28);
+}
+
+.modern-hero-caption{
+  margin-top:12px;
+  color:rgba(255,255,255,.66);
+  font-size:13px;
+  line-height:1.45;
+  max-width:360px;
+}
+
+.modern-hero-action{
+  border-radius:999px;
+  padding:10px 14px;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.modern-hero-metrics{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:28px;
+}
+
+.modern-metric-pill{
+  padding:14px;
+  border-radius:22px;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(14px);
+}
+
+.modern-metric-pill span{
+  display:block;
+  color:rgba(255,255,255,.62);
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.modern-metric-pill strong{
+  display:block;
+  margin-top:6px;
+  color:white;
+  font-size:18px;
+  font-weight:900;
+}
+
+.modern-progress-block{
+  position:relative;
+  z-index:2;
+  margin-top:20px;
+}
+
+.modern-progress-block .progress-track{
+  height:12px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.modern-progress-block .progress-fill{
+  background:linear-gradient(90deg,#34d399,#22d3ee,#a7f3d0);
+  box-shadow:0 0 20px rgba(34,211,238,.42);
+}
+
+.modern-quick-add-card{
+  margin-top:14px;
+  background:rgba(255,255,255,.86);
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:var(--dash-shadow);
+  border-radius:30px;
+  padding:16px;
+  backdrop-filter:blur(20px);
+}
+
+.modern-quick-add-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.modern-quick-add-head div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--dash-ink);
+  font-size:14px;
+}
+
+.modern-quick-add-head small{
+  color:var(--dash-muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+.modern-dot-live{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  background:var(--dash-green);
+  box-shadow:0 0 0 5px rgba(18,185,129,.12);
+}
+
+.modern-quick-add-box{
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:none;
+}
+
+.modern-quick-add-row{
+  display:grid;
+  grid-template-columns:1fr 48px auto;
+  gap:8px;
+}
+
+.modern-quick-add-row input{
+  height:52px;
+  border-radius:18px;
+  border:1px solid var(--dash-line);
+  background:#f8fafc;
+  padding:0 15px;
+  font-size:15px;
+  color:var(--dash-ink);
+  outline:none;
+}
+
+.modern-quick-add-row input:focus{
+  background:white;
+  border-color:rgba(109,93,252,.36);
+  box-shadow:0 0 0 4px rgba(109,93,252,.10);
+}
+
+.modern-icon-btn,
+.modern-add-btn{
+  height:52px;
+  border:none;
+  border-radius:18px;
+  font-weight:900;
+}
+
+.modern-icon-btn{
+  background:#eef2ff;
+  color:var(--dash-purple);
+}
+
+.modern-add-btn{
+  padding:0 16px;
+  background:#111827;
+  color:white;
+  box-shadow:0 12px 24px rgba(17,24,39,.18);
+}
+
+.modern-quick-hints{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:11px;
+  color:var(--dash-muted);
+}
+
+.modern-quick-hints span{
+  display:inline-flex;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#f1f5f9;
+  font-size:11px;
+  font-weight:800;
+}
+
+.modern-side-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:2px 2px 12px;
+}
+
+.modern-side-title span{
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:-.3px;
+  color:var(--dash-ink);
+}
+
+.modern-side-title small{
+  color:var(--dash-muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+.modern-stats-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.modern-stat-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:104px;
+  padding:15px;
+  border-radius:26px;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid rgba(255,255,255,.9) !important;
+  box-shadow:var(--dash-shadow-soft);
+}
+
+.modern-stat-card .widget-icon{
+  width:44px;
+  height:44px;
+  margin:0;
+  border-radius:16px;
+  flex-shrink:0;
+}
+
+.modern-stat-card .stat-label{
+  font-size:10px;
+  letter-spacing:.10em;
+}
+
+.modern-stat-card .stat-value{
+  margin-top:5px;
+  font-family:var(--font);
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:-.8px;
+}
+
+.modern-stat-primary{
+  background:linear-gradient(145deg,#ecfdf5,#ffffff) !important;
+}
+
+.modern-payment-widget{
+  margin-top:14px;
+  border-radius:28px;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid rgba(255,255,255,.9) !important;
+  box-shadow:var(--dash-shadow-soft);
+}
+
+.modern-dashboard-lists{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+
+.modern-list-card{
+  padding:0 !important;
+  overflow:hidden;
+  border-radius:30px !important;
+  background:rgba(255,255,255,.84) !important;
+  border:1px solid rgba(255,255,255,.92) !important;
+  box-shadow:var(--dash-shadow-soft);
+}
+
+.modern-list-header{
+  padding:18px 18px 13px !important;
+  border-bottom:1px solid rgba(16,24,40,.06);
+}
+
+.modern-list-card .section-add{
+  border-radius:999px;
+  background:#111827;
+  color:white;
+  box-shadow:0 10px 20px rgba(17,24,39,.14);
+}
+
+.modern-list-card .expense-list{
+  padding:12px !important;
+}
+
+.modern-list-card .expense-item{
+  background:#fff !important;
+  border:1px solid rgba(16,24,40,.06) !important;
+  box-shadow:0 6px 18px rgba(16,24,40,.04);
+  border-radius:22px !important;
+  padding:13px !important;
+  margin-bottom:10px !important;
+}
+
+.modern-list-card .expense-icon{
+  border-radius:17px !important;
+}
+
+@media (max-width:520px){
+  .view#vDash{padding:12px 12px 0;}
+  .modern-dashboard-topline{align-items:flex-start;}
+  .modern-dashboard-topline h2{font-size:25px;}
+  .modern-dashboard-topline p{font-size:13px;}
+  .modern-month-chip{display:none;}
+  .modern-hero-card{border-radius:30px;padding:20px;min-height:286px;}
+  .modern-hero-header{flex-direction:column;}
+  .modern-hero-action{align-self:flex-start;}
+  .modern-hero-card .hero-balance{font-size:42px;}
+  .modern-hero-metrics{margin-top:22px;}
+  .modern-quick-add-row{grid-template-columns:1fr 48px;}
+  .modern-add-btn{grid-column:1 / -1;width:100%;}
+  .modern-stats-grid{gap:10px;}
+  .modern-stat-card{min-height:98px;padding:13px;align-items:flex-start;flex-direction:column;}
+}
+
+@media (min-width:768px){
+  .view#vDash{padding:0;}
+  .modern-dashboard-shell{
+    grid-template-columns:minmax(0,1.65fr) minmax(280px,.85fr);
+    gap:22px;
+    align-items:start;
+  }
+  .modern-dashboard-main{grid-column:1;}
+  .modern-dashboard-side{grid-column:2;position:sticky;top:22px;}
+  .modern-dashboard-lists{grid-column:1 / -1;grid-template-columns:1fr 1fr;gap:18px;}
+  .modern-dashboard-topline h2{font-size:38px;letter-spacing:-1.8px;}
+  .modern-hero-card{min-height:330px;padding:30px;border-radius:38px;}
+  .modern-hero-card .hero-balance{font-size:64px;letter-spacing:-4px;}
+  .modern-hero-caption{font-size:14px;}
+  .modern-hero-metrics{max-width:520px;}
+  .modern-quick-add-card{padding:18px;border-radius:32px;}
+  .modern-stats-grid{grid-template-columns:1fr;}
+  .modern-stat-card{min-height:94px;}
+  .modern-list-card .expense-list{max-height:520px;overflow:auto;}
+}
+
+@media (min-width:1100px){
+  .modern-dashboard-shell{grid-template-columns:minmax(0,1.7fr) 360px;}
+  .modern-dashboard-lists{grid-template-columns:1fr 1fr;}
+}
+
+
+/* ============================================================
+   DESKTOP FIX V2 — fixes from screenshot
+   Focus: desktop dashboard only.
+   ============================================================ */
+
+@media (min-width:768px){
+
+  /* Better desktop grid balance */
+  .modern-dashboard-shell{
+    grid-template-columns:minmax(0,1fr) 340px !important;
+    column-gap:24px !important;
+    row-gap:22px !important;
+    align-items:start !important;
+  }
+
+  .modern-dashboard-main{
+    grid-column:1 !important;
+    min-width:0 !important;
+  }
+
+  .modern-dashboard-side{
+    grid-column:2 !important;
+    position:relative !important;
+    top:auto !important;
+    align-self:start !important;
+    min-width:0 !important;
+  }
+
+  .modern-dashboard-lists{
+    grid-column:1 / -1 !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:18px !important;
+    align-items:start !important;
+    margin-top:0 !important;
+  }
+
+  /* Hero slightly smaller so it does not dominate the page */
+  .modern-hero-card{
+    min-height:300px !important;
+    padding:28px !important;
+    border-radius:34px !important;
+  }
+
+  .modern-hero-card .hero-balance{
+    font-size:56px !important;
+    line-height:.95 !important;
+  }
+
+  .modern-hero-metrics{
+    margin-top:24px !important;
+  }
+
+  .modern-progress-block{
+    margin-top:18px !important;
+  }
+
+  /* Quick add: fix oversized/empty-looking button and tighten spacing */
+  .modern-quick-add-card{
+    margin-top:14px !important;
+    padding:16px !important;
+    border-radius:26px !important;
+  }
+
+  .modern-quick-add-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 52px 158px !important;
+    gap:10px !important;
+    align-items:center !important;
+  }
+
+  .modern-quick-add-row input{
+    min-width:0 !important;
+    height:50px !important;
+    border-radius:17px !important;
+  }
+
+  .modern-quick-add-row .modern-icon-btn,
+  .modern-quick-add-row .quick-voice-btn{
+    width:52px !important;
+    min-width:52px !important;
+    height:50px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:17px !important;
+    background:#f1f3ff !important;
+    color:var(--dash-purple) !important;
+    box-shadow:none !important;
+    padding:0 !important;
+    font-size:17px !important;
+  }
+
+  .modern-quick-add-row .modern-add-btn{
+    width:100% !important;
+    min-width:158px !important;
+    height:50px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:17px !important;
+    background:linear-gradient(135deg,var(--dash-purple),#4f46e5) !important;
+    color:#fff !important;
+    box-shadow:0 14px 28px rgba(79,70,229,.22) !important;
+    padding:0 16px !important;
+    font-size:13px !important;
+    font-weight:900 !important;
+    white-space:nowrap !important;
+  }
+
+  .modern-quick-hints{
+    margin-top:10px !important;
+  }
+
+  /* Snapshot: make it a compact clean vertical list instead of giant cards */
+  .modern-side-title{
+    margin:0 2px 10px !important;
+  }
+
+  .modern-stats-grid{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+  .modern-stat-card{
+    min-height:72px !important;
+    height:auto !important;
+    padding:12px 14px !important;
+    border-radius:22px !important;
+    display:grid !important;
+    grid-template-columns:44px minmax(0,1fr) !important;
+    align-items:center !important;
+    gap:12px !important;
+    box-shadow:0 10px 26px rgba(16,24,40,.055) !important;
+  }
+
+  .modern-stat-card .widget-icon{
+    width:42px !important;
+    height:42px !important;
+    border-radius:15px !important;
+    font-size:17px !important;
+  }
+
+  .modern-stat-card .stat-label{
+    font-size:10px !important;
+    letter-spacing:.09em !important;
+    line-height:1.1 !important;
+    margin:0 !important;
+  }
+
+  .modern-stat-card .stat-value{
+    margin-top:4px !important;
+    font-size:20px !important;
+    line-height:1.05 !important;
+    white-space:nowrap !important;
+  }
+
+  .modern-payment-widget{
+    margin-top:12px !important;
+    padding:16px !important;
+    border-radius:24px !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  .modern-payment-widget .section-title{
+    font-size:16px !important;
+    margin-bottom:12px !important;
+  }
+
+  .modern-payment-widget .payment-sources-grid{
+    max-height:260px !important;
+    overflow:auto !important;
+    padding-right:2px !important;
+  }
+
+  /* Lists should start below hero/sidebar and stay clean */
+  .modern-list-card{
+    min-width:0 !important;
+    border-radius:26px !important;
+  }
+
+  .modern-list-header{
+    min-height:72px !important;
+    padding:16px 18px 12px !important;
+  }
+
+  .modern-list-card .expense-list{
+    max-height:420px !important;
+    overflow:auto !important;
+  }
+
+  .modern-list-card .section-add{
+    min-width:auto !important;
+    height:40px !important;
+    padding:0 14px !important;
+    border-radius:999px !important;
+    font-size:13px !important;
+    background:#111827 !important;
+    color:#fff !important;
+  }
+
+  /* Floating add button should not cover list actions too much */
+  .fab{
+    right:24px !important;
+    bottom:24px !important;
+    width:58px !important;
+    height:58px !important;
+    border-radius:20px !important;
+  }
+}
+
+@media (min-width:1180px){
+  .modern-dashboard-shell{
+    grid-template-columns:minmax(0,1fr) 360px !important;
+  }
+
+  .modern-hero-card{
+    min-height:308px !important;
+  }
+}
+
+/* ============================================================
+   DESKTOP POLISH V3 — dashboard clean-up
+   Replaces v2 desktop fix. Keep this as the only dashboard redesign file.
+   ============================================================ */
+
+@media (min-width: 768px) {
+
+  /* Page rhythm */
+  body:not(.auth-pending) {
+    background:
+      radial-gradient(circle at 4% 0%, rgba(109,93,252,.12), transparent 28%),
+      radial-gradient(circle at 96% 5%, rgba(34,211,238,.11), transparent 30%),
+      linear-gradient(180deg, #fbfcff 0%, #f6f8fc 42%, #eef3f8 100%) !important;
+  }
+
+  .app {
+    max-width: 1180px !important;
+    padding-top: 34px !important;
+    padding-bottom: 84px !important;
+  }
+
+  .view#vDash {
+    padding: 0 !important;
+  }
+
+  /* Header polish */
+  .header {
+    max-width: 1180px !important;
+    margin: 0 auto 18px !important;
+    padding: 0 0 18px !important;
+    border-bottom: 1px solid rgba(15,23,42,.06) !important;
+  }
+
+  .header-icon {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #6d5dfc, #4f46e5) !important;
+    box-shadow: 0 14px 28px rgba(79,70,229,.22) !important;
+  }
+
+  .header h1 {
+    font-size: 22px !important;
+    letter-spacing: -.7px !important;
+  }
+
+  .header p {
+    font-size: 13px !important;
+    color: #667085 !important;
+  }
+
+  .month-nav {
+    height: 48px !important;
+    padding: 6px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.76) !important;
+    border: 1px solid rgba(255,255,255,.92) !important;
+    box-shadow: 0 12px 28px rgba(16,24,40,.07) !important;
+  }
+
+  .month-nav button {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+    color: #64748b !important;
+  }
+
+  .month-nav button:hover {
+    background: #eef2ff !important;
+    color: #4f46e5 !important;
+  }
+
+  .month-label {
+    min-width: 142px !important;
+    font-size: 14px !important;
+  }
+
+  .ghost-btn {
+    height: 48px !important;
+    border-radius: 18px !important;
+    padding: 0 18px !important;
+    background: rgba(255,255,255,.76) !important;
+    border: 1px solid rgba(255,255,255,.92) !important;
+    color: #667085 !important;
+    box-shadow: 0 12px 28px rgba(16,24,40,.06) !important;
+  }
+
+  /* Main dashboard grid */
+  .modern-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr) 344px !important;
+    gap: 22px !important;
+  }
+
+  .modern-dashboard-topline {
+    padding: 0 2px 2px !important;
+  }
+
+  .modern-kicker {
+    font-size: 11px !important;
+    color: #6254f3 !important;
+  }
+
+  .modern-dashboard-topline h2 {
+    font-size: 36px !important;
+    letter-spacing: -1.7px !important;
+  }
+
+  .modern-dashboard-topline p {
+    font-size: 14px !important;
+    color: #667085 !important;
+    margin-top: 8px !important;
+  }
+
+  .modern-month-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 40px !important;
+    padding: 0 16px !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    border: 1px solid rgba(15,23,42,.06) !important;
+    box-shadow: 0 10px 24px rgba(16,24,40,.06) !important;
+  }
+
+  /* Hero polish */
+  .modern-hero-card {
+    min-height: 296px !important;
+    padding: 28px !important;
+    border-radius: 32px !important;
+    background:
+      radial-gradient(circle at 88% 18%, rgba(147,197,253,.42), transparent 31%),
+      radial-gradient(circle at 64% 44%, rgba(255,255,255,.12), transparent 28%),
+      linear-gradient(145deg, #17183e 0%, #342b86 46%, #6957f5 100%) !important;
+    box-shadow: 0 26px 70px rgba(67,56,202,.25) !important;
+  }
+
+  .modern-hero-card .hero-balance {
+    font-size: 54px !important;
+    letter-spacing: -3.5px !important;
+  }
+
+  .modern-hero-caption {
+    max-width: 500px !important;
+    color: rgba(255,255,255,.74) !important;
+  }
+
+  .modern-hero-action {
+    background: rgba(255,255,255,.17) !important;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    height: 42px !important;
+    padding: 0 16px !important;
+  }
+
+  .modern-metric-pill {
+    min-height: 78px !important;
+    border-radius: 22px !important;
+    background: rgba(255,255,255,.12) !important;
+  }
+
+  .modern-progress-block .progress-track {
+    height: 11px !important;
+    border-radius: 999px !important;
+  }
+
+  /* Snapshot right column */
+  .modern-side-title {
+    padding: 0 2px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .modern-side-title span {
+    font-size: 17px !important;
+  }
+
+  .modern-stat-card {
+    min-height: 70px !important;
+    padding: 12px 14px !important;
+    border-radius: 22px !important;
+    background: rgba(255,255,255,.84) !important;
+    border: 1px solid rgba(255,255,255,.94) !important;
+    box-shadow: 0 10px 26px rgba(16,24,40,.055) !important;
+  }
+
+  .modern-stat-card .stat-value {
+    font-size: 20px !important;
+    letter-spacing: -.4px !important;
+  }
+
+  .modern-payment-widget {
+    border-radius: 24px !important;
+    background: rgba(255,255,255,.84) !important;
+    border: 1px solid rgba(255,255,255,.94) !important;
+    box-shadow: 0 10px 26px rgba(16,24,40,.055) !important;
+  }
+
+  /* Quick add */
+  .modern-quick-add-card {
+    margin-top: 14px !important;
+    padding: 16px !important;
+    border-radius: 28px !important;
+    background: rgba(255,255,255,.88) !important;
+    border: 1px solid rgba(255,255,255,.94) !important;
+    box-shadow: 0 18px 48px rgba(16,24,40,.075) !important;
+  }
+
+  .modern-quick-add-row {
+    grid-template-columns: minmax(0, 1fr) 52px 164px !important;
+  }
+
+  .modern-quick-add-row input {
+    background: #f8fafc !important;
+    border-color: rgba(15,23,42,.08) !important;
+  }
+
+  .modern-add-btn,
+  .modern-quick-add-row .modern-add-btn {
+    background: linear-gradient(135deg, #6d5dfc, #4f46e5) !important;
+    color: #fff !important;
+  }
+
+  .modern-quick-hints span {
+    background: #eef2f7 !important;
+    color: #64748b !important;
+  }
+
+  /* Lists */
+  .modern-dashboard-lists {
+    margin-top: 2px !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .86fr) !important;
+  }
+
+  .modern-list-card {
+    border-radius: 28px !important;
+    background: rgba(255,255,255,.88) !important;
+    border: 1px solid rgba(255,255,255,.95) !important;
+    box-shadow: 0 16px 44px rgba(16,24,40,.07) !important;
+  }
+
+  .modern-list-header {
+    padding: 18px 18px 12px !important;
+    min-height: 76px !important;
+  }
+
+  .section-title h3,
+  .modern-list-header h3 {
+    letter-spacing: -.35px !important;
+  }
+
+  .modern-list-card .section-add {
+    height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    background: #111827 !important;
+    color: white !important;
+    font-size: 13px !important;
+  }
+
+  .modern-list-card .expense-list {
+    padding: 12px !important;
+    max-height: 400px !important;
+  }
+
+  .modern-list-card .expense-item {
+    min-height: 68px !important;
+    border-radius: 20px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 9px !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(15,23,42,.055) !important;
+  }
+
+  .modern-list-card .expense-item:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 10px 24px rgba(16,24,40,.055) !important;
+  }
+
+  .modern-list-card .expense-name {
+    font-weight: 850 !important;
+  }
+
+  .modern-list-card .expense-amount,
+  .modern-list-card .amount {
+    font-weight: 900 !important;
+  }
+
+  /* Desktop nav: softer floating dock */
+  .bottom-nav {
+    max-width: 720px !important;
+    padding: 10px !important;
+    border-radius: 30px !important;
+    background: rgba(255,255,255,.86) !important;
+    border: 1px solid rgba(255,255,255,.94) !important;
+    box-shadow: 0 20px 55px rgba(16,24,40,.13) !important;
+  }
+
+  .nav-btn {
+    border-radius: 20px !important;
+  }
+
+  .nav-btn.active {
+    background: #111827 !important;
+    color: #fff !important;
+    box-shadow: 0 10px 26px rgba(17,24,39,.16) !important;
+  }
+
+  .nav-btn.active::before {
+    display: none !important;
+  }
+
+  /* Hide floating FAB on desktop. Desktop already has add buttons. */
+  .fab {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1180px) {
+  .modern-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+  }
+
+  .modern-dashboard-lists {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .85fr) !important;
+  }
+}
+
+/* ============================================================
+   V4 DESKTOP CLEANUP — dashboard density + app-shell feel
+   Replace V3 with this file. Keep it loaded after desktop.css.
+   ============================================================ */
+
+@media (min-width: 768px) {
+
+  /* 1) Desktop should not show mobile bottom navigation */
+  .bottom-nav {
+    display: none !important;
+  }
+
+  .app {
+    max-width: 1160px !important;
+    padding-top: 26px !important;
+    padding-bottom: 36px !important;
+  }
+
+  .view#vDash {
+    padding: 0 !important;
+  }
+
+  /* 2) Header: less bulky, cleaner desktop rhythm */
+  .header {
+    max-width: 1160px !important;
+    margin: 0 auto 14px !important;
+    padding: 0 0 14px !important;
+  }
+
+  .header-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .header h1 {
+    font-size: 21px !important;
+  }
+
+  .header p {
+    font-size: 12.5px !important;
+  }
+
+  .month-nav,
+  .ghost-btn {
+    height: 44px !important;
+    border-radius: 16px !important;
+  }
+
+  .month-nav button {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .month-label {
+    min-width: 132px !important;
+  }
+
+  /* 3) Top intro: reduce the landing-page feeling */
+  .modern-dashboard-topline {
+    margin-bottom: 12px !important;
+  }
+
+  .modern-kicker {
+    margin-bottom: 4px !important;
+  }
+
+  .modern-dashboard-topline h2 {
+    font-size: 31px !important;
+    line-height: 1.04 !important;
+    letter-spacing: -1.45px !important;
+  }
+
+  .modern-dashboard-topline p {
+    font-size: 13.5px !important;
+    margin-top: 6px !important;
+  }
+
+  /* 4) Main grid: more compact, less whitespace */
+  .modern-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr) 330px !important;
+    gap: 18px !important;
+    align-items: start !important;
+  }
+
+  .modern-left-stack {
+    gap: 12px !important;
+  }
+
+  .modern-right-stack {
+    gap: 10px !important;
+  }
+
+  /* 5) Hero: still premium, less oversized */
+  .modern-hero-card {
+    min-height: 242px !important;
+    padding: 24px !important;
+    border-radius: 28px !important;
+  }
+
+  .modern-hero-card .hero-balance {
+    font-size: 47px !important;
+    line-height: 1 !important;
+    letter-spacing: -3px !important;
+    margin-top: 8px !important;
+  }
+
+  .modern-hero-caption {
+    font-size: 13.5px !important;
+    margin-top: 9px !important;
+  }
+
+  .modern-hero-top {
+    margin-bottom: 20px !important;
+  }
+
+  .modern-hero-action {
+    height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+  }
+
+  .modern-hero-metrics {
+    gap: 10px !important;
+    margin-top: 20px !important;
+  }
+
+  .modern-metric-pill {
+    min-height: 66px !important;
+    padding: 13px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .modern-metric-pill small {
+    font-size: 10px !important;
+  }
+
+  .modern-metric-pill strong {
+    font-size: 18px !important;
+  }
+
+  .modern-progress-block {
+    margin-top: 16px !important;
+  }
+
+  .modern-progress-block .progress-track {
+    height: 9px !important;
+  }
+
+  .modern-progress-meta {
+    font-size: 11.5px !important;
+    margin-top: 8px !important;
+  }
+
+  /* 6) Snapshot: compact cards */
+  .modern-side-title {
+    margin-bottom: 8px !important;
+  }
+
+  .modern-side-title span {
+    font-size: 16px !important;
+  }
+
+  .modern-side-title small {
+    font-size: 11.5px !important;
+  }
+
+  .modern-stat-card {
+    min-height: 58px !important;
+    padding: 10px 12px !important;
+    border-radius: 18px !important;
+    gap: 10px !important;
+  }
+
+  .modern-stat-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 14px !important;
+    font-size: 16px !important;
+  }
+
+  .modern-stat-card .stat-label {
+    font-size: 10px !important;
+    letter-spacing: .05em !important;
+  }
+
+  .modern-stat-card .stat-value {
+    font-size: 18px !important;
+  }
+
+  .modern-payment-widget {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+
+  .modern-payment-widget h3 {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .income-source-item,
+  .payment-source-card,
+  .modern-payment-widget .income-source-item {
+    min-height: 82px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  /* 7) Quick Add: command-bar feeling */
+  .modern-quick-add-card {
+    margin-top: 0 !important;
+    padding: 14px 16px !important;
+    border-radius: 24px !important;
+  }
+
+  .modern-quick-add-head {
+    margin-bottom: 10px !important;
+  }
+
+  .modern-quick-add-row {
+    grid-template-columns: minmax(0, 1fr) 46px 144px !important;
+    gap: 10px !important;
+  }
+
+  .modern-quick-add-row input {
+    height: 46px !important;
+    border-radius: 16px !important;
+    font-size: 14px !important;
+  }
+
+  .modern-quick-add-row .modern-icon-btn,
+  .modern-quick-add-row .quick-voice-btn {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 16px !important;
+  }
+
+  .modern-quick-add-row .modern-add-btn {
+    height: 46px !important;
+    border-radius: 16px !important;
+    font-size: 13.5px !important;
+  }
+
+  .modern-quick-hints {
+    margin-top: 10px !important;
+    gap: 8px !important;
+  }
+
+  .modern-quick-hints span {
+    height: 28px !important;
+    padding: 0 12px !important;
+    font-size: 11.5px !important;
+  }
+
+  /* 8) Lists: tighter desktop app density */
+  .modern-dashboard-lists {
+    margin-top: 16px !important;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, .78fr) !important;
+    gap: 18px !important;
+    align-items: start !important;
+  }
+
+  .modern-list-card {
+    border-radius: 24px !important;
+  }
+
+  .modern-list-header {
+    padding: 16px 18px 10px !important;
+    min-height: 64px !important;
+  }
+
+  .section-title h3,
+  .modern-list-header h3 {
+    font-size: 17px !important;
+  }
+
+  .modern-list-card .section-add {
+    height: 36px !important;
+    padding: 0 13px !important;
+    font-size: 12.5px !important;
+  }
+
+  .modern-list-card .expense-list {
+    padding: 10px 12px 14px !important;
+    max-height: 350px !important;
+  }
+
+  .modern-list-card .expense-item {
+    min-height: 56px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 17px !important;
+  }
+
+  .modern-list-card .expense-icon,
+  .modern-list-card .cat-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 14px !important;
+    font-size: 16px !important;
+  }
+
+  .modern-list-card .expense-name {
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .modern-list-card .expense-cat,
+  .modern-list-card .expense-meta {
+    font-size: 11.5px !important;
+    margin-top: 2px !important;
+  }
+
+  .modern-list-card .expense-amount,
+  .modern-list-card .amount {
+    font-size: 13.5px !important;
+  }
+
+  .modern-list-card .edit-btn,
+  .modern-list-card .del-btn {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 10px !important;
+  }
+
+  /* 9) Make old/global list sections behave better inside redesigned dashboard */
+  #lFixed,
+  #lDaily {
+    max-height: 350px !important;
+    overflow: auto !important;
+  }
+
+  /* 10) No accidental floating plus on desktop */
+  .fab {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1180px) {
+  .modern-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr) 340px !important;
+  }
+
+  .modern-dashboard-lists {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, .78fr) !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .app,
+  .header {
+    max-width: 1220px !important;
+  }
+
+  .modern-dashboard-shell {
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+  }
+}
+
+
+/* ============================================================
+   V5 — DESKTOP SIDEBAR NAVIGATION
+   Keeps mobile bottom nav untouched. Desktop uses left app shell.
+   ============================================================ */
+
+.desktop-sidebar{
+  display:none;
+}
+
+@media (min-width: 1024px){
+
+  :root{
+    --desktop-sidebar-width: 252px;
+    --desktop-shell-gap: 24px;
+  }
+
+  body{
+    background:
+      radial-gradient(circle at 8% 6%, rgba(99,102,241,.12), transparent 28%),
+      radial-gradient(circle at 92% 10%, rgba(14,165,233,.10), transparent 30%),
+      linear-gradient(135deg,#f7f8ff 0%,#f6fbff 48%,#eef9ff 100%) !important;
+  }
+
+  .desktop-sidebar{
+    position:fixed;
+    top:24px;
+    left:24px;
+    bottom:24px;
+    width:var(--desktop-sidebar-width);
+    z-index:90;
+    display:flex;
+    flex-direction:column;
+    padding:18px 14px;
+    border-radius:30px;
+    background:rgba(255,255,255,.74);
+    border:1px solid rgba(226,232,240,.9);
+    box-shadow:0 24px 70px rgba(15,23,42,.10);
+    backdrop-filter:blur(22px) saturate(1.25);
+    -webkit-backdrop-filter:blur(22px) saturate(1.25);
+  }
+
+  body.auth-pending .desktop-sidebar{
+    display:none !important;
+  }
+
+  .desktop-sidebar-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:8px 8px 18px;
+    margin-bottom:10px;
+    border-bottom:1px solid rgba(226,232,240,.72);
+  }
+
+  .desktop-sidebar-logo{
+    width:46px;
+    height:46px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    background:linear-gradient(135deg,#6d5dfc 0%,#4f46e5 100%);
+    box-shadow:0 16px 34px rgba(79,70,229,.28);
+    flex:0 0 auto;
+  }
+
+  .desktop-sidebar-logo svg{
+    width:24px;
+    height:24px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .desktop-sidebar-brand strong{
+    display:block;
+    font-size:16px;
+    line-height:1.05;
+    font-weight:900;
+    letter-spacing:-.35px;
+    color:#0f172a;
+  }
+
+  .desktop-sidebar-brand span{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    font-weight:700;
+    color:#94a3b8;
+  }
+
+  .desktop-sidebar-menu{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:4px 0;
+  }
+
+  .desktop-sidebar .desktop-nav-btn,
+  .desktop-sidebar .nav-btn{
+    width:100%;
+    height:46px;
+    min-height:46px;
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+    gap:12px;
+    padding:0 13px;
+    border:0;
+    border-radius:16px;
+    background:transparent;
+    color:#64748b;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:-.15px;
+    box-shadow:none;
+    transition:background .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease;
+  }
+
+  .desktop-sidebar .desktop-nav-btn svg,
+  .desktop-sidebar .nav-btn svg{
+    width:20px;
+    height:20px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex:0 0 auto;
+  }
+
+  .desktop-sidebar .desktop-nav-btn span,
+  .desktop-sidebar .nav-btn span{
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .desktop-sidebar .desktop-nav-btn:hover,
+  .desktop-sidebar .nav-btn:hover{
+    background:rgba(99,102,241,.08);
+    color:#4338ca;
+    transform:translateX(2px);
+  }
+
+  .desktop-sidebar .desktop-nav-btn.active,
+  .desktop-sidebar .nav-btn.active{
+    background:linear-gradient(135deg,#6d5dfc 0%,#4f46e5 100%);
+    color:white;
+    box-shadow:0 16px 34px rgba(79,70,229,.26);
+  }
+
+  .desktop-sidebar .desktop-nav-btn.active::before,
+  .desktop-sidebar .nav-btn.active::before{
+    display:none !important;
+  }
+
+  .desktop-sidebar-footer{
+    margin-top:auto;
+    padding:14px 6px 4px;
+    border-top:1px solid rgba(226,232,240,.72);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .desktop-quick-add{
+    width:100%;
+    height:46px;
+    border:0;
+    border-radius:16px;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:900;
+    box-shadow:0 16px 34px rgba(15,23,42,.18);
+  }
+
+  .desktop-quick-add span{
+    font-size:19px;
+    line-height:1;
+  }
+
+  .desktop-sidebar-logout{
+    width:100%;
+    height:42px;
+    border:1px solid rgba(226,232,240,.95);
+    border-radius:15px;
+    background:rgba(255,255,255,.72);
+    color:#64748b;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .desktop-sidebar-logout:hover{
+    background:#fee2e2;
+    color:#ef4444;
+    border-color:#fecaca;
+  }
+
+  /* Desktop shell with sidebar */
+  .app{
+    width:auto !important;
+    max-width:none !important;
+    margin:0 32px 0 calc(var(--desktop-sidebar-width) + 48px) !important;
+    padding:28px 0 48px !important;
+  }
+
+  .header{
+    max-width:1240px !important;
+    margin:0 auto 18px !important;
+    padding:0 0 20px !important;
+  }
+
+  .view{
+    max-width:1240px !important;
+    margin:0 auto !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+
+  /* Desktop should not use mobile/floating nav once sidebar exists */
+  .bottom-nav,
+  .fab{
+    display:none !important;
+  }
+
+  /* Clean duplicated logout in header since sidebar has it */
+  .header .ghost-btn.hide-sm{
+    display:none !important;
+  }
+}
+
+@media (min-width:1024px) and (max-width:1250px){
+  :root{ --desktop-sidebar-width: 224px; }
+
+  .desktop-sidebar{
+    left:16px;
+    top:16px;
+    bottom:16px;
+    padding:16px 12px;
+  }
+
+  .app{
+    margin-left:calc(var(--desktop-sidebar-width) + 34px) !important;
+    margin-right:18px !important;
+  }
+
+  .desktop-sidebar-brand span{
+    display:none;
+  }
+
+  .desktop-sidebar .desktop-nav-btn,
+  .desktop-sidebar .nav-btn{
+    font-size:13px;
+    padding:0 11px;
+  }
+
+  .desktop-sidebar .desktop-nav-btn span,
+  .desktop-sidebar .nav-btn span{
+    font-size:13px;
+  }
+}
+
+@media (max-width:1023px){
+  .desktop-sidebar{
+    display:none !important;
+  }
+}
+
+/* ============================================================
+   V6 — DESKTOP SIDEBAR FIXES
+   Fixes: duplicate brand/header label + list spacing/scrollbars
+   ============================================================ */
+
+@media (min-width: 768px) {
+  /* The sidebar is now the product brand area, so the old header brand
+     should not be shown again in the main content. Keep only month/actions. */
+  .header {
+    justify-content: flex-end !important;
+    border-bottom: 0 !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .header-left {
+    display: none !important;
+  }
+
+  .header-actions {
+    margin-left: auto !important;
+    gap: 12px !important;
+  }
+
+  /* Dashboard content should start cleaner once duplicated header brand is gone. */
+  .modern-dashboard-intro,
+  .money-overview,
+  .dashboard-intro {
+    margin-top: 0 !important;
+  }
+
+  /* Remove awkward internal scrollbars/gutters in desktop list cards.
+     The page itself should scroll, not each dashboard card. */
+  .modern-list-card {
+    overflow: visible !important;
+  }
+
+  .modern-list-card .expense-list,
+  #lFixed,
+  #lDaily {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding-right: 16px !important;
+  }
+
+  /* Tighter list rhythm: less empty white area, still readable. */
+  .modern-dashboard-lists {
+    align-items: start !important;
+    gap: 18px !important;
+    margin-top: 20px !important;
+  }
+
+  .modern-list-header {
+    min-height: 62px !important;
+    padding: 18px 22px 12px !important;
+  }
+
+  .modern-list-card .expense-item {
+    min-height: 58px !important;
+    padding: 11px 14px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .modern-list-card .expense-icon,
+  .modern-list-card .cat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 14px !important;
+  }
+
+  .modern-list-card .section-add {
+    box-shadow: 0 10px 24px rgba(15,23,42,.14) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .modern-dashboard-lists {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, .82fr) !important;
+  }
+}
+
+/* ============================================================
+   V7 — DESKTOP LIST WIDTH / EMPTY RIGHT COLUMN FIX
+   Fixes the blank right-side space under the dashboard summary.
+   The expense lists should span the full dashboard content area.
+   ============================================================ */
+
+@media (min-width: 1024px) {
+  /* Force the list section to occupy BOTH dashboard columns, not only the left/main column. */
+  .modern-dashboard-shell > .modern-dashboard-lists {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    margin-top: 18px !important;
+    align-items: stretch !important;
+  }
+
+  /* Each list card fills the complete available width. */
+  .modern-dashboard-shell > .modern-dashboard-lists > .modern-list-card,
+  .modern-dashboard-shell > .modern-dashboard-lists > .fixed-list-widget,
+  .modern-dashboard-shell > .modern-dashboard-lists > .daily-list-widget {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-right: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Keep the page scrolling, but remove the visual internal gutter/scrollbar area. */
+  .modern-dashboard-shell > .modern-dashboard-lists .expense-list,
+  .modern-dashboard-shell > .modern-dashboard-lists #lFixed,
+  .modern-dashboard-shell > .modern-dashboard-lists #lDaily {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 16px 16px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .modern-dashboard-shell > .modern-dashboard-lists .expense-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* ============================================================
+   V8 — DESKTOP HERO REFINEMENT
+   Goal: make the hero feel more premium/fintech without changing JS.
+   ============================================================ */
+
+@media (min-width: 1024px) {
+  /* Give the top dashboard a cleaner desktop rhythm */
+  .modern-dashboard-main {
+    gap: 14px !important;
+  }
+
+  .modern-dashboard-topline {
+    margin-bottom: 10px !important;
+  }
+
+  .modern-dashboard-topline h2 {
+    max-width: 720px !important;
+    font-size: clamp(32px, 2.3vw, 42px) !important;
+    line-height: .98 !important;
+    letter-spacing: -1.8px !important;
+  }
+
+  .modern-dashboard-topline p {
+    max-width: 760px !important;
+    margin-top: 8px !important;
+    color: #667085 !important;
+  }
+
+  /* Premium hero card: denser, more balanced, less oversized. */
+  .modern-hero-card {
+    position: relative !important;
+    min-height: 286px !important;
+    padding: 30px 34px 26px !important;
+    border-radius: 32px !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 82% 20%, rgba(255,255,255,.22) 0 13%, transparent 34%),
+      radial-gradient(circle at 5% 100%, rgba(21,245,186,.18) 0 16%, transparent 42%),
+      linear-gradient(135deg, #171747 0%, #34228e 44%, #654cff 100%) !important;
+    box-shadow:
+      0 28px 80px rgba(53,42,151,.24),
+      0 14px 36px rgba(15,23,42,.12),
+      inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  /* Softer grid texture */
+  .modern-hero-pattern {
+    opacity: .22 !important;
+    background-size: 48px 48px !important;
+    mask-image: linear-gradient(90deg, rgba(0,0,0,.9), rgba(0,0,0,.45), rgba(0,0,0,.75)) !important;
+    -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.9), rgba(0,0,0,.45), rgba(0,0,0,.75)) !important;
+  }
+
+  /* Add a fake finance curve as visual detail without touching markup/JS. */
+  .modern-hero-card::after {
+    content: '' !important;
+    position: absolute !important;
+    right: 28px !important;
+    bottom: 86px !important;
+    width: 42% !important;
+    height: 115px !important;
+    pointer-events: none !important;
+    opacity: .72 !important;
+    background:
+      radial-gradient(45px 26px at 8% 68%, transparent 56%, rgba(255,255,255,.42) 58% 62%, transparent 64%),
+      radial-gradient(70px 36px at 34% 45%, transparent 56%, rgba(255,255,255,.44) 58% 62%, transparent 64%),
+      radial-gradient(88px 44px at 66% 62%, transparent 56%, rgba(255,255,255,.50) 58% 62%, transparent 64%),
+      radial-gradient(78px 38px at 96% 28%, transparent 56%, rgba(255,255,255,.58) 58% 62%, transparent 64%);
+    filter: drop-shadow(0 0 18px rgba(137,121,255,.5));
+  }
+
+  .modern-hero-header {
+    position: relative !important;
+    z-index: 2 !important;
+    align-items: flex-start !important;
+  }
+
+  .modern-hero-card .eyebrow {
+    color: rgba(255,255,255,.68) !important;
+    letter-spacing: .16em !important;
+    font-size: 11px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .modern-hero-card .hero-balance {
+    font-size: clamp(50px, 4.25vw, 68px) !important;
+    line-height: .86 !important;
+    letter-spacing: -4.2px !important;
+    text-shadow: 0 12px 36px rgba(0,0,0,.24) !important;
+  }
+
+  .modern-hero-caption {
+    max-width: 520px !important;
+    margin-top: 14px !important;
+    color: rgba(255,255,255,.76) !important;
+    font-size: 14px !important;
+  }
+
+  .modern-hero-action {
+    min-width: 104px !important;
+    height: 42px !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,.16) !important;
+    border: 1px solid rgba(255,255,255,.26) !important;
+    color: white !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16) !important;
+  }
+
+  .modern-hero-action:hover {
+    background: rgba(255,255,255,.22) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .modern-hero-metrics {
+    position: relative !important;
+    z-index: 2 !important;
+    max-width: 500px !important;
+    margin-top: 34px !important;
+    gap: 12px !important;
+  }
+
+  .modern-metric-pill {
+    min-height: 78px !important;
+    border-radius: 20px !important;
+    padding: 16px 18px !important;
+    background: rgba(255,255,255,.13) !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(18px) saturate(1.25) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+  }
+
+  .modern-metric-pill span {
+    color: rgba(255,255,255,.58) !important;
+    font-size: 11px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .modern-metric-pill strong {
+    color: white !important;
+    font-size: 22px !important;
+    letter-spacing: -.5px !important;
+  }
+
+  .modern-progress-block {
+    position: relative !important;
+    z-index: 2 !important;
+    margin-top: 22px !important;
+  }
+
+  .modern-hero-card .progress-track {
+    height: 11px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.16) !important;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.16) !important;
+  }
+
+  .modern-hero-card .progress-fill {
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: linear-gradient(90deg, #33e7c4 0%, #78f7be 52%, #a5ffda 100%) !important;
+    box-shadow: 0 0 24px rgba(74,231,195,.32) !important;
+  }
+
+  .modern-hero-card .progress-labels {
+    margin-top: 10px !important;
+    color: rgba(255,255,255,.56) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  .modern-hero-card .progress-labels span:last-child {
+    color: rgba(255,255,255,.78) !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1250px) {
+  .modern-hero-card {
+    padding: 26px 28px 24px !important;
+    min-height: 270px !important;
+  }
+
+  .modern-hero-card::after {
+    width: 36% !important;
+    opacity: .52 !important;
+  }
+
+  .modern-hero-metrics {
+    max-width: 430px !important;
+  }
+}
+
+/* ============================================================
+   EXPENSE HERO — V9 QUICK ADD REDESIGN
+   Scope: Dashboard Quick Add only. No JS/logic changes.
+   Replaces V8. Keep this file AFTER desktop.css.
+   ============================================================ */
+
+/* ---------- Base / Mobile-safe Quick Add polish ---------- */
+.modern-quick-add-card{
+  position:relative !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+
+.modern-quick-add-card::before{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  z-index:-1;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(109,93,252,.16), transparent 30%),
+    radial-gradient(circle at 92% 0%, rgba(34,211,238,.13), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.90));
+}
+
+.modern-quick-add-head strong{
+  letter-spacing:-.2px !important;
+}
+
+.modern-quick-add-head small{
+  color:rgba(100,116,139,.82) !important;
+}
+
+.modern-quick-add-row input::placeholder{
+  color:#9aa4b2 !important;
+}
+
+.modern-quick-hints span{
+  cursor:default !important;
+  user-select:none !important;
+}
+
+/* ---------- Desktop Quick Add command bar ---------- */
+@media (min-width:1024px){
+
+  .modern-quick-add-card{
+    margin-top:18px !important;
+    padding:18px !important;
+    border-radius:30px !important;
+    background:rgba(255,255,255,.82) !important;
+    border:1px solid rgba(255,255,255,.92) !important;
+    box-shadow:
+      0 22px 58px rgba(16,24,40,.10),
+      inset 0 1px 0 rgba(255,255,255,.75) !important;
+    backdrop-filter:blur(22px) saturate(1.12) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(1.12) !important;
+  }
+
+  .modern-quick-add-head{
+    margin-bottom:12px !important;
+    padding:0 2px !important;
+  }
+
+  .modern-quick-add-head div{
+    gap:10px !important;
+    font-size:15px !important;
+  }
+
+  .modern-dot-live{
+    width:10px !important;
+    height:10px !important;
+    background:linear-gradient(135deg,#22c55e,#14b8a6) !important;
+    box-shadow:0 0 0 6px rgba(20,184,166,.11), 0 0 18px rgba(20,184,166,.38) !important;
+  }
+
+  .modern-quick-add-head small{
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:6px !important;
+    height:28px !important;
+    padding:0 10px !important;
+    border-radius:999px !important;
+    background:rgba(15,23,42,.04) !important;
+    color:#64748b !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+    text-transform:uppercase !important;
+    letter-spacing:.06em !important;
+  }
+
+  .modern-quick-add-head small::before{
+    content:'⌘';
+    color:#6d5dfc;
+    font-size:12px;
+    line-height:1;
+  }
+
+  .modern-quick-add-box{
+    position:relative !important;
+    padding:8px !important;
+    border-radius:24px !important;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82)) !important;
+    border:1px solid rgba(226,232,240,.92) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 12px 26px rgba(15,23,42,.045) !important;
+  }
+
+  .modern-quick-add-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 50px 132px !important;
+    gap:8px !important;
+    align-items:center !important;
+  }
+
+  .modern-quick-add-row input{
+    height:54px !important;
+    border:0 !important;
+    border-radius:18px !important;
+    background:transparent !important;
+    padding:0 18px 0 44px !important;
+    color:#0f172a !important;
+    font-size:16px !important;
+    font-weight:750 !important;
+    letter-spacing:-.2px !important;
+    box-shadow:none !important;
+  }
+
+  .modern-quick-add-row::before{
+    content:'+';
+    position:absolute;
+    left:22px;
+    top:20px;
+    width:24px;
+    height:24px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#6d5dfc,#22d3ee);
+    color:white;
+    font-size:17px;
+    font-weight:900;
+    box-shadow:0 8px 18px rgba(109,93,252,.28);
+    pointer-events:none;
+    z-index:2;
+  }
+
+  .modern-quick-add-row input:focus{
+    background:rgba(255,255,255,.72) !important;
+    box-shadow:0 0 0 4px rgba(109,93,252,.10) !important;
+  }
+
+  .modern-quick-add-row .modern-icon-btn,
+  .modern-quick-add-row .quick-voice-btn{
+    width:50px !important;
+    height:50px !important;
+    border-radius:17px !important;
+    background:#eef2ff !important;
+    border:1px solid rgba(109,93,252,.10) !important;
+    color:#6d5dfc !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.72) !important;
+    transition:transform .18s ease, background .18s ease, box-shadow .18s ease !important;
+  }
+
+  .modern-quick-add-row .modern-icon-btn:hover,
+  .modern-quick-add-row .quick-voice-btn:hover{
+    transform:translateY(-1px) !important;
+    background:#e6e9ff !important;
+    box-shadow:0 10px 22px rgba(109,93,252,.16) !important;
+  }
+
+  .modern-quick-add-row .modern-add-btn{
+    height:50px !important;
+    border-radius:17px !important;
+    padding:0 18px !important;
+    background:linear-gradient(135deg,#111827 0%,#26215c 48%,#6d5dfc 100%) !important;
+    color:white !important;
+    font-size:13px !important;
+    font-weight:950 !important;
+    letter-spacing:.01em !important;
+    box-shadow:0 14px 26px rgba(37,33,92,.24) !important;
+    transition:transform .18s ease, box-shadow .18s ease, filter .18s ease !important;
+  }
+
+  .modern-quick-add-row .modern-add-btn:hover{
+    transform:translateY(-1px) !important;
+    filter:saturate(1.08) !important;
+    box-shadow:0 18px 34px rgba(37,33,92,.30) !important;
+  }
+
+  .modern-quick-add-row .modern-add-btn:active,
+  .modern-quick-add-row .quick-voice-btn:active{
+    transform:scale(.97) !important;
+  }
+
+  .modern-quick-hints{
+    margin-top:10px !important;
+    padding:0 2px 1px !important;
+    gap:8px !important;
+    display:flex !important;
+    flex-wrap:wrap !important;
+  }
+
+  .modern-quick-hints::before{
+    content:'Examples';
+    display:inline-flex;
+    align-items:center;
+    height:28px;
+    padding:0 2px;
+    margin-right:2px;
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .modern-quick-hints span{
+    height:28px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    padding:0 11px !important;
+    border-radius:999px !important;
+    background:rgba(255,255,255,.76) !important;
+    border:1px solid rgba(226,232,240,.92) !important;
+    color:#475569 !important;
+    font-size:11.5px !important;
+    font-weight:900 !important;
+    box-shadow:0 6px 14px rgba(15,23,42,.035) !important;
+  }
+
+  .modern-quick-hints span:first-of-type{
+    background:rgba(109,93,252,.09) !important;
+    border-color:rgba(109,93,252,.16) !important;
+    color:#5b50dd !important;
+  }
+
+  .modern-quick-hints span:nth-of-type(2){
+    background:rgba(34,211,238,.10) !important;
+    border-color:rgba(34,211,238,.18) !important;
+    color:#087f94 !important;
+  }
+
+  .modern-quick-hints span:nth-of-type(3){
+    background:rgba(18,185,129,.10) !important;
+    border-color:rgba(18,185,129,.18) !important;
+    color:#047857 !important;
+  }
+}
+
+/* ---------- Large desktop density ---------- */
+@media (min-width:1280px){
+  .modern-quick-add-card{
+    padding:16px !important;
+  }
+
+  .modern-quick-add-box{
+    padding:7px !important;
+  }
+
+  .modern-quick-add-row{
+    grid-template-columns:minmax(0,1fr) 48px 124px !important;
+  }
+
+  .modern-quick-add-row input,
+  .modern-quick-add-row .modern-add-btn,
+  .modern-quick-add-row .quick-voice-btn{
+    height:48px !important;
+  }
+
+  .modern-quick-add-row .quick-voice-btn{
+    width:48px !important;
+  }
+
+  .modern-quick-add-row::before{
+    top:18px !important;
+  }
+}
+
+/* =========================================
+   QUICK ADD — DESKTOP LAYOUT FIX
+   Keeps input, mic and submit aligned.
+========================================= */
+
+@media (min-width: 1024px) {
+  .quick-add-card,
+  .quickadd-card,
+  .quick-add-wrap {
+    overflow: hidden !important;
+  }
+
+  .quick-add-form,
+  .quick-add-row,
+  .quickadd-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .quick-add-form input,
+  .quick-add-input,
+  #quickAddInput {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .quick-add-mic,
+  .voice-btn,
+  #voiceQuickBtn {
+    flex: 0 0 68px !important;
+    width: 68px !important;
+    height: 58px !important;
+  }
+
+  .quick-add-submit,
+  .quick-add-btn,
+  #quickAddBtn {
+    flex: 0 0 190px !important;
+    width: 190px !important;
+    min-width: 190px !important;
+    height: 58px !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* =========================================
+   EXPENSE ROWS — SAFE DESKTOP POLISH
+   Only affects fixed/daily lists. Does NOT touch hero/cards globally.
+========================================= */
+
+@media (min-width: 1024px) {
+  .fixed-card,
+  .daily-card {
+    border-radius: 28px !important;
+    padding: 26px 28px !important;
+    background: rgba(255,255,255,.86) !important;
+    box-shadow:
+      0 14px 44px rgba(15,23,42,.06),
+      inset 0 1px 0 rgba(255,255,255,.75) !important;
+  }
+
+  .hero-card {
+    background: var(--hero-gradient) !important;
+    color: white !important;
+    opacity: 1 !important;
+  }
+
+  .hero-card * {
+    opacity: 1 !important;
+  }
+
+  .fixed-card .expense-item,
+  .daily-card .expense-item,
+  #lFixed .expense-item,
+  #lDaily .expense-item {
+    min-height: 74px !important;
+    border-radius: 20px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 10px !important;
+    background: rgba(255,255,255,.74) !important;
+    border: 1px solid rgba(120,130,180,.10) !important;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease !important;
+  }
+
+  .fixed-card .expense-item:hover,
+  .daily-card .expense-item:hover,
+  #lFixed .expense-item:hover,
+  #lDaily .expense-item:hover {
+    transform: translateY(-1px) !important;
+    background: rgba(255,255,255,.96) !important;
+    box-shadow: 0 10px 24px rgba(80,90,140,.08) !important;
+  }
+
+  .fixed-card .expense-item h4,
+  .daily-card .expense-item h4,
+  #lFixed .expense-item h4,
+  #lDaily .expense-item h4 {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #121826 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .fixed-card .expense-item p,
+  .daily-card .expense-item p,
+  #lFixed .expense-item p,
+  #lDaily .expense-item p {
+    font-size: 12px !important;
+    font-weight: 650 !important;
+    color: #91a0b8 !important;
+    margin-top: 3px !important;
+  }
+
+  .fixed-card .expense-amount,
+  .daily-card .expense-amount,
+  #lFixed .expense-amount,
+  #lDaily .expense-amount {
+    font-size: 16px !important;
+    font-weight: 850 !important;
+    letter-spacing: -.02em !important;
+  }
+
+  .fixed-card .edit-btn,
+  .daily-card .edit-btn,
+  .fixed-card .del-btn,
+  .daily-card .del-btn {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    background: rgba(116,92,255,.08) !important;
+  }
+
+  .fixed-card h2,
+  .daily-card h2 {
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+  }
+}
+
+/* =========================================
+   SIDEBAR — FINAL DESKTOP POLISH + TIGHTER ADJUSTMENTS
+========================================= */
+
+@media (min-width: 1024px) {
+  .desktop-sidebar,
+  .sidebar {
+    width: 232px !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.72)) !important;
+    backdrop-filter: blur(24px) !important;
+    border-right: 1px solid rgba(120,130,180,.10) !important;
+    box-shadow: 0 18px 50px rgba(20,30,70,.08) !important;
+  }
+
+  .app {
+    margin-left: 232px !important;
+  }
+
+  .sidebar-brand,
+  .sidebar-logo {
+    padding: 26px 22px 22px !important;
+    border-bottom: 1px solid rgba(120,130,180,.08) !important;
+  }
+
+  .sidebar-brand h1,
+  .sidebar-logo h1 {
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.04em !important;
+    color: #121826 !important;
+  }
+
+  .sidebar-brand p,
+  .sidebar-logo p {
+    font-size: 12px !important;
+    font-weight: 650 !important;
+    color: #8b97ac !important;
+    margin-top: 4px !important;
+  }
+
+  .sidebar-nav,
+  .sidebar-links {
+    padding: 20px 16px !important;
+  }
+
+  .sidebar-nav a,
+  .sidebar-link,
+  .nav-link {
+    height: 48px !important;
+    padding: 0 18px !important;
+    border-radius: 16px !important;
+    margin-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    font-size: 14px !important;
+    font-weight: 650 !important;
+    color: #4f5d75 !important;
+    transition:
+      background .18s ease,
+      transform .18s ease,
+      color .18s ease,
+      box-shadow .18s ease !important;
+  }
+
+  .sidebar-nav a:hover,
+  .sidebar-link:hover,
+  .nav-link:hover {
+    background: rgba(116,92,255,.08) !important;
+    color: #4f46ff !important;
+    transform: translateX(2px) !important;
+  }
+
+  .sidebar-nav a.active,
+  .sidebar-link.active,
+  .nav-link.active {
+    height: 50px !important;
+    background: #101827 !important;
+    color: white !important;
+    box-shadow: 0 12px 26px rgba(15,23,42,.18) !important;
+  }
+
+  .sidebar-nav a.active svg,
+  .sidebar-link.active svg,
+  .nav-link.active svg {
+    opacity: 1 !important;
+  }
+
+  .sidebar-nav svg,
+  .sidebar-link svg,
+  .nav-link svg {
+    width: 19px !important;
+    height: 19px !important;
+    opacity: .76 !important;
+    transition: opacity .18s ease !important;
+  }
+
+  .sidebar-nav a.active svg,
+  .sidebar-link.active svg,
+  .nav-link.active svg {
+    opacity: 1 !important;
+  }
+
+  .sidebar-footer,
+  .sidebar-profile {
+    margin-top: auto !important;
+    padding: 18px !important;
+    border-top: 1px solid rgba(120,130,180,.08) !important;
+  }
+
+  .sidebar-profile-card {
+    border-radius: 22px !important;
+    padding: 16px !important;
+    background: rgba(255,255,255,.75) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7) !important;
+  }
+
+  .sidebar-logout,
+  .logout-btn {
+    height: 44px !important;
+    border-radius: 16px !important;
+    font-weight: 800 !important;
+    background: rgba(15,23,42,.04) !important;
+    color: #5e6b85 !important;
+    transition: all .18s ease !important;
+  }
+
+  .sidebar-logout:hover,
+  .logout-btn:hover {
+    background: rgba(255,91,99,.08) !important;
+    color: #ff5b63 !important;
+  }
+}

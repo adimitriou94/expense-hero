@@ -5,7 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Expense Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20">
+  <!-- CSS Architecture: mobile-first -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/desktop.css">
+  <link rel="stylesheet" href="css/expense-hero-dashboard-redesign-v10-desktop-dashboard-final.css">
+  <link rel="stylesheet" href="css/expense-hero-dashboard-slim-transactions-v2.css">
+  <link rel="stylesheet" href="css/expense-hero-transactions-page-v3-polish.css">
+  <link rel="stylesheet" href="css/expense-hero-mobile-v3-clean.css">
+  <link rel="stylesheet" href="css/expense-hero-mobile-nav-v7.css">
+  <link rel="stylesheet" href="css/expense-hero-quickadd-role-split-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-mobile-dashboard-v3.css">
+  <link rel="stylesheet" href="css/transactions-complete-v3.css">
+  <!-- Fallback: αφαιρέσετε μόλις επαληθεύσετε τα πάντα -->
+  <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
 
 <body class="auth-pending">
@@ -112,6 +127,73 @@
   </div>
 </div>
 
+
+<!-- DESKTOP SIDEBAR NAVIGATION -->
+<aside class="desktop-sidebar" aria-label="Κύρια πλοήγηση">
+  <div class="desktop-sidebar-brand">
+    <div class="desktop-sidebar-logo">
+      <svg viewBox="0 0 24 24">
+        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+        <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+        <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+      </svg>
+    </div>
+    <div>
+      <strong>Expense Hero</strong>
+      <span>Finance dashboard</span>
+    </div>
+  </div>
+
+  <nav class="desktop-sidebar-menu">
+    <button class="desktop-nav-btn nav-btn active" data-v="vDash" onclick="go('vDash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vTransactions" onclick="go('vTransactions',this)">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+      <span>Κινήσεις</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vIncome" onclick="go('vIncome',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Έσοδα</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vCards" onclick="go('vCards',this)">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span>Κάρτες & Πηγές</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vAdvisor" onclick="go('vAdvisor',this)">
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>Σύμβουλος</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vStats" onclick="go('vStats',this)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Στατιστικά</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vArchive" onclick="go('vArchive',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+      <span>Αρχείο</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vSettings" onclick="go('vSettings',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <span>Ρυθμίσεις</span>
+    </button>
+  </nav>
+
+  <div class="desktop-sidebar-footer">
+    <button class="desktop-quick-add" onclick="openModal('daily')">
+      <span>+</span> Νέο έξοδο
+    </button>
+    <button class="desktop-sidebar-logout" onclick="signOutUser()">Αποσύνδεση</button>
+  </div>
+</aside>
+
 <div class="app" id="appRoot">
 
   <!-- HEADER -->
@@ -143,106 +225,222 @@
 
   <!-- DASHBOARD -->
   <main class="view active" id="vDash">
-    <section class="dashboard-grid">
+    <section class="modern-dashboard-shell">
 
-      <!-- HERO -->
-      <div class="bento-card hero-card">
-        <div class="hero-glow"></div>
-
-        <div class="hero-top">
+      <!-- TOP SUMMARY / HERO -->
+      <section class="modern-dashboard-main">
+        <div class="modern-dashboard-topline">
           <div>
-            <div class="eyebrow">Μηνιαία εικόνα</div>
-            <h2>Υπόλοιπο μήνα</h2>
-            <div class="hero-balance" id="dBalance">€0,00</div>
+            <div class="modern-kicker">Money overview</div>
+            <h2>Η οικονομική εικόνα σου</h2>
+            <p>Μηνιαίο budget, έξοδα και καθαρή οικονομική εικόνα σε ένα dashboard.</p>
           </div>
 
-          <button class="hero-edit" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'))">
-            Διαχείριση εσόδων ✎
+          <button class="modern-month-chip" type="button" onclick="chMonth(0)">
+            <span id="modernMonthMirror">Τρέχων μήνας</span>
           </button>
         </div>
 
-        <div class="hero-income-row">
-          <div>
-            <span>Καθαρό μηνιαίο εισόδημα</span>
-            <strong id="dIncome">€0,00</strong>
-          </div>
-          <div>
-            <span>Πρόοδος εξόδων</span>
-            <strong id="dPct">0%</strong>
-          </div>
-        </div>
+        <div class="bento-card hero-card modern-hero-card">
+          <div class="hero-glow"></div>
+          <div class="modern-hero-pattern"></div>
 
-        <div class="quick-add-box">
-          <div class="quick-add-label">
-            ⚡ Γρήγορη καταχώρηση
-          </div>
-        
-          <div class="quick-add-row">
-            <input
-              type="text"
-              id="quickAddInput"
-              placeholder="π.χ. καφές 3 ticket"
-              autocomplete="off"
-            >
-        
-            <button type="button" class="quick-voice-btn" id="quickVoiceBtn" onclick="startQuickVoice()">
-              🎤
-            </button>
-            
-            <button type="button" onclick="quickAddExpense()">
-              Προσθήκη
+          <div class="modern-hero-header">
+            <div>
+              <div class="eyebrow">Υπόλοιπο μήνα</div>
+              <div class="hero-balance" id="dBalance">€0,00</div>
+              <div class="modern-hero-caption">Με βάση εισόδημα, πάγια, κάρτες και ημερήσια έξοδα.</div>
+            </div>
+
+            <button class="hero-edit modern-hero-action" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'))">
+              Έσοδα ✎
             </button>
           </div>
-        
-          <div class="quick-add-hint">
-            καφές 3 • σούπερ μάρκετ 25 • φαγητό 12 ticket
+
+          <div class="modern-hero-metrics">
+            <div class="modern-metric-pill">
+              <span>Εισόδημα</span>
+              <strong id="dIncome">€0,00</strong>
+            </div>
+            <div class="modern-metric-pill">
+              <span>Χρήση budget</span>
+              <strong id="dPct">0%</strong>
+            </div>
+          </div>
+
+          <div class="progress-bar modern-progress-block">
+            <div class="progress-track">
+              <div class="progress-fill" id="dBar"></div>
+            </div>
+            <div class="progress-labels">
+              <span>Χρησιμοποιημένο</span>
+              <span id="dSpent">€0,00 / €0,00</span>
+            </div>
           </div>
         </div>
 
-        <div class="progress-bar">
-          <div class="progress-track">
-            <div class="progress-fill" id="dBar"></div>
+        <!-- MOBILE DASHBOARD INSIGHTS -->
+        <section class="mobile-dashboard-insights" aria-label="Κατηγορίες μήνα">
+          <div class="mobile-insights-head">
+            <div>
+              <h3>Κατηγορίες (Μήνας)</h3>
+              <p>Πού πήγαν τα ημερήσια έξοδα.</p>
+            </div>
+            <button type="button" onclick="go('vStats',document.querySelector('[data-v=vStats]'))">
+              Βλέπε περισσότερα ›
+            </button>
           </div>
-          <div class="progress-labels">
-            <span>Χρησιμοποιημένο</span>
-            <span id="dSpent">€0,00 / €0,00</span>
+
+          <div class="mobile-category-card" id="mobileCategoryCard">
+            <div class="mobile-donut-wrap">
+              <div class="mobile-donut" id="mobileCategoryDonut">
+                <div class="mobile-donut-hole">
+                  <span id="mobileCategoryTotal">€0,00</span>
+                  <small>σύνολο</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="mobile-category-list" id="mobileCategoryList"></div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- QUICK STATS -->
-      <div class="bento-card stat-widget stat-fixed">
-        <div class="widget-icon red">🏠</div>
-        <div class="stat-label">Πάγια</div>
-        <div class="stat-value red" id="sFixed">€0</div>
-      </div>
+        <!-- QUICK ADD -->
+        <section class="modern-quick-add-card">
+          <div class="modern-quick-add-head">
+            <div>
+              <span class="modern-dot-live"></span>
+              <strong>Quick add</strong>
+            </div>
+            <small>γράψε ή μίλα</small>
+          </div>
 
-      <div class="bento-card stat-widget stat-cards">
-        <div class="widget-icon blue">💳</div>
-        <div class="stat-label">Κάρτες</div>
-        <div class="stat-value blue" id="sCC">€0</div>
-      </div>
+          <div class="quick-add-box modern-quick-add-box">
+            <div class="quick-add-row modern-quick-add-row">
+              <input
+                type="text"
+                id="quickAddInput"
+                placeholder="π.χ. καφές 3 ticket"
+                autocomplete="off"
+              >
 
-      <div class="bento-card stat-widget stat-daily">
-        <div class="widget-icon amber">🧾</div>
-        <div class="stat-label">Ημερήσια</div>
-        <div class="stat-value amber" id="sDaily">€0</div>
-      </div>
+              <button type="button" class="quick-voice-btn modern-icon-btn" id="quickVoiceBtn" onclick="startQuickVoice()" aria-label="Φωνητική καταχώρηση">
+                🎤
+              </button>
+            </div>
 
-      <div class="bento-card stat-widget stat-remain">
-        <div class="widget-icon teal">✅</div>
-        <div class="stat-label">Υπόλοιπο</div>
-        <div class="stat-value teal" id="sRemain">€0</div>
-      </div>
+            <div class="quick-add-hint modern-quick-hints">
+              <span>καφές 3</span>
+              <span>σούπερ μάρκετ 25</span>
+              <span>φαγητό 12 ticket</span>
+            </div>
 
-      <section class="bento-card payment-sources-widget">
-        <div class="section-title">🎫 Voucher / Ticket διαθέσιμα</div>
-        <div id="paymentSourcesSummary" class="payment-sources-grid"></div>
+            <div class="smart-quick-repeat dashboard-quick-chips" id="quickRepeatChips" aria-label="Γρήγορες προτάσεις"></div>
+          </div>
+        </section>
       </section>
 
-      <!-- FIXED EXPENSES -->
-      <section class="bento-card list-widget fixed-list-widget">
-        <div class="section-header">
+      <!-- SIDE SUMMARY -->
+      <aside class="modern-dashboard-side">
+        <div class="modern-side-title">
+          <span>Snapshot</span>
+          <small>τρέχων μήνας</small>
+        </div>
+
+        <div class="modern-stats-grid">
+          <div class="bento-card stat-widget stat-fixed modern-stat-card">
+            <div class="widget-icon red">🏠</div>
+            <div>
+              <div class="stat-label">Πάγια</div>
+              <div class="stat-value red" id="sFixed">€0</div>
+            </div>
+          </div>
+
+          <div class="bento-card stat-widget stat-cards modern-stat-card">
+            <div class="widget-icon blue">💳</div>
+            <div>
+              <div class="stat-label">Κάρτες</div>
+              <div class="stat-value blue" id="sCC">€0</div>
+            </div>
+          </div>
+
+          <div class="bento-card stat-widget stat-daily modern-stat-card">
+            <div class="widget-icon amber">🧾</div>
+            <div>
+              <div class="stat-label">Ημερήσια</div>
+              <div class="stat-value amber" id="sDaily">€0</div>
+            </div>
+          </div>
+
+          <div class="bento-card stat-widget stat-remain modern-stat-card modern-stat-primary">
+            <div class="widget-icon teal">✅</div>
+            <div>
+              <div class="stat-label">Υπόλοιπο</div>
+              <div class="stat-value teal" id="sRemain">€0</div>
+            </div>
+          </div>
+        </div>
+
+        <section class="bento-card payment-sources-widget modern-payment-widget">
+          <div class="section-title">🎫 Voucher / Ticket</div>
+          <div id="paymentSourcesSummary" class="payment-sources-grid"></div>
+        </section>
+      </aside>
+
+      <!-- DASHBOARD PREVIEW -->
+      <section class="modern-dashboard-preview">
+        <section class="bento-card dashboard-preview-widget">
+          <div class="section-header modern-list-header">
+            <div class="section-title-wrap">
+              <div class="section-dot teal-dot"></div>
+              <div>
+                <div class="section-title">Τελευταίες κινήσεις</div>
+                <div class="section-subtitle">Οι 5 πιο πρόσφατες ημερήσιες κινήσεις του μήνα</div>
+              </div>
+            </div>
+
+            <button class="section-add" onclick="go('vTransactions',document.querySelector('[data-v=vTransactions]'))">
+              Προβολή όλων
+            </button>
+          </div>
+
+          <div class="dashboard-preview-list" id="dashRecentList"></div>
+        </section>
+      </section>
+
+    </section>
+  </main>
+<!-- TRANSACTIONS -->
+  <main class="view" id="vTransactions">
+    <section class="page-grid transactions-page">
+
+      <div class="page-hero bento-card transactions-hero compact-transactions-hero">
+        <div>
+          <div class="eyebrow">Transactions</div>
+          <h2>Κινήσεις & Έξοδα</h2>
+          <p>Όλα τα πάγια και ημερήσια έξοδα σε ξεχωριστή, καθαρή σελίδα.</p>
+        </div>
+
+        <button class="section-add primary-add" onclick="openAddCenterSheet('manual')">
+          + Νέο έξοδο
+        </button>
+      </div>
+
+      <div class="mobile-transactions-tools" aria-label="Φίλτρα κινήσεων">
+        <label class="mobile-transaction-search">
+          <span>⌕</span>
+          <input id="mobileTransactionSearch" type="search" placeholder="Αναζήτηση κινήσεων..." oninput="renderDailyList();renderFixedList();">
+        </label>
+        <div class="mobile-transaction-chips">
+          <button type="button" class="mobile-transaction-chip active" data-mobile-transaction-filter="all" onclick="setMobileTransactionFilter('all')">Όλα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="expense" onclick="setMobileTransactionFilter('expense')">Έξοδα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="today" onclick="setMobileTransactionFilter('today')">Σήμερα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">7 ημέρες</button>
+        </div>
+      </div>
+
+      <section class="bento-card list-widget fixed-list-widget transactions-list-card">
+        <div class="section-header modern-list-header">
           <div class="section-title-wrap">
             <div class="section-dot red-dot"></div>
             <div>
@@ -260,9 +458,8 @@
         <div class="expense-list" id="lFixed"></div>
       </section>
 
-      <!-- DAILY EXPENSES -->
-      <section class="bento-card list-widget daily-list-widget">
-        <div class="section-header">
+      <section class="bento-card list-widget daily-list-widget transactions-list-card">
+        <div class="section-header modern-list-header">
           <div class="section-title-wrap">
             <div class="section-dot amber-dot"></div>
             <div>
@@ -461,53 +658,241 @@
     </section>
   </main>
 
+
+  <!-- MORE / MOBILE HUB -->
+  <main class="view" id="vMore">
+    <section class="page-grid more-page">
+      <div class="page-hero bento-card more-hero">
+        <div>
+          <div class="eyebrow">More</div>
+          <h2>Περισσότερα</h2>
+          <p>Όλα τα εργαλεία και οι δευτερεύουσες ενότητες σε ένα καθαρό σημείο.</p>
+        </div>
+      </div>
+
+      <section class="bento-card more-menu-card">
+        <button class="more-menu-item" onclick="go('vCards',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">💳</span>
+          <span><strong>Κάρτες & Πηγές</strong><small>Πιστωτικές, πηγές πληρωμής και δόσεις</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="go('vAdvisor',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">📖</span>
+          <span><strong>Σύμβουλος</strong><small>Οικονομική ανάλυση και προτάσεις</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="go('vStats',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">📊</span>
+          <span><strong>Στατιστικά</strong><small>Κατηγορίες, trends και γραφήματα</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="go('vArchive',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">🗄️</span>
+          <span><strong>Αρχείο</strong><small>Προηγούμενοι μήνες και ιστορικό</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="go('vSettings',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">⚙️</span>
+          <span><strong>Ρυθμίσεις</strong><small>Telegram, εισαγωγή / εξαγωγή και λογαριασμός</small></span>
+          <em>›</em>
+        </button>
+      </section>
+    </section>
+  </main>
+
 </div>
 
-<!-- FAB -->
-<button class="fab" onclick="openModal('daily')" aria-label="Νέο έξοδο">+</button>
+<!-- MOBILE FLOATING NAV -->
+<nav class="mobile-bottom-nav" aria-label="Κάτω πλοήγηση">
+  <button class="mobile-nav-item nav-btn active" data-v="vDash" onclick="go('vDash',this)" aria-label="Αρχική">
+    <svg viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span>Αρχική</span>
+  </button>
 
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <div class="nav-inner">
-    <button class="nav-btn active" data-v="vDash" onclick="go('vDash',this)">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Dashboard</span>
-    </button>
+  <button class="mobile-nav-item nav-btn" data-v="vTransactions" onclick="go('vTransactions',this)" aria-label="Κινήσεις">
+    <svg viewBox="0 0 24 24">
+      <path d="M8 6h13"/>
+      <path d="M8 12h13"/>
+      <path d="M8 18h13"/>
+      <path d="M3 6h.01"/>
+      <path d="M3 12h.01"/>
+      <path d="M3 18h.01"/>
+    </svg>
+    <span>Κινήσεις</span>
+  </button>
 
-    <button class="nav-btn" data-v="vIncome" onclick="go('vIncome',this)">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 1v22"/>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-      <span>Έσοδα</span>
-    </button>
+  <button class="mobile-nav-fab" type="button" onclick="openAddCenterSheet()" aria-label="Νέα καταχώρηση">
+    +
+  </button>
 
-    <button class="nav-btn" data-v="vCards" onclick="go('vCards',this)">
-      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      <span>Κάρτες</span>
-    </button>
+  <button class="mobile-nav-item nav-btn" data-v="vIncome" onclick="go('vIncome',this)" aria-label="Έσοδα">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 1v22"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    <span>Έσοδα</span>
+  </button>
 
-    <button class="nav-btn" data-v="vAdvisor" onclick="go('vAdvisor',this)">
-      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      <span>Σύμβουλος</span>
-    </button>
-
-    <button class="nav-btn" data-v="vStats" onclick="go('vStats',this)">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span>Στατιστικά</span>
-    </button>
-
-    <button class="nav-btn" data-v="vArchive" onclick="go('vArchive',this)">
-      <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-      <span>Αρχείο</span>
-    </button>
-
-    <button class="nav-btn" data-v="vSettings" onclick="go('vSettings',this)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      <span>Ρυθμίσεις</span>
-    </button>
-  </div>
+  <button class="mobile-nav-item nav-btn" data-v="vMore" onclick="go('vMore',this)" aria-label="Περισσότερα">
+    <svg viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1.8"/>
+      <circle cx="12" cy="12" r="1.8"/>
+      <circle cx="19" cy="12" r="1.8"/>
+    </svg>
+    <span>More</span>
+  </button>
 </nav>
+
+<!-- ADD CENTER MOBILE SHEET -->
+<div class="add-center-overlay" id="addCenterSheet" onclick="closeAddCenterSheet(event)">
+  <section class="add-center-sheet" role="dialog" aria-modal="true" aria-label="Νέα καταχώρηση εξόδου">
+    <div class="add-center-handle"></div>
+
+    <div class="add-center-header">
+      <div>
+        <div class="add-center-kicker">Νέα καταχώρηση</div>
+        <h2>Νέο έξοδο</h2>
+        <p>Γρήγορα με λέξεις ή αναλυτικά με φόρμα.</p>
+      </div>
+      <button type="button" class="add-center-close" onclick="closeAddCenterSheet()" aria-label="Κλείσιμο">×</button>
+    </div>
+
+    <div class="add-center-tabs" role="tablist" aria-label="Τρόπος καταχώρησης">
+      <button type="button" class="add-center-tab active" id="addCenterQuickTab" onclick="switchAddCenterTab('quick')" role="tab" aria-selected="true">
+        ⚡ Quick
+      </button>
+      <button type="button" class="add-center-tab" id="addCenterManualTab" onclick="switchAddCenterTab('manual')" role="tab" aria-selected="false">
+        📄 Αναλυτικό
+      </button>
+    </div>
+
+    <div class="add-center-panel active" id="addCenterQuickPanel" role="tabpanel">
+      <div class="add-center-input-row">
+        <input
+          type="text"
+          id="quickAddSheetInput"
+          placeholder="π.χ. καφές 3 ticket"
+          autocomplete="off"
+        >
+        <button type="button" class="add-center-voice" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Φωνητική καταχώρηση">🎤</button>
+      </div>
+
+      <div class="smart-quick-preview add-center-preview" id="quickAddSheetPreview" aria-live="polite"></div>
+      <div class="quick-add-error hidden add-center-error" id="quickAddSheetError" aria-live="polite"></div>
+
+      <div class="add-center-section-title">Προτάσεις</div>
+      <div class="add-center-examples">
+        <button type="button" onclick="fillQuickAddSheet('καφές 3')">καφές 3</button>
+        <button type="button" onclick="fillQuickAddSheet('σούπερ μάρκετ 25')">σούπερ μάρκετ 25</button>
+        <button type="button" onclick="fillQuickAddSheet('φαγητό 12 ticket')">φαγητό 12 ticket</button>
+      </div>
+
+      <div class="add-center-section-title add-center-recent-title">Πρόσφατα</div>
+      <div class="add-center-recent" id="addCenterRecentChips"></div>
+
+      <button type="button" class="add-center-submit quick-sheet-submit" id="quickAddSheetSubmit" onclick="submitQuickAddSheet()">
+        Προσθήκη εξόδου
+      </button>
+    </div>
+
+    <div class="add-center-panel" id="addCenterManualPanel" role="tabpanel">
+      <div class="add-center-manual-form">
+        <div class="add-center-field">
+          <label>Τίτλος</label>
+          <input type="text" id="acDN" placeholder="π.χ. Σούπερ μάρκετ" autocomplete="off">
+        </div>
+
+        <div class="add-center-field">
+          <label>Ποσό</label>
+          <input type="number" id="acDA" placeholder="€ 0,00" step="0.01" min="0" inputmode="decimal">
+        </div>
+
+        <div class="add-center-field add-center-select-field add-center-category-field">
+          <label>Κατηγορία</label>
+
+          <select id="acDC" class="add-center-native-select" aria-hidden="true" tabindex="-1">
+            <option value="Τρόφιμα">🛒 Τρόφιμα</option>
+            <option value="Καφέδες">☕ Καφέδες</option>
+            <option value="Μεταφορά">🚗 Μεταφορά</option>
+            <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
+            <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
+            <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
+            <option value="Υγεία">🏥 Υγεία</option>
+            <option value="Ρούχα">👕 Ρούχα</option>
+            <option value="Δάνεια">🏦 Δάνεια</option>
+            <option value="Συνδρομές">📱 Συνδρομές</option>
+            <option value="Άλλο">📌 Άλλο</option>
+          </select>
+
+          <button type="button" class="add-center-picker-button" id="acDCCustom" onclick="toggleAddCenterCategoryPicker(event)" aria-expanded="false">
+            <span class="add-center-picker-left">
+              <span class="add-center-picker-icon" id="acDCCustomIcon">🛒</span>
+              <span id="acDCCustomText">Τρόφιμα</span>
+            </span>
+            <span class="add-center-picker-chevron">›</span>
+          </button>
+
+          <div class="add-center-category-list" id="acDCCustomList" role="listbox" aria-label="Επιλογή κατηγορίας">
+            <button type="button" onclick="selectAddCenterCategory('Τρόφιμα')">🛒 <span>Τρόφιμα</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Καφέδες')">☕ <span>Καφέδες</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Μεταφορά')">🚗 <span>Μεταφορά</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Ψυχαγωγία')">🎭 <span>Ψυχαγωγία</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Φαγητό έξω')">🍕 <span>Φαγητό έξω</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Λογαριασμοί')">💡 <span>Λογαριασμοί</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Υγεία')">🏥 <span>Υγεία</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Ρούχα')">👕 <span>Ρούχα</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Δάνεια')">🏦 <span>Δάνεια</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Συνδρομές')">📱 <span>Συνδρομές</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Άλλο')">📌 <span>Άλλο</span></button>
+          </div>
+        </div>
+
+        <div class="add-center-field add-center-select-field add-center-payment-field">
+          <label>Πηγή πληρωμής</label>
+
+          <select id="acDPay" class="add-center-native-select" aria-hidden="true" tabindex="-1">
+            <option value="">Κανονικό budget</option>
+          </select>
+
+          <button type="button" class="add-center-picker-button" id="acDPayCustom" onclick="toggleAddCenterPaymentPicker(event)" aria-expanded="false">
+            <span class="add-center-picker-left">
+              <span class="add-center-picker-icon" id="acDPayCustomIcon">💶</span>
+              <span id="acDPayCustomText">Κανονικό budget</span>
+            </span>
+            <span class="add-center-picker-chevron">›</span>
+          </button>
+
+          <div class="add-center-payment-list" id="acDPayCustomList" role="listbox" aria-label="Επιλογή πηγής πληρωμής"></div>
+        </div>
+
+        <div class="add-center-field">
+          <label>Ημερομηνία</label>
+          <input type="date" id="acDD">
+        </div>
+
+        <div class="add-center-field">
+          <label>Σημειώσεις <span>(προαιρετικό)</span></label>
+          <textarea id="acDNotes" rows="3" placeholder="Πρόσθεσε σημείωση..."></textarea>
+        </div>
+
+        <div class="quick-add-error hidden add-center-error" id="addCenterManualError" aria-live="polite"></div>
+
+        <button type="button" class="add-center-submit" id="addCenterManualSubmit" onclick="saveAddCenterManualExpense()">
+          Αποθήκευση εξόδου
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="mDaily">
@@ -759,10 +1144,20 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="app.js?v=32"></script>
+<script src="app.js?v=39"></script>
 <script src="cards.js"></script>
 <script src="sync.js?v=22"></script>
 <script src="advisor.js"></script>
+
+
+
+
+<div class="mobile-transaction-detail-overlay" id="mobileTransactionDetail" onclick="if(event.target===this)closeMobileTransactionDetail()">
+  <div class="mobile-transaction-detail-sheet" role="dialog" aria-modal="true" aria-label="Λεπτομέρειες κίνησης">
+    <div class="mobile-transaction-detail-handle"></div>
+    <div id="mobileTransactionDetailContent"></div>
+  </div>
+</div>
 
 </body>
 </html>

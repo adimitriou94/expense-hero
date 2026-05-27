@@ -1,0 +1,379 @@
+/* =========================================
+   EXPENSE HERO — QUICK ADD V2.1 CLEAN FIX
+   Compatible with current index.html classes:
+   - .smart-quick-preview / #quickAddPreview
+   - .quick-add-error / #quickAddError
+   - .smart-quick-repeat / #quickRepeatChips
+   - .quick-sheet-overlay / #quickAddSheet
+   - .quick-sheet / bottom sheet
+========================================= */
+
+/* ---------- Dashboard inline Quick Add ---------- */
+
+.smart-quick-preview {
+  display: none;
+  margin-top: 12px;
+}
+
+.smart-quick-preview.is-visible,
+.smart-quick-preview.active,
+.smart-quick-preview:not(:empty) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.86);
+  border: 1px solid rgba(130,140,190,.12);
+  box-shadow: 0 10px 28px rgba(15,23,42,.05);
+  color: #172033;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.quick-add-error {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff4f4;
+  border: 1px solid rgba(239,68,68,.14);
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-add-error.hidden,
+.quick-add-error:empty {
+  display: none !important;
+}
+
+.smart-quick-repeat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.smart-quick-repeat:empty {
+  display: none;
+}
+
+.smart-quick-repeat button,
+.quick-repeat-chip {
+  appearance: none;
+  border: 0;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(91,79,255,.10);
+  color: #5145cd;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.modern-add-btn,
+.quick-add-submit {
+  display: none;
+}
+
+.modern-add-btn.is-visible,
+.quick-add-submit.is-visible {
+  display: flex !important;
+  width: 100%;
+  height: 52px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 16px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,#151a33,#5b4fff);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 14px 30px rgba(91,79,255,.24);
+}
+
+.modern-add-btn:disabled,
+.quick-add-submit:disabled {
+  opacity: .45;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* ---------- Toast position above mobile nav ---------- */
+
+.mini-toast,
+.quick-toast,
+.success-toast,
+.error-toast {
+  bottom: 150px !important;
+  z-index: 20000 !important;
+}
+
+/* ---------- Quick Add Sheet ---------- */
+
+.quick-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(15,23,42,.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .24s ease;
+  z-index: 12000;
+}
+
+.quick-sheet-overlay.open,
+.quick-sheet-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.quick-sheet {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 10px 18px calc(26px + env(safe-area-inset-bottom));
+  border-radius: 30px 30px 0 0;
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(255,255,255,.72);
+  box-shadow: 0 -18px 54px rgba(15,23,42,.22);
+  transform: translateY(110%);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1);
+}
+
+.quick-sheet-overlay.open .quick-sheet,
+.quick-sheet-overlay.active .quick-sheet {
+  transform: translateY(0);
+}
+
+.quick-sheet-handle {
+  width: 42px;
+  height: 5px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  background: #d7deea;
+}
+
+.quick-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.quick-sheet-kicker {
+  color: #635bff;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.quick-sheet-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  line-height: .98;
+  font-weight: 950;
+  letter-spacing: -.06em;
+}
+
+.quick-sheet-header p {
+  margin: 8px 0 0;
+  color: #66738c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.quick-sheet-close {
+  appearance: none;
+  border: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  color: #66738c;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.quick-sheet-input-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 54px;
+  gap: 10px;
+  align-items: center;
+}
+
+.quick-sheet-input-row input,
+#quickAddSheetInput {
+  width: 100%;
+  height: 56px;
+  min-width: 0;
+  border: 1px solid rgba(130,140,190,.16);
+  border-radius: 18px;
+  background: rgba(248,250,252,.92);
+  color: #111827;
+  padding: 0 16px;
+  font-size: 16px;
+  outline: none;
+  box-shadow: none;
+}
+
+.quick-sheet-input-row input:focus,
+#quickAddSheetInput:focus {
+  border-color: rgba(91,79,255,.42);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(91,79,255,.10);
+}
+
+.quick-sheet-voice {
+  appearance: none;
+  border: 1px solid rgba(130,140,190,.16);
+  width: 54px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.sheet-preview {
+  margin-top: 14px;
+}
+
+.sheet-error {
+  margin-top: 14px;
+}
+
+.quick-sheet-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.quick-sheet-examples button {
+  appearance: none;
+  border: 0;
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: rgba(91,79,255,.10);
+  color: #5145cd;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.quick-sheet-submit {
+  width: 100%;
+  height: 56px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg,#151a33,#5b4fff);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+  box-shadow: 0 16px 34px rgba(91,79,255,.28);
+  cursor: pointer;
+}
+
+.quick-sheet-submit:disabled {
+  opacity: .45;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* ---------- Auth / desktop safeguards ---------- */
+
+body.auth-pending .quick-sheet-overlay {
+  display: none !important;
+}
+
+@media (min-width: 769px) {
+  .quick-sheet-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .quick-sheet {
+    border-radius: 30px;
+    transform: translateY(20px) scale(.98);
+    padding: 12px 24px 24px;
+  }
+
+  .quick-sheet-overlay.open .quick-sheet,
+  .quick-sheet-overlay.active .quick-sheet {
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================
+   QUICK ADD ROLE SPLIT V1
+   Dashboard = minimal capture
+   FAB sheet = full add flow
+========================================= */
+
+/* Dashboard quick add: hide duplicate full-flow pieces */
+.modern-quick-add-card #quickAddPreview,
+.modern-quick-add-card #quickAddError,
+.modern-quick-add-card .modern-add-btn,
+.modern-quick-add-card .quick-add-submit {
+  display: none !important;
+}
+
+/* Dashboard quick add layout stays compact */
+.modern-quick-add-card .modern-quick-add-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 50px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.modern-quick-add-card #quickAddInput {
+  height: 50px !important;
+}
+
+.modern-quick-add-card #quickVoiceBtn {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+/* Chips are the only dashboard helper */
+.dashboard-quick-chips,
+.modern-quick-add-card .smart-quick-repeat {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+.dashboard-quick-chips:empty,
+.modern-quick-add-card .smart-quick-repeat:empty {
+  display: none !important;
+}
+
+/* Sheet remains the full add experience */
+.quick-sheet .smart-quick-preview,
+.quick-sheet .quick-add-error,
+.quick-sheet .quick-sheet-submit {
+  display: flex;
+}
