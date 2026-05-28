@@ -1954,3 +1954,84 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     min-height:54px !important;
   }
 }
+
+/* ============================================================
+   QUICK ADD V12 — SAFARI MOBILE BROWSER SAFE AREA FIX
+   Fixes: iPhone Safari bottom URL toolbar covering the save button.
+   Scope: Add Center only. CSS-only patch.
+   ============================================================ */
+
+@media (max-width:768px){
+  /* Use the small viewport on mobile Safari so the sheet does not assume
+     space that is actually occupied by the browser toolbar. */
+  .add-center-overlay,
+  .add-center-overlay.active{
+    height:100svh !important;
+    max-height:100svh !important;
+    min-height:100svh !important;
+    overflow:hidden !important;
+  }
+
+  .add-center-v4{
+    height:calc(100svh - 14px - env(safe-area-inset-top)) !important;
+    max-height:calc(100svh - 14px - env(safe-area-inset-top)) !important;
+    min-height:0 !important;
+  }
+
+  /* In Safari browser mode the bottom toolbar can overlap fixed/absolute UI.
+     Keep the action area visibly above it. */
+  .add-center-v4 .add-center-sticky-actions{
+    padding:12px 18px calc(88px + env(safe-area-inset-bottom)) !important;
+    background:linear-gradient(180deg,rgba(243,246,255,0),rgba(243,246,255,.98) 18%,#f3f6ff 100%) !important;
+  }
+
+  .add-center-v4 .add-center-scroll-area{
+    padding-bottom:205px !important;
+    scroll-padding-bottom:205px !important;
+  }
+
+  body.add-center-manual-active .add-center-v4 .add-center-scroll-area{
+    padding-bottom:235px !important;
+    scroll-padding-bottom:235px !important;
+  }
+}
+
+/* When installed as PWA / standalone there is no Safari URL toolbar,
+   so we bring the button back down and keep only the native safe area. */
+@media (max-width:768px) and (display-mode: standalone){
+  .add-center-overlay,
+  .add-center-overlay.active{
+    height:100dvh !important;
+    max-height:100dvh !important;
+    min-height:100dvh !important;
+  }
+
+  .add-center-v4{
+    height:calc(100dvh - 14px - env(safe-area-inset-top)) !important;
+    max-height:calc(100dvh - 14px - env(safe-area-inset-top)) !important;
+  }
+
+  .add-center-v4 .add-center-sticky-actions{
+    padding:12px 18px calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .add-center-v4 .add-center-scroll-area{
+    padding-bottom:128px !important;
+    scroll-padding-bottom:128px !important;
+  }
+
+  body.add-center-manual-active .add-center-v4 .add-center-scroll-area{
+    padding-bottom:165px !important;
+    scroll-padding-bottom:165px !important;
+  }
+}
+
+/* iOS fallback: older Safari versions may not fully respect svh.
+   This keeps the bottom action safe anyway. */
+@supports (-webkit-touch-callout:none){
+  @media (max-width:768px){
+    .add-center-v4 .add-center-sticky-actions{
+      padding-bottom:calc(92px + env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
