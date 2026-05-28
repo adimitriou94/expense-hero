@@ -324,3 +324,56 @@ body.auth-pending .quick-sheet-overlay {
     transform: translateY(0) scale(1);
   }
 }
+
+
+/* =========================================
+   QUICK ADD ROLE SPLIT V1
+   Dashboard = minimal capture
+   FAB sheet = full add flow
+========================================= */
+
+/* Dashboard quick add: hide duplicate full-flow pieces */
+.modern-quick-add-card #quickAddPreview,
+.modern-quick-add-card #quickAddError,
+.modern-quick-add-card .modern-add-btn,
+.modern-quick-add-card .quick-add-submit {
+  display: none !important;
+}
+
+/* Dashboard quick add layout stays compact */
+.modern-quick-add-card .modern-quick-add-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 50px !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.modern-quick-add-card #quickAddInput {
+  height: 50px !important;
+}
+
+.modern-quick-add-card #quickVoiceBtn {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+/* Chips are the only dashboard helper */
+.dashboard-quick-chips,
+.modern-quick-add-card .smart-quick-repeat {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+.dashboard-quick-chips:empty,
+.modern-quick-add-card .smart-quick-repeat:empty {
+  display: none !important;
+}
+
+/* Sheet remains the full add experience */
+.quick-sheet .smart-quick-preview,
+.quick-sheet .quick-add-error,
+.quick-sheet .quick-sheet-submit {
+  display: flex;
+}

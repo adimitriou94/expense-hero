@@ -1,0 +1,2509 @@
+
+/* ===== Imported from transactions-header-v4-polish.css ===== */
+/* ============================================================
+   EXPENSE HERO — MOBILE TRANSACTIONS V2
+   Mobile-only redesign for the Transactions page.
+   Safe layer: does not affect desktop/dashboard/add center.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vTransactions{
+    padding:0 14px calc(120px + env(safe-area-inset-bottom)) !important;
+    background:linear-gradient(180deg,#f7f9ff 0%,#eef3ff 100%) !important;
+  }
+
+  #vTransactions .transactions-page{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:14px !important;
+    max-width:100% !important;
+    margin:0 !important;
+    padding:14px 0 0 !important;
+  }
+
+  #vTransactions .transactions-hero{
+    min-height:auto !important;
+    padding:18px 4px 6px !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    border:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    border-radius:0 !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    display:none !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    margin:0 !important;
+    font-size:28px !important;
+    line-height:1 !important;
+    letter-spacing:-.06em !important;
+    font-weight:950 !important;
+    color:#12172b !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    display:none !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add{
+    width:44px !important;
+    height:44px !important;
+    padding:0 !important;
+    border-radius:16px !important;
+    font-size:0 !important;
+    background:rgba(255,255,255,.82) !important;
+    color:#5b4fff !important;
+    border:1px solid rgba(120,130,180,.12) !important;
+    box-shadow:0 12px 28px rgba(50,60,120,.08) !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add::before{
+    content:'+';
+    font-size:26px;
+    font-weight:900;
+    line-height:1;
+  }
+
+  .mobile-transactions-tools{
+    display:grid;
+    gap:12px;
+    margin:0 0 2px;
+  }
+
+  .mobile-transaction-search{
+    height:48px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.84);
+    border:1px solid rgba(120,130,180,.12);
+    box-shadow:0 12px 30px rgba(40,50,120,.06);
+  }
+
+  .mobile-transaction-search span{
+    color:#8c96b2;
+    font-size:17px;
+  }
+
+  .mobile-transaction-search input{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#12172b;
+    font-size:14px;
+    font-weight:750;
+  }
+
+  .mobile-transaction-search input::placeholder{
+    color:#9aa3bb;
+  }
+
+  .mobile-transaction-chips{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+
+  .mobile-transaction-chips::-webkit-scrollbar{display:none;}
+
+  .mobile-transaction-chip{
+    flex:0 0 auto;
+    height:36px;
+    padding:0 14px;
+    border:0;
+    border-radius:999px;
+    background:rgba(255,255,255,.78);
+    color:#65708d;
+    font-size:13px;
+    font-weight:850;
+    box-shadow:0 8px 22px rgba(40,50,120,.05);
+  }
+
+  .mobile-transaction-chip.active{
+    background:linear-gradient(135deg,#6b55ff,#4c39d8);
+    color:white;
+    box-shadow:0 12px 26px rgba(91,79,255,.26);
+  }
+
+  #vTransactions .transactions-list-card{
+    padding:0 !important;
+    border-radius:28px !important;
+    background:rgba(255,255,255,.88) !important;
+    border:1px solid rgba(255,255,255,.78) !important;
+    box-shadow:0 16px 42px rgba(30,40,100,.08) !important;
+    overflow:hidden !important;
+  }
+
+  #vTransactions .fixed-list-widget{
+    display:none !important;
+  }
+
+  #vTransactions .modern-list-header{
+    padding:18px 18px 10px !important;
+    border:0 !important;
+  }
+
+  #vTransactions .section-title{
+    font-size:18px !important;
+    font-weight:950 !important;
+    color:#12172b !important;
+    letter-spacing:-.04em !important;
+  }
+
+  #vTransactions .section-subtitle{
+    margin-top:4px !important;
+    font-size:12px !important;
+    font-weight:750 !important;
+    color:#8792ad !important;
+  }
+
+  #vTransactions .section-add:not(.primary-add){
+    display:none !important;
+  }
+
+  #vTransactions .expense-list{
+    padding:0 14px 14px !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  #vTransactions .day-header{
+    margin:14px 2px 8px !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    background:transparent !important;
+    border:0 !important;
+  }
+
+  #vTransactions .day-header span:first-child{
+    font-size:13px !important;
+    font-weight:900 !important;
+    color:#303854 !important;
+  }
+
+  #vTransactions .day-total{
+    font-size:13px !important;
+    font-weight:950 !important;
+    color:#ef4444 !important;
+  }
+
+  #vTransactions .expense-item{
+    margin:0 0 10px !important;
+    padding:13px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.92) !important;
+    border:1px solid rgba(120,130,180,.08) !important;
+    box-shadow:0 10px 26px rgba(35,45,100,.055) !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:12px !important;
+    transition:transform .18s ease, box-shadow .18s ease !important;
+  }
+
+  #vTransactions .expense-item:active{
+    transform:scale(.985);
+  }
+
+  #vTransactions .expense-icon{
+    width:48px !important;
+    height:48px !important;
+    border-radius:17px !important;
+    font-size:20px !important;
+    flex:0 0 48px !important;
+  }
+
+  #vTransactions .expense-info{
+    min-width:0 !important;
+    flex:1 !important;
+  }
+
+  #vTransactions .expense-name{
+    font-size:15px !important;
+    font-weight:950 !important;
+    color:#12172b !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  #vTransactions .expense-cat{
+    margin-top:3px !important;
+    font-size:12px !important;
+    font-weight:750 !important;
+    color:#7f8aa7 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  #vTransactions .expense-amount{
+    font-family:var(--mono) !important;
+    font-size:14px !important;
+    font-weight:950 !important;
+    color:#ef4444 !important;
+    white-space:nowrap !important;
+    margin-left:auto !important;
+  }
+
+  #vTransactions .expense-actions{
+    display:none !important;
+  }
+
+  #vTransactions .empty{
+    min-height:360px !important;
+    padding:28px 22px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    text-align:center !important;
+    gap:14px !important;
+    color:#6f7893 !important;
+    font-weight:800 !important;
+    background:transparent !important;
+  }
+
+  #vTransactions .empty svg{
+    width:110px !important;
+    height:110px !important;
+    padding:22px !important;
+    border-radius:32px !important;
+    background:linear-gradient(135deg,#eef2ff,#fff) !important;
+    color:#6b55ff !important;
+    box-shadow:0 18px 46px rgba(90,70,255,.12) !important;
+  }
+
+  .mobile-transaction-detail-overlay{
+    position:fixed;
+    inset:0;
+    z-index:16000;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    background:rgba(15,23,42,.42);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .22s ease;
+  }
+
+  .mobile-transaction-detail-overlay.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .mobile-transaction-detail-sheet{
+    width:100%;
+    max-width:440px;
+    max-height:88vh;
+    overflow:auto;
+    padding:12px 18px calc(18px + env(safe-area-inset-bottom));
+    border-radius:32px 32px 0 0;
+    background:rgba(255,255,255,.96);
+    box-shadow:0 -22px 70px rgba(15,23,42,.22);
+    transform:translateY(102%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .mobile-transaction-detail-overlay.active .mobile-transaction-detail-sheet{
+    transform:translateY(0);
+  }
+
+  .mobile-transaction-detail-handle{
+    width:46px;
+    height:5px;
+    border-radius:999px;
+    background:#d9def0;
+    margin:0 auto 18px;
+  }
+
+  .mobile-transaction-detail-top{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:8px;
+    padding:4px 0 18px;
+  }
+
+  .mobile-transaction-detail-icon{
+    width:76px;
+    height:76px;
+    border-radius:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f5f0e8;
+    font-size:34px;
+  }
+
+  .mobile-transaction-detail-title{
+    font-size:24px;
+    font-weight:950;
+    color:#12172b;
+    letter-spacing:-.05em;
+  }
+
+  .mobile-transaction-detail-amount{
+    font-size:28px;
+    font-weight:950;
+    color:#ef4444;
+    font-family:var(--mono);
+  }
+
+  .mobile-transaction-detail-meta{
+    color:#7f8aa7;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .mobile-transaction-detail-list{
+    border-radius:24px;
+    overflow:hidden;
+    background:#f8faff;
+    border:1px solid rgba(120,130,180,.10);
+  }
+
+  .mobile-transaction-detail-row{
+    min-height:50px;
+    padding:0 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:1px solid rgba(120,130,180,.08);
+    font-size:14px;
+  }
+
+  .mobile-transaction-detail-row:last-child{border-bottom:0;}
+  .mobile-transaction-detail-row span:first-child{color:#7f8aa7;font-weight:800;}
+  .mobile-transaction-detail-row span:last-child{color:#12172b;font-weight:900;text-align:right;}
+
+  .mobile-transaction-detail-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+  }
+
+  .mobile-transaction-detail-actions button{
+    height:52px;
+    border:0;
+    border-radius:18px;
+    font-size:14px;
+    font-weight:950;
+  }
+
+  .mobile-detail-edit{
+    background:#eef2ff;
+    color:#5145cd;
+  }
+
+  .mobile-detail-delete{
+    background:#fff1f2;
+    color:#ef4444;
+  }
+
+  .mobile-detail-close{
+    width:100%;
+    height:50px;
+    margin-top:10px;
+    border:0;
+    border-radius:18px;
+    background:#f1f4fa;
+    color:#65708d;
+    font-weight:900;
+  }
+}
+
+@media (min-width: 769px){
+  .mobile-transactions-tools,
+  .mobile-transaction-detail-overlay{display:none !important;}
+}
+
+
+/* Integration fix: transactions page add buttons use the shared Add Center from app.js. */
+
+
+/* ============================================================
+   TRANSACTIONS COMPLETE V3 — mobile polish/completion
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vTransactions .expense-item.tx-v3-row{
+    position:relative;
+    min-height:72px;
+    padding:13px 14px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.88) !important;
+    border:1px solid rgba(130,140,190,.11) !important;
+    box-shadow:0 10px 28px rgba(20,30,70,.045) !important;
+    margin-bottom:10px !important;
+  }
+
+  #vTransactions .expense-item.tx-v3-row:active{
+    transform:scale(.985);
+  }
+
+  #vTransactions .tx-v3-row .expense-info{
+    min-width:0;
+  }
+
+  #vTransactions .tx-v3-row .expense-name{
+    font-size:15px !important;
+    font-weight:900 !important;
+    letter-spacing:-.02em;
+    color:#151b2f !important;
+  }
+
+  #vTransactions .tx-v3-row .expense-cat{
+    margin-top:4px;
+    font-size:12px !important;
+    font-weight:750 !important;
+    color:#8a95aa !important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #vTransactions .tx-v3-row-right{
+    margin-left:auto;
+    text-align:right;
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:center;
+    gap:4px;
+  }
+
+  #vTransactions .tx-v3-row-right .expense-amount{
+    font-size:15px !important;
+    font-weight:950 !important;
+    color:#ef4444 !important;
+    font-family:var(--mono,monospace);
+  }
+
+  #vTransactions .tx-v3-row-right span{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#a1abc0;
+  }
+
+  #vTransactions .tx-v3-day-header{
+    margin:20px 2px 10px !important;
+    padding:0 2px !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:space-between !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+
+  #vTransactions .tx-v3-day-header div{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  #vTransactions .tx-v3-day-header span:first-child{
+    font-size:15px !important;
+    font-weight:950 !important;
+    letter-spacing:-.03em;
+    color:#111827 !important;
+  }
+
+  #vTransactions .tx-v3-day-header small{
+    font-size:11px;
+    font-weight:800;
+    color:#8d98ae;
+  }
+
+  #vTransactions .tx-v3-day-header .day-total{
+    font-size:13px !important;
+    font-weight:950 !important;
+    font-family:var(--mono,monospace);
+    color:#ef4444 !important;
+  }
+
+  .tx-v3-empty{
+    margin-top:14px;
+    border-radius:28px !important;
+    background:rgba(255,255,255,.78) !important;
+    border:1px solid rgba(130,140,190,.12) !important;
+  }
+
+  .mobile-transaction-detail-overlay.active{
+    display:flex !important;
+  }
+
+  .mobile-transaction-detail-overlay{
+    z-index:18000 !important;
+    background:rgba(15,23,42,.42) !important;
+    backdrop-filter:blur(10px) saturate(1.15) !important;
+    -webkit-backdrop-filter:blur(10px) saturate(1.15) !important;
+  }
+
+  .mobile-transaction-detail-sheet{
+    max-width:440px !important;
+    width:calc(100% - 18px) !important;
+    margin:0 auto calc(10px + env(safe-area-inset-bottom)) !important;
+    border-radius:34px !important;
+    padding:10px 16px 18px !important;
+    background:rgba(255,255,255,.96) !important;
+    border:1px solid rgba(255,255,255,.86) !important;
+    box-shadow:0 24px 70px rgba(15,23,42,.24) !important;
+  }
+
+  .mobile-transaction-detail-handle{
+    width:42px !important;
+    height:5px !important;
+    border-radius:999px !important;
+    background:#d6dcea !important;
+    margin:2px auto 14px !important;
+  }
+
+  .tx-v3-detail-head{
+    position:relative;
+    text-align:center;
+    padding:4px 4px 16px;
+  }
+
+  .tx-v3-sheet-close{
+    position:absolute;
+    right:0;
+    top:0;
+    width:34px;
+    height:34px;
+    border:0;
+    border-radius:14px;
+    background:#f1f4fb;
+    color:#778199;
+    font-size:22px;
+    font-weight:700;
+  }
+
+  .tx-v3-detail-icon{
+    width:62px;
+    height:62px;
+    border-radius:23px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:2px auto 12px;
+    font-size:27px;
+    box-shadow:0 12px 26px rgba(20,30,70,.08);
+  }
+
+  .tx-v3-detail-kicker{
+    font-size:11px;
+    font-weight:950;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#655cff;
+    margin-bottom:5px;
+  }
+
+  .tx-v3-detail-head h3{
+    margin:0;
+    font-size:24px;
+    line-height:1.05;
+    font-weight:950;
+    letter-spacing:-.06em;
+    color:#12182a;
+  }
+
+  .tx-v3-detail-amount{
+    margin-top:10px;
+    font-size:32px;
+    line-height:1;
+    font-weight:950;
+    font-family:var(--mono,monospace);
+    color:#ef4444;
+  }
+
+  .tx-v3-detail-subtitle{
+    margin-top:8px;
+    font-size:13px;
+    font-weight:800;
+    color:#8893aa;
+  }
+
+  .tx-v3-detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin:4px 0 14px;
+  }
+
+  .tx-v3-info-tile{
+    min-width:0;
+    border-radius:20px;
+    padding:13px;
+    background:#f7f8fc;
+    border:1px solid rgba(130,140,190,.10);
+  }
+
+  .tx-v3-info-tile span{
+    display:block;
+    font-size:10px;
+    font-weight:950;
+    letter-spacing:.10em;
+    text-transform:uppercase;
+    color:#9aa4b8;
+    margin-bottom:5px;
+  }
+
+  .tx-v3-info-tile strong{
+    display:block;
+    min-width:0;
+    font-size:13px;
+    font-weight:900;
+    color:#182033;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .tx-v3-detail-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding-bottom:2px;
+  }
+
+  .tx-v3-action{
+    height:50px;
+    border:0;
+    border-radius:18px;
+    font-size:14px;
+    font-weight:950;
+  }
+
+  .tx-v3-action.primary{
+    grid-column:1 / -1;
+    background:linear-gradient(135deg,#151a33,#5b4fff);
+    color:white;
+    box-shadow:0 16px 32px rgba(91,79,255,.22);
+  }
+
+  .tx-v3-action.secondary{
+    background:#eef2ff;
+    color:#554bdf;
+  }
+
+  .tx-v3-action.danger{
+    background:#fff1f2;
+    color:#e11d48;
+  }
+
+  .tx-v3-action:active{
+    transform:scale(.98);
+  }
+
+  .add-center-submit{
+    box-shadow:0 14px 34px rgba(91,79,255,.24) !important;
+  }
+}
+
+/* ============================================================
+   TRANSACTIONS HEADER V4 — Mobile unified hero card
+   Goal: bring the desktop transactions hero style to mobile,
+   without changing dashboard/add-center/backend logic.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vTransactions{
+    padding:0 14px calc(122px + env(safe-area-inset-bottom)) !important;
+    background:
+      radial-gradient(circle at 8% 0%, rgba(99,91,255,.10), transparent 34%),
+      radial-gradient(circle at 100% 10%, rgba(34,211,238,.08), transparent 30%),
+      linear-gradient(180deg,#f7f9ff 0%,#eef3ff 100%) !important;
+  }
+
+  #vTransactions .transactions-page{
+    gap:16px !important;
+    padding:14px 0 0 !important;
+  }
+
+  /* Mobile hero becomes a rounded desktop-like card */
+  #vTransactions .transactions-hero{
+    position:relative !important;
+    min-height:174px !important;
+    padding:24px 24px 22px !important;
+    margin:2px 0 4px !important;
+    border-radius:32px !important;
+    overflow:hidden !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:space-between !important;
+    gap:14px !important;
+
+    background:
+      radial-gradient(circle at 92% 18%, rgba(116,92,255,.22), transparent 38%),
+      radial-gradient(circle at 0% 92%, rgba(16,185,129,.13), transparent 34%),
+      rgba(255,255,255,.86) !important;
+    border:1px solid rgba(255,255,255,.82) !important;
+    box-shadow:
+      0 18px 48px rgba(35,45,95,.10),
+      inset 0 1px 0 rgba(255,255,255,.72) !important;
+    backdrop-filter:blur(18px) saturate(1.18) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(1.18) !important;
+  }
+
+  #vTransactions .transactions-hero::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    opacity:.72;
+    background-image:
+      linear-gradient(rgba(95,105,150,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(95,105,150,.055) 1px, transparent 1px);
+    background-size:34px 34px;
+    mask-image:linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    -webkit-mask-image:linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  }
+
+  #vTransactions .transactions-hero > *{
+    position:relative !important;
+    z-index:1 !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    display:block !important;
+    margin:0 0 10px !important;
+    color:#6757ff !important;
+    font-size:11px !important;
+    font-weight:950 !important;
+    letter-spacing:.16em !important;
+    text-transform:uppercase !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    margin:0 !important;
+    max-width:230px !important;
+    font-size:31px !important;
+    line-height:.96 !important;
+    letter-spacing:-.07em !important;
+    font-weight:950 !important;
+    color:#111827 !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    display:block !important;
+    margin:12px 0 0 !important;
+    max-width:235px !important;
+    color:#6b7890 !important;
+    font-size:13px !important;
+    line-height:1.45 !important;
+    font-weight:700 !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add{
+    width:auto !important;
+    height:48px !important;
+    min-width:116px !important;
+    padding:0 17px !important;
+    border-radius:17px !important;
+    flex:0 0 auto !important;
+    align-self:flex-end !important;
+
+    font-size:13px !important;
+    font-weight:950 !important;
+    letter-spacing:-.01em !important;
+    color:#fff !important;
+    background:linear-gradient(135deg,#1f1a62 0%,#5d45f6 100%) !important;
+    border:0 !important;
+    box-shadow:
+      0 16px 30px rgba(91,79,255,.27),
+      inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add::before{
+    content:none !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add:active{
+    transform:scale(.98) translateY(1px) !important;
+  }
+
+  /* Search/filter block sits visually under the hero */
+  #vTransactions .mobile-transactions-tools{
+    margin-top:0 !important;
+  }
+
+  #vTransactions .mobile-transaction-search{
+    height:54px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.88) !important;
+    box-shadow:0 14px 34px rgba(40,50,120,.07) !important;
+  }
+}
+
+@media (max-width: 380px){
+  #vTransactions .transactions-hero{
+    padding:22px 20px 20px !important;
+    border-radius:30px !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    font-size:28px !important;
+    max-width:205px !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    max-width:210px !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add{
+    min-width:104px !important;
+    padding:0 13px !important;
+    font-size:12px !important;
+  }
+}
+
+/* ============================================================
+   TRANSACTIONS HEADER V4.1 — Mobile polish / alignment fix
+   Fixes the broken-looking mobile hero proportions.
+   Keeps desktop untouched.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vTransactions{
+    padding:0 12px calc(122px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vTransactions .transactions-page{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:14px !important;
+    padding:12px 0 0 !important;
+  }
+
+  #vTransactions .transactions-hero{
+    min-height:142px !important;
+    margin:8px 0 2px !important;
+    padding:20px 18px !important;
+    border-radius:28px !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+  }
+
+  #vTransactions .transactions-hero::before{
+    opacity:.42 !important;
+    background-size:30px 30px !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    margin:0 0 7px !important;
+    font-size:10px !important;
+    letter-spacing:.15em !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    max-width:190px !important;
+    font-size:26px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.055em !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    margin:8px 0 0 !important;
+    max-width:205px !important;
+    font-size:12px !important;
+    line-height:1.42 !important;
+    font-weight:750 !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add{
+    height:42px !important;
+    min-width:104px !important;
+    padding:0 13px !important;
+    border-radius:15px !important;
+    align-self:center !important;
+    font-size:12px !important;
+    box-shadow:
+      0 12px 24px rgba(91,79,255,.22),
+      inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  #vTransactions .mobile-transactions-tools{
+    margin-top:0 !important;
+    gap:10px !important;
+  }
+
+  #vTransactions .mobile-transaction-search{
+    height:50px !important;
+    border-radius:20px !important;
+  }
+
+  #vTransactions .mobile-transaction-search input{
+    font-size:14px !important;
+  }
+
+  #vTransactions .mobile-transaction-chips{
+    gap:8px !important;
+    padding-bottom:2px !important;
+  }
+
+  #vTransactions .mobile-transaction-chip{
+    height:36px !important;
+    padding:0 14px !important;
+    border-radius:999px !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+  }
+
+  #vTransactions .transactions-list-card{
+    margin-top:2px !important;
+    border-radius:26px !important;
+    padding:14px !important;
+    overflow:hidden !important;
+  }
+
+  #vTransactions .modern-list-header{
+    padding:0 0 12px !important;
+    margin:0 !important;
+    align-items:center !important;
+  }
+
+  #vTransactions .section-title{
+    font-size:17px !important;
+    line-height:1.1 !important;
+  }
+
+  #vTransactions .section-subtitle{
+    font-size:12px !important;
+  }
+
+  #vTransactions .expense-list{
+    padding:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  #vTransactions .tx-v3-day-header,
+  #vTransactions .day-header{
+    margin:10px 0 8px !important;
+    padding:0 2px !important;
+  }
+
+  #vTransactions .tx-v3-day-header span:first-child,
+  #vTransactions .day-header span:first-child{
+    font-size:13px !important;
+    font-weight:950 !important;
+  }
+
+  #vTransactions .expense-item,
+  #vTransactions .expense-item.tx-v3-row{
+    min-height:68px !important;
+    padding:10px 10px !important;
+    margin-bottom:9px !important;
+    border-radius:20px !important;
+    box-shadow:0 8px 22px rgba(20,30,70,.045) !important;
+  }
+
+  #vTransactions .expense-icon{
+    width:44px !important;
+    height:44px !important;
+    border-radius:15px !important;
+    font-size:18px !important;
+  }
+
+  #vTransactions .expense-name{
+    font-size:14px !important;
+    line-height:1.15 !important;
+  }
+
+  #vTransactions .expense-cat{
+    margin-top:4px !important;
+    font-size:11.5px !important;
+    line-height:1.25 !important;
+  }
+
+  #vTransactions .expense-amount,
+  #vTransactions .tx-v3-row-right .expense-amount{
+    font-size:13px !important;
+    line-height:1.15 !important;
+  }
+
+  #vTransactions .tx-v3-row-right span{
+    font-size:10.5px !important;
+    letter-spacing:.04em !important;
+  }
+}
+
+@media (max-width: 380px){
+  #vTransactions .transactions-hero{
+    min-height:132px !important;
+    padding:18px 16px !important;
+    border-radius:26px !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    max-width:165px !important;
+    font-size:23px !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    max-width:180px !important;
+    font-size:11.5px !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add{
+    height:39px !important;
+    min-width:94px !important;
+    padding:0 11px !important;
+    font-size:11px !important;
+  }
+}
+
+
+/* ===== Imported from transactions-mobile-stabilize-v5.css ===== */
+/* ============================================================
+   Expense Hero — Transactions Mobile Stabilize V5
+   Purpose: fix broken-looking mobile Transactions UI after header v4.
+   Load this CSS LAST, after all other mobile/transactions CSS files.
+   Mobile only. Desktop untouched.
+   ============================================================ */
+
+@media (max-width: 768px){
+  /* Page shell */
+  body:not(.auth-pending){
+    background: linear-gradient(180deg,#eef4ff 0%,#f7f8ff 46%,#eef2ff 100%) !important;
+  }
+
+  #vTransactions{
+    padding: 0 12px calc(126px + env(safe-area-inset-bottom)) !important;
+    background: transparent !important;
+  }
+
+  #vTransactions .transactions-page,
+  #vTransactions.page-grid,
+  #vTransactions .page-grid{
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 12px 0 0 !important;
+  }
+
+  /* Desktop-like mobile hero, compact and aligned */
+  #vTransactions .transactions-hero,
+  #vTransactions .compact-transactions-hero{
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: 138px !important;
+    margin: 8px 0 4px !important;
+    padding: 19px 17px !important;
+    border-radius: 27px !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(circle at 92% 18%, rgba(125,96,255,.20), transparent 34%),
+      radial-gradient(circle at 8% 92%, rgba(16,185,129,.12), transparent 34%),
+      rgba(255,255,255,.84) !important;
+    border: 1px solid rgba(255,255,255,.86) !important;
+    box-shadow: 0 16px 42px rgba(25,33,80,.075) !important;
+    backdrop-filter: blur(20px) saturate(1.1) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.1) !important;
+  }
+
+  #vTransactions .transactions-hero::before,
+  #vTransactions .compact-transactions-hero::before{
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    opacity: .32 !important;
+    background-image:
+      linear-gradient(rgba(92,103,145,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(92,103,145,.10) 1px, transparent 1px) !important;
+    background-size: 30px 30px !important;
+    mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent) !important;
+  }
+
+  #vTransactions .transactions-hero > *,
+  #vTransactions .compact-transactions-hero > *{
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    margin: 0 0 7px !important;
+    color: #6b5cff !important;
+    font-size: 10px !important;
+    font-weight: 950 !important;
+    letter-spacing: .16em !important;
+    text-transform: uppercase !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    margin: 0 !important;
+    max-width: 190px !important;
+    font-size: 25px !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.055em !important;
+    color: #121827 !important;
+    font-weight: 950 !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    margin: 8px 0 0 !important;
+    max-width: 205px !important;
+    color: #66738d !important;
+    font-size: 12px !important;
+    line-height: 1.42 !important;
+    font-weight: 750 !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add,
+  #vTransactions .transactions-hero .section-add.primary-add{
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 40px !important;
+    min-width: 104px !important;
+    margin: 0 !important;
+    padding: 0 13px !important;
+    border: 0 !important;
+    border-radius: 15px !important;
+    background: linear-gradient(135deg,#241f68,#684cff) !important;
+    color: #fff !important;
+    font-size: 11.5px !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 13px 26px rgba(91,79,255,.25), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  /* Search + filters — force styled version even if older CSS is fighting */
+  #vTransactions .mobile-transactions-tools{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #vTransactions .mobile-transaction-search{
+    width: 100% !important;
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 0 15px !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255,255,255,.82) !important;
+    border-radius: 21px !important;
+    background: rgba(255,255,255,.88) !important;
+    box-shadow: 0 12px 30px rgba(26,33,80,.055) !important;
+    backdrop-filter: blur(18px) saturate(1.12) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.12) !important;
+  }
+
+  #vTransactions .mobile-transaction-search span{
+    width: 18px !important;
+    min-width: 18px !important;
+    color: #8a94ad !important;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #vTransactions .mobile-transaction-search input,
+  #vTransactions #mobileTransactionSearch{
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    outline: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    color: #172033 !important;
+    font-size: 14px !important;
+    font-weight: 750 !important;
+    box-shadow: none !important;
+  }
+
+  #vTransactions .mobile-transaction-search input::placeholder,
+  #vTransactions #mobileTransactionSearch::placeholder{
+    color: #9aa4ba !important;
+    opacity: 1 !important;
+  }
+
+  #vTransactions .mobile-transaction-chips{
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 0 2px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  #vTransactions .mobile-transaction-chips::-webkit-scrollbar{display:none !important;}
+
+  #vTransactions .mobile-transaction-chips button,
+  #vTransactions .mobile-transaction-chip{
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 36px !important;
+    min-width: 0 !important;
+    padding: 0 14px !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255,255,255,.74) !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.82) !important;
+    color: #3c4565 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    box-shadow: 0 8px 20px rgba(26,33,80,.045) !important;
+    text-decoration: none !important;
+  }
+
+  #vTransactions .mobile-transaction-chips button.active,
+  #vTransactions .mobile-transaction-chip.active{
+    background: linear-gradient(135deg,#6d55ff,#533ee8) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,.32) !important;
+    box-shadow: 0 12px 24px rgba(91,79,255,.22) !important;
+  }
+
+  /* List/card area */
+  #vTransactions .transactions-list-card,
+  #vTransactions .fixed-list-widget,
+  #vTransactions .list-widget{
+    width: 100% !important;
+    margin: 4px 0 0 !important;
+    padding: 15px !important;
+    border-radius: 27px !important;
+    background: rgba(255,255,255,.88) !important;
+    border: 1px solid rgba(255,255,255,.82) !important;
+    box-shadow: 0 14px 36px rgba(26,33,80,.065) !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(18px) saturate(1.08) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
+  }
+
+  #vTransactions .modern-list-header,
+  #vTransactions .section-header{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 0 0 13px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid rgba(90,100,145,.07) !important;
+  }
+
+  #vTransactions .section-title-wrap{
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+  }
+
+  #vTransactions .section-dot{
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 999px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #vTransactions .section-title{
+    margin: 0 !important;
+    color: #172033 !important;
+    font-size: 17px !important;
+    line-height: 1.12 !important;
+    font-weight: 950 !important;
+    letter-spacing: -.035em !important;
+  }
+
+  #vTransactions .section-subtitle{
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    margin-top: 5px !important;
+    color: #8a94ad !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+  }
+
+  #vTransactions .global-badge{
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 22px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    background: rgba(91,79,255,.08) !important;
+    color: #5b4fff !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+  }
+
+  #vTransactions .section-header .section-add:not(.primary-add){
+    height: 38px !important;
+    padding: 0 13px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg,#6d55ff,#4f3ed9) !important;
+    color: #fff !important;
+    font-size: 11.5px !important;
+    font-weight: 950 !important;
+    box-shadow: 0 10px 22px rgba(91,79,255,.20) !important;
+  }
+
+  #vTransactions .expense-list,
+  #vTransactions #fixedList,
+  #vTransactions #dailyList{
+    padding: 12px 0 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #vTransactions .expense-item,
+  #vTransactions .expense-item.tx-v3-row{
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-height: 66px !important;
+    padding: 10px 10px !important;
+    margin: 0 0 9px !important;
+    border: 1px solid rgba(120,130,180,.08) !important;
+    border-radius: 20px !important;
+    background: rgba(255,255,255,.86) !important;
+    box-shadow: 0 8px 22px rgba(26,33,80,.045) !important;
+  }
+
+  #vTransactions .expense-item:last-child{margin-bottom:0 !important;}
+
+  #vTransactions .expense-icon{
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 15px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+  }
+
+  #vTransactions .expense-info,
+  #vTransactions .tx-v3-row-main{
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  #vTransactions .expense-name{
+    display: block !important;
+    margin: 0 !important;
+    color: #172033 !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+    font-weight: 950 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #vTransactions .expense-cat{
+    display: block !important;
+    margin-top: 4px !important;
+    color: #7d89a3 !important;
+    font-size: 11.5px !important;
+    line-height: 1.25 !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #vTransactions .expense-amount,
+  #vTransactions .tx-v3-row-right .expense-amount{
+    color: #ef4444 !important;
+    font-family: var(--mono, monospace) !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    font-weight: 950 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  #vTransactions .tx-v3-row-right,
+  #vTransactions .expense-actions{
+    flex-shrink: 0 !important;
+  }
+
+  #vTransactions .tx-v3-row-right span,
+  #vTransactions .expense-actions span{
+    display: block !important;
+    margin-top: 3px !important;
+    color: #8a94ad !important;
+    font-size: 10.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: .04em !important;
+    text-align: right !important;
+  }
+
+  #vTransactions .edit-btn,
+  #vTransactions .del-btn{
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 10px !important;
+    border: 0 !important;
+    background: rgba(245,247,255,.9) !important;
+    color: #8a94ad !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 380px){
+  #vTransactions{padding-left:10px !important;padding-right:10px !important;}
+  #vTransactions .transactions-hero{min-height:130px !important;padding:17px 15px !important;border-radius:25px !important;}
+  #vTransactions .transactions-hero h2{max-width:170px !important;font-size:23px !important;}
+  #vTransactions .transactions-hero p{max-width:180px !important;font-size:11.3px !important;}
+  #vTransactions .transactions-hero .primary-add{height:38px !important;min-width:94px !important;font-size:11px !important;padding:0 10px !important;}
+}
+
+
+/* ===== Imported from transactions-mobile-hero-title-fix.css ===== */
+/* ============================================================
+   TRANSACTIONS MOBILE HERO TITLE FIX
+   Scope: mobile only. Desktop remains unchanged.
+   Load this file LAST, after transactions-mobile-stabilize-v5.css
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Hero card becomes a vertical mobile block */
+  #vTransactions .transactions-hero,
+  #vTransactions .mobile-transactions-hero,
+  #vTransactions .transactions-page-hero,
+  #vTransactions .tx-hero,
+  .transactions-hero,
+  .mobile-transactions-hero,
+  .transactions-page-hero,
+  .tx-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    text-align: left !important;
+    min-height: auto !important;
+    padding: 22px 18px 18px !important;
+  }
+
+  /* Text area should use the full card width */
+  #vTransactions .transactions-hero > div,
+  #vTransactions .mobile-transactions-hero > div,
+  #vTransactions .transactions-page-hero > div,
+  #vTransactions .tx-hero > div,
+  .transactions-hero > div,
+  .mobile-transactions-hero > div,
+  .transactions-page-hero > div,
+  .tx-hero > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Kicker */
+  #vTransactions .transactions-hero .eyebrow,
+  #vTransactions .mobile-transactions-hero .eyebrow,
+  #vTransactions .transactions-page-hero .eyebrow,
+  #vTransactions .tx-hero .eyebrow,
+  .transactions-hero .eyebrow,
+  .mobile-transactions-hero .eyebrow,
+  .transactions-page-hero .eyebrow,
+  .tx-hero .eyebrow {
+    display: block !important;
+    text-align: left !important;
+    margin: 0 0 6px !important;
+    width: 100% !important;
+  }
+
+  /* Title should be horizontal/left aligned and not pushed to the right */
+  #vTransactions .transactions-hero h1,
+  #vTransactions .transactions-hero h2,
+  #vTransactions .mobile-transactions-hero h1,
+  #vTransactions .mobile-transactions-hero h2,
+  #vTransactions .transactions-page-hero h1,
+  #vTransactions .transactions-page-hero h2,
+  #vTransactions .tx-hero h1,
+  #vTransactions .tx-hero h2,
+  .transactions-hero h1,
+  .transactions-hero h2,
+  .mobile-transactions-hero h1,
+  .mobile-transactions-hero h2,
+  .transactions-page-hero h1,
+  .transactions-page-hero h2,
+  .tx-hero h1,
+  .tx-hero h2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    font-size: clamp(25px, 8vw, 32px) !important;
+    line-height: 1.03 !important;
+    letter-spacing: -0.055em !important;
+    margin: 0 !important;
+    white-space: normal !important;
+  }
+
+  /* Description */
+  #vTransactions .transactions-hero p,
+  #vTransactions .mobile-transactions-hero p,
+  #vTransactions .transactions-page-hero p,
+  #vTransactions .tx-hero p,
+  .transactions-hero p,
+  .mobile-transactions-hero p,
+  .transactions-page-hero p,
+  .tx-hero p {
+    width: 100% !important;
+    max-width: 260px !important;
+    text-align: left !important;
+    margin: 8px 0 0 !important;
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+  }
+
+  /* CTA no longer squeezes the title. It sits below the copy. */
+  #vTransactions .transactions-hero .primary-add,
+  #vTransactions .transactions-hero .section-add,
+  #vTransactions .transactions-hero .hero-add-btn,
+  #vTransactions .mobile-transactions-hero .primary-add,
+  #vTransactions .mobile-transactions-hero .section-add,
+  #vTransactions .mobile-transactions-hero .hero-add-btn,
+  #vTransactions .transactions-page-hero .primary-add,
+  #vTransactions .transactions-page-hero .section-add,
+  #vTransactions .transactions-page-hero .hero-add-btn,
+  #vTransactions .tx-hero .primary-add,
+  #vTransactions .tx-hero .section-add,
+  #vTransactions .tx-hero .hero-add-btn,
+  .transactions-hero .primary-add,
+  .transactions-hero .section-add,
+  .transactions-hero .hero-add-btn,
+  .mobile-transactions-hero .primary-add,
+  .mobile-transactions-hero .section-add,
+  .mobile-transactions-hero .hero-add-btn,
+  .transactions-page-hero .primary-add,
+  .transactions-page-hero .section-add,
+  .transactions-page-hero .hero-add-btn,
+  .tx-hero .primary-add,
+  .tx-hero .section-add,
+  .tx-hero .hero-add-btn {
+    position: static !important;
+    align-self: flex-start !important;
+    width: auto !important;
+    min-width: 132px !important;
+    height: 42px !important;
+    margin-top: 4px !important;
+    padding: 0 16px !important;
+    border-radius: 15px !important;
+    font-size: 13px !important;
+    box-shadow: 0 12px 26px rgba(91, 79, 255, .22) !important;
+  }
+
+  /* On very small screens, make the title a touch smaller */
+  @media (max-width: 380px) {
+    #vTransactions .transactions-hero h1,
+    #vTransactions .transactions-hero h2,
+    #vTransactions .mobile-transactions-hero h1,
+    #vTransactions .mobile-transactions-hero h2,
+    #vTransactions .transactions-page-hero h1,
+    #vTransactions .transactions-page-hero h2,
+    #vTransactions .tx-hero h1,
+    #vTransactions .tx-hero h2,
+    .transactions-hero h1,
+    .transactions-hero h2,
+    .mobile-transactions-hero h1,
+    .mobile-transactions-hero h2,
+    .transactions-page-hero h1,
+    .transactions-page-hero h2,
+    .tx-hero h1,
+    .tx-hero h2 {
+      font-size: 25px !important;
+    }
+  }
+}
+
+
+/* ============================================================
+   EXPENSE HERO — TRANSACTIONS MOBILE FINAL V6
+   Goal: cleaner mobile-only transactions page
+   - no top add CTA
+   - daily transactions first
+   - fixed expenses at bottom
+   - search/filters apply visually to daily activity
+   - desktop untouched
+   ============================================================ */
+
+@media (max-width: 768px){
+  /* Page rhythm */
+  #vTransactions{
+    padding:0 14px calc(128px + env(safe-area-inset-bottom)) !important;
+    background:linear-gradient(180deg,#f7f9ff 0%,#eef3ff 100%) !important;
+  }
+
+  #vTransactions .transactions-page{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:16px !important;
+    padding:14px 0 0 !important;
+    margin:0 !important;
+    max-width:100% !important;
+  }
+
+  /* Hero: informational only, no duplicated add button */
+  #vTransactions .transactions-hero,
+  #vTransactions .transactions-hero-clean{
+    width:100% !important;
+    min-height:138px !important;
+    padding:20px 18px !important;
+    border-radius:30px !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:flex-start !important;
+    overflow:hidden !important;
+    background:
+      radial-gradient(circle at 88% 18%, rgba(116,92,255,.18), transparent 34%),
+      radial-gradient(circle at 12% 92%, rgba(16,185,129,.13), transparent 32%),
+      rgba(255,255,255,.88) !important;
+    border:1px solid rgba(120,130,180,.11) !important;
+    box-shadow:0 18px 50px rgba(15,23,42,.07) !important;
+  }
+
+  #vTransactions .transactions-hero::before{
+    content:'' !important;
+    position:absolute !important;
+    inset:0 !important;
+    background-image:
+      linear-gradient(rgba(90,100,140,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,100,140,.035) 1px, transparent 1px) !important;
+    background-size:42px 42px !important;
+    pointer-events:none !important;
+  }
+
+  #vTransactions .transactions-hero > div{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    position:relative !important;
+    z-index:1 !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    display:block !important;
+    margin:0 0 8px !important;
+    color:#5f54ff !important;
+    font-size:11px !important;
+    line-height:1 !important;
+    font-weight:950 !important;
+    letter-spacing:.15em !important;
+    text-transform:uppercase !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    display:block !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    color:#101827 !important;
+    font-size:30px !important;
+    line-height:1.02 !important;
+    font-weight:950 !important;
+    letter-spacing:-.06em !important;
+    white-space:nowrap !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    display:block !important;
+    max-width:92% !important;
+    margin:10px 0 0 !important;
+    color:#6b7890 !important;
+    font-size:13px !important;
+    line-height:1.45 !important;
+    font-weight:650 !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add,
+  #vTransactions .transactions-hero .section-add{
+    display:none !important;
+  }
+
+  /* Search + filters belong to daily activity */
+  #vTransactions .mobile-transactions-tools{
+    margin:0 !important;
+    padding:0 !important;
+    display:grid !important;
+    gap:12px !important;
+  }
+
+  #vTransactions .mobile-transaction-search{
+    height:52px !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:10px !important;
+    padding:0 15px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.88) !important;
+    border:1px solid rgba(120,130,180,.11) !important;
+    box-shadow:0 12px 32px rgba(20,30,70,.055) !important;
+  }
+
+  #vTransactions .mobile-transaction-search span{
+    width:30px !important;
+    height:30px !important;
+    border-radius:12px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:rgba(91,79,255,.09) !important;
+    color:#5b4fff !important;
+    font-weight:900 !important;
+  }
+
+  #vTransactions .mobile-transaction-search input{
+    width:100% !important;
+    min-width:0 !important;
+    height:100% !important;
+    border:0 !important;
+    outline:0 !important;
+    background:transparent !important;
+    color:#121826 !important;
+    font-size:14px !important;
+    font-weight:750 !important;
+  }
+
+  #vTransactions .mobile-transaction-search input::placeholder{
+    color:#98a3b8 !important;
+    font-weight:700 !important;
+  }
+
+  #vTransactions .mobile-transaction-chips{
+    display:flex !important;
+    gap:8px !important;
+    overflow-x:auto !important;
+    padding:0 2px 3px !important;
+    scrollbar-width:none !important;
+  }
+
+  #vTransactions .mobile-transaction-chips::-webkit-scrollbar{display:none !important;}
+
+  #vTransactions .mobile-transaction-chip{
+    flex:0 0 auto !important;
+    min-height:36px !important;
+    padding:0 14px !important;
+    border-radius:999px !important;
+    border:1px solid rgba(120,130,180,.10) !important;
+    background:rgba(255,255,255,.74) !important;
+    color:#7a849b !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    box-shadow:0 8px 20px rgba(20,30,70,.035) !important;
+  }
+
+  #vTransactions .mobile-transaction-chip.active{
+    background:#111827 !important;
+    border-color:#111827 !important;
+    color:white !important;
+    box-shadow:0 14px 28px rgba(17,24,39,.18) !important;
+  }
+
+  /* Daily section: primary activity feed */
+  #vTransactions .daily-list-widget{
+    order:10 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    border-radius:28px !important;
+    background:rgba(255,255,255,.88) !important;
+    border:1px solid rgba(120,130,180,.10) !important;
+    box-shadow:0 16px 46px rgba(15,23,42,.065) !important;
+  }
+
+  #vTransactions .daily-list-widget .section-header{
+    padding:18px 18px 10px !important;
+    border-bottom:0 !important;
+  }
+
+  #vTransactions .daily-list-widget .section-title{
+    font-size:18px !important;
+    line-height:1.05 !important;
+    font-weight:950 !important;
+    letter-spacing:-.045em !important;
+    color:#111827 !important;
+  }
+
+  #vTransactions .daily-list-widget .section-subtitle{
+    margin-top:6px !important;
+    font-size:12px !important;
+    line-height:1.3 !important;
+    font-weight:750 !important;
+    color:#8994aa !important;
+  }
+
+  /* Daily add is handled by global bottom + */
+  #vTransactions .daily-list-widget .section-add{
+    display:none !important;
+  }
+
+  #vTransactions .daily-list-widget .expense-list{
+    padding:2px 12px 14px !important;
+    display:grid !important;
+    gap:8px !important;
+  }
+
+  #vTransactions .tx-v3-day-header,
+  #vTransactions .day-header{
+    margin:8px 2px 4px !important;
+    padding:0 4px !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    justify-content:space-between !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+
+  #vTransactions .tx-v3-day-header span,
+  #vTransactions .day-header > span:first-child,
+  #vTransactions .tx-v3-day-header div span{
+    color:#404960 !important;
+    font-size:13px !important;
+    font-weight:950 !important;
+    letter-spacing:-.015em !important;
+  }
+
+  #vTransactions .tx-v3-day-header small{
+    display:block !important;
+    margin-top:3px !important;
+    color:#9aa4b8 !important;
+    font-size:11px !important;
+    font-weight:800 !important;
+  }
+
+  #vTransactions .day-total{
+    color:#7c879d !important;
+    font-size:12px !important;
+    font-weight:950 !important;
+    font-family:var(--mono) !important;
+  }
+
+  #vTransactions .expense-item,
+  #vTransactions .tx-v3-row{
+    min-height:72px !important;
+    margin:0 !important;
+    padding:12px !important;
+    border-radius:22px !important;
+    background:#fff !important;
+    border:1px solid rgba(120,130,180,.075) !important;
+    box-shadow:0 8px 22px rgba(20,30,70,.045) !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:12px !important;
+  }
+
+  #vTransactions .expense-icon{
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    border-radius:16px !important;
+    font-size:19px !important;
+  }
+
+  #vTransactions .expense-info{
+    min-width:0 !important;
+    flex:1 1 auto !important;
+  }
+
+  #vTransactions .expense-name{
+    font-size:14px !important;
+    line-height:1.15 !important;
+    font-weight:950 !important;
+    color:#111827 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  #vTransactions .expense-cat{
+    margin-top:5px !important;
+    font-size:12px !important;
+    line-height:1.25 !important;
+    font-weight:750 !important;
+    color:#8a95aa !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  #vTransactions .tx-v3-row-right,
+  #vTransactions .expense-amount{
+    margin-left:auto !important;
+    flex-shrink:0 !important;
+    text-align:right !important;
+  }
+
+  #vTransactions .expense-amount,
+  #vTransactions .tx-v3-row-right .expense-amount{
+    color:#ef4444 !important;
+    font-size:14px !important;
+    line-height:1.15 !important;
+    font-weight:950 !important;
+    font-family:var(--mono) !important;
+  }
+
+  #vTransactions .tx-v3-row-right span{
+    display:block !important;
+    margin-top:4px !important;
+    color:#9aa4b8 !important;
+    font-size:10px !important;
+    line-height:1 !important;
+    font-weight:900 !important;
+    letter-spacing:.05em !important;
+    text-transform:uppercase !important;
+  }
+
+  /* Fixed expenses: secondary block at the bottom */
+  #vTransactions .fixed-list-widget{
+    order:20 !important;
+    margin-top:2px !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    border-radius:26px !important;
+    background:rgba(255,255,255,.70) !important;
+    border:1px solid rgba(120,130,180,.085) !important;
+    box-shadow:0 10px 30px rgba(15,23,42,.045) !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-header{
+    padding:16px 16px 8px !important;
+    border-bottom:0 !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-title{
+    font-size:16px !important;
+    font-weight:950 !important;
+    letter-spacing:-.035em !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-subtitle{
+    margin-top:5px !important;
+    color:#9aa4b8 !important;
+    font-size:11.5px !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-dot{
+    opacity:.75 !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-add{
+    height:34px !important;
+    min-width:auto !important;
+    padding:0 11px !important;
+    border-radius:999px !important;
+    background:rgba(17,24,39,.06) !important;
+    color:#535d73 !important;
+    box-shadow:none !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-list{
+    padding:2px 10px 12px !important;
+    display:grid !important;
+    gap:7px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-item{
+    min-height:64px !important;
+    padding:10px !important;
+    border-radius:20px !important;
+    box-shadow:none !important;
+    background:rgba(255,255,255,.82) !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-icon{
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+    border-radius:14px !important;
+    font-size:17px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-name{
+    font-size:13px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-cat{
+    font-size:11px !important;
+  }
+
+  /* Empty states */
+  #vTransactions .empty,
+  #vTransactions .tx-v3-empty{
+    margin:4px 0 0 !important;
+    min-height:132px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.70) !important;
+    border:1px dashed rgba(120,130,180,.20) !important;
+    color:#8a95aa !important;
+  }
+}
+
+@media (max-width: 380px){
+  #vTransactions .transactions-hero,
+  #vTransactions .transactions-hero-clean{
+    min-height:126px !important;
+    padding:18px 16px !important;
+    border-radius:26px !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    font-size:26px !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    max-width:100% !important;
+    font-size:12px !important;
+  }
+}
+
+/* ============================================================
+   EXPENSE HERO — TRANSACTIONS MOBILE FINAL V7
+   Goal: match cleaner mockup
+   - search/filters clear and airy
+   - daily feed limited first, fixed expenses visible at bottom
+   - no top add CTA, global bottom + remains main action
+   - mobile only, desktop untouched
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vTransactions{
+    padding:0 16px calc(138px + env(safe-area-inset-bottom)) !important;
+    background:linear-gradient(180deg,#f8faff 0%,#eef4ff 100%) !important;
+  }
+
+  #vTransactions .transactions-page{
+    gap:18px !important;
+    padding:18px 0 0 !important;
+  }
+
+  /* Hero, informational only */
+  #vTransactions .transactions-hero,
+  #vTransactions .transactions-hero-clean{
+    min-height:174px !important;
+    padding:26px 20px !important;
+    border-radius:30px !important;
+    align-items:center !important;
+    background:
+      radial-gradient(circle at 90% 12%, rgba(116,92,255,.22), transparent 34%),
+      radial-gradient(circle at 6% 92%, rgba(16,185,129,.12), transparent 34%),
+      rgba(255,255,255,.90) !important;
+    box-shadow:0 18px 54px rgba(24,34,88,.07) !important;
+  }
+
+  #vTransactions .transactions-hero::before{
+    opacity:1 !important;
+    background-image:
+      linear-gradient(rgba(98,110,150,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(98,110,150,.04) 1px, transparent 1px) !important;
+    background-size:34px 34px !important;
+  }
+
+  #vTransactions .transactions-hero .eyebrow{
+    margin:0 0 9px !important;
+    font-size:12px !important;
+    letter-spacing:.16em !important;
+    color:#684fff !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    font-size:33px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.07em !important;
+    white-space:normal !important;
+    max-width:100% !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    max-width:95% !important;
+    margin-top:12px !important;
+    font-size:15px !important;
+    line-height:1.48 !important;
+    color:#66738c !important;
+  }
+
+  #vTransactions .transactions-hero .primary-add,
+  #vTransactions .transactions-hero .section-add,
+  #vTransactions .transactions-hero .hero-add-btn{
+    display:none !important;
+  }
+
+  /* Search and filters */
+  #vTransactions .mobile-transactions-tools{
+    gap:14px !important;
+  }
+
+  #vTransactions .mobile-transaction-search{
+    height:60px !important;
+    border-radius:26px !important;
+    padding:0 18px !important;
+    background:rgba(255,255,255,.92) !important;
+    box-shadow:0 15px 36px rgba(32,42,90,.055) !important;
+  }
+
+  #vTransactions .mobile-transaction-search span{
+    width:34px !important;
+    height:34px !important;
+    border-radius:15px !important;
+    font-size:18px !important;
+    background:transparent !important;
+  }
+
+  #vTransactions .mobile-transaction-search input{
+    font-size:15px !important;
+    font-weight:750 !important;
+  }
+
+  #vTransactions .mobile-transaction-chips{
+    gap:10px !important;
+    padding:0 0 4px !important;
+  }
+
+  #vTransactions .mobile-transaction-chip{
+    min-height:42px !important;
+    padding:0 18px !important;
+    border-radius:22px !important;
+    font-size:14px !important;
+    color:#101827 !important;
+    background:rgba(255,255,255,.86) !important;
+    border-color:rgba(120,130,180,.09) !important;
+    box-shadow:0 10px 24px rgba(20,30,70,.04) !important;
+  }
+
+  #vTransactions .mobile-transaction-chip.active{
+    background:linear-gradient(135deg,#7b4fff,#5b42f2) !important;
+    color:#fff !important;
+    border-color:transparent !important;
+    box-shadow:0 15px 30px rgba(91,79,255,.22) !important;
+  }
+
+  /* Main daily card */
+  #vTransactions .daily-list-widget{
+    border-radius:28px !important;
+    background:rgba(255,255,255,.90) !important;
+    box-shadow:0 18px 52px rgba(26,36,92,.07) !important;
+  }
+
+  #vTransactions .daily-list-widget .section-header{
+    padding:22px 20px 8px !important;
+  }
+
+  #vTransactions .daily-list-widget .section-title-wrap{
+    align-items:flex-start !important;
+  }
+
+  #vTransactions .daily-list-widget .section-dot{
+    width:40px !important;
+    height:40px !important;
+    border-radius:16px !important;
+    background:rgba(104,79,255,.10) !important;
+    position:relative !important;
+  }
+
+  #vTransactions .daily-list-widget .section-dot::before{
+    content:'◷';
+    color:#684fff;
+    font-size:22px;
+    line-height:40px;
+    display:block;
+    text-align:center;
+  }
+
+  #vTransactions .daily-list-widget .section-title{
+    font-size:22px !important;
+    line-height:1.08 !important;
+  }
+
+  #vTransactions .daily-list-widget .section-subtitle{
+    margin-top:6px !important;
+    font-size:15px !important;
+    color:#66738c !important;
+  }
+
+  #vTransactions .daily-list-widget .mini-action{
+    min-height:26px !important;
+    padding:0 10px !important;
+    border-radius:999px !important;
+    margin-left:8px !important;
+    background:rgba(104,79,255,.10) !important;
+    color:#684fff !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+  }
+
+  #vTransactions .daily-list-widget .expense-list{
+    padding:6px 12px 18px !important;
+    gap:10px !important;
+  }
+
+  #vTransactions .tx-v3-day-header,
+  #vTransactions .day-header{
+    margin:12px 4px 8px !important;
+  }
+
+  #vTransactions .tx-v3-day-header span,
+  #vTransactions .day-header > span:first-child,
+  #vTransactions .tx-v3-day-header div span{
+    font-size:17px !important;
+    color:#4b5568 !important;
+  }
+
+  #vTransactions .tx-v3-day-header small{
+    font-size:12px !important;
+    color:#8994aa !important;
+  }
+
+  #vTransactions .day-total{
+    display:none !important;
+  }
+
+  #vTransactions .expense-item,
+  #vTransactions .tx-v3-row{
+    min-height:78px !important;
+    padding:14px 12px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.96) !important;
+    box-shadow:0 10px 26px rgba(20,30,70,.045) !important;
+  }
+
+  #vTransactions .expense-icon{
+    width:52px !important;
+    height:52px !important;
+    min-width:52px !important;
+    border-radius:18px !important;
+    font-size:21px !important;
+  }
+
+  #vTransactions .expense-name{
+    font-size:16px !important;
+    line-height:1.15 !important;
+  }
+
+  #vTransactions .expense-cat{
+    margin-top:5px !important;
+    font-size:14px !important;
+    color:#66738c !important;
+  }
+
+  #vTransactions .expense-amount,
+  #vTransactions .tx-v3-row-right .expense-amount{
+    font-size:16px !important;
+    color:#ff3b48 !important;
+  }
+
+  #vTransactions .tx-v3-row-right span{
+    margin-top:5px !important;
+    font-size:12px !important;
+    color:#66738c !important;
+    text-transform:none !important;
+    letter-spacing:0 !important;
+  }
+
+  #vTransactions .tx-v3-row-right::after{
+    content:'›';
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-left:8px;
+    color:#7b8498;
+    font-size:24px;
+    font-weight:700;
+    vertical-align:middle;
+  }
+
+  .tx-mobile-more-btn{
+    width:100% !important;
+    height:50px !important;
+    border:0 !important;
+    border-radius:18px !important;
+    background:transparent !important;
+    color:#684fff !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:8px !important;
+    font-size:15px !important;
+    font-weight:950 !important;
+    cursor:pointer !important;
+  }
+
+  .tx-mobile-more-btn span{
+    font-size:18px !important;
+    line-height:1 !important;
+  }
+
+  /* Fixed expenses at bottom, visible as secondary summary */
+  #vTransactions .fixed-list-widget{
+    display:block !important;
+    order:20 !important;
+    margin-top:0 !important;
+    border-radius:28px !important;
+    background:rgba(255,255,255,.88) !important;
+    box-shadow:0 16px 46px rgba(26,36,92,.055) !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-header{
+    padding:20px 20px 10px !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-dot{
+    width:40px !important;
+    height:40px !important;
+    border-radius:16px !important;
+    background:rgba(104,79,255,.10) !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-dot::before{
+    content:'▣';
+    color:#684fff;
+    font-size:19px;
+    line-height:40px;
+    display:block;
+    text-align:center;
+  }
+
+  #vTransactions .fixed-list-widget .section-title{
+    font-size:21px !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-subtitle{
+    font-size:14px !important;
+    color:#66738c !important;
+  }
+
+  #vTransactions .fixed-list-widget .section-add{
+    display:none !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-list{
+    padding:8px 12px 18px !important;
+    gap:0 !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-item{
+    min-height:72px !important;
+    padding:13px 12px !important;
+    border-radius:0 !important;
+    background:rgba(255,255,255,.82) !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(120,130,180,.10) !important;
+    box-shadow:none !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-item:first-child{
+    border-radius:22px 22px 0 0 !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-item:last-child{
+    border-bottom:0 !important;
+    border-radius:0 0 22px 22px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-icon{
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    border-radius:16px !important;
+    font-size:19px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-name{
+    font-size:15px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-cat{
+    font-size:13px !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-amount{
+    font-size:16px !important;
+    color:#111827 !important;
+  }
+
+  #vTransactions .fixed-list-widget .expense-item::after{
+    content:'›';
+    color:#7b8498;
+    font-size:24px;
+    font-weight:700;
+    margin-left:8px;
+  }
+}
+
+@media (max-width: 380px){
+  #vTransactions{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #vTransactions .transactions-hero,
+  #vTransactions .transactions-hero-clean{
+    min-height:150px !important;
+    padding:22px 17px !important;
+  }
+
+  #vTransactions .transactions-hero h2{
+    font-size:28px !important;
+  }
+
+  #vTransactions .transactions-hero p{
+    font-size:13px !important;
+  }
+
+  #vTransactions .mobile-transaction-chip{
+    min-height:38px !important;
+    padding:0 14px !important;
+    font-size:12px !important;
+  }
+
+  #vTransactions .expense-name{
+    font-size:14px !important;
+  }
+
+  #vTransactions .expense-cat{
+    font-size:12px !important;
+  }
+}

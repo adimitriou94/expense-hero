@@ -703,9 +703,15 @@ function render(){
 
 function renderFixedList(){
   const ccCards=(D.creditCards||[]).filter(c=>c.balance>0);
-  const count=D.fixedExpenses.length+ccCards.length;
+  const fixedItems=(D.fixedExpenses||[]).map(e=>({kind:'fixed',data:e}))
+    .concat(ccCards.map(c=>({kind:'cc',data:c})));
 
-  $('cFixed').innerHTML=`
+  const count=fixedItems.length;
+  const countEl=$('cFixed');
+  const listEl=$('lFixed');
+  if(!countEl || !listEl)return;
+
+  countEl.innerHTML=`
     ${count} εγγραφές
     <button class="mini-action" onclick="toggleSelectMode('fixed')">${selectionMode.fixed?'Άκυρο':'Επιλογή'}</button>
     ${selectionMode.fixed?`
@@ -715,43 +721,67 @@ function renderFixedList(){
     `:''}
   `;
 
-  let html='';
-
   if(count===0){
-    html=`
-      <div class="empty">
+    listEl.innerHTML=`
+      <div class="empty tx-v3-empty tx-v25-fixed-empty">
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-          <polyline points="13 2 13 9 20 9"/>
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
         </svg>
-        Βάλε τα πάγια μία φορά — ισχύουν παντού.
+        Δεν έχεις πάγια έξοδα ακόμα. Πρόσθεσε νέο πάγιο.
       </div>`;
-  }else{
-    html=D.fixedExpenses.map(e=>eRow(e,'fixed')).join('');
-
-    ccCards.forEach(c=>{
-      const pay=c.chosenPay||c.minPay||0;
-      html+=`
-        <div class="expense-item fadeIn">
-          <div class="expense-icon cat-cc">💳</div>
-          <div class="expense-info">
-            <div class="expense-name">${esc(c.name)} <span class="auto-badge">από Κάρτες</span></div>
-            <div class="expense-cat">Δόση πιστωτικής · Χρέος: ${fmt(c.balance)}</div>
-          </div>
-          <div class="expense-amount" style="color:var(--blue)">${fmt(pay)}</div>
-          <button class="cc-link-btn" onclick="go('vCards',document.querySelector('[data-v=vCards]'))" title="Επεξεργασία">✎</button>
-        </div>`;
-    });
+    return;
   }
 
-  $('lFixed').innerHTML=html;
+  const isMobile=window.innerWidth<=768;
+  const visibleLimit=isMobile && !txMobileFixedExpanded ? 5 : fixedItems.length;
+  const visibleItems=fixedItems.slice(0,visibleLimit);
+
+  let html='';
+
+  visibleItems.forEach(item=>{
+    if(item.kind==='fixed'){
+      html+=eRow(item.data,'fixed');
+      return;
+    }
+
+    const c=item.data;
+    const pay=c.chosenPay||c.minPay||0;
+    html+=`
+      <div class="expense-item fadeIn tx-v25-credit-row" onclick="go('vCards',document.querySelector('[data-v=vCards]'))">
+        <div class="expense-icon cat-cc">💳</div>
+        <div class="expense-info">
+          <div class="expense-name">${esc(c.name)} <span class="auto-badge">από Κάρτες</span></div>
+          <div class="expense-cat">Δόση πιστωτικής · Χρέος: ${fmt(c.balance)}</div>
+        </div>
+        <div class="expense-amount is-fixed" style="color:var(--blue)">${fmt(pay)}</div>
+      </div>`;
+  });
+
+  if(isMobile && fixedItems.length>5){
+    html+=`
+      <button type="button" class="tx-v25-more-btn tx-v25-fixed-more" onclick="toggleTxMobileFixedExpanded()">
+        ${txMobileFixedExpanded?'Λιγότερα':'Προβολή όλων των πάγιων'}
+        <span>${txMobileFixedExpanded?'⌃':'⌄'}</span>
+      </button>`;
+  }
+
+  listEl.innerHTML=html;
 }
 
+function toggleTxMobileFixedExpanded(){
+  txMobileFixedExpanded=!txMobileFixedExpanded;
+  renderFixedList();
+}
 
 let mobileTransactionFilter='all';
+let txMobileDailyExpanded=false;
+let txMobileFixedExpanded=false;
 
 function setMobileTransactionFilter(filter='all'){
   mobileTransactionFilter=filter;
+  txMobileDailyExpanded=false;
   document.querySelectorAll('[data-mobile-transaction-filter]').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.mobileTransactionFilter===filter);
   });
@@ -797,38 +827,77 @@ function getExpenseByTypeAndId(type,id){
 }
 
 function showMobileTransactionDetail(type,id){
-  if(window.innerWidth>768)return;
-  const e=getExpenseByTypeAndId(type,id);
+  if(window.innerWidth>768){
+    return (type==='fixed') ? editExp(type,id) : undefined;
+  }
+
+  const e=txCompleteFindByTypeAndId(type,id);
   if(!e)return;
+
+  txCompleteDetailState={type,id};
 
   const overlay=document.getElementById('mobileTransactionDetail');
   const content=document.getElementById('mobileTransactionDetailContent');
   if(!overlay || !content)return;
 
-  const icon=CEMO[e.category]||'📌';
-  const dateText=e.date ? new Date(e.date+'T12:00:00').toLocaleDateString('el-GR',{day:'2-digit',month:'long',year:'numeric'}) : '-';
-  const payText=e.paymentSourceName || (type==='fixed'?'Σταθερό έξοδο':'Κάρτα / budget');
+  const category=e.category||'Άλλο';
+  const icon=CEMO[category]||'📌';
+  const payText=txCompletePaymentText(e,type);
+  const amount=Number(e.amount)||0;
+  const dateLabel=type==='fixed' ? 'Κάθε μήνα' : txCompleteLongDate(e.date);
+  const typeLabel=type==='fixed' ? 'Πάγιο έξοδο' : 'Ημερήσια κίνηση';
+  const noteText=e.notes || e.note || '';
 
   content.innerHTML=`
-    <div class="mobile-transaction-detail-top">
-      <div class="mobile-transaction-detail-icon">${icon}</div>
-      <div class="mobile-transaction-detail-title">${esc(e.name)}</div>
-      <div class="mobile-transaction-detail-amount">-${fmt(e.amount)}</div>
-      <div class="mobile-transaction-detail-meta">${esc(e.category||'Άλλο')}</div>
+    <div class="tx-v25-detail-hero">
+      <button class="tx-v25-close" type="button" onclick="closeMobileTransactionDetail()" aria-label="Κλείσιμο">×</button>
+      <div class="tx-v25-icon ${CCLS[category]||'cat-other'}">${icon}</div>
+      <div class="tx-v25-kicker">${typeLabel}</div>
+      <h3>${esc(e.name)}</h3>
+      <div class="tx-v25-amount">-${fmt(amount)}</div>
+      <div class="tx-v25-subtitle">${esc(category)} · ${esc(payText)}</div>
     </div>
 
-    <div class="mobile-transaction-detail-list">
-      <div class="mobile-transaction-detail-row"><span>Ημερομηνία</span><span>${dateText}</span></div>
-      <div class="mobile-transaction-detail-row"><span>Κατηγορία</span><span>${esc(e.category||'Άλλο')}</span></div>
-      <div class="mobile-transaction-detail-row"><span>Πληρωμή</span><span>${esc(payText)}</span></div>
-      <div class="mobile-transaction-detail-row"><span>Τύπος</span><span>${type==='fixed'?'Πάγιο':'Ημερήσιο'}</span></div>
+    <div class="tx-v25-summary">
+      <div class="tx-v25-summary-item">
+        <span>Ημερομηνία</span>
+        <strong>${esc(dateLabel)}</strong>
+      </div>
+      <div class="tx-v25-summary-item">
+        <span>Κατηγορία</span>
+        <strong>${esc(category)}</strong>
+      </div>
+      <div class="tx-v25-summary-item">
+        <span>Πληρωμή</span>
+        <strong>${esc(payText)}</strong>
+      </div>
+      <div class="tx-v25-summary-item">
+        <span>Τύπος</span>
+        <strong>${type==='fixed'?'Σταθερό':'Ημερήσιο'}</strong>
+      </div>
     </div>
 
-    <div class="mobile-transaction-detail-actions">
-      <button class="mobile-detail-edit" onclick="closeMobileTransactionDetail();editExp('${type}','${id}')">✎ Επεξεργασία</button>
-      <button class="mobile-detail-delete" onclick="closeMobileTransactionDetail();delExp('${type}','${id}')">🗑 Διαγραφή</button>
+    ${noteText ? `
+      <div class="tx-v25-note">
+        <span>Σημείωση</span>
+        <p>${esc(noteText)}</p>
+      </div>
+    ` : ''}
+
+    <div class="tx-v25-actions">
+      <button type="button" class="tx-v25-action primary" onclick="txCompleteOpenManualForEdit('${type}','${id}')">
+        <span>✎</span>
+        Επεξεργασία
+      </button>
+      <button type="button" class="tx-v25-action secondary" onclick="txCompleteOpenManualForDuplicate('${type}','${id}')">
+        <span>⧉</span>
+        Αντιγραφή
+      </button>
+      <button type="button" class="tx-v25-action danger" onclick="txCompleteDeleteWithConfirm('${type}','${id}')">
+        <span>🗑</span>
+        Διαγραφή
+      </button>
     </div>
-    <button class="mobile-detail-close" onclick="closeMobileTransactionDetail()">Κλείσιμο</button>
   `;
 
   overlay.classList.add('active');
@@ -1021,16 +1090,16 @@ function paymentSourceExists(id){
 }
 
 function eRow(e,t){
-  const c=CCLS[e.category]||'cat-other';
-  const em=CEMO[e.category]||'📌';
-  const cl=t==='fixed'?'color:var(--red)':'color:var(--amber-dark)';
+  const category=e.category||'Άλλο';
+  const c=CCLS[category]||'cat-other';
+  const em=CEMO[category]||'📌';
   const isSelected=t==='fixed'?selectedFixed.has(e.id):selectedDaily.has(e.id);
   const showSelect=selectionMode[t];
 
   return `
     <div class="expense-item fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${t}','${e.id}')`:''}">
       ${showSelect?`
-        <label class="select-box">
+        <label class="select-box" onclick="event.stopPropagation()">
           <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('${t}','${e.id}',this.checked)">
         </label>`:''}
 
@@ -1038,24 +1107,18 @@ function eRow(e,t){
 
       <div class="expense-info">
         <div class="expense-name">${esc(e.name)}</div>
-<div class="expense-cat">
-  ${esc(e.category)}
-  ${t==='daily' && e.paymentSourceName
-    ? ` <span class="payment-badge ${paymentSourceExists(e.paymentSourceId)?'':'deleted'}">
-          💳 ${esc(e.paymentSourceName)}${paymentSourceExists(e.paymentSourceId)?'':' (διαγραμμένο)'}
-        </span>`
-    : ''
-  }
-</div>
+        <div class="expense-cat">
+          ${esc(category)}
+          ${t==='daily' && e.paymentSourceName
+            ? ` <span class="payment-badge ${paymentSourceExists(e.paymentSourceId)?'':'deleted'}">
+                  💳 ${esc(e.paymentSourceName)}${paymentSourceExists(e.paymentSourceId)?'':' (διαγραμμένο)'}
+                </span>`
+            : ''
+          }
+        </div>
       </div>
 
-      <div class="expense-amount" style="${cl}">${fmt(e.amount)}</div>
-
-      ${!showSelect?`
-        <div class="expense-actions" onclick="event.stopPropagation()">
-          <button class="edit-btn" onclick="editExp('${t}','${e.id}')" title="Επεξεργασία">✎</button>
-          <button class="del-btn" onclick="delExp('${t}','${e.id}')" title="Διαγραφή">×</button>
-        </div>`:''}
+      <div class="expense-amount ${t==='fixed'?'is-fixed':'is-daily'}">${t==='fixed'?fmt(e.amount):'-'+fmt(e.amount)}</div>
     </div>`;
 }
 
@@ -3532,8 +3595,7 @@ function txCompleteDailyRow(e){
         <div class="expense-cat">${esc(category)}${pay}</div>
       </div>
       <div class="tx-v3-row-right">
-        <div class="expense-amount">-${fmt(e.amount)}</div>
-        <span>Άνοιγμα</span>
+        <div class="expense-amount is-daily">-${fmt(e.amount)}</div>
       </div>
     </div>`;
 }
@@ -3590,21 +3652,45 @@ function renderDailyList(){
     grouped[key].push(e);
   });
 
+  const isMobile=window.innerWidth<=768;
+  const visibleLimit=isMobile && !txMobileDailyExpanded ? 4 : filtered.length;
+  const visibleItems=filtered.slice(0, visibleLimit);
+  const visibleGrouped={};
+  visibleItems.forEach(e=>{
+    const key=e.date||'no-date';
+    if(!visibleGrouped[key])visibleGrouped[key]=[];
+    visibleGrouped[key].push(e);
+  });
+
   let html='';
-  Object.keys(grouped).sort().reverse().forEach(dt=>{
-    const dayTotal=grouped[dt].reduce((s,e)=>s+(Number(e.amount)||0),0);
+  Object.keys(visibleGrouped).sort().reverse().forEach(dt=>{
+    const allForDay=grouped[dt]||[];
+    const dayTotal=allForDay.reduce((s,e)=>s+(Number(e.amount)||0),0);
     html+=`
       <div class="day-header tx-v3-day-header">
         <div>
           <span>${txCompleteDateLabel(dt)}</span>
-          <small>${grouped[dt].length} κινήσεις</small>
+          <small>${allForDay.length} κινήσεις</small>
         </div>
         <span class="day-total">-${fmt(dayTotal)}</span>
       </div>`;
-    grouped[dt].forEach(e=>html+=txCompleteDailyRow(e));
+    visibleGrouped[dt].forEach(e=>html+=txCompleteDailyRow(e));
   });
 
+  if(isMobile && filtered.length>4){
+    html+=`
+      <button type="button" class="tx-mobile-more-btn" onclick="toggleTxMobileDailyExpanded()">
+        ${txMobileDailyExpanded?'Προβολή λιγότερων':'Προβολή περισσότερων'}
+        <span>${txMobileDailyExpanded?'⌃':'⌄'}</span>
+      </button>`;
+  }
+
   listEl.innerHTML=html;
+}
+
+function toggleTxMobileDailyExpanded(){
+  txMobileDailyExpanded=!txMobileDailyExpanded;
+  renderDailyList();
 }
 
 const txCompleteLegacyEditExp = typeof editExp==='function' ? editExp : null;
@@ -3725,3 +3811,370 @@ async function saveAddCenterManualExpense(){
     }
   }
 }
+
+
+// ============================================================
+// ADD CENTER V4 — Premium Quick Add overrides
+// Kept at the end on purpose so it safely overrides older patch functions.
+// ============================================================
+(function(){
+  function acEl(id){return document.getElementById(id);}
+
+  window.renderSmartQuickPreview=function(targetId,text){
+    const el=acEl(targetId);
+    if(!el)return;
+
+    const value=(text||'').trim();
+    const parsed=quickAddPreviewData(value);
+
+    if(!value){
+      el.classList.remove('visible','invalid','is-visible');
+      el.innerHTML='';
+      return;
+    }
+
+    if(!parsed){
+      el.classList.add('visible','invalid','is-visible');
+      el.innerHTML=`
+        <div class="smart-preview-card">
+          <div class="smart-preview-top">
+            <div>
+              <div class="smart-preview-amount-big">?</div>
+              <div class="smart-preview-name">Δεν βρήκα ποσό</div>
+            </div>
+            <div class="smart-preview-chip">💬</div>
+          </div>
+          <div class="smart-preview-lines">
+            <div class="smart-preview-line"><span>Παράδειγμα</span><strong>καφές 3 ticket</strong></div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const icon=(typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌';
+    const amount=(typeof fmt==='function') ? fmt(parsed.amount) : `€${Number(parsed.amount||0).toFixed(2)}`;
+    const payment=parsed.paymentSourceName || 'Κανονικό budget';
+    const today=typeof addCenterToday==='function' ? addCenterToday() : new Date().toISOString().split('T')[0];
+
+    el.classList.add('visible','is-visible');
+    el.classList.remove('invalid');
+    el.innerHTML=`
+      <div class="smart-preview-card">
+        <div class="smart-preview-top">
+          <div>
+            <div class="smart-preview-amount-big">${amount}</div>
+            <div class="smart-preview-name">${esc(parsed.name || 'Έξοδο')}</div>
+          </div>
+          <div class="smart-preview-chip">${icon}</div>
+        </div>
+        <div class="smart-preview-lines">
+          <div class="smart-preview-line"><span>Κατηγορία</span><strong>${esc(parsed.category || 'Άλλο')}</strong></div>
+          <div class="smart-preview-line"><span>Πληρωμή</span><strong>${esc(payment)}</strong></div>
+          <div class="smart-preview-line"><span>Ημερομηνία</span><strong>${esc(today)}</strong></div>
+        </div>
+      </div>`;
+  };
+
+  window.switchAddCenterTab=function(tab='quick'){
+    const quickTab=acEl('addCenterQuickTab');
+    const manualTab=acEl('addCenterManualTab');
+    const quickPanel=acEl('addCenterQuickPanel');
+    const manualPanel=acEl('addCenterManualPanel');
+    const success=acEl('addCenterSuccess');
+    const isManual=tab==='manual';
+
+    document.body.classList.toggle('add-center-manual-active',isManual);
+    document.body.classList.remove('add-center-success-active');
+    success?.classList.remove('active');
+
+    quickTab?.classList.toggle('active',!isManual);
+    manualTab?.classList.toggle('active',isManual);
+    quickPanel?.classList.toggle('active',!isManual);
+    manualPanel?.classList.toggle('active',isManual);
+
+    quickTab?.setAttribute('aria-selected',String(!isManual));
+    manualTab?.setAttribute('aria-selected',String(isManual));
+
+    setTimeout(()=>{
+      if(isManual) acEl('acDN')?.focus();
+      else acEl('quickAddSheetInput')?.focus();
+    },80);
+  };
+
+  window.openAddCenterSheet=function(tab='quick',prefill='',errorMessage=''){
+    const sheet=acEl('addCenterSheet');
+    const input=acEl('quickAddSheetInput');
+    if(!sheet)return;
+
+    sheet.classList.add('active');
+    document.body.classList.add('quick-sheet-open','add-center-open');
+    document.body.classList.remove('add-center-success-active');
+
+    if(typeof resetAddCenterManualForm==='function')resetAddCenterManualForm();
+    if(typeof renderAddCenterRecentChips==='function')renderAddCenterRecentChips();
+    switchAddCenterTab(tab==='manual'?'manual':'quick');
+
+    if(input){
+      if(typeof prefill==='string' && prefill.trim())input.value=prefill.trim();
+      else if(tab!=='manual')input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    clearQuickAddInlineError('quickAddSheetError');
+    clearQuickAddInlineError('addCenterManualError');
+
+    if(errorMessage)setQuickAddInlineError(errorMessage,'quickAddSheetError');
+
+    setTimeout(()=>{
+      if(tab==='manual') acEl('acDN')?.focus();
+      else input?.focus();
+    },180);
+  };
+
+  window.closeAddCenterSheet=function(event){
+    if(event && event.target && event.target.id!=='addCenterSheet')return;
+
+    addCenterEditState=null;
+    document.body.classList.remove('quick-sheet-open','add-center-open','add-center-manual-active','add-center-success-active');
+    acEl('addCenterSheet')?.classList.remove('active');
+    acEl('addCenterSuccess')?.classList.remove('active');
+
+    const submit=acEl('addCenterManualSubmit');
+    if(submit)submit.textContent='Αποθήκευση εξόδου';
+
+    if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
+    if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
+  };
+
+  window.openQuickAddSheet=function(prefill='',errorMessage=''){
+    return openAddCenterSheet('quick',prefill,errorMessage);
+  };
+
+  window.closeQuickAddSheet=function(event){
+    return closeAddCenterSheet(event);
+  };
+
+  window.fillQuickAddSheet=function(text){
+    const input=acEl('quickAddSheetInput');
+    if(!input)return;
+    input.value=text;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.focus();
+  };
+
+  window.showAddCenterSuccess=function(){
+    acEl('addCenterSuccess')?.classList.add('active');
+    document.body.classList.add('add-center-success-active');
+  };
+
+  window.submitQuickAddSheet=async function(){
+    const sheetInput=acEl('quickAddSheetInput');
+    const btn=acEl('quickAddSheetSubmit');
+    clearQuickAddInlineError('quickAddSheetError');
+
+    const text=(sheetInput?.value || '').trim();
+    if(!text){
+      setQuickAddInlineError('Γράψε κάτι όπως “καφές 3”.','quickAddSheetError');
+      sheetInput?.focus();
+      return false;
+    }
+
+    if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+
+    const saved=await quickAddExpense('quickAddSheetInput',{errorTarget:'quickAddSheetError'});
+
+    if(btn){btn.disabled=false;btn.textContent='Αποθήκευση';}
+
+    if(!saved)return false;
+
+    if(sheetInput){
+      sheetInput.value='';
+      sheetInput.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    showAddCenterSuccess();
+    setTimeout(()=>closeAddCenterSheet(),700);
+    return true;
+  };
+
+  const previousSetup=window.setupAddCenterState;
+  window.setupAddCenterState=function(){
+    if(typeof previousSetup==='function')previousSetup();
+
+    const sheetInput=acEl('quickAddSheetInput');
+    const submit=acEl('quickAddSheetSubmit');
+
+    if(sheetInput && !sheetInput.dataset.v4Bound){
+      sheetInput.dataset.v4Bound='1';
+      const sync=()=>{
+        const hasValue=sheetInput.value.trim().length>0;
+        if(submit)submit.disabled=!hasValue;
+        renderSmartQuickPreview('quickAddSheetPreview',sheetInput.value);
+        if(hasValue)clearQuickAddInlineError('quickAddSheetError');
+      };
+      sheetInput.addEventListener('input',sync);
+      sheetInput.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          e.stopPropagation();
+          submitQuickAddSheet();
+        }
+      });
+      sync();
+    }
+  };
+
+  // Bind once for pages where DOMContentLoaded already fired before this override is parsed.
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setupAddCenterState(),{once:true});
+  }else{
+    setupAddCenterState();
+  }
+})();
+
+// ============================================================
+// QUICK ADD V5 HOTFIX — stable open/close/save state
+// Keeps the existing V4 HTML, but prevents broken success/duplicate button state.
+// ============================================================
+(function(){
+  function qav5(id){return document.getElementById(id);}
+
+  function qav5CleanState(){
+    document.body.classList.remove('add-center-success-active');
+    qav5('addCenterSuccess')?.classList.remove('active');
+
+    const quickBtn=qav5('quickAddSheetSubmit');
+    const manualBtn=qav5('addCenterManualSubmit');
+
+    if(quickBtn){
+      quickBtn.disabled=!((qav5('quickAddSheetInput')?.value || '').trim());
+      quickBtn.textContent='Αποθήκευση';
+    }
+
+    if(manualBtn){
+      manualBtn.disabled=false;
+      manualBtn.textContent='Αποθήκευση εξόδου';
+    }
+  }
+
+  const previousOpenAddCenterSheet=window.openAddCenterSheet;
+  window.openAddCenterSheet=function(tab='quick',prefill='',errorMessage=''){
+    if(typeof previousOpenAddCenterSheet==='function'){
+      previousOpenAddCenterSheet(tab,prefill,errorMessage);
+    }else{
+      qav5('addCenterSheet')?.classList.add('active');
+      document.body.classList.add('quick-sheet-open','add-center-open');
+    }
+
+    qav5CleanState();
+
+    const isManual=tab==='manual';
+    document.body.classList.toggle('add-center-manual-active',isManual);
+
+    qav5('addCenterQuickTab')?.classList.toggle('active',!isManual);
+    qav5('addCenterManualTab')?.classList.toggle('active',isManual);
+    qav5('addCenterQuickPanel')?.classList.toggle('active',!isManual);
+    qav5('addCenterManualPanel')?.classList.toggle('active',isManual);
+
+    const input=qav5('quickAddSheetInput');
+    if(input && !isManual){
+      if(prefill && String(prefill).trim())input.value=String(prefill).trim();
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    setTimeout(()=>{
+      if(isManual)qav5('acDN')?.focus();
+      else input?.focus();
+    },120);
+  };
+
+  window.closeAddCenterSheet=function(event){
+    if(event && event.target && event.target.id && event.target.id!=='addCenterSheet')return;
+
+    if(typeof addCenterEditState!=='undefined')addCenterEditState=null;
+
+    qav5CleanState();
+    document.body.classList.remove('quick-sheet-open','add-center-open','add-center-manual-active','add-center-success-active');
+    qav5('addCenterSheet')?.classList.remove('active');
+
+    if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
+    if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
+  };
+
+  window.closeQuickAddSheet=function(event){
+    return window.closeAddCenterSheet(event);
+  };
+
+  window.openQuickAddSheet=function(prefill='',errorMessage=''){
+    return window.openAddCenterSheet('quick',prefill,errorMessage);
+  };
+
+  window.showAddCenterSuccess=function(){
+    // No inline success state for now. It caused duplicate/broken visual state.
+    // We keep user feedback through toast and close the sheet.
+    if(typeof showMiniToast==='function')showMiniToast('✅ Το έξοδο αποθηκεύτηκε');
+    setTimeout(()=>window.closeAddCenterSheet(),120);
+  };
+
+  window.submitQuickAddSheet=async function(){
+    const input=qav5('quickAddSheetInput');
+    const btn=qav5('quickAddSheetSubmit');
+
+    if(typeof clearQuickAddInlineError==='function')clearQuickAddInlineError('quickAddSheetError');
+
+    const text=(input?.value || '').trim();
+    if(!text){
+      if(typeof setQuickAddInlineError==='function')setQuickAddInlineError('Γράψε κάτι όπως “καφές 3”.','quickAddSheetError');
+      input?.focus();
+      return false;
+    }
+
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='Αποθήκευση...';
+    }
+
+    let saved=false;
+    try{
+      saved=await quickAddExpense('quickAddSheetInput',{errorTarget:'quickAddSheetError'});
+    }finally{
+      if(btn){
+        btn.disabled=false;
+        btn.textContent='Αποθήκευση';
+      }
+    }
+
+    if(!saved)return false;
+
+    if(input){
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    if(typeof showMiniToast==='function')showMiniToast('✅ Το έξοδο αποθηκεύτηκε');
+    window.closeAddCenterSheet();
+    return true;
+  };
+
+  const previousSetup=window.setupAddCenterState;
+  window.setupAddCenterState=function(){
+    if(typeof previousSetup==='function')previousSetup();
+
+    qav5CleanState();
+
+    const input=qav5('quickAddSheetInput');
+    const submit=qav5('quickAddSheetSubmit');
+    if(input && !input.dataset.v5Bound){
+      input.dataset.v5Bound='1';
+      input.addEventListener('input',()=>{
+        if(submit)submit.disabled=!input.value.trim();
+      });
+    }
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>window.setupAddCenterState(),{once:true});
+  }else{
+    window.setupAddCenterState();
+  }
+})();
