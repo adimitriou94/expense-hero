@@ -1,0 +1,630 @@
+/* ============================================================
+   EXPENSE HERO — ARCHIVE / HISTORY PAGE V1
+   Scope: #vArchive only. Mobile-first financial timeline.
+   ============================================================ */
+
+:root{
+  --archive-purple:#6547f6;
+  --archive-purple-2:#7c5cff;
+  --archive-ink:#111827;
+  --archive-muted:#72809a;
+  --archive-line:rgba(119,132,170,.12);
+  --archive-green:#22c985;
+  --archive-blue:#3b82f6;
+  --archive-orange:#f59e0b;
+  --archive-red:#ff3e67;
+  --archive-shadow:0 18px 46px rgba(30,40,90,.075);
+  --archive-shadow-soft:0 10px 26px rgba(30,40,90,.055);
+}
+
+#vArchive,
+#vArchive *{box-sizing:border-box;}
+
+#vArchive{
+  background:
+    radial-gradient(circle at 14% 0%,rgba(101,71,246,.10),transparent 34%),
+    linear-gradient(180deg,#fbfcff 0%,#f3f6ff 44%,#edf2ff 100%);
+  overflow-x:hidden;
+}
+
+#vArchive .page-grid{
+  display:grid !important;
+  gap:16px !important;
+  width:100% !important;
+  max-width:1180px !important;
+  margin:0 auto !important;
+  padding:16px 14px calc(124px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Hero */
+#vArchive .page-hero{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:188px !important;
+  padding:24px !important;
+  border:1px solid rgba(147,132,255,.18) !important;
+  border-radius:32px !important;
+  background:
+    radial-gradient(circle at 88% 28%,rgba(122,92,255,.18),transparent 30%),
+    radial-gradient(circle at 0% 100%,rgba(34,201,133,.12),transparent 36%),
+    linear-gradient(135deg,rgba(255,255,255,.95),rgba(246,243,255,.92)) !important;
+  box-shadow:var(--archive-shadow) !important;
+  display:block !important;
+}
+
+#vArchive .page-hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  opacity:.42;
+  background-image:
+    linear-gradient(rgba(101,71,246,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,71,246,.08) 1px, transparent 1px);
+  background-size:34px 34px;
+  pointer-events:none;
+  mask-image:linear-gradient(90deg,black 0%,black 76%,transparent 100%);
+}
+
+#vArchive .page-hero::after{
+  content:'🗓️';
+  position:absolute;
+  right:24px;
+  top:42px;
+  width:92px;
+  height:92px;
+  border-radius:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  background:
+    radial-gradient(circle at 25% 22%,rgba(255,255,255,.72),transparent 34%),
+    linear-gradient(135deg,#8c6dff 0%,#5636e7 60%,#351b9a 100%);
+  box-shadow:0 24px 56px rgba(101,71,246,.26);
+  transform:rotate(-4deg);
+}
+
+#vArchive .page-hero > *{position:relative;z-index:2;}
+#vArchive .page-hero > div{max-width:66%;}
+
+#vArchive .page-hero .eyebrow{
+  color:var(--archive-purple) !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  letter-spacing:.16em !important;
+  margin-bottom:12px !important;
+  text-transform:uppercase !important;
+}
+
+#vArchive .page-hero h2{
+  margin:0 !important;
+  color:var(--archive-ink) !important;
+  font-size:31px !important;
+  line-height:1.02 !important;
+  letter-spacing:-.07em !important;
+  font-weight:950 !important;
+}
+
+#vArchive .page-hero p{
+  max-width:280px;
+  margin:14px 0 0 !important;
+  color:#64718a !important;
+  font-size:14px !important;
+  line-height:1.48 !important;
+  font-weight:750 !important;
+}
+
+#archList{display:block;}
+.archive-page-content{display:grid;gap:16px;}
+
+.archive-summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.archive-summary-card{
+  min-width:0;
+  min-height:126px;
+  padding:16px;
+  border-radius:26px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(255,255,255,.86);
+  box-shadow:var(--archive-shadow-soft);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.archive-summary-icon{
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+  background:rgba(101,71,246,.11);
+  font-size:18px;
+}
+
+.archive-summary-card span{
+  color:#7d89a4;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.archive-summary-card strong{
+  display:block;
+  margin-top:7px;
+  color:var(--archive-ink);
+  font-size:18px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.05em;
+}
+
+.archive-summary-card small{
+  margin-top:5px;
+  color:#7f8aa5;
+  font-size:12px;
+  font-weight:900;
+}
+
+.archive-summary-card.is-green strong,
+.archive-summary-card.is-green small{color:var(--archive-green);}
+.archive-summary-card.is-red strong,
+.archive-summary-card.is-red small{color:var(--archive-red);}
+.archive-summary-card.is-blue strong,
+.archive-summary-card.is-blue small{color:var(--archive-blue);}
+
+.archive-trend-card,
+.archive-timeline-list,
+.archive-empty-card{
+  padding:18px;
+  border-radius:30px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(255,255,255,.86);
+  box-shadow:var(--archive-shadow);
+}
+
+.archive-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+
+.archive-section-head span{
+  display:block;
+  color:var(--archive-purple);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+
+.archive-section-head h3{
+  margin:0;
+  color:var(--archive-ink);
+  font-size:20px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.055em;
+}
+
+.archive-mini-bars{
+  height:94px;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:10px;
+  align-items:end;
+  padding:8px 2px 0;
+}
+
+.archive-mini-bar{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+}
+
+.archive-mini-bar i{
+  width:100%;
+  max-width:26px;
+  min-height:12px;
+  border-radius:999px;
+  display:block;
+  background:linear-gradient(180deg,#6b55ff,#3922c7);
+  box-shadow:0 10px 20px rgba(91,79,255,.18);
+}
+
+.archive-mini-bar.good i{background:linear-gradient(180deg,#34d399,#10b981);}
+.archive-mini-bar.bad i{background:linear-gradient(180deg,#fb7185,#ef4444);}
+
+.archive-mini-bar span{
+  color:#8a95ad;
+  font-size:10px;
+  font-weight:950;
+}
+
+.archive-timeline-list{display:grid;gap:12px;}
+
+.archive-month-card{
+  overflow:hidden;
+  border-radius:26px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(120,130,180,.10);
+  box-shadow:0 10px 26px rgba(30,40,90,.045);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.archive-month-card.is-current{
+  border-color:rgba(34,201,133,.46);
+  box-shadow:0 12px 30px rgba(34,201,133,.08);
+}
+
+.archive-month-card:active{transform:scale(.99);}
+
+.archive-month-main{
+  width:100%;
+  border:0;
+  background:transparent;
+  min-height:82px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 28px;
+  align-items:center;
+  gap:10px;
+  padding:16px;
+  text-align:left;
+}
+
+.archive-month-left strong{
+  display:block;
+  color:var(--archive-ink);
+  font-size:16px;
+  font-weight:950;
+  letter-spacing:-.035em;
+}
+
+.archive-month-left span{
+  display:inline-flex;
+  margin-top:5px;
+  color:#7d89a4;
+  font-size:11px;
+  font-weight:900;
+}
+
+.archive-month-card.is-current .archive-month-left span{
+  color:var(--archive-green);
+}
+
+.archive-month-right{text-align:right;}
+.archive-month-right strong{
+  display:block;
+  font-family:var(--mono,monospace);
+  font-size:17px;
+  line-height:1;
+  font-weight:950;
+}
+.archive-month-right strong.is-positive{color:var(--archive-green);}
+.archive-month-right strong.is-negative{color:var(--archive-red);}
+.archive-month-right span{
+  display:block;
+  margin-top:6px;
+  color:#8a95ad;
+  font-size:11px;
+  font-weight:850;
+  white-space:nowrap;
+}
+
+.archive-chevron{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--archive-purple);
+  background:rgba(101,71,246,.10);
+  font-size:13px;
+  font-weight:950;
+}
+
+.archive-mini-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:0 16px 16px;
+}
+
+.archive-mini-stats div{
+  min-width:0;
+  padding:10px;
+  border-radius:18px;
+  background:#f7f9ff;
+  border:1px solid rgba(120,130,180,.08);
+}
+
+.archive-mini-stats span{
+  display:block;
+  color:#8a95ad;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.archive-mini-stats strong{
+  display:block;
+  margin-top:5px;
+  color:#172033;
+  font-family:var(--mono,monospace);
+  font-size:12px;
+  font-weight:950;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.archive-expanded{
+  padding:0 16px 16px;
+  display:grid;
+  gap:12px;
+  animation:archiveFade .18s ease;
+}
+
+@keyframes archiveFade{
+  from{opacity:0;transform:translateY(-4px);}
+  to{opacity:1;transform:none;}
+}
+
+.archive-expanded-title{
+  color:#172033;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:-.02em;
+}
+
+.archive-breakdown-grid{
+  display:grid;
+  gap:8px;
+}
+
+.archive-cat-row{
+  min-height:42px;
+  padding:0 12px;
+  border-radius:16px;
+  background:#f7f9ff;
+  border:1px solid rgba(120,130,180,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.archive-cat-row span{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#172033;
+  font-size:12px;
+  font-weight:900;
+}
+
+.archive-cat-row i{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  flex:0 0 auto;
+}
+
+.archive-cat-row strong{
+  color:#172033;
+  font-family:var(--mono,monospace);
+  font-size:12px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+.archive-month-totals{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.archive-month-totals div{
+  padding:11px;
+  border-radius:17px;
+  background:rgba(101,71,246,.06);
+}
+.archive-month-totals span{
+  display:block;
+  color:#7d89a4;
+  font-size:10px;
+  font-weight:950;
+}
+.archive-month-totals strong{
+  display:block;
+  margin-top:5px;
+  color:var(--archive-purple);
+  font-family:var(--mono,monospace);
+  font-size:12px;
+  font-weight:950;
+}
+
+.archive-compare-box{
+  display:grid;
+  gap:10px;
+  padding-top:4px;
+}
+
+.archive-compare-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+
+.archive-compare-pill{
+  min-width:0;
+  padding:10px;
+  border-radius:16px;
+  background:#f7f9ff;
+  border:1px solid rgba(120,130,180,.08);
+  text-align:center;
+}
+.archive-compare-pill span{
+  display:block;
+  color:#8a95ad;
+  font-size:10px;
+  font-weight:950;
+}
+.archive-compare-pill strong{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+  font-weight:950;
+}
+.archive-compare-pill.good strong{color:var(--archive-green);}
+.archive-compare-pill.bad strong{color:var(--archive-red);}
+
+.archive-empty-mini{
+  padding:12px;
+  border-radius:16px;
+  background:#f7f9ff;
+  color:#8a95ad;
+  font-size:12px;
+  font-weight:850;
+}
+
+.archive-empty-card{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:#74819b;
+}
+.archive-empty-icon{
+  width:70px;
+  height:70px;
+  margin-bottom:14px;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(101,71,246,.10);
+  font-size:30px;
+}
+.archive-empty-card h3{
+  margin:0;
+  color:#172033;
+  font-size:20px;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+.archive-empty-card p{
+  max-width:280px;
+  margin:8px 0 0;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:750;
+}
+
+@media (max-width:380px){
+  #vArchive .page-grid{padding-left:12px !important;padding-right:12px !important;}
+  #vArchive .page-hero{min-height:172px !important;padding:22px 20px !important;}
+  #vArchive .page-hero::after{width:76px;height:76px;right:18px;top:42px;font-size:38px;border-radius:25px;}
+  #vArchive .page-hero h2{font-size:28px !important;}
+  #vArchive .page-hero > div{max-width:68%;}
+  .archive-month-main{grid-template-columns:minmax(0,1fr) auto 26px;padding:14px;}
+  .archive-month-right span{font-size:10px;}
+  .archive-summary-card{padding:14px;}
+}
+
+@media (min-width:769px){
+  #vArchive .page-grid{padding:20px 20px 120px !important;}
+  .archive-summary-grid{grid-template-columns:repeat(4,1fr);}
+  .archive-page-content{gap:18px;}
+  .archive-month-main{min-height:88px;}
+}
+
+
+/* ============================================================
+   ARCHIVE V2 FIX — accordion/open state stability
+   Fix: old global mobile.css was limiting #archList to 70vh, so the
+   expanded month looked clipped/broken inside a second inner scroll.
+   ============================================================ */
+
+#vArchive #archList{
+  max-height:none !important;
+  overflow:visible !important;
+  padding-right:0 !important;
+  width:100% !important;
+}
+
+#vArchive .archive-page-content,
+#vArchive .archive-timeline-list{
+  overflow:visible !important;
+}
+
+#vArchive .archive-month-card{
+  overflow:visible !important;
+}
+
+#vArchive .archive-month-card.is-open{
+  border-color:rgba(101,71,246,.26) !important;
+  box-shadow:0 18px 42px rgba(30,40,90,.075) !important;
+}
+
+#vArchive .archive-month-card.is-open .archive-month-main{
+  border-bottom:1px solid rgba(120,130,180,.08) !important;
+}
+
+#vArchive .archive-expanded{
+  padding:14px 16px 16px !important;
+  overflow:visible !important;
+}
+
+#vArchive .archive-chevron{
+  transition:transform .18s ease, background .18s ease !important;
+}
+
+#vArchive .archive-month-card.is-open .archive-chevron{
+  transform:rotate(180deg) !important;
+  background:linear-gradient(135deg,var(--archive-purple),var(--archive-purple-2)) !important;
+  color:#fff !important;
+}
+
+@media (max-width:768px){
+  #vArchive .archive-compare-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  #vArchive .archive-compare-pill{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    text-align:left !important;
+  }
+
+  #vArchive .archive-month-totals{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+}
+
+@media (max-width:380px){
+  #vArchive .archive-mini-stats,
+  #vArchive .archive-month-totals{
+    grid-template-columns:1fr !important;
+  }
+}

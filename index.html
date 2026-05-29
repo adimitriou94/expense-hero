@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="css/expense-hero-mobile-v3-clean.css">
   <link rel="stylesheet" href="css/expense-hero-mobile-nav-v7.css">
   <link rel="stylesheet" href="css/expense-hero-quickadd-role-split-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-income-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-reports-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-debt-planner-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-advisor-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-archive-page-v1.css">
   <link rel="stylesheet" href="css/expense-hero-mobile-dashboard-v3.css">
   <link rel="stylesheet" href="css/transactions-complete-v3.css">
   <link rel="stylesheet" href="css/transactions-mobile-final-v7.css">
@@ -582,26 +587,95 @@
 
   <!-- STATS -->
   <main class="view" id="vStats">
-    <section class="page-grid">
-      <div class="chart-container">
-        <div class="chart-title">Κατανομή εξόδων ανά κατηγορία</div>
-      
-        <div class="donut-layout">
-          <div class="donut-chart" id="chartCatDonut">
-            <div class="donut-center">
-              <span>Σύνολο</span>
-              <strong id="chartCatTotal">€0,00</strong>
-            </div>
-          </div>
-      
-          <div class="donut-legend" id="chartCat"></div>
+    <section class="reports-page">
+
+      <div class="page-hero bento-card reports-hero">
+        <div>
+          <div class="eyebrow">Reports & Analytics</div>
+          <h2>Στατιστικά & Αναφορές</h2>
+          <p>Κατανόησε πού πηγαίνουν τα χρήματά σου και βρες ευκαιρίες εξοικονόμησης.</p>
         </div>
       </div>
 
-      <div class="chart-container">
-        <div class="chart-title">Ημερήσια έξοδα ανά ημέρα</div>
+      <section class="reports-card reports-snapshot-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">1.</span>
+          <h3>Μηνιαία εικόνα</h3>
+        </div>
+
+        <div class="reports-kpi-grid">
+          <div class="reports-kpi">
+            <div class="reports-kpi-icon">💳</div>
+            <span>Σύνολο εξόδων</span>
+            <strong id="reportsTotal">€0,00</strong>
+            <small id="reportsTotalDelta">τρέχων μήνας</small>
+          </div>
+
+          <div class="reports-kpi">
+            <div class="reports-kpi-icon blue">📈</div>
+            <span>Μέση ημέρα</span>
+            <strong id="reportsAvgDay">€0,00</strong>
+            <small id="reportsAvgDelta">ανά ημέρα</small>
+          </div>
+
+          <div class="reports-kpi">
+            <div class="reports-kpi-icon amber">👑</div>
+            <span>Top κατηγορία</span>
+            <strong id="reportsTopCategory">—</strong>
+            <small id="reportsTopPct">0% των εξόδων</small>
+          </div>
+
+          <div class="reports-kpi">
+            <div class="reports-kpi-icon red">↗</div>
+            <span>Μεγαλύτερη κίνηση</span>
+            <strong id="reportsLargestTx">€0,00</strong>
+            <small id="reportsLargestTxMeta">—</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="reports-card reports-breakdown-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">2.</span>
+          <h3>Κατανομή εξόδων ανά κατηγορία</h3>
+        </div>
+
+        <div class="reports-breakdown-layout">
+          <div class="reports-donut-wrap">
+            <div class="donut-chart" id="chartCatDonut">
+              <div class="donut-center">
+                <span>Σύνολο</span>
+                <strong id="chartCatTotal">€0,00</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="donut-legend reports-category-list" id="chartCat"></div>
+        </div>
+      </section>
+
+      <section class="reports-card reports-insights-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">3.</span>
+          <h3>Insights</h3>
+        </div>
+
+        <div class="reports-insights-grid" id="reportsInsights"></div>
+      </section>
+
+      <section class="reports-advanced-cta" role="button" tabindex="0" onclick="openReportsAdvancedSheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReportsAdvancedSheet();}">
+        <div class="reports-cta-icon">📊</div>
+        <div>
+          <strong>Θέλεις περισσότερα δεδομένα;</strong>
+          <span>Δες γρήγορα τάσεις, πηγές πληρωμής και συγκρίσεις του μήνα.</span>
+        </div>
+        <button type="button" onclick="event.stopPropagation();openReportsAdvancedSheet();">Αναλυτικά στατιστικά ›</button>
+      </section>
+
+      <div class="reports-legacy-charts" aria-hidden="true">
         <div class="bar-chart" id="chartDay"></div>
       </div>
+
     </section>
   </main>
 
@@ -704,6 +778,39 @@
 
 </div>
 
+
+
+<!-- REPORTS SHEETS -->
+<div class="reports-sheet-overlay" id="reportsAllCategoriesSheet" onclick="if(event.target===this)closeReportsSheet('reportsAllCategoriesSheet')">
+  <section class="reports-sheet" role="dialog" aria-modal="true" aria-label="Όλες οι κατηγορίες">
+    <div class="reports-sheet-handle"></div>
+    <div class="reports-sheet-header">
+      <div>
+        <div class="reports-sheet-kicker">CATEGORY BREAKDOWN</div>
+        <h3>Όλες οι κατηγορίες</h3>
+        <p id="reportsAllCategoriesSubtitle">Πλήρης κατανομή εξόδων μήνα</p>
+      </div>
+      <button type="button" class="reports-sheet-close" onclick="closeReportsSheet('reportsAllCategoriesSheet')" aria-label="Κλείσιμο">×</button>
+    </div>
+    <div class="reports-sheet-list" id="reportsAllCategoriesList"></div>
+  </section>
+</div>
+
+<div class="reports-sheet-overlay" id="reportsAdvancedSheet" onclick="if(event.target===this)closeReportsSheet('reportsAdvancedSheet')">
+  <section class="reports-sheet" role="dialog" aria-modal="true" aria-label="Αναλυτικά στατιστικά">
+    <div class="reports-sheet-handle"></div>
+    <div class="reports-sheet-header">
+      <div>
+        <div class="reports-sheet-kicker">ADVANCED REPORTS</div>
+        <h3>Αναλυτικά στατιστικά</h3>
+        <p>Γρήγορη εικόνα με τάσεις, πηγές και συγκρίσεις.</p>
+      </div>
+      <button type="button" class="reports-sheet-close" onclick="closeReportsSheet('reportsAdvancedSheet')" aria-label="Κλείσιμο">×</button>
+    </div>
+    <div class="reports-advanced-grid" id="reportsAdvancedContent"></div>
+  </section>
+</div>
+
 <!-- MOBILE FLOATING NAV -->
 <nav class="mobile-bottom-nav" aria-label="Κάτω πλοήγηση">
   <button class="mobile-nav-item nav-btn active" data-v="vDash" onclick="go('vDash',this)" aria-label="Αρχική">
@@ -750,153 +857,144 @@
   </button>
 </nav>
 
-<!-- ADD CENTER MOBILE SHEET — V4 PREMIUM -->
+<!-- ADD CENTER MOBILE SHEET -->
 <div class="add-center-overlay" id="addCenterSheet" onclick="closeAddCenterSheet(event)">
-  <section class="add-center-sheet add-center-v4" role="dialog" aria-modal="true" aria-label="Νέα καταχώρηση εξόδου" onclick="event.stopPropagation()">
-    <div class="add-center-topbar">
-      <button type="button" class="add-center-back" onclick="closeAddCenterSheet()" aria-label="Κλείσιμο">
-        ←
-      </button>
+  <section class="add-center-sheet" role="dialog" aria-modal="true" aria-label="Νέα καταχώρηση εξόδου">
+    <div class="add-center-handle"></div>
 
-      <div class="add-center-title-wrap">
-        <div class="add-center-kicker">Expense Hero</div>
-        <h2>Quick Add</h2>
+    <div class="add-center-header">
+      <div>
+        <div class="add-center-kicker">Νέα καταχώρηση</div>
+        <h2>Νέο έξοδο</h2>
+        <p>Γρήγορα με λέξεις ή αναλυτικά με φόρμα.</p>
       </div>
-
       <button type="button" class="add-center-close" onclick="closeAddCenterSheet()" aria-label="Κλείσιμο">×</button>
     </div>
 
     <div class="add-center-tabs" role="tablist" aria-label="Τρόπος καταχώρησης">
       <button type="button" class="add-center-tab active" id="addCenterQuickTab" onclick="switchAddCenterTab('quick')" role="tab" aria-selected="true">
-        Γρήγορα
+        ⚡ Quick
       </button>
       <button type="button" class="add-center-tab" id="addCenterManualTab" onclick="switchAddCenterTab('manual')" role="tab" aria-selected="false">
-        Πλήρες
+        📄 Αναλυτικό
       </button>
     </div>
 
-    <div class="add-center-scroll-area">
-      <div class="add-center-panel active" id="addCenterQuickPanel" role="tabpanel">
-        <div class="quick-compose-card">
-          <label class="quick-compose-label" for="quickAddSheetInput">Γράψε όπως το σκέφτεσαι</label>
-          <div class="add-center-input-row">
-            <input
-              type="text"
-              id="quickAddSheetInput"
-              placeholder="π.χ. καφές 3 ticket"
-              autocomplete="off"
-            >
-            <button type="button" class="add-center-voice" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Φωνητική καταχώρηση">🎤</button>
-          </div>
-          <div class="quick-compose-help">Παραδείγματα: <strong>καφές 3</strong>, <strong>φαγητό 12 ticket</strong>, <strong>σούπερ μάρκετ 25</strong></div>
-        </div>
-
-        <div class="smart-quick-preview add-center-preview" id="quickAddSheetPreview" aria-live="polite"></div>
-        <div class="quick-add-error hidden add-center-error" id="quickAddSheetError" aria-live="polite"></div>
-
-        <div class="add-center-section-title">Γρήγορες επιλογές</div>
-        <div class="add-center-examples">
-          <button type="button" onclick="fillQuickAddSheet('καφές 3')">☕ Καφές 3</button>
-          <button type="button" onclick="fillQuickAddSheet('σούπερ μάρκετ 25')">🛒 Σούπερ 25</button>
-          <button type="button" onclick="fillQuickAddSheet('φαγητό 12 ticket')">🎫 Φαγητό 12 ticket</button>
-        </div>
-
-        <div class="add-center-section-title add-center-recent-title">Πρόσφατα</div>
-        <div class="add-center-recent" id="addCenterRecentChips"></div>
+    <div class="add-center-panel active" id="addCenterQuickPanel" role="tabpanel">
+      <div class="add-center-input-row">
+        <input
+          type="text"
+          id="quickAddSheetInput"
+          placeholder="π.χ. καφές 3 ticket"
+          autocomplete="off"
+        >
+        <button type="button" class="add-center-voice" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Φωνητική καταχώρηση">🎤</button>
       </div>
 
-      <div class="add-center-panel" id="addCenterManualPanel" role="tabpanel">
-        <div class="add-center-manual-form">
-          <div class="add-center-field">
-            <label>Τίτλος</label>
-            <input type="text" id="acDN" placeholder="π.χ. Σούπερ μάρκετ" autocomplete="off">
-          </div>
+      <div class="smart-quick-preview add-center-preview" id="quickAddSheetPreview" aria-live="polite"></div>
+      <div class="quick-add-error hidden add-center-error" id="quickAddSheetError" aria-live="polite"></div>
 
-          <div class="add-center-field">
-            <label>Ποσό</label>
-            <input type="number" id="acDA" placeholder="€ 0,00" step="0.01" min="0" inputmode="decimal">
-          </div>
-
-          <div class="add-center-field add-center-select-field add-center-category-field">
-            <label>Κατηγορία</label>
-            <select id="acDC" class="add-center-native-select" aria-hidden="true" tabindex="-1">
-              <option value="Τρόφιμα">🛒 Τρόφιμα</option>
-              <option value="Καφέδες">☕ Καφέδες</option>
-              <option value="Μεταφορά">🚗 Μεταφορά</option>
-              <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
-              <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
-              <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
-              <option value="Υγεία">🏥 Υγεία</option>
-              <option value="Ρούχα">👕 Ρούχα</option>
-              <option value="Δάνεια">🏦 Δάνεια</option>
-              <option value="Συνδρομές">📱 Συνδρομές</option>
-              <option value="Άλλο">📌 Άλλο</option>
-            </select>
-            <button type="button" class="add-center-picker-button" id="acDCCustom" onclick="toggleAddCenterCategoryPicker(event)" aria-expanded="false">
-              <span class="add-center-picker-left">
-                <span class="add-center-picker-icon" id="acDCCustomIcon">🛒</span>
-                <span id="acDCCustomText">Τρόφιμα</span>
-              </span>
-              <span class="add-center-picker-chevron">›</span>
-            </button>
-            <div class="add-center-category-list" id="acDCCustomList" role="listbox" aria-label="Επιλογή κατηγορίας">
-              <button type="button" onclick="selectAddCenterCategory('Τρόφιμα')">🛒 <span>Τρόφιμα</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Καφέδες')">☕ <span>Καφέδες</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Μεταφορά')">🚗 <span>Μεταφορά</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Ψυχαγωγία')">🎭 <span>Ψυχαγωγία</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Φαγητό έξω')">🍕 <span>Φαγητό έξω</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Λογαριασμοί')">💡 <span>Λογαριασμοί</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Υγεία')">🏥 <span>Υγεία</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Ρούχα')">👕 <span>Ρούχα</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Δάνεια')">🏦 <span>Δάνεια</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Συνδρομές')">📱 <span>Συνδρομές</span></button>
-              <button type="button" onclick="selectAddCenterCategory('Άλλο')">📌 <span>Άλλο</span></button>
-            </div>
-          </div>
-
-          <div class="add-center-field add-center-select-field add-center-payment-field">
-            <label>Πηγή πληρωμής</label>
-            <select id="acDPay" class="add-center-native-select" aria-hidden="true" tabindex="-1">
-              <option value="">Κανονικό budget</option>
-            </select>
-            <button type="button" class="add-center-picker-button" id="acDPayCustom" onclick="toggleAddCenterPaymentPicker(event)" aria-expanded="false">
-              <span class="add-center-picker-left">
-                <span class="add-center-picker-icon" id="acDPayCustomIcon">💶</span>
-                <span id="acDPayCustomText">Κανονικό budget</span>
-              </span>
-              <span class="add-center-picker-chevron">›</span>
-            </button>
-            <div class="add-center-payment-list" id="acDPayCustomList" role="listbox" aria-label="Επιλογή πηγής πληρωμής"></div>
-          </div>
-
-          <div class="add-center-field">
-            <label>Ημερομηνία</label>
-            <input type="date" id="acDD">
-          </div>
-
-          <div class="add-center-field">
-            <label>Σημειώσεις <span>(προαιρετικό)</span></label>
-            <textarea id="acDNotes" rows="3" placeholder="Πρόσθεσε σημείωση..."></textarea>
-          </div>
-
-          <div class="quick-add-error hidden add-center-error" id="addCenterManualError" aria-live="polite"></div>
-        </div>
+      <div class="add-center-section-title">Προτάσεις</div>
+      <div class="add-center-examples">
+        <button type="button" onclick="fillQuickAddSheet('καφές 3')">καφές 3</button>
+        <button type="button" onclick="fillQuickAddSheet('σούπερ μάρκετ 25')">σούπερ μάρκετ 25</button>
+        <button type="button" onclick="fillQuickAddSheet('φαγητό 12 ticket')">φαγητό 12 ticket</button>
       </div>
 
-      <div class="add-center-success" id="addCenterSuccess" aria-live="polite">
-        <div class="add-center-success-icon">✓</div>
-        <h3>Τέλεια!</h3>
-        <p>Το έξοδο καταχωρήθηκε με επιτυχία.</p>
-      </div>
-    </div>
+      <div class="add-center-section-title add-center-recent-title">Πρόσφατα</div>
+      <div class="add-center-recent" id="addCenterRecentChips"></div>
 
-    <div class="add-center-sticky-actions">
       <button type="button" class="add-center-submit quick-sheet-submit" id="quickAddSheetSubmit" onclick="submitQuickAddSheet()">
-        Αποθήκευση
+        Προσθήκη εξόδου
       </button>
-      <button type="button" class="add-center-submit" id="addCenterManualSubmit" onclick="saveAddCenterManualExpense()">
-        Αποθήκευση εξόδου
-      </button>
+    </div>
+
+    <div class="add-center-panel" id="addCenterManualPanel" role="tabpanel">
+      <div class="add-center-manual-form">
+        <div class="add-center-field">
+          <label>Τίτλος</label>
+          <input type="text" id="acDN" placeholder="π.χ. Σούπερ μάρκετ" autocomplete="off">
+        </div>
+
+        <div class="add-center-field">
+          <label>Ποσό</label>
+          <input type="number" id="acDA" placeholder="€ 0,00" step="0.01" min="0" inputmode="decimal">
+        </div>
+
+        <div class="add-center-field add-center-select-field add-center-category-field">
+          <label>Κατηγορία</label>
+
+          <select id="acDC" class="add-center-native-select" aria-hidden="true" tabindex="-1">
+            <option value="Τρόφιμα">🛒 Τρόφιμα</option>
+            <option value="Καφέδες">☕ Καφέδες</option>
+            <option value="Μεταφορά">🚗 Μεταφορά</option>
+            <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
+            <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
+            <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
+            <option value="Υγεία">🏥 Υγεία</option>
+            <option value="Ρούχα">👕 Ρούχα</option>
+            <option value="Δάνεια">🏦 Δάνεια</option>
+            <option value="Συνδρομές">📱 Συνδρομές</option>
+            <option value="Άλλο">📌 Άλλο</option>
+          </select>
+
+          <button type="button" class="add-center-picker-button" id="acDCCustom" onclick="toggleAddCenterCategoryPicker(event)" aria-expanded="false">
+            <span class="add-center-picker-left">
+              <span class="add-center-picker-icon" id="acDCCustomIcon">🛒</span>
+              <span id="acDCCustomText">Τρόφιμα</span>
+            </span>
+            <span class="add-center-picker-chevron">›</span>
+          </button>
+
+          <div class="add-center-category-list" id="acDCCustomList" role="listbox" aria-label="Επιλογή κατηγορίας">
+            <button type="button" onclick="selectAddCenterCategory('Τρόφιμα')">🛒 <span>Τρόφιμα</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Καφέδες')">☕ <span>Καφέδες</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Μεταφορά')">🚗 <span>Μεταφορά</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Ψυχαγωγία')">🎭 <span>Ψυχαγωγία</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Φαγητό έξω')">🍕 <span>Φαγητό έξω</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Λογαριασμοί')">💡 <span>Λογαριασμοί</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Υγεία')">🏥 <span>Υγεία</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Ρούχα')">👕 <span>Ρούχα</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Δάνεια')">🏦 <span>Δάνεια</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Συνδρομές')">📱 <span>Συνδρομές</span></button>
+            <button type="button" onclick="selectAddCenterCategory('Άλλο')">📌 <span>Άλλο</span></button>
+          </div>
+        </div>
+
+        <div class="add-center-field add-center-select-field add-center-payment-field">
+          <label>Πηγή πληρωμής</label>
+
+          <select id="acDPay" class="add-center-native-select" aria-hidden="true" tabindex="-1">
+            <option value="">Κανονικό budget</option>
+          </select>
+
+          <button type="button" class="add-center-picker-button" id="acDPayCustom" onclick="toggleAddCenterPaymentPicker(event)" aria-expanded="false">
+            <span class="add-center-picker-left">
+              <span class="add-center-picker-icon" id="acDPayCustomIcon">💶</span>
+              <span id="acDPayCustomText">Κανονικό budget</span>
+            </span>
+            <span class="add-center-picker-chevron">›</span>
+          </button>
+
+          <div class="add-center-payment-list" id="acDPayCustomList" role="listbox" aria-label="Επιλογή πηγής πληρωμής"></div>
+        </div>
+
+        <div class="add-center-field">
+          <label>Ημερομηνία</label>
+          <input type="date" id="acDD">
+        </div>
+
+        <div class="add-center-field">
+          <label>Σημειώσεις <span>(προαιρετικό)</span></label>
+          <textarea id="acDNotes" rows="3" placeholder="Πρόσθεσε σημείωση..."></textarea>
+        </div>
+
+        <div class="quick-add-error hidden add-center-error" id="addCenterManualError" aria-live="polite"></div>
+
+        <button type="button" class="add-center-submit" id="addCenterManualSubmit" onclick="saveAddCenterManualExpense()">
+          Αποθήκευση εξόδου
+        </button>
+      </div>
     </div>
   </section>
 </div>
@@ -986,143 +1084,185 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="mCC">
-  <div class="modal">
-    <h2 id="mCCTitle">💳 Πιστωτική κάρτα<button class="modal-close" onclick="closeM()">×</button></h2>
+<div class="modal-overlay debt-card-overlay" id="mCC">
+  <div class="modal debt-card-modal">
+    <button type="button" class="debt-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
-    <div class="form-group">
-      <label>Όνομα</label>
-      <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Συνολικό χρέος (€)</label>
-        <input type="number" id="fCCB" placeholder="0.00" step="0.01" min="0">
-      </div>
-
-      <div class="form-group">
-        <label>Ετήσιο επιτόκιο (%)</label>
-        <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0">
+    <div class="debt-modal-hero">
+      <div class="debt-modal-icon">💳</div>
+      <div class="debt-modal-heading">
+        <div class="debt-modal-kicker">Debt planner</div>
+        <h2 id="mCCTitle">Νέα κάρτα</h2>
+        <p>Καταχώρησε πιστωτική κάρτα ή δάνειο και υπολόγισε το πλάνο αποπληρωμής.</p>
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Ελάχιστη δόση (€)</label>
-        <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0">
+    <div class="debt-modal-amount-card">
+      <label for="fCCB">Συνολικό χρέος</label>
+      <div class="debt-modal-amount-input">
+        <span>€</span>
+        <input type="number" id="fCCB" placeholder="0,00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="debt-modal-form-card">
+      <div class="form-group debt-full-row">
+        <label>Όνομα</label>
+        <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank">
       </div>
 
-      <div class="form-group">
-        <label>Πιστωτικό όριο (€)</label>
-        <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0">
+      <div class="debt-modal-grid">
+        <div class="form-group">
+          <label>Ετήσιο επιτόκιο</label>
+          <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Ελάχιστη δόση</label>
+          <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0">
+        </div>
+
+        <div class="form-group debt-full-row">
+          <label>Πιστωτικό όριο</label>
+          <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0">
+        </div>
       </div>
     </div>
 
     <input type="hidden" id="fCCID">
-    <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση</button>
+
+    <div class="debt-modal-savebar">
+      <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση</button>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="mIncomeSource">
-  <div class="modal">
-    <h2 id="mIncomeSourceTitle">
-      💰 Νέο έσοδο
-      <button class="modal-close" onclick="closeM()">×</button>
-    </h2>
+<div class="modal-overlay income-source-overlay" id="mIncomeSource">
+  <div class="modal income-source-modal">
+    <button type="button" class="income-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
-    <div class="form-group">
-      <label>Όνομα εισοδήματος</label>
-      <input type="text" id="fISName" placeholder="π.χ. Μισθός, Ticket Restaurant, Ενοίκιο">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Ποσό (€)</label>
-        <input type="number" id="fISAmount" placeholder="0.00" step="0.01" min="0">
-      </div>
-
-      <div class="form-group">
-        <label>Κατηγορία</label>
-        <select id="fISCategory">
-          <option value="Μισθός">Μισθός</option>
-          <option value="Bonus">Bonus</option>
-          <option value="Ενοίκιο">Ενοίκιο</option>
-          <option value="Ticket Restaurant">Ticket Restaurant</option>
-          <option value="Άυλη κάρτα">Άυλη κάρτα</option>
-          <option value="Μερίσματα">Μερίσματα</option>
-          <option value="Freelance">Freelance</option>
-          <option value="Δώρο">Δώρο</option>
-          <option value="Άλλο">Άλλο</option>
-        </select>
+    <div class="income-modal-hero">
+      <div class="income-modal-icon">💰</div>
+      <div class="income-modal-heading">
+        <div class="income-modal-kicker">Income source</div>
+        <h2 id="mIncomeSourceTitle">Νέα πηγή εισοδήματος</h2>
+        <p>Καταχώρησε το μηνιαίο εισόδημα και όρισε πώς επηρεάζει το budget σου.</p>
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Τύπος</label>
-        <select id="fISType">
-          <option value="bank">Τράπεζα</option>
-          <option value="cash">Μετρητά</option>
-          <option value="voucher">Voucher / Ticket</option>
-          <option value="card">Κάρτα</option>
-          <option value="investment">Επένδυση</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Περιορισμός</label>
-        <select id="fISRestriction">
-          <option value="none">Χωρίς περιορισμό</option>
-          <option value="food_only">Μόνο φαγητό</option>
-          <option value="card_only">Μόνο με κάρτα</option>
-          <option value="locked">Locked / δεν ξοδεύεται</option>
-          <option value="investment">Επένδυση</option>
-        </select>
+    <div class="income-modal-amount-card">
+      <label for="fISAmount">Ποσό εισοδήματος</label>
+      <div class="income-modal-amount-input">
+        <span>€</span>
+        <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0">
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Αν αφορά συγκεκριμένη κατηγορία εξόδων</label>
-      <select id="fISRestrictedCategory">
-        <option value="">Καμία</option>
-        <option value="Τρόφιμα">Τρόφιμα</option>
-        <option value="Φαγητό έξω">Φαγητό έξω</option>
-        <option value="Μεταφορά">Μεταφορά</option>
-        <option value="Στέγαση">Στέγαση</option>
-        <option value="Λογαριασμοί">Λογαριασμοί</option>
-        <option value="Υγεία">Υγεία</option>
-        <option value="Άλλο">Άλλο</option>
-      </select>
+    <div class="income-modal-form-card">
+      <div class="form-group income-full-row">
+        <label>Όνομα εισοδήματος</label>
+        <input type="text" id="fISName" placeholder="π.χ. Μισθός, Ticket Restaurant, Ενοίκιο">
+      </div>
+
+      <div class="income-modal-grid">
+        <div class="form-group">
+          <label>Κατηγορία</label>
+          <select id="fISCategory">
+            <option value="Μισθός">Μισθός</option>
+            <option value="Bonus">Bonus</option>
+            <option value="Ενοίκιο">Ενοίκιο</option>
+            <option value="Ticket Restaurant">Ticket Restaurant</option>
+            <option value="Άυλη κάρτα">Άυλη κάρτα</option>
+            <option value="Μερίσματα">Μερίσματα</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Δώρο">Δώρο</option>
+            <option value="Άλλο">Άλλο</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Τύπος</label>
+          <select id="fISType">
+            <option value="bank">Τράπεζα</option>
+            <option value="cash">Μετρητά</option>
+            <option value="voucher">Voucher / Ticket</option>
+            <option value="card">Κάρτα</option>
+            <option value="investment">Επένδυση</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="income-modal-grid">
+        <div class="form-group">
+          <label>Περιορισμός</label>
+          <select id="fISRestriction">
+            <option value="none">Χωρίς περιορισμό</option>
+            <option value="food_only">Μόνο φαγητό</option>
+            <option value="card_only">Μόνο με κάρτα</option>
+            <option value="locked">Locked / δεν ξοδεύεται</option>
+            <option value="investment">Επένδυση</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Κατηγορία εξόδων</label>
+          <select id="fISRestrictedCategory">
+            <option value="">Καμία</option>
+            <option value="Τρόφιμα">Τρόφιμα</option>
+            <option value="Φαγητό έξω">Φαγητό έξω</option>
+            <option value="Μεταφορά">Μεταφορά</option>
+            <option value="Στέγαση">Στέγαση</option>
+            <option value="Λογαριασμοί">Λογαριασμοί</option>
+            <option value="Υγεία">Υγεία</option>
+            <option value="Άλλο">Άλλο</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <div class="income-toggle-box">
-      <label>
+    <div class="income-toggle-box income-modal-options">
+      <label class="income-option-card">
         <input type="checkbox" id="fISIncludeBudget" checked>
-        <span>Να μετράει στο διαθέσιμο εισόδημα του dashboard</span>
+        <span class="income-option-icon">📊</span>
+        <span class="income-option-copy">
+          <strong>Στο budget</strong>
+          <small>Μετράει στο διαθέσιμο εισόδημα του dashboard.</small>
+        </span>
       </label>
 
-      <label>
+      <label class="income-option-card">
         <input type="checkbox" id="fISSavings">
-        <span>Να θεωρείται αποταμίευση / locked ποσό</span>
+        <span class="income-option-icon">🔒</span>
+        <span class="income-option-copy">
+          <strong>Locked / αποταμίευση</strong>
+          <small>Δεν υπολογίζεται ως ελεύθερο ποσό για έξοδα.</small>
+        </span>
       </label>
 
-      <label>
+      <label class="income-option-card">
         <input type="checkbox" id="fISRecurring" checked>
-        <span>Επαναλαμβάνεται κάθε μήνα</span>
+        <span class="income-option-icon">🔁</span>
+        <span class="income-option-copy">
+          <strong>Μηνιαίο</strong>
+          <small>Επαναλαμβάνεται κάθε μήνα.</small>
+        </span>
       </label>
     </div>
 
-    <div class="form-group">
-      <label>Σημειώσεις</label>
-      <input type="text" id="fISNotes" placeholder="προαιρετικά">
+    <div class="income-modal-form-card income-notes-card">
+      <div class="form-group">
+        <label>Σημειώσεις</label>
+        <input type="text" id="fISNotes" placeholder="προαιρετικά">
+      </div>
     </div>
 
     <input type="hidden" id="fISID">
 
-    <button class="btn btn-primary btn-block" id="btnIncomeSource" onclick="saveIncomeSource()">
-      Αποθήκευση
-    </button>
+    <div class="income-modal-actions">
+      <button class="btn btn-primary btn-block income-save-btn" id="btnIncomeSource" onclick="saveIncomeSource()">
+        Αποθήκευση πηγής
+      </button>
+    </div>
   </div>
 </div>
 
