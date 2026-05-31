@@ -1,0 +1,819 @@
+/* ============================================================
+   CAPVO — Minimal Auth + Splash V1
+   Scope: .capvo-auth-screen only. Safe override over components.css auth.
+   ============================================================ */
+
+:root{
+  --capvo-purple:#6547f6;
+  --capvo-purple-2:#7c5cff;
+  --capvo-ink:#111827;
+  --capvo-muted:#72809a;
+  --capvo-line:rgba(119,132,170,.13);
+  --capvo-card:rgba(255,255,255,.86);
+  --capvo-shadow:0 22px 70px rgba(30,40,90,.12);
+}
+
+body.auth-pending .capvo-auth-screen{
+  display:flex !important;
+}
+
+.capvo-auth-screen,
+.capvo-auth-screen *{
+  box-sizing:border-box;
+}
+
+.capvo-auth-screen{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:var(--z-auth) !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:18px !important;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom)) !important;
+  overflow:hidden !important;
+  background:
+    radial-gradient(circle at 16% 0%,rgba(101,71,246,.12),transparent 32%),
+    radial-gradient(circle at 86% 8%,rgba(34,201,133,.10),transparent 30%),
+    linear-gradient(180deg,#fbfcff 0%,#f3f6ff 48%,#edf2ff 100%) !important;
+}
+
+.capvo-auth-screen .auth-bg-orb{
+  display:none !important;
+}
+
+.capvo-auth-bg{
+  position:absolute;
+  pointer-events:none;
+  border-radius:999px;
+  filter:blur(34px);
+  opacity:.42;
+}
+
+.capvo-auth-bg-a{
+  width:240px;
+  height:240px;
+  left:-80px;
+  top:-70px;
+  background:rgba(101,71,246,.30);
+}
+
+.capvo-auth-bg-b{
+  width:280px;
+  height:280px;
+  right:-100px;
+  bottom:-100px;
+  background:rgba(34,201,133,.18);
+}
+
+/* ===== Splash intro ===== */
+.capvo-splash{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(101,71,246,.16),transparent 25%),
+    linear-gradient(180deg,#fbfcff 0%,#f5f7ff 100%);
+  animation:capvoSplashHide 1.35s ease forwards;
+  pointer-events:none;
+}
+
+.capvo-splash-mark{
+  position:relative;
+  width:74px;
+  height:58px;
+  border-radius:18px;
+  background:transparent !important;
+  box-shadow:none !important;
+  transform:scale(.42);
+  opacity:0;
+  animation:capvoDotBuild 1.05s cubic-bezier(.2,.85,.2,1) forwards;
+}
+
+.capvo-splash-mark::before,
+.capvo-splash-mark::after,
+.capvo-mark::before,
+.capvo-mark::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  width:58px;
+  height:22px;
+  border-radius:11px 7px 11px 7px;
+  transform:translateX(-50%) skewX(-27deg);
+  box-shadow:0 18px 38px rgba(101,71,246,.24);
+}
+
+.capvo-splash-mark::before,
+.capvo-mark::before{
+  top:8px;
+  background:linear-gradient(135deg,#9b7cff 0%,#6e49f6 52%,#3f2bd2 100%);
+}
+
+.capvo-splash-mark::after,
+.capvo-mark::after{
+  bottom:8px;
+  background:linear-gradient(135deg,#4f37e9 0%,#243dc8 55%,#071b78 100%);
+}
+
+.capvo-splash-word{
+  color:var(--capvo-ink);
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.42em;
+  padding-left:.42em;
+  opacity:0;
+  transform:translateY(8px);
+  animation:capvoWordIn .8s ease .28s forwards;
+}
+
+.capvo-splash-line{
+  width:92px;
+  height:3px;
+  border-radius:99px;
+  overflow:hidden;
+  background:#e6e8f4;
+  opacity:0;
+  animation:capvoWordIn .8s ease .42s forwards;
+}
+
+.capvo-splash-line::before{
+  content:'';
+  display:block;
+  height:100%;
+  width:0%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--capvo-purple),var(--capvo-purple-2));
+  animation:capvoLine 1s ease .3s forwards;
+}
+
+@keyframes capvoDotBuild{
+  0%{opacity:0;transform:scale(.42)}
+  42%{opacity:1;transform:scale(1.08)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+@keyframes capvoWordIn{
+  to{opacity:1;transform:none}
+}
+
+@keyframes capvoLine{
+  to{width:100%}
+}
+
+@keyframes capvoSplashHide{
+  0%,72%{opacity:1;visibility:visible}
+  100%{opacity:0;visibility:hidden}
+}
+
+/* ===== Card ===== */
+.capvo-auth-card{
+  width:100% !important;
+  max-width:430px !important;
+  max-height:min(92vh,820px) !important;
+  overflow-y:auto !important;
+  position:relative !important;
+  z-index:2 !important;
+  padding:24px !important;
+  border-radius:34px !important;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid rgba(255,255,255,.86) !important;
+  box-shadow:var(--capvo-shadow) !important;
+  backdrop-filter:blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.2) !important;
+  scrollbar-width:thin;
+  opacity:0;
+  transform:translateY(14px) scale(.985);
+  animation:capvoAuthIn .45s ease 1.05s forwards;
+}
+
+@keyframes capvoAuthIn{
+  to{opacity:1;transform:none}
+}
+
+.capvo-auth-card::-webkit-scrollbar{width:0;height:0;}
+
+.capvo-auth-top{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:4px 0 28px;
+}
+
+.capvo-brand-lockup{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  text-align:center;
+}
+
+.capvo-mark{
+  position:relative;
+  width:74px;
+  height:58px;
+  border-radius:18px;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+.capvo-brand-lockup h1{
+  margin:0 !important;
+  color:var(--capvo-ink) !important;
+  font-size:18px !important;
+  font-weight:950 !important;
+  letter-spacing:.38em !important;
+  padding-left:.38em;
+  line-height:1 !important;
+}
+
+.capvo-brand-lockup p{
+  margin:9px 0 0 !important;
+  color:var(--capvo-muted) !important;
+  font-size:13px !important;
+  font-weight:750 !important;
+}
+
+.capvo-login-state,
+.capvo-telegram-state{
+  display:grid;
+  gap:14px;
+}
+
+.capvo-login-hero{
+  position:relative;
+  overflow:hidden;
+  padding:24px 22px;
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 92% 18%,rgba(101,71,246,.13),transparent 34%),
+    radial-gradient(circle at 0% 100%,rgba(34,201,133,.10),transparent 34%),
+    rgba(255,255,255,.78);
+  border:1px solid rgba(147,132,255,.16);
+  box-shadow:0 16px 40px rgba(30,40,90,.065);
+}
+
+.capvo-login-hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  opacity:.38;
+  background-image:
+    linear-gradient(rgba(101,71,246,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,71,246,.07) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+}
+
+.capvo-login-hero > *{
+  position:relative;
+  z-index:1;
+}
+
+.capvo-kicker{
+  display:block;
+  color:var(--capvo-purple);
+  font-size:11px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+
+.capvo-login-hero h2{
+  margin:0 !important;
+  max-width:290px;
+  color:var(--capvo-ink) !important;
+  font-size:34px !important;
+  line-height:.98 !important;
+  letter-spacing:-.065em !important;
+  font-weight:950 !important;
+}
+
+.capvo-login-hero p{
+  margin:16px 0 0 !important;
+  max-width:300px;
+  color:#657189 !important;
+  font-size:14px !important;
+  line-height:1.5 !important;
+  font-weight:750 !important;
+}
+
+.capvo-feature-list{
+  display:grid;
+  gap:8px;
+}
+
+.capvo-feature-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:54px;
+  padding:0 16px;
+  border-radius:19px;
+  background:rgba(255,255,255,.78);
+  border:1px solid var(--capvo-line);
+  box-shadow:0 10px 24px rgba(30,40,90,.045);
+}
+
+.capvo-feature-row span{
+  color:var(--capvo-ink);
+  font-size:14px;
+  font-weight:900;
+}
+
+.capvo-feature-row small{
+  color:var(--capvo-muted);
+  font-size:12px;
+  font-weight:800;
+  text-align:right;
+}
+
+.capvo-google-btn{
+  width:100% !important;
+  min-height:56px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+  border:0 !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,var(--capvo-purple),var(--capvo-purple-2)) !important;
+  color:#fff !important;
+  box-shadow:0 18px 38px rgba(101,71,246,.24) !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+}
+
+.capvo-google-dot{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  color:var(--capvo-purple);
+  font-size:13px;
+  font-weight:950;
+}
+
+.capvo-privacy-note{
+  margin:0 !important;
+  color:#7b869d !important;
+  font-size:12px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+  text-align:center !important;
+}
+
+.auth-error{
+  display:none;
+}
+
+.auth-error:not(:empty){
+  display:block;
+  padding:13px 14px;
+  border-radius:16px;
+  background:#fff1f2;
+  color:#e11d48;
+  border:1px solid rgba(225,29,72,.10);
+  font-size:13px;
+  font-weight:850;
+  margin-bottom:12px;
+}
+
+/* ===== Telegram link state ===== */
+.capvo-user-box{
+  border-radius:18px !important;
+  background:rgba(255,255,255,.72) !important;
+  border:1px solid var(--capvo-line) !important;
+  color:var(--capvo-muted) !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+
+.capvo-telegram-hero h2{
+  font-size:30px !important;
+}
+
+.capvo-steps-card,
+.capvo-help-card{
+  padding:16px !important;
+  border-radius:24px !important;
+  background:rgba(255,255,255,.78) !important;
+  border:1px solid var(--capvo-line) !important;
+  box-shadow:0 12px 28px rgba(30,40,90,.05) !important;
+}
+
+.capvo-step{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:10px 0;
+}
+
+.capvo-step + .capvo-step{
+  border-top:1px solid rgba(119,132,170,.10);
+}
+
+.capvo-step b{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(101,71,246,.10);
+  color:var(--capvo-purple);
+  font-size:12px;
+  font-weight:950;
+}
+
+.capvo-step span{
+  color:var(--capvo-ink);
+  font-size:13px;
+  line-height:1.35;
+  font-weight:900;
+}
+
+.capvo-step small{
+  display:block;
+  margin-top:3px;
+  color:var(--capvo-muted);
+  font-size:11px;
+  font-weight:800;
+}
+
+.capvo-step code,
+.capvo-help-card code{
+  padding:2px 6px;
+  border-radius:7px;
+  background:rgba(101,71,246,.09);
+  color:var(--capvo-purple);
+  font-weight:950;
+}
+
+.capvo-auth-form{
+  display:grid;
+  gap:10px;
+  padding:16px;
+  border-radius:24px;
+  background:rgba(255,255,255,.78);
+  border:1px solid var(--capvo-line);
+  box-shadow:0 12px 28px rgba(30,40,90,.05);
+}
+
+.capvo-auth-form label{
+  margin:4px 0 0 !important;
+  color:#77839a !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+}
+
+.capvo-input-wrap{
+  height:54px !important;
+  border-radius:17px !important;
+  background:#f4f6fb !important;
+  border:1px solid rgba(119,132,170,.15) !important;
+  box-shadow:none !important;
+}
+
+.capvo-input-wrap:focus-within{
+  border-color:rgba(101,71,246,.38) !important;
+  background:#fff !important;
+  box-shadow:0 0 0 4px rgba(101,71,246,.10) !important;
+}
+
+.capvo-help-card .auth-help-title{
+  color:var(--capvo-ink) !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+}
+
+.capvo-help-card p{
+  margin:8px 0 12px !important;
+  color:#657189 !important;
+  font-size:12px !important;
+  line-height:1.45 !important;
+  font-weight:750 !important;
+}
+
+.capvo-secondary-btn{
+  min-height:50px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:16px !important;
+  background:rgba(101,71,246,.10) !important;
+  color:var(--capvo-purple) !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+.capvo-logout-btn{
+  min-height:50px !important;
+  border:0 !important;
+  border-radius:16px !important;
+  background:#fff1f2 !important;
+  color:#e11d48 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+@media (max-width:420px){
+  .capvo-auth-screen{padding:10px !important;}
+  .capvo-auth-card{padding:18px !important;border-radius:30px !important;}
+  .capvo-login-hero{padding:22px 20px;border-radius:28px;}
+  .capvo-login-hero h2{font-size:31px !important;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .capvo-splash,
+  .capvo-splash-mark,
+  .capvo-splash-word,
+  .capvo-splash-line,
+  .capvo-splash-line::before,
+  .capvo-auth-card{
+    animation:none !important;
+  }
+  .capvo-splash{display:none !important;}
+  .capvo-auth-card{opacity:1 !important;transform:none !important;}
+}
+
+
+/* ============================================================
+   CAPVO LOGO REAL SVG FIX V5
+   Replaces the old CSS capsule mark with the selected layered logo.
+   ============================================================ */
+.capvo-mark::before,
+.capvo-mark::after,
+.capvo-splash-mark::before,
+.capvo-splash-mark::after{
+  display:none !important;
+  content:none !important;
+}
+
+.capvo-mark,
+.capvo-splash-mark{
+  width:82px !important;
+  height:66px !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+}
+
+.capvo-logo-svg{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  overflow:visible !important;
+}
+
+.capvo-splash .capvo-logo-svg{
+  width:92px !important;
+  height:72px !important;
+}
+
+.capvo-logo-piece{
+  transform-box:fill-box;
+  transform-origin:center;
+}
+
+.capvo-splash-mark .capvo-logo-top{
+  animation:capvoTopIn .75s cubic-bezier(.2,.85,.2,1) .04s both;
+}
+.capvo-splash-mark .capvo-logo-bottom{
+  animation:capvoBottomIn .75s cubic-bezier(.2,.85,.2,1) .12s both;
+}
+
+@keyframes capvoTopIn{
+  from{opacity:0;transform:translate(-12px,-8px) scale(.86) rotate(-3deg)}
+  to{opacity:1;transform:none}
+}
+@keyframes capvoBottomIn{
+  from{opacity:0;transform:translate(12px,8px) scale(.86) rotate(3deg)}
+  to{opacity:1;transform:none}
+}
+
+.capvo-brand-lockup h1,
+.capvo-splash-word{
+  letter-spacing:.46em !important;
+  padding-left:.46em !important;
+}
+
+/* ============================================================
+   CAPVO LOGO V6 — exact image mark from selected concept
+   Replaces the CSS capsule mark with a real transparent asset.
+   ============================================================ */
+
+.capvo-splash-mark::before,
+.capvo-splash-mark::after,
+.capvo-mark::before,
+.capvo-mark::after{
+  display:none !important;
+  content:none !important;
+}
+
+.capvo-splash-mark,
+.capvo-mark{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+
+.capvo-splash-mark{
+  width:88px !important;
+  height:84px !important;
+}
+
+.capvo-mark{
+  width:86px !important;
+  height:82px !important;
+  margin-bottom:-2px !important;
+}
+
+.capvo-mark-img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 18px 28px rgba(101,71,246,.22)) !important;
+  transform:translateZ(0) !important;
+}
+
+.capvo-splash-mark .capvo-mark-img{
+  width:92px !important;
+  height:86px !important;
+}
+
+.capvo-brand-lockup{
+  gap:8px !important;
+}
+
+.capvo-brand-lockup h1,
+.capvo-splash-word{
+  letter-spacing:.42em !important;
+  padding-left:.42em !important;
+}
+
+
+/* ============================================================
+   CAPVO AUTH V11 — Restore minimal login spacing/content
+   Fixes regression from hero-card login back to compact mockup style.
+   ============================================================ */
+
+.capvo-auth-card{
+  max-width:405px !important;
+  padding:30px 24px 26px !important;
+  border-radius:34px !important;
+}
+
+.capvo-auth-top{
+  margin:0 0 30px !important;
+}
+
+.capvo-brand-lockup{
+  gap:12px !important;
+}
+
+.capvo-mark{
+  width:92px !important;
+  height:88px !important;
+  margin-bottom:2px !important;
+}
+
+.capvo-brand-lockup h1{
+  font-size:17px !important;
+  letter-spacing:.44em !important;
+  padding-left:.44em !important;
+}
+
+.capvo-brand-lockup p{
+  margin:10px 0 0 !important;
+  font-size:12.5px !important;
+  font-weight:850 !important;
+  color:#7a859d !important;
+}
+
+.capvo-login-minimal-state{
+  gap:14px !important;
+}
+
+.capvo-login-minimal{
+  text-align:center !important;
+  padding:0 4px 2px !important;
+}
+
+.capvo-login-minimal h2{
+  margin:0 auto !important;
+  max-width:330px !important;
+  color:var(--capvo-ink) !important;
+  font-size:30px !important;
+  line-height:1.03 !important;
+  letter-spacing:-.06em !important;
+  font-weight:950 !important;
+}
+
+.capvo-login-minimal p{
+  margin:18px auto 0 !important;
+  max-width:300px !important;
+  color:#66748d !important;
+  font-size:14px !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+
+.capvo-chip-list{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  flex-wrap:wrap !important;
+  margin:4px 0 2px !important;
+}
+
+.capvo-chip{
+  min-width:76px !important;
+  text-align:center !important;
+  padding:9px 14px !important;
+  border-radius:999px !important;
+  background:rgba(101,71,246,.085) !important;
+  border:1px solid rgba(101,71,246,.14) !important;
+  color:var(--capvo-purple) !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  box-shadow:0 8px 18px rgba(40,35,100,.045) !important;
+}
+
+.capvo-login-minimal-state .capvo-google-btn{
+  margin-top:2px !important;
+}
+
+.capvo-login-minimal-state .capvo-privacy-note{
+  margin-top:-2px !important;
+  padding:0 8px !important;
+}
+
+/* Hide old row design if an older HTML fragment remains cached */
+.capvo-login-state > .capvo-login-hero:not(.capvo-telegram-hero),
+.capvo-login-state > .capvo-feature-list{
+  display:none !important;
+}
+
+.capvo-splash-word + .capvo-splash-tagline{
+  margin-top:-10px;
+}
+
+.capvo-splash-word::after{
+  content:'Track. Understand. Control.';
+  display:block;
+  margin-top:12px;
+  padding-left:0;
+  letter-spacing:0;
+  color:#7a859d;
+  font-size:12px;
+  font-weight:850;
+  text-transform:none;
+}
+
+@media (max-width:420px){
+  .capvo-auth-card{
+    max-width:calc(100vw - 34px) !important;
+    padding:28px 20px 24px !important;
+  }
+  .capvo-auth-top{
+    margin-bottom:28px !important;
+  }
+  .capvo-mark{
+    width:86px !important;
+    height:82px !important;
+  }
+  .capvo-login-minimal h2{
+    font-size:28px !important;
+  }
+  .capvo-login-minimal p{
+    font-size:13.5px !important;
+  }
+  .capvo-chip{
+    min-width:70px !important;
+    padding:8px 12px !important;
+  }
+}

@@ -1,0 +1,536 @@
+/* ============================================================
+   EXPENSE HERO — SETTINGS PAGE V1
+   Scope: #vSettings only. Mobile-first settings redesign.
+   ============================================================ */
+
+:root{
+  --settings-purple:#6547f6;
+  --settings-purple-2:#7c5cff;
+  --settings-ink:#111827;
+  --settings-muted:#72809a;
+  --settings-line:rgba(119,132,170,.12);
+  --settings-green:#22c985;
+  --settings-blue:#3b82f6;
+  --settings-orange:#f59e0b;
+  --settings-red:#ff3e67;
+  --settings-shadow:0 18px 46px rgba(30,40,90,.075);
+  --settings-shadow-soft:0 10px 26px rgba(30,40,90,.055);
+}
+
+#vSettings,
+#vSettings *{box-sizing:border-box;}
+
+#vSettings{
+  background:
+    radial-gradient(circle at 14% 0%,rgba(101,71,246,.10),transparent 34%),
+    linear-gradient(180deg,#fbfcff 0%,#f3f6ff 44%,#edf2ff 100%);
+  overflow-x:hidden;
+}
+
+#vSettings .settings-page{
+  display:grid !important;
+  gap:16px !important;
+  width:100% !important;
+  max-width:1180px !important;
+  margin:0 auto !important;
+  padding:16px 14px calc(156px + env(safe-area-inset-bottom)) !important;
+}
+
+#vSettings .settings-hero{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:188px !important;
+  padding:24px !important;
+  border:1px solid rgba(147,132,255,.18) !important;
+  border-radius:32px !important;
+  background:
+    radial-gradient(circle at 88% 28%,rgba(122,92,255,.18),transparent 30%),
+    radial-gradient(circle at 0% 100%,rgba(34,201,133,.12),transparent 36%),
+    linear-gradient(135deg,rgba(255,255,255,.95),rgba(246,243,255,.92)) !important;
+  box-shadow:var(--settings-shadow) !important;
+  display:block !important;
+}
+
+#vSettings .settings-hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  opacity:.42;
+  background-image:
+    linear-gradient(rgba(101,71,246,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,71,246,.08) 1px, transparent 1px);
+  background-size:34px 34px;
+  pointer-events:none;
+  mask-image:linear-gradient(90deg,black 0%,black 76%,transparent 100%);
+}
+
+#vSettings .settings-hero::after{
+  content:'⚙️';
+  position:absolute;
+  right:24px;
+  top:42px;
+  width:92px;
+  height:92px;
+  border-radius:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  background:
+    radial-gradient(circle at 25% 22%,rgba(255,255,255,.72),transparent 34%),
+    linear-gradient(135deg,#8c6dff 0%,#5636e7 60%,#351b9a 100%);
+  box-shadow:0 24px 56px rgba(101,71,246,.26);
+  transform:rotate(-4deg);
+}
+
+#vSettings .settings-hero > *{
+  position:relative;
+  z-index:2;
+}
+
+#vSettings .settings-hero > div{max-width:66%;}
+
+#vSettings .settings-hero .eyebrow{
+  color:var(--settings-purple) !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  letter-spacing:.16em !important;
+  margin-bottom:12px !important;
+  text-transform:uppercase !important;
+}
+
+#vSettings .settings-hero h2{
+  margin:0 !important;
+  color:var(--settings-ink) !important;
+  font-size:31px !important;
+  line-height:1.02 !important;
+  letter-spacing:-.07em !important;
+  font-weight:950 !important;
+}
+
+#vSettings .settings-hero p{
+  max-width:280px;
+  margin:14px 0 0 !important;
+  color:#64718a !important;
+  font-size:14px !important;
+  line-height:1.48 !important;
+  font-weight:750 !important;
+}
+
+#vSettings .settings-status-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+#vSettings .settings-mini-card,
+#vSettings .settings-section-card{
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(255,255,255,.86);
+  box-shadow:var(--settings-shadow);
+}
+
+#vSettings .settings-mini-card{
+  min-width:0;
+  padding:14px;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#vSettings .settings-mini-icon{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#eef2ff,#fff);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+}
+
+#vSettings .settings-mini-card small,
+#vSettings .settings-metrics-grid span{
+  display:block;
+  color:var(--settings-muted);
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+
+#vSettings .settings-mini-card strong{
+  display:block;
+  margin-top:4px;
+  color:var(--settings-ink);
+  font-size:12px;
+  line-height:1.15;
+  font-weight:950;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#vSettings .settings-section-card{
+  border-radius:30px;
+  padding:18px;
+  overflow:hidden;
+}
+
+#vSettings .settings-card-head{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+
+#vSettings .settings-card-icon{
+  width:52px;
+  height:52px;
+  flex:0 0 52px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  background:
+    radial-gradient(circle at 25% 22%,rgba(255,255,255,.72),transparent 34%),
+    linear-gradient(135deg,#8c6dff 0%,#5636e7 100%);
+  box-shadow:0 16px 32px rgba(101,71,246,.22);
+}
+
+#vSettings .settings-kicker{
+  display:block;
+  color:var(--settings-purple);
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+
+#vSettings .settings-card-head h3{
+  margin:0;
+  color:var(--settings-ink);
+  font-size:21px;
+  line-height:1.05;
+  letter-spacing:-.055em;
+  font-weight:950;
+}
+
+#vSettings .settings-card-head p{
+  margin:8px 0 0;
+  color:var(--settings-muted);
+  font-size:13px;
+  line-height:1.45;
+  font-weight:750;
+}
+
+#vSettings .settings-info-list{
+  display:grid;
+  gap:8px;
+  margin-top:16px;
+}
+
+#vSettings .settings-info-row{
+  min-height:48px;
+  padding:0 14px;
+  border-radius:18px;
+  background:#f7f8ff;
+  border:1px solid rgba(119,132,170,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+#vSettings .settings-info-row span{
+  color:var(--settings-muted);
+  font-size:12px;
+  font-weight:850;
+}
+
+#vSettings .settings-info-row strong{
+  min-width:0;
+  color:var(--settings-ink);
+  font-size:13px;
+  font-weight:950;
+  text-align:right;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#vSettings .settings-actions,
+#vSettings .settings-action-grid{
+  display:grid;
+  gap:10px;
+  margin-top:16px;
+}
+
+#vSettings .settings-actions{
+  grid-template-columns:1fr 1fr;
+}
+
+#vSettings .settings-primary-action,
+#vSettings .settings-secondary-action,
+#vSettings .settings-backup-action{
+  appearance:none;
+  border:0;
+  min-height:50px;
+  border-radius:18px;
+  font-family:var(--font);
+  font-weight:950;
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+
+#vSettings .settings-primary-action{
+  background:linear-gradient(135deg,var(--settings-purple),var(--settings-purple-2));
+  color:white;
+  box-shadow:0 15px 30px rgba(101,71,246,.24);
+}
+
+#vSettings .settings-secondary-action{
+  background:#eef2ff;
+  color:#554bdf;
+}
+
+#vSettings .settings-primary-action:active,
+#vSettings .settings-secondary-action:active,
+#vSettings .settings-backup-action:active{
+  transform:scale(.98);
+}
+
+#vSettings .settings-sync-status{
+  margin-top:12px !important;
+  padding:12px 14px;
+  border-radius:16px;
+  background:#f8fafc;
+  border:1px solid rgba(119,132,170,.10);
+  color:var(--settings-muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+#vSettings .settings-action-grid{
+  grid-template-columns:1fr 1fr;
+}
+
+#vSettings .settings-backup-action{
+  min-width:0;
+  min-height:116px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:6px;
+  background:#f7f8ff;
+  border:1px solid rgba(119,132,170,.08);
+  text-align:left;
+}
+
+#vSettings .settings-backup-action span{
+  width:38px;
+  height:38px;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef2ff;
+  color:#554bdf;
+}
+
+#vSettings .settings-backup-action strong{
+  color:var(--settings-ink);
+  font-size:15px;
+  font-weight:950;
+}
+
+#vSettings .settings-backup-action small{
+  color:var(--settings-muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+#vSettings .settings-metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+
+#vSettings .settings-metrics-grid div{
+  min-width:0;
+  padding:14px;
+  border-radius:20px;
+  background:#f7f8ff;
+  border:1px solid rgba(119,132,170,.08);
+}
+
+#vSettings .settings-metrics-grid strong{
+  display:block;
+  margin-top:6px;
+  color:var(--settings-ink);
+  font-size:20px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+
+#vSettings .settings-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(101,71,246,.10);
+  color:var(--settings-purple) !important;
+  font-size:11px !important;
+}
+
+#vSettings .settings-account-card{
+  border-color:rgba(255,255,255,.92);
+}
+
+#vSettings .settings-single-action{
+  grid-template-columns:1fr !important;
+}
+
+#vSettings .settings-footer-card{
+  min-height:82px;
+  padding:18px;
+  border-radius:28px;
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(255,255,255,.84);
+  box-shadow:var(--settings-shadow-soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  color:var(--settings-ink);
+}
+
+#vSettings .settings-footer-card strong{
+  display:block;
+  font-size:16px;
+  line-height:1.1;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+
+#vSettings .settings-footer-card span{
+  display:block;
+  margin-top:4px;
+  color:var(--settings-muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+#vSettings .settings-footer-card em{
+  flex:0 0 auto;
+  font-style:normal;
+  padding:8px 10px;
+  border-radius:999px;
+  background:rgba(101,71,246,.10);
+  color:var(--settings-purple);
+  font-size:11px;
+  font-weight:950;
+}
+
+@media (max-width:420px){
+  #vSettings .settings-hero{min-height:176px;padding:22px;border-radius:30px;}
+  #vSettings .settings-hero::after{width:76px;height:76px;right:18px;top:44px;border-radius:25px;font-size:40px;}
+  #vSettings .settings-hero > div{max-width:68%;}
+  #vSettings .settings-hero h2{font-size:28px !important;}
+  #vSettings .settings-hero p{font-size:13px !important;max-width:230px;}
+  #vSettings .settings-status-grid{grid-template-columns:1fr;}
+  #vSettings .settings-mini-card strong{font-size:14px;}
+  #vSettings .settings-actions{grid-template-columns:1fr;}
+  #vSettings .settings-metrics-grid{grid-template-columns:1fr 1fr;}
+}
+
+@media (min-width:768px){
+  #vSettings .settings-page{padding:20px 22px 120px !important;}
+  #vSettings .settings-hero{min-height:210px;padding:30px !important;}
+  #vSettings .settings-hero h2{font-size:42px !important;max-width:520px;}
+  #vSettings .settings-hero p{max-width:470px;font-size:15px !important;}
+  #vSettings .settings-status-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  #vSettings .settings-section-card{padding:22px;}
+}
+
+/* ============================================================
+   SETTINGS POLISH V3 — compact top stats + safer mobile spacing
+   Fixes: top stats breathing/clarity, bottom nav overlap, excessive empty tail.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vSettings .settings-page{
+    gap:15px !important;
+    padding:16px 14px calc(132px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vSettings .settings-status-grid{
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+  }
+
+  #vSettings .settings-status-grid .settings-mini-card:first-child{
+    grid-column:1 / -1 !important;
+  }
+
+  #vSettings .settings-mini-card{
+    min-height:64px !important;
+    padding:12px 13px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.92) !important;
+    border:1px solid rgba(255,255,255,.84) !important;
+    box-shadow:0 12px 28px rgba(30,40,90,.055) !important;
+  }
+
+  #vSettings .settings-mini-card:first-child{
+    min-height:58px !important;
+    background:
+      radial-gradient(circle at 96% 0%,rgba(34,201,133,.11),transparent 32%),
+      rgba(255,255,255,.94) !important;
+  }
+
+  #vSettings .settings-mini-icon{
+    width:36px !important;
+    height:36px !important;
+    flex-basis:36px !important;
+    border-radius:14px !important;
+  }
+
+  #vSettings .settings-mini-card small{
+    font-size:9.5px !important;
+    letter-spacing:.11em !important;
+    line-height:1 !important;
+  }
+
+  #vSettings .settings-mini-card strong{
+    margin-top:5px !important;
+    font-size:13px !important;
+    line-height:1.1 !important;
+  }
+
+  #vSettings .settings-section-card{
+    scroll-margin-bottom:120px !important;
+  }
+
+  #vSettings .settings-footer-card{
+    margin-bottom:0 !important;
+  }
+}
+
+@media (max-width:420px){
+  #vSettings .settings-status-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  #vSettings .settings-status-grid .settings-mini-card:first-child{
+    grid-column:1 / -1 !important;
+  }
+}

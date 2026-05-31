@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Expense Tracker</title>
+  <title>CAPVO</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: mobile-first -->
   <link rel="stylesheet" href="css/variables.css">
@@ -22,6 +22,9 @@
   <link rel="stylesheet" href="css/expense-hero-debt-planner-v1.css">
   <link rel="stylesheet" href="css/expense-hero-advisor-page-v1.css">
   <link rel="stylesheet" href="css/expense-hero-archive-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-settings-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-auth-capvo-v1.css?v=11">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/expense-hero-mobile-dashboard-v3.css">
   <link rel="stylesheet" href="css/transactions-complete-v3.css">
   <link rel="stylesheet" href="css/transactions-mobile-final-v7.css">
@@ -33,49 +36,73 @@
 <body class="auth-pending">
 
 <!-- AUTH / GOOGLE + TELEGRAM SCREEN -->
-<div class="auth-screen" id="authScreen">
-  <div class="auth-bg-orb auth-bg-orb-a"></div>
-  <div class="auth-bg-orb auth-bg-orb-b"></div>
+<div class="auth-screen capvo-auth-screen" id="authScreen">
+  <div class="capvo-splash" aria-hidden="true">
+    <div class="capvo-splash-mark"><img class="capvo-mark-img" src="assets/capvo-mark.png" alt="" aria-hidden="true"></div>
+    <div class="capvo-splash-word">CAPVO</div>
+    <div class="capvo-splash-line"></div>
+  </div>
 
-  <div class="auth-card">
-    <div class="auth-brand">
-      <div class="auth-logo">
-        <svg viewBox="0 0 24 24">
-          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
-        </svg>
-      </div>
-      <div>
-        <h1>Expense Tracker</h1>
-        <p>Σύνδεση με Google & Telegram</p>
-      </div>
-    </div>
+  <div class="capvo-auth-bg capvo-auth-bg-a"></div>
+  <div class="capvo-auth-bg capvo-auth-bg-b"></div>
 
-    <div class="auth-hero">
-      <span class="auth-pill">Private finance dashboard</span>
-      <h2>Συνδέσου με Google για να φορτώσουν τα δεδομένα σου με ασφάλεια.</h2>
-      <p>
-        Μετά τη σύνδεση θα συνδέσεις μία φορά το Telegram σου. Θα χρειαστείς το Chat ID και έναν κωδικό σύνδεσης από το bot.
-      </p>
+  <div class="auth-card capvo-auth-card">
+    <div class="capvo-auth-top">
+      <div class="capvo-brand-lockup">
+        <div class="capvo-mark" aria-hidden="true"><img class="capvo-mark-img" src="assets/capvo-mark.png" alt="" aria-hidden="true"></div>
+        <div>
+          <h1>CAPVO</h1>
+          <p>Track. Understand. Control.</p>
+        </div>
+      </div>
     </div>
 
     <div class="auth-error" id="authError"></div>
 
     <!-- STEP 1: GOOGLE LOGIN -->
-    <div id="googleLoginBox">
-      <button type="button" class="auth-submit google-auth-btn" onclick="signInWithGoogle()">
-        Σύνδεση με Google
+    <div id="googleLoginBox" class="capvo-login-state capvo-login-minimal-state">
+      <section class="capvo-login-minimal" aria-label="CAPVO Login">
+        <h2>Πάρε τον έλεγχο των οικονομικών σου.</h2>
+        <p>
+          Έξοδα, κάρτες και έξυπνες προτάσεις σε ένα καθαρό προσωπικό dashboard.
+        </p>
+      </section>
+
+      <div class="capvo-chip-list" aria-label="Βασικά χαρακτηριστικά">
+        <span class="capvo-chip">Tracker</span>
+        <span class="capvo-chip">Advisor</span>
+        <span class="capvo-chip">Reports</span>
+      </div>
+
+      <button type="button" class="auth-submit google-auth-btn capvo-google-btn" onclick="signInWithGoogle()">
+        <span class="capvo-google-dot">G</span>
+        Συνέχεια με Google
       </button>
+
+      <p class="capvo-privacy-note">🔒 Τα δεδομένα σου αποθηκεύονται με ασφάλεια στον δικό σου λογαριασμό.</p>
     </div>
 
     <!-- STEP 2: TELEGRAM LINK -->
-    <div id="telegramLinkBox" style="display:none">
-      <div class="auth-user-box" id="authUserBox"></div>
+    <div id="telegramLinkBox" class="capvo-telegram-state" style="display:none">
+      <div class="auth-user-box capvo-user-box" id="authUserBox"></div>
 
-      <form class="auth-form" onsubmit="saveTelegramChatId(event)">
-        <label for="chatIdInput">Telegram ID</label>
-        <div class="auth-input-wrap">
+      <section class="capvo-login-hero capvo-telegram-hero">
+        <span class="capvo-kicker">Telegram Sync</span>
+        <h2>Σύνδεσε το Telegram σου.</h2>
+        <p>
+          Κάνε μία γρήγορη επιβεβαίωση για να περνάς έξοδα στέλνοντας απλά μηνύματα στο bot.
+        </p>
+      </section>
+
+      <div class="capvo-steps-card">
+        <div class="capvo-step"><b>1</b><span>Άνοιξε το bot <small>@myexpense_hero_tracker_bot</small></span></div>
+        <div class="capvo-step"><b>2</b><span>Στείλε <code>/id</code> και <code>/code</code></span></div>
+        <div class="capvo-step"><b>3</b><span>Κάνε επιβεβαίωση εδώ</span></div>
+      </div>
+
+      <form class="auth-form capvo-auth-form" onsubmit="saveTelegramChatId(event)">
+        <label for="chatIdInput">Telegram Chat ID</label>
+        <div class="auth-input-wrap capvo-input-wrap">
           <span>#</span>
           <input
             type="text"
@@ -87,7 +114,7 @@
         </div>
 
         <label for="telegramCodeInput">Κωδικός σύνδεσης</label>
-        <div class="auth-input-wrap">
+        <div class="auth-input-wrap capvo-input-wrap">
           <span>🔐</span>
           <input
             type="text"
@@ -99,36 +126,23 @@
           >
         </div>
 
-        <button type="submit" class="auth-submit" id="authSubmitBtn">
+        <button type="submit" class="auth-submit capvo-google-btn" id="authSubmitBtn">
           Σύνδεση Telegram
         </button>
       </form>
 
-      <div class="auth-help auth-compact-help">
-        <div class="auth-help-title">Σύνδεση Telegram</div>
-      
+      <div class="auth-help auth-compact-help capvo-help-card">
+        <div class="auth-help-title">Χρήσιμες εντολές</div>
         <p>
-          Στο bot στείλε <code>/id</code> για Chat ID και <code>/code</code> για κωδικό.
-          Για όλες τις εντολές στείλε <code>/help</code>.
+          <code>/id</code> για Chat ID, <code>/code</code> για κωδικό και <code>/help</code> για όλες τις οδηγίες.
         </p>
-      
-        <a class="auth-telegram-btn full" href="https://t.me/myexpense_hero_tracker_bot" target="_blank">
+        <a class="auth-telegram-btn full capvo-secondary-btn" href="https://t.me/myexpense_hero_tracker_bot" target="_blank" rel="noopener">
           Άνοιγμα Telegram Bot
         </a>
-      
-        <p class="auth-small-note">
-          Από PC χωρίς Telegram, άνοιξε
-          <a href="https://web.telegram.org/" target="_blank" rel="noopener">
-            Telegram Web
-          </a>
-          και αναζήτησε το bot
-          <strong>@myexpense_hero_tracker_bot</strong>
-          ή χρησιμοποίησε το κινητό σου.
-        </p>
       </div>
 
-      <button type="button" class="auth-logout-btn auth-logout-card-btn" onclick="signOutUser()">
-        Αποσύνδεση
+      <button type="button" class="auth-logout-btn auth-logout-card-btn capvo-logout-btn" onclick="signOutUser()">
+        Αποσύνδεση Google
       </button>
     </div>
   </div>
@@ -146,8 +160,8 @@
       </svg>
     </div>
     <div>
-      <strong>Expense Hero</strong>
-      <span>Finance dashboard</span>
+      <strong>CAPVO</strong>
+      <span>Track. Understand. Control.</span>
     </div>
   </div>
 
@@ -214,7 +228,7 @@
         </svg>
       </div>
       <div>
-        <h1>Expense Tracker</h1>
+        <h1>CAPVO</h1>
         <p>Future Bento Dashboard</p>
       </div>
     </div>
@@ -696,36 +710,175 @@
 
   <!-- SETTINGS -->
   <main class="view" id="vSettings">
-    <section class="settings-grid">
+    <section class="settings-page page-grid">
 
-      <div class="settings-card">
-        <div class="chart-title">📥 Telegram Συγχρονισμός</div>
-        <p>Τραβάει τα έξοδα που έστειλες στο Telegram Bot.</p>
-        <button class="btn btn-primary" id="syncBtn" onclick="syncFromTelegram()">📥 Συγχρονισμός</button>
-        <div id="syncStatus" style="display:none;margin-top:12px"></div>
+      <div class="settings-hero page-hero bento-card">
+        <div>
+          <div class="eyebrow">Settings</div>
+          <h2>Ρυθμίσεις & λογαριασμός</h2>
+          <p>Διαχειρίσου το Telegram, τα αντίγραφα ασφαλείας και τη σύνδεσή σου.</p>
+        </div>
       </div>
 
-      <div class="settings-card">
-        <div class="chart-title">Εξαγωγή / Εισαγωγή</div>
-        <p>Backup JSON αρχείο.</p>
-        <div class="btn-group">
-          <button class="btn btn-primary" onclick="doExport()">⬇ Εξαγωγή</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('impFile').click()">⬆ Εισαγωγή</button>
+      <section class="settings-status-grid" aria-label="Σύνοψη ρυθμίσεων">
+        <article class="settings-mini-card">
+          <span class="settings-mini-icon">💬</span>
+          <div>
+            <small>Σύνδεση</small>
+            <strong id="settingsTelegramState">—</strong>
+          </div>
+        </article>
+
+        <article class="settings-mini-card">
+          <span class="settings-mini-icon">📦</span>
+          <div>
+            <small>Συναλλαγές</small>
+            <strong id="settingsDataCount">—</strong>
+          </div>
+        </article>
+
+        <article class="settings-mini-card">
+          <span class="settings-mini-icon">🗓️</span>
+          <div>
+            <small>Μήνες</small>
+            <strong id="settingsMonthCount">—</strong>
+          </div>
+        </article>
+      </section>
+
+      <section class="settings-section-card settings-telegram-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">📥</div>
+          <div>
+            <span class="settings-kicker">Telegram Sync</span>
+            <h3>Συγχρονισμός εξόδων</h3>
+            <p>Τράβα αυτόματα τα έξοδα που έστειλες στο Telegram Bot.</p>
+          </div>
+        </div>
+
+        <div class="settings-info-list">
+          <div class="settings-info-row">
+            <span>Κατάσταση</span>
+            <strong id="settingsTelegramLabel">—</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Chat ID</span>
+            <strong id="settingsChatId">—</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Τελευταίο Sync</span>
+            <strong id="settingsTelegramLastSync">—</strong>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="settings-primary-action" id="syncBtn" onclick="syncFromTelegram()">Συγχρονισμός τώρα</button>
+          <button class="settings-secondary-action" onclick="switchChatId()">Αλλαγή Telegram</button>
+        </div>
+
+        <div id="syncStatus" class="settings-sync-status" style="display:none"></div>
+      </section>
+
+      <section class="settings-section-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">🗂️</div>
+          <div>
+            <span class="settings-kicker">Backup</span>
+            <h3>Εξαγωγή / Εισαγωγή</h3>
+            <p>Κράτησε αντίγραφο JSON ή επανάφερε δεδομένα από αρχείο.</p>
+          </div>
+        </div>
+
+        <div class="settings-action-grid">
+          <button class="settings-backup-action" onclick="doExport()">
+            <span>⬇</span>
+            <strong>Εξαγωγή</strong>
+            <small>Κατέβασε backup</small>
+          </button>
+
+          <button class="settings-backup-action" onclick="document.getElementById('impFile').click()">
+            <span>⬆</span>
+            <strong>Εισαγωγή</strong>
+            <small>Φόρτωση αρχείου</small>
+          </button>
+
           <input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(event)">
         </div>
-      </div>
+      </section>
 
-      <div class="settings-card danger-zone">
-        <div class="chart-title">Λογαριασμός</div>
-        <p>Διαχείριση σύνδεσης Google και Telegram.</p>
-        <div class="btn-group">
-          <button class="btn btn-secondary" onclick="switchChatId()">Αλλαγή Telegram λογαριασμού</button>
-          <button class="btn btn-secondary" onclick="signOutUser()">Αποσύνδεση</button>
-          <!--
-<button class="btn btn-danger" onclick="doReset()">🗑 Διαγραφή όλων</button>
--->
+      <section class="settings-section-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">📊</div>
+          <div>
+            <span class="settings-kicker">Overview</span>
+            <h3>Σύνοψη εφαρμογής</h3>
+            <p>Γρήγορη εικόνα για τα δεδομένα που υπάρχουν στο Expense Hero.</p>
+          </div>
         </div>
-      </div>
+
+        <div class="settings-metrics-grid">
+          <div><span>Κινήσεις</span><strong id="settingsTxCount">—</strong></div>
+          <div><span>Πάγια</span><strong id="settingsFixedCount">—</strong></div>
+          <div><span>Πηγές</span><strong id="settingsIncomeCount">—</strong></div>
+          <div><span>Κάρτες</span><strong id="settingsCardCount">—</strong></div>
+        </div>
+      </section>
+
+      <section class="settings-section-card settings-app-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">📱</div>
+          <div>
+            <span class="settings-kicker">Application</span>
+            <h3>Web App</h3>
+            <p>Η εφαρμογή είναι έτοιμη για το επόμενο βήμα προς PWA εγκατάσταση.</p>
+          </div>
+        </div>
+
+        <div class="settings-info-list">
+          <div class="settings-info-row">
+            <span>Τύπος</span>
+            <strong>Responsive Web App</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>PWA</span>
+            <strong class="settings-pill">Phase 2</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section-card settings-account-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">👤</div>
+          <div>
+            <span class="settings-kicker">Account</span>
+            <h3>Λογαριασμός</h3>
+            <p>Google Account & προσωπική σύνδεση.</p>
+          </div>
+        </div>
+
+        <div class="settings-info-list">
+          <div class="settings-info-row">
+            <span>Email</span>
+            <strong id="settingsAccountEmail">Google account συνδεδεμένο.</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Μέλος από</span>
+            <strong id="settingsMemberSince">—</strong>
+          </div>
+        </div>
+
+        <div class="settings-actions settings-single-action">
+          <button class="settings-secondary-action" onclick="signOutUser()">Αποσύνδεση</button>
+        </div>
+      </section>
+
+      <section class="settings-footer-card" aria-label="Πληροφορίες εφαρμογής">
+        <div>
+          <strong>CAPVO</strong>
+          <span>Personal Finance Dashboard</span>
+        </div>
+        <em>Version 1.0</em>
+      </section>
 
     </section>
   </main>

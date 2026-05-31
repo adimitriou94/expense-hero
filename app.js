@@ -669,6 +669,51 @@ function renderPaymentSourcesSummary(){
     `;
   }).join('');
 }
+
+function renderSettingsPage(){
+  const root=$('vSettings');
+  if(!root)return;
+
+  const chatId=localStorage.getItem(SK)||'';
+  const months=Object.keys(D.months||{}).sort();
+  const dailyCount=Object.values(D.months||{})
+    .reduce((sum,m)=>sum+((m.daily||[]).length),0);
+  const fixedCount=(D.fixedExpenses||[]).length;
+  const cardCount=(D.creditCards||[]).length;
+  const incomeCount=(D.incomeSources||[]).length;
+  const totalData=dailyCount+fixedCount+cardCount+incomeCount;
+  const email=currentUser?.email||currentSession?.user?.email||'';
+
+  const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+  const monthLabel=(mk)=>{
+    if(!mk || !mk.includes('-'))return 'Τρέχων μήνας';
+    const [y,mo]=mk.split('-');
+    return `${MG[(parseInt(mo,10)||1)-1]||''} ${y}`.trim();
+  };
+
+  const memberSince=monthLabel(months[0]||curM||curMK());
+  const syncKey=typeof getSyncKey==='function'?getSyncKey():'';
+  const lastTelegramId=syncKey?localStorage.getItem(syncKey):'';
+  const syncLabel=lastTelegramId?'Έχει γίνει sync':'Μετά τον πρώτο συγχρονισμό';
+
+  setText('settingsTelegramState',chatId?'Συνδεδεμένο':'Δεν έχει συνδεθεί');
+  setText('settingsTelegramLabel',chatId?'🟢 Συνδεδεμένο':'⚪ Δεν έχει συνδεθεί');
+  setText('settingsChatId',chatId||'—');
+  setText('settingsTelegramLastSync',syncLabel);
+  setText('settingsDataCount',String(totalData));
+  setText('settingsMonthCount',String(months.length));
+  setText('settingsTxCount',String(dailyCount));
+  setText('settingsFixedCount',String(fixedCount));
+  setText('settingsIncomeCount',String(incomeCount));
+  setText('settingsCardCount',String(cardCount));
+  setText('settingsMemberSince',memberSince);
+
+  const account=$('settingsAccountEmail');
+  if(account){
+    account.textContent=email||'Google account συνδεδεμένο.';
+  }
+}
+
 // ===== MAIN RENDER =====
 function render(){
   refreshComputedIncome();
@@ -712,6 +757,7 @@ function render(){
   if(typeof rAdv==='function') rAdv();
 
   renderPaymentSourcesSummary();
+  renderSettingsPage();
 }
 
 
