@@ -66,6 +66,7 @@ let currentSession=null;
 let currentUser=null;
 let currentProfile=null;
 let authBooting=false;
+let appInitStarted=false;
 let changingTelegramId=false;
 let pendingAuthEvent=null;
 let selectionMode = { fixed:false, daily:false };
@@ -3000,9 +3001,37 @@ async function getOrCreateProfile(user){
     updated_at:new Date().toISOString()
   };
 
+  // IMPORTANT:
+  // Do not blindly upsert on every auth check, because it can wipe/lose
+  // telegram_chat_id depending on the Supabase/PostgREST merge behaviour.
+  // First read the profile, then update only the metadata fields.
+  const {data:existing,error:selectError}=await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('user_id',user.id)
+    .maybeSingle();
+
+  if(selectError)throw selectError;
+
+  if(existing){
+    const {data,error}=await supabaseClient
+      .from('profiles')
+      .update(profilePayload)
+      .eq('user_id',user.id)
+      .select('*')
+      .single();
+
+    if(error){
+      console.warn('Profile metadata update failed, using existing profile:',error);
+      return {...existing,...profilePayload};
+    }
+
+    return data;
+  }
+
   const {data,error}=await supabaseClient
     .from('profiles')
-    .upsert(profilePayload,{onConflict:'user_id'})
+    .insert(profilePayload)
     .select('*')
     .single();
 
@@ -3084,7 +3113,35 @@ async function saveTelegramChatId(ev){
       throw new Error(data.error||'Verification failed');
     }
 
-    currentProfile=data.profile;
+    let verifiedProfile=data.profile||null;
+
+    // Some Worker responses may verify successfully but not return the updated
+    // profile row. Persist the Telegram Chat ID client-side as well, so the
+    // next auth check does not send the user back to the login/Telegram step.
+    if(!verifiedProfile?.telegram_chat_id || String(verifiedProfile.telegram_chat_id)!==String(chatId)){
+      const {data:profileData,error:profileError}=await supabaseClient
+        .from('profiles')
+        .update({
+          telegram_chat_id:chatId,
+          updated_at:new Date().toISOString()
+        })
+        .eq('user_id',currentUser.id)
+        .select('*')
+        .single();
+
+      if(profileError){
+        console.warn('Profile telegram_chat_id update fallback failed:',profileError);
+      }else{
+        verifiedProfile=profileData;
+      }
+    }
+
+    currentProfile={
+      ...(currentProfile||{}),
+      ...(verifiedProfile||{}),
+      telegram_chat_id:chatId
+    };
+
     changingTelegramId=false;
     localStorage.setItem(SK,chatId);
 
@@ -3092,14 +3149,12 @@ async function saveTelegramChatId(ev){
 
     if(btn){
       btn.disabled=true;
-      btn.innerHTML='⏳ Σύνδεση...';
+      btn.innerHTML='⏳ Φόρτωση...';
     }
 
     showMiniToast('✅ Το Telegram συνδέθηκε');
 
-    await new Promise(r=>setTimeout(r,1400));
-
-    window.location.reload();
+    await loadUserData(chatId);
 
     return;
 
@@ -3287,6 +3342,11 @@ async function saveTelegramLinkRequest(row, env) {
 }
 
 async function initApp(){
+  if(appInitStarted){
+    return;
+  }
+
+  appInitStarted=true;
   authBooting=true;
 
   try{
@@ -3314,11 +3374,15 @@ async function initApp(){
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
-    const chatId=currentProfile?.telegram_chat_id;
+    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
 
     if(!chatId){
       showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
       return;
+    }
+
+    if(!currentProfile?.telegram_chat_id){
+      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
     }
 
     localStorage.setItem(SK,chatId);
@@ -3335,7 +3399,10 @@ async function initApp(){
 }
 
 supabaseClient.auth.onAuthStateChange(async (event,session)=>{
-  if(authBooting)return;
+  // During the manual PKCE callback (?code=...), initApp() is responsible for
+  // exchanging the code. Supabase may emit a temporary null INITIAL_SESSION before
+  // the exchange completes; do not show the login screen from that transient event.
+  if(authBooting || window.location.search.includes('code='))return;
 
   currentSession=session;
   currentUser=session?.user||null;
@@ -3346,7 +3413,14 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
 
   if(!currentUser){
     currentProfile=null;
-    localStorage.removeItem(SK);
+
+    // Only clear the linked chat id on an explicit sign out.
+    // Other transient auth events can momentarily have no user/session and
+    // should not wipe the Telegram link.
+    if(event==='SIGNED_OUT'){
+      localStorage.removeItem(SK);
+    }
+
     showAuth();
     renderAuthState();
     return;
@@ -3356,11 +3430,15 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
-    const chatId=currentProfile?.telegram_chat_id;
+    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
 
     if(!chatId){
       showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
       return;
+    }
+
+    if(!currentProfile?.telegram_chat_id){
+      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
     }
 
     localStorage.setItem(SK,chatId);
@@ -4850,5 +4928,96 @@ async function saveAddCenterManualExpense(){
     document.addEventListener('DOMContentLoaded',()=>window.setupAddCenterState(),{once:true});
   }else{
     window.setupAddCenterState();
+  }
+})();
+
+// ===== AUTH BOOTSTRAP SAFETY =====
+// Do not depend on advisor.js being the last script. initApp has an internal
+// guard, so the later advisor.js call is harmless.
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>initApp(),{once:true});
+}else{
+  initApp();
+}
+
+
+// ============================================================
+// CAPVO FIXED EXPENSE CATEGORY PICKER — portal safety patch
+// Keeps the fixed-expense category picker outside the modal clipping context.
+// ============================================================
+const FIXED_CATEGORY_META = window.FIXED_CATEGORY_META || {
+  'Στέγαση':'🏠',
+  'Λογαριασμοί':'💡',
+  'Συνδρομές':'📱',
+  'Μεταφορά':'🚗',
+  'Δάνεια':'🏦',
+  'Υγεία':'🏥',
+  'Άλλο':'📌'
+};
+
+function syncFixedCategoryPicker(value){
+  const selected=value||$('fFC')?.value||'Στέγαση';
+  const input=$('fFC');
+  const icon=$('fixedCategoryIcon');
+  const label=$('fixedCategoryLabel');
+
+  if(input)input.value=selected;
+  if(icon)icon.textContent=FIXED_CATEGORY_META[selected]||'📌';
+  if(label)label.textContent=selected;
+
+  document.querySelectorAll('.fixed-category-option').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.value===selected);
+  });
+}
+
+function selectFixedCategory(value, silent=false){
+  syncFixedCategoryPicker(value);
+  if(!silent)closeFixedCategoryPicker();
+}
+
+function ensureFixedCategoryPickerPortal(){
+  const pop=$('fixedCategoryPopover');
+  if(!pop)return null;
+  if(pop.parentElement!==document.body){
+    document.body.appendChild(pop);
+  }
+  return pop;
+}
+
+function toggleFixedCategoryPicker(event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const pop=ensureFixedCategoryPickerPortal();
+  if(!pop)return;
+  const isOpening=!pop.classList.contains('active');
+  pop.classList.toggle('active',isOpening);
+  pop.setAttribute('aria-hidden',isOpening?'false':'true');
+  document.body.classList.toggle('fixed-category-open',isOpening);
+}
+
+function closeFixedCategoryPicker(){
+  const pop=$('fixedCategoryPopover');
+  if(!pop)return;
+  pop.classList.remove('active');
+  pop.setAttribute('aria-hidden','true');
+  document.body.classList.remove('fixed-category-open');
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#mFixed .fixed-category-field') && !e.target.closest('.fixed-category-popover')){
+    closeFixedCategoryPicker();
+  }
+});
+
+(function(){
+  const previousOpenModal=window.openModal;
+  if(typeof previousOpenModal==='function' && !previousOpenModal.__capvoFixedCategoryPatched){
+    window.openModal=function(t){
+      previousOpenModal(t);
+      if(t==='fixed'){
+        syncFixedCategoryPicker($('fFC')?.value || 'Στέγαση');
+      }
+    };
+    window.openModal.__capvoFixedCategoryPatched=true;
   }
 })();

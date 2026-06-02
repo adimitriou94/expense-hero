@@ -1,6 +1,7 @@
+
 /* ============================================================
-   EXPENSE HERO — INCOME PAGE FINAL MOBILE REDESIGN
-   Scope: #vIncome only.
+   EXPENSE HERO — INCOME PAGE MODERN V1
+   Scope: #vIncome only. Mobile-first redesign for Έσοδα & Πηγές.
    Safe layer: no JS changes, no Transactions/Quick Add changes.
    ============================================================ */
 
@@ -20,8 +21,6 @@
   --income-shadow-soft:0 10px 26px rgba(30,40,90,.055);
 }
 
-/* ===== Base scope ===== */
-
 #vIncome,
 #vIncome *{
   box-sizing:border-box;
@@ -38,7 +37,6 @@
 }
 
 /* ===== Hero ===== */
-
 #vIncome .page-hero{
   position:relative;
   overflow:hidden;
@@ -104,7 +102,6 @@
   font-weight:950 !important;
   letter-spacing:.16em !important;
   margin-bottom:12px !important;
-  text-transform:uppercase;
 }
 
 #vIncome .page-hero h2{
@@ -141,7 +138,6 @@
 }
 
 /* ===== Summary cards ===== */
-
 #vIncome .income-summary-grid{
   display:grid !important;
   grid-template-columns:repeat(4,minmax(0,1fr)) !important;
@@ -184,7 +180,6 @@
   line-height:1.25 !important;
   font-weight:950 !important;
   letter-spacing:.06em !important;
-  text-transform:uppercase;
 }
 
 #vIncome .income-summary-card .stat-value{
@@ -203,11 +198,8 @@
 #vIncome .income-summary-card .stat-value.red{color:var(--income-red) !important;}
 
 /* ===== Donut / distribution ===== */
-
 #vIncome .chart-container{
-  position:relative;
-  overflow:hidden !important;
-  padding:24px !important;
+  padding:26px !important;
   border-radius:30px !important;
   background:rgba(255,255,255,.94) !important;
   border:1px solid rgba(255,255,255,.9) !important;
@@ -217,131 +209,71 @@
 #vIncome .chart-title{
   color:var(--income-ink) !important;
   font-size:22px !important;
-  line-height:1.1 !important;
   font-weight:950 !important;
   letter-spacing:-.04em !important;
 }
 
 #vIncome .donut-layout{
-  width:100% !important;
-  min-width:0 !important;
   display:grid !important;
-  grid-template-columns:minmax(180px,260px) minmax(0,1fr) !important;
+  grid-template-columns:minmax(220px,340px) 1fr !important;
   align-items:center !important;
-  gap:24px !important;
-  margin-top:20px !important;
+  gap:28px !important;
+  margin-top:22px !important;
 }
 
 #vIncome .donut-chart{
-  position:relative !important;
-  width:min(100%,240px) !important;
-  height:auto !important;
-  aspect-ratio:1/1 !important;
-  min-width:0 !important;
-  min-height:0 !important;
+  width:min(100%,300px) !important;
+  height:300px !important;
   margin:0 auto !important;
-  border-radius:999px !important;
-  overflow:hidden !important;
-  flex:0 0 auto !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.72),
-    0 16px 36px rgba(34,201,133,.14) !important;
+  border-radius:999px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.72),0 18px 40px rgba(34,201,133,.16);
 }
 
 #vIncome .donut-center{
-  position:absolute !important;
-  inset:31% !important;
-  width:auto !important;
-  height:auto !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  border-radius:999px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
+  width:48% !important;
+  height:48% !important;
   background:rgba(255,255,255,.96) !important;
-  box-shadow:0 10px 22px rgba(30,40,90,.06) !important;
-  pointer-events:none;
+  box-shadow:0 12px 24px rgba(30,40,90,.06);
 }
 
 #vIncome .donut-center span{
   color:#8b95ad !important;
-  font-size:11px !important;
+  font-size:12px !important;
   font-weight:950 !important;
   letter-spacing:.08em !important;
-  text-transform:uppercase;
 }
 
 #vIncome .donut-center strong{
-  margin-top:5px;
+  margin-top:6px;
   color:var(--income-ink) !important;
   font-family:var(--mono);
-  font-size:16px !important;
-  line-height:1 !important;
+  font-size:18px !important;
   letter-spacing:-.04em;
-  white-space:nowrap;
 }
 
 #vIncome .donut-legend{
-  min-width:0 !important;
   display:grid !important;
-  gap:12px !important;
+  gap:14px !important;
 }
 
 #vIncome .donut-legend-row{
-  min-width:0 !important;
-  min-height:54px !important;
-  padding:0 16px !important;
-  border-radius:17px !important;
+  min-height:58px;
+  padding:0 18px !important;
+  border-radius:18px !important;
   background:#fff !important;
   border:1px solid var(--income-line) !important;
   box-shadow:0 10px 24px rgba(30,40,90,.045) !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:space-between !important;
-  gap:10px !important;
-}
-
-#vIncome .donut-legend-left,
-#vIncome .donut-legend-right{
-  min-width:0 !important;
-}
-
-#vIncome .donut-legend-left{
-  display:flex !important;
-  align-items:center !important;
-  gap:9px !important;
-}
-
-#vIncome .donut-dot{
-  width:10px !important;
-  height:10px !important;
-  border-radius:50% !important;
-  flex:0 0 auto !important;
 }
 
 #vIncome .donut-legend-left span:last-child{
-  min-width:0 !important;
   font-weight:900 !important;
   color:var(--income-ink) !important;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#vIncome .donut-legend-right{
-  display:grid !important;
-  justify-items:end !important;
-  gap:2px !important;
-  flex:0 0 auto !important;
 }
 
 #vIncome .donut-legend-right strong{
   font-family:var(--mono);
   color:var(--income-ink) !important;
   font-weight:950 !important;
-  white-space:nowrap;
 }
 
 #vIncome .donut-legend-right small{
@@ -350,7 +282,6 @@
 }
 
 /* ===== Income sources list ===== */
-
 #vIncome .list-widget{
   padding:0 !important;
   border:0 !important;
@@ -359,18 +290,13 @@
 }
 
 #vIncome .section-header{
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) auto !important;
-  align-items:end !important;
-  gap:10px !important;
-  padding:2px 4px 12px !important;
+  padding:0 6px 12px !important;
   margin:0 !important;
   border:0 !important;
 }
 
 #vIncome .section-title-wrap{
-  min-width:0 !important;
-  display:block !important;
+  gap:10px !important;
 }
 
 #vIncome .section-dot{
@@ -380,37 +306,35 @@
 #vIncome .section-title{
   color:var(--income-ink) !important;
   font-size:24px !important;
-  line-height:1.03 !important;
+  line-height:1 !important;
   font-weight:950 !important;
   letter-spacing:-.055em !important;
-  white-space:nowrap !important;
 }
 
 #vIncome .section-subtitle{
-  width:max-content !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  margin:8px 0 0 !important;
-  min-height:28px !important;
-  padding:0 11px !important;
-  border-radius:999px !important;
-  background:#eee8ff !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:0 !important;
+  margin-left:8px !important;
+  min-height:30px;
+  padding:0 12px;
+  border-radius:999px;
+  background:#eee8ff;
   color:var(--income-purple) !important;
-  font-size:12px !important;
+  font-size:13px !important;
   font-weight:950 !important;
 }
 
 #vIncome .section-add:not(.primary-add){
-  min-height:42px !important;
-  padding:0 14px !important;
-  border-radius:15px !important;
+  min-height:46px !important;
+  padding:0 17px !important;
+  border-radius:16px !important;
   background:rgba(255,255,255,.86) !important;
   border:1px solid rgba(101,71,246,.42) !important;
   color:var(--income-purple) !important;
   box-shadow:0 10px 24px rgba(101,71,246,.07) !important;
   font-weight:950 !important;
-  white-space:nowrap !important;
 }
 
 #vIncome #incomeList.expense-list{
@@ -418,20 +342,17 @@
   gap:13px !important;
   max-height:none !important;
   overflow:visible !important;
-  padding:0 0 118px !important;
+  padding:0 0 12px !important;
 }
 
 #vIncome .income-source-item{
   position:relative;
   display:grid !important;
-  grid-template-columns:58px minmax(0,1fr) auto !important;
-  grid-template-areas:
-    "icon info amount"
-    "icon info actions" !important;
+  grid-template-columns:64px minmax(0,1fr) max-content max-content !important;
   align-items:center !important;
-  gap:7px 14px !important;
-  min-height:96px !important;
-  padding:16px !important;
+  gap:14px !important;
+  min-height:92px !important;
+  padding:16px 18px !important;
   border-radius:24px !important;
   background:rgba(255,255,255,.95) !important;
   border:1px solid rgba(255,255,255,.88) !important;
@@ -445,14 +366,13 @@
 }
 
 #vIncome .income-source-icon{
-  grid-area:icon;
-  width:54px !important;
-  height:54px !important;
+  width:58px !important;
+  height:58px !important;
   border-radius:18px !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
-  font-size:23px !important;
+  font-size:25px !important;
   background:linear-gradient(135deg,#dcfce7,#f0fdf4) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.78);
 }
@@ -462,14 +382,13 @@
 }
 
 #vIncome .income-source-info{
-  grid-area:info;
   min-width:0 !important;
 }
 
 #vIncome .income-source-name{
   color:var(--income-ink) !important;
-  font-size:17px !important;
-  line-height:1.12 !important;
+  font-size:18px !important;
+  line-height:1.15 !important;
   font-weight:950 !important;
   letter-spacing:-.035em !important;
   white-space:nowrap;
@@ -478,33 +397,32 @@
 }
 
 #vIncome .income-source-meta{
-  margin-top:4px !important;
+  margin-top:5px !important;
   color:#7b86a2 !important;
-  font-size:12px !important;
-  font-weight:760 !important;
+  font-size:13px !important;
+  font-weight:750 !important;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
 #vIncome .income-badges{
-  margin-top:7px !important;
+  margin-top:8px !important;
   display:flex !important;
   flex-wrap:wrap !important;
-  gap:5px !important;
+  gap:6px !important;
 }
 
 #vIncome .income-badge{
-  min-height:21px !important;
+  min-height:22px !important;
   display:inline-flex !important;
   align-items:center !important;
   padding:0 8px !important;
   border-radius:999px !important;
-  font-size:10.5px !important;
+  font-size:11px !important;
   line-height:1 !important;
   font-weight:950 !important;
   border:0 !important;
-  max-width:100%;
 }
 
 #vIncome .income-badge.budget{
@@ -523,34 +441,29 @@
 }
 
 #vIncome .income-source-amount{
-  grid-area:amount;
-  align-self:end;
   font-family:var(--mono);
   color:var(--income-green) !important;
-  font-size:17px !important;
+  font-size:19px !important;
   letter-spacing:-.055em !important;
   font-weight:950 !important;
   white-space:nowrap;
 }
 
 #vIncome .expense-actions{
-  grid-area:actions;
   display:flex !important;
   align-items:center !important;
-  justify-content:flex-end !important;
-  align-self:start;
   gap:7px !important;
 }
 
 #vIncome .expense-actions button{
-  width:31px !important;
-  height:31px !important;
-  border-radius:11px !important;
+  width:34px !important;
+  height:34px !important;
+  border-radius:12px !important;
   background:#f5f7ff !important;
   color:#65708d !important;
   border:1px solid rgba(119,132,170,.10) !important;
   box-shadow:none !important;
-  font-size:13px !important;
+  font-size:15px !important;
 }
 
 #vIncome .expense-actions .del-btn{
@@ -559,8 +472,8 @@
 }
 
 #vIncome .empty{
-  min-height:260px !important;
-  border-radius:26px !important;
+  min-height:330px !important;
+  border-radius:30px !important;
   background:rgba(255,255,255,.76) !important;
   border:1px solid rgba(255,255,255,.88) !important;
   box-shadow:var(--income-shadow-soft) !important;
@@ -569,11 +482,524 @@
   font-weight:850 !important;
 }
 
-/* ===== Mobile final pass ===== */
-
-@media (max-width:768px){
+/* ===== Mobile ===== */
+@media (max-width: 768px){
   #vIncome{
-    padding:0 12px calc(94px + env(safe-area-inset-bottom)) !important;
+    padding:0 14px calc(116px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vIncome .page-grid{
+    gap:14px !important;
+    padding-top:14px !important;
+  }
+
+  #vIncome .page-hero{
+    min-height:232px !important;
+    padding:24px 20px !important;
+    border-radius:28px !important;
+  }
+
+  #vIncome .page-hero > div{
+    max-width:64% !important;
+  }
+
+  #vIncome .page-hero::after{
+    right:16px;
+    top:66px;
+    width:106px;
+    height:106px;
+    border-radius:34px;
+    font-size:56px;
+  }
+
+  #vIncome .page-hero .eyebrow{
+    font-size:11px !important;
+    margin-bottom:9px !important;
+  }
+
+  #vIncome .page-hero h2{
+    font-size:27px !important;
+    letter-spacing:-.065em !important;
+  }
+
+  #vIncome .page-hero p{
+    margin-top:10px !important;
+    font-size:13px !important;
+    line-height:1.45 !important;
+  }
+
+  #vIncome .page-hero .primary-add{
+    left:20px;
+    bottom:20px;
+    min-width:150px;
+    height:48px;
+    border-radius:16px !important;
+  }
+
+  #vIncome .income-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  #vIncome .income-summary-card{
+    min-height:128px;
+    padding:16px 12px !important;
+    border-radius:20px !important;
+  }
+
+  #vIncome .income-summary-card::before{
+    width:42px;
+    height:42px;
+    margin-bottom:13px;
+    font-size:19px;
+  }
+
+  #vIncome .income-summary-card .stat-label{
+    font-size:10px !important;
+  }
+
+  #vIncome .income-summary-card .stat-value{
+    font-size:22px !important;
+  }
+
+  #vIncome .chart-container{
+    padding:20px !important;
+    border-radius:26px !important;
+  }
+
+  #vIncome .chart-title{
+    font-size:21px !important;
+  }
+
+  #vIncome .donut-layout{
+    grid-template-columns:1fr !important;
+    gap:18px !important;
+    margin-top:18px !important;
+  }
+
+  #vIncome .donut-chart{
+    width:220px !important;
+    height:220px !important;
+  }
+
+  #vIncome .donut-legend-row{
+    min-height:54px;
+    padding:0 14px !important;
+    border-radius:16px !important;
+  }
+
+  #vIncome .section-header{
+    align-items:center !important;
+    padding:4px 2px 10px !important;
+  }
+
+  #vIncome .section-title-wrap > div:last-child{
+    display:flex !important;
+    align-items:center !important;
+    gap:7px !important;
+  }
+
+  #vIncome .section-title{
+    font-size:22px !important;
+  }
+
+  #vIncome .section-subtitle{
+    min-height:28px;
+    margin-left:0 !important;
+    padding:0 10px;
+    font-size:12px !important;
+  }
+
+  #vIncome .section-add:not(.primary-add){
+    min-height:40px !important;
+    padding:0 12px !important;
+    border-radius:14px !important;
+    font-size:13px !important;
+  }
+
+  #vIncome #incomeList.expense-list{
+    gap:11px !important;
+  }
+
+  #vIncome .income-source-item{
+    grid-template-columns:52px minmax(0,1fr) max-content !important;
+    grid-template-areas:
+      'icon info amount'
+      'icon info actions';
+    gap:10px 12px !important;
+    min-height:94px !important;
+    padding:14px !important;
+    border-radius:22px !important;
+  }
+
+  #vIncome .income-source-icon{grid-area:icon;width:50px !important;height:50px !important;border-radius:16px !important;font-size:23px !important;}
+  #vIncome .income-source-info{grid-area:info;}
+  #vIncome .income-source-amount{grid-area:amount;font-size:17px !important;align-self:end;}
+  #vIncome .expense-actions{grid-area:actions;justify-content:flex-end !important;align-self:start;}
+
+  #vIncome .income-source-name{
+    font-size:16px !important;
+  }
+
+  #vIncome .income-source-meta{
+    font-size:12px !important;
+  }
+
+  #vIncome .expense-actions button{
+    width:28px !important;
+    height:28px !important;
+    border-radius:10px !important;
+    font-size:13px !important;
+  }
+}
+
+@media (max-width: 390px){
+  #vIncome .page-hero{
+    min-height:226px !important;
+  }
+
+  #vIncome .page-hero > div{
+    max-width:68% !important;
+  }
+
+  #vIncome .page-hero::after{
+    width:88px;
+    height:88px;
+    font-size:48px;
+    right:12px;
+    top:72px;
+  }
+
+  #vIncome .page-hero h2{
+    font-size:25px !important;
+  }
+
+  #vIncome .page-hero p{
+    font-size:12px !important;
+  }
+
+  #vIncome .income-source-amount{
+    font-size:15px !important;
+  }
+}
+
+/* ============================================================
+   EXPENSE HERO — INCOME PAGE V2 COMPACT POLISH
+   Fixes mobile density, hero overlap, donut size, source header,
+   bottom nav spacing. Safe CSS-only override.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vIncome{
+    padding:0 12px calc(150px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vIncome .page-grid{
+    gap:12px !important;
+    padding-top:10px !important;
+  }
+
+  /* Compact hero */
+  #vIncome .page-hero{
+    min-height:174px !important;
+    padding:18px 16px !important;
+    border-radius:24px !important;
+    align-items:flex-start !important;
+  }
+
+  #vIncome .page-hero > div{
+    max-width:66% !important;
+  }
+
+  #vIncome .page-hero::before{
+    background-size:28px 28px !important;
+    opacity:.34 !important;
+  }
+
+  #vIncome .page-hero::after{
+    right:14px !important;
+    top:54px !important;
+    width:78px !important;
+    height:78px !important;
+    border-radius:24px !important;
+    font-size:42px !important;
+    box-shadow:0 16px 36px rgba(101,71,246,.22) !important;
+  }
+
+  #vIncome .page-hero .eyebrow{
+    font-size:10px !important;
+    letter-spacing:.16em !important;
+    margin-bottom:7px !important;
+  }
+
+  #vIncome .page-hero h2{
+    font-size:24px !important;
+    line-height:.98 !important;
+    letter-spacing:-.065em !important;
+  }
+
+  #vIncome .page-hero p{
+    margin-top:8px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+    max-width:210px !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2 !important;
+    -webkit-box-orient:vertical !important;
+    overflow:hidden !important;
+  }
+
+  #vIncome .page-hero .primary-add{
+    left:16px !important;
+    bottom:14px !important;
+    min-width:128px !important;
+    height:38px !important;
+    border-radius:13px !important;
+    font-size:13px !important;
+    box-shadow:0 12px 24px rgba(101,71,246,.24) !important;
+  }
+
+  /* Summary cards tighter */
+  #vIncome .income-summary-grid{
+    gap:8px !important;
+  }
+
+  #vIncome .income-summary-card{
+    min-height:104px !important;
+    padding:13px 8px !important;
+    border-radius:18px !important;
+  }
+
+  #vIncome .income-summary-card::before{
+    width:34px !important;
+    height:34px !important;
+    margin-bottom:10px !important;
+    font-size:16px !important;
+  }
+
+  #vIncome .income-summary-card .stat-label{
+    font-size:9px !important;
+    letter-spacing:.045em !important;
+  }
+
+  #vIncome .income-summary-card .stat-value{
+    margin-top:7px !important;
+    font-size:18px !important;
+    line-height:1.05 !important;
+    word-break:normal !important;
+  }
+
+  /* Distribution section */
+  #vIncome .chart-container{
+    padding:16px !important;
+    border-radius:22px !important;
+  }
+
+  #vIncome .chart-title{
+    font-size:18px !important;
+    line-height:1.05 !important;
+  }
+
+  #vIncome .donut-layout{
+    gap:13px !important;
+    margin-top:12px !important;
+  }
+
+  #vIncome .donut-chart{
+    width:172px !important;
+    height:172px !important;
+  }
+
+  #vIncome .donut-center span{
+    font-size:9px !important;
+  }
+
+  #vIncome .donut-center strong{
+    font-size:14px !important;
+  }
+
+  #vIncome .donut-legend{
+    gap:8px !important;
+  }
+
+  #vIncome .donut-legend-row{
+    min-height:44px !important;
+    padding:0 12px !important;
+    border-radius:14px !important;
+  }
+
+  #vIncome .donut-legend-left span:last-child,
+  #vIncome .donut-legend-right strong{
+    font-size:12px !important;
+  }
+
+  #vIncome .donut-legend-right small{
+    font-size:10px !important;
+  }
+
+  /* Income source section header */
+  #vIncome .section-header{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:8px !important;
+    padding:2px 2px 8px !important;
+  }
+
+  #vIncome .section-title-wrap{
+    min-width:0 !important;
+  }
+
+  #vIncome .section-title-wrap > div:last-child{
+    display:flex !important;
+    align-items:center !important;
+    gap:7px !important;
+    min-width:0 !important;
+    flex-wrap:nowrap !important;
+  }
+
+  #vIncome .section-title{
+    font-size:19px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.05em !important;
+    white-space:normal !important;
+    max-width:118px !important;
+  }
+
+  #vIncome .section-subtitle{
+    min-height:26px !important;
+    padding:0 9px !important;
+    font-size:11px !important;
+    flex:0 0 auto !important;
+  }
+
+  #vIncome .section-add:not(.primary-add){
+    min-height:36px !important;
+    padding:0 10px !important;
+    border-radius:13px !important;
+    font-size:12px !important;
+    white-space:nowrap !important;
+  }
+
+  #vIncome #incomeList.expense-list{
+    gap:10px !important;
+    padding:0 0 calc(130px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Income cards more app-like */
+  #vIncome .income-source-item{
+    grid-template-columns:48px minmax(0,1fr) max-content !important;
+    grid-template-areas:
+      'icon info amount'
+      'icon info actions' !important;
+    min-height:82px !important;
+    padding:12px !important;
+    border-radius:20px !important;
+    gap:8px 10px !important;
+  }
+
+  #vIncome .income-source-icon{
+    width:46px !important;
+    height:46px !important;
+    border-radius:15px !important;
+    font-size:20px !important;
+  }
+
+  #vIncome .income-source-name{
+    font-size:15px !important;
+    line-height:1.1 !important;
+  }
+
+  #vIncome .income-source-meta{
+    margin-top:4px !important;
+    font-size:11px !important;
+    line-height:1.25 !important;
+  }
+
+  #vIncome .income-badges{
+    margin-top:6px !important;
+    gap:5px !important;
+  }
+
+  #vIncome .income-badge{
+    min-height:20px !important;
+    padding:0 7px !important;
+    font-size:10px !important;
+  }
+
+  #vIncome .income-source-amount{
+    font-size:15px !important;
+    line-height:1.1 !important;
+  }
+
+  #vIncome .expense-actions{
+    gap:6px !important;
+  }
+
+  #vIncome .expense-actions button{
+    width:28px !important;
+    height:28px !important;
+    border-radius:10px !important;
+    font-size:12px !important;
+    background:#f7f8ff !important;
+  }
+
+  #vIncome .expense-actions .del-btn{
+    background:#fff4f6 !important;
+  }
+}
+
+@media (max-width: 390px){
+  #vIncome{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  #vIncome .page-hero{
+    min-height:166px !important;
+    padding:16px 14px !important;
+  }
+
+  #vIncome .page-hero h2{
+    font-size:22px !important;
+  }
+
+  #vIncome .page-hero p{
+    max-width:190px !important;
+    font-size:11px !important;
+  }
+
+  #vIncome .page-hero::after{
+    width:70px !important;
+    height:70px !important;
+    font-size:38px !important;
+    top:58px !important;
+    right:10px !important;
+  }
+
+  #vIncome .income-summary-card .stat-value{
+    font-size:16px !important;
+  }
+
+  #vIncome .section-title{
+    max-width:104px !important;
+    font-size:18px !important;
+  }
+
+  #vIncome .income-source-amount{
+    font-size:14px !important;
+  }
+}
+
+/* ============================================================
+   EXPENSE HERO — INCOME PAGE V3 FINAL COMPACT PASS
+   Fixes: top density, smaller hero/summary/donut, source cards,
+   and excessive bottom empty space above mobile nav.
+   ============================================================ */
+
+@media (max-width: 768px){
+  #vIncome{
+    padding:0 12px calc(104px + env(safe-area-inset-bottom)) !important;
     min-height:auto !important;
   }
 
@@ -583,28 +1009,24 @@
     padding-bottom:0 !important;
   }
 
+  /* Hero: compact and readable */
   #vIncome .page-hero{
-    min-height:154px !important;
-    padding:14px 14px 48px !important;
+    min-height:156px !important;
+    padding:15px 14px !important;
     border-radius:22px !important;
   }
 
   #vIncome .page-hero > div{
-    max-width:calc(100% - 78px) !important;
-  }
-
-  #vIncome .page-hero::before{
-    background-size:28px 28px !important;
-    opacity:.34 !important;
+    max-width:68% !important;
   }
 
   #vIncome .page-hero::after{
-    width:60px !important;
-    height:60px !important;
+    width:64px !important;
+    height:64px !important;
     right:14px !important;
-    top:50px !important;
+    top:49px !important;
     border-radius:20px !important;
-    font-size:32px !important;
+    font-size:35px !important;
     box-shadow:0 12px 28px rgba(101,71,246,.20) !important;
   }
 
@@ -614,48 +1036,42 @@
   }
 
   #vIncome .page-hero h2{
-    font-size:20px !important;
-    line-height:1.02 !important;
+    font-size:21px !important;
+    line-height:1 !important;
     letter-spacing:-.055em !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
   }
 
   #vIncome .page-hero p{
-    max-width:210px !important;
+    max-width:190px !important;
     margin-top:7px !important;
-    font-size:10.5px !important;
-    line-height:1.32 !important;
-    display:-webkit-box !important;
+    font-size:11px !important;
+    line-height:1.3 !important;
     -webkit-line-clamp:2 !important;
-    -webkit-box-orient:vertical !important;
-    overflow:hidden !important;
   }
 
   #vIncome .page-hero .primary-add{
     left:14px !important;
-    bottom:11px !important;
-    min-width:116px !important;
+    bottom:12px !important;
+    min-width:118px !important;
     height:34px !important;
     border-radius:12px !important;
     font-size:12px !important;
   }
 
+  /* Summary cards: less empty */
   #vIncome .income-summary-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
     gap:8px !important;
   }
 
   #vIncome .income-summary-card{
-    min-height:88px !important;
-    padding:9px 8px !important;
+    min-height:92px !important;
+    padding:10px 8px !important;
     border-radius:17px !important;
   }
 
   #vIncome .income-summary-card::before{
-    width:29px !important;
-    height:29px !important;
+    width:30px !important;
+    height:30px !important;
     margin-bottom:7px !important;
     font-size:14px !important;
   }
@@ -667,13 +1083,12 @@
 
   #vIncome .income-summary-card .stat-value{
     margin-top:5px !important;
-    font-size:16px !important;
-    line-height:1.05 !important;
-    word-break:normal !important;
+    font-size:17px !important;
   }
 
+  /* Distribution: make the chart section a real mobile card */
   #vIncome .chart-container{
-    padding:13px !important;
+    padding:14px !important;
     border-radius:21px !important;
   }
 
@@ -682,31 +1097,18 @@
   }
 
   #vIncome .donut-layout{
-    grid-template-columns:132px minmax(0,1fr) !important;
-    gap:12px !important;
-    margin-top:11px !important;
+    gap:10px !important;
+    margin-top:10px !important;
   }
 
   #vIncome .donut-chart{
-    width:132px !important;
-    max-width:132px !important;
-    height:auto !important;
-    aspect-ratio:1/1 !important;
-    min-width:132px !important;
-    min-height:132px !important;
-  }
-
-  #vIncome .donut-center{
-    inset:31% !important;
-  }
-
-  #vIncome .donut-center span{
-    font-size:8px !important;
+    width:154px !important;
+    height:154px !important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.72),0 12px 28px rgba(34,201,133,.12) !important;
   }
 
   #vIncome .donut-center strong{
-    margin-top:3px !important;
-    font-size:10.5px !important;
+    font-size:13px !important;
   }
 
   #vIncome .donut-legend{
@@ -714,44 +1116,34 @@
   }
 
   #vIncome .donut-legend-row{
-    min-height:37px !important;
-    padding:0 9px !important;
-    border-radius:12px !important;
-    gap:6px !important;
-  }
-
-  #vIncome .donut-dot{
-    width:8px !important;
-    height:8px !important;
-  }
-
-  #vIncome .donut-legend-left{
-    gap:7px !important;
+    min-height:38px !important;
+    padding:0 11px !important;
+    border-radius:13px !important;
   }
 
   #vIncome .donut-legend-left span:last-child,
   #vIncome .donut-legend-right strong{
-    font-size:10.5px !important;
+    font-size:11px !important;
   }
 
   #vIncome .donut-legend-right small{
-    font-size:8.5px !important;
+    font-size:9px !important;
   }
 
+  /* Section header */
   #vIncome .section-header{
-    align-items:end !important;
-    padding:4px 2px 8px !important;
-    gap:8px !important;
+    padding:0 2px 7px !important;
+    gap:6px !important;
   }
 
   #vIncome .section-title{
+    max-width:108px !important;
     font-size:18px !important;
-    line-height:1.02 !important;
+    line-height:.95 !important;
   }
 
   #vIncome .section-subtitle{
     min-height:24px !important;
-    margin-top:7px !important;
     padding:0 8px !important;
     font-size:10.5px !important;
   }
@@ -759,18 +1151,18 @@
   #vIncome .section-add:not(.primary-add){
     min-height:34px !important;
     padding:0 10px !important;
-    border-radius:12px !important;
     font-size:12px !important;
   }
 
+  /* Source list: tighter cards and cleaner actions */
   #vIncome #incomeList.expense-list{
     gap:9px !important;
-    padding:0 0 calc(96px + env(safe-area-inset-bottom)) !important;
+    padding:0 0 calc(104px + env(safe-area-inset-bottom)) !important;
   }
 
   #vIncome .income-source-item{
     grid-template-columns:44px minmax(0,1fr) max-content !important;
-    min-height:78px !important;
+    min-height:74px !important;
     padding:10px 11px !important;
     border-radius:18px !important;
     gap:6px 9px !important;
@@ -821,682 +1213,851 @@
   }
 }
 
-@media (max-width:390px){
+@media (max-width: 390px){
   #vIncome{
     padding-left:9px !important;
     padding-right:9px !important;
   }
 
   #vIncome .page-hero{
-    min-height:150px !important;
-    padding:13px 12px 48px !important;
-  }
-
-  #vIncome .page-hero > div{
-    max-width:calc(100% - 70px) !important;
+    min-height:148px !important;
+    padding:14px 12px !important;
   }
 
   #vIncome .page-hero h2{
-    font-size:18px !important;
+    font-size:20px !important;
   }
 
   #vIncome .page-hero p{
-    max-width:176px !important;
-    font-size:10px !important;
+    max-width:170px !important;
+    font-size:10.5px !important;
   }
 
   #vIncome .page-hero::after{
-    width:54px !important;
-    height:54px !important;
+    width:58px !important;
+    height:58px !important;
+    top:50px !important;
     right:10px !important;
-    top:52px !important;
-    font-size:29px !important;
+    font-size:31px !important;
   }
 
   #vIncome .income-summary-card .stat-value{
-    font-size:15px !important;
-  }
-
-  #vIncome .donut-layout{
-    grid-template-columns:124px minmax(0,1fr) !important;
-    gap:10px !important;
+    font-size:15.5px !important;
   }
 
   #vIncome .donut-chart{
-    width:124px !important;
-    max-width:124px !important;
-    min-width:124px !important;
-  }
-
-  #vIncome .donut-center strong{
-    font-size:9.5px !important;
+    width:146px !important;
+    height:146px !important;
   }
 
   #vIncome .section-title{
+    max-width:98px !important;
     font-size:17px !important;
   }
-
-  #vIncome .income-source-amount{
-    font-size:13.5px !important;
-  }
 }
-
 
 /* ============================================================
-   EXPENSE HERO — INCOME SOURCE MODAL REFRESH V1
-   Scope: #mIncomeSource only.
-   Modern mobile-first income source form.
+   CAPVO Income Sprint 2 — Modal/Picker emergency fix
+   Fixes native select bleed-through and cramped income modal.
+   Safe CSS-only patch. No auth/app logic touched.
    ============================================================ */
 
-#mIncomeSource{
-  z-index:20000 !important;
-}
-
-#mIncomeSource.modal-overlay{
+#mIncomeSource.income-source-overlay{
   align-items:flex-end !important;
   justify-content:center !important;
   padding:0 !important;
-  background:rgba(15,23,42,.48) !important;
-  backdrop-filter:blur(14px) saturate(1.08) !important;
-  -webkit-backdrop-filter:blur(14px) saturate(1.08) !important;
+  z-index:12050 !important;
 }
 
 #mIncomeSource .income-source-modal{
+  position:relative !important;
   width:100% !important;
-  max-width:520px !important;
-  max-height:min(92svh,780px) !important;
+  max-width:430px !important;
+  max-height:min(88vh,760px) !important;
   margin:0 auto !important;
-  padding:12px 16px calc(18px + env(safe-area-inset-bottom)) !important;
-  border-radius:32px 32px 0 0 !important;
-  overflow:auto !important;
-  overscroll-behavior:contain !important;
-  -webkit-overflow-scrolling:touch !important;
-  background:
-    radial-gradient(circle at 85% 0%,rgba(101,71,246,.11),transparent 32%),
-    linear-gradient(180deg,#ffffff 0%,#f8faff 100%) !important;
-  border:1px solid rgba(255,255,255,.92) !important;
-  box-shadow:0 -26px 80px rgba(15,23,42,.26) !important;
-  transform:translateY(100%) !important;
-}
-
-#mIncomeSource.active .income-source-modal{
-  transform:translateY(0) !important;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+  border-radius:30px 30px 0 0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  background:rgba(255,255,255,.98) !important;
+  border:1px solid rgba(255,255,255,.86) !important;
+  box-shadow:0 -24px 70px rgba(15,23,42,.26) !important;
 }
 
 #mIncomeSource .income-source-modal::before{
   content:'' !important;
   display:block !important;
-  width:44px !important;
+  width:42px !important;
   height:5px !important;
   margin:0 auto 14px !important;
   border-radius:999px !important;
-  background:#d7ddeb !important;
+  background:#d9dfeb !important;
 }
 
 #mIncomeSource .income-modal-close{
   position:absolute !important;
-  top:30px !important;
-  right:18px !important;
-  z-index:5 !important;
-  width:38px !important;
-  height:38px !important;
+  top:18px !important;
+  right:16px !important;
+  left:auto !important;
+  width:42px !important;
+  height:42px !important;
   border:0 !important;
-  border-radius:15px !important;
-  background:#f1f4fb !important;
-  color:#64718a !important;
-  font-size:20px !important;
+  border-radius:16px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#f3f6fb !important;
+  color:#7a859d !important;
+  font-size:22px !important;
+  line-height:1 !important;
   font-weight:900 !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8) !important;
+  z-index:10 !important;
 }
 
 #mIncomeSource .income-modal-hero{
-  position:relative !important;
-  display:flex !important;
-  align-items:flex-start !important;
-  gap:13px !important;
-  padding:4px 48px 14px 2px !important;
+  display:grid !important;
+  grid-template-columns:42px minmax(0,1fr) !important;
+  gap:12px !important;
+  align-items:center !important;
+  padding:0 50px 12px 0 !important;
+  margin:0 !important;
 }
 
 #mIncomeSource .income-modal-icon{
-  width:48px !important;
-  height:48px !important;
-  border-radius:18px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  flex:0 0 auto !important;
-  background:linear-gradient(135deg,#7c5cff,#3d26cf) !important;
-  color:white !important;
-  font-size:24px !important;
-  box-shadow:0 14px 34px rgba(101,71,246,.28) !important;
+  width:42px !important;
+  height:42px !important;
+  border-radius:15px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:linear-gradient(135deg,#eee9ff,#ffffff) !important;
+  box-shadow:0 10px 24px rgba(101,71,246,.12) !important;
 }
 
-#mIncomeSource .income-modal-kicker{
-  color:var(--income-purple) !important;
-  font-size:10px !important;
-  font-weight:950 !important;
-  letter-spacing:.14em !important;
-  text-transform:uppercase !important;
-  margin-bottom:5px !important;
-}
-
-#mIncomeSource #mIncomeSourceTitle{
+#mIncomeSource .income-modal-heading h2{
   margin:0 !important;
-  padding:0 !important;
-  color:var(--income-ink) !important;
-  font-size:21px !important;
-  line-height:1.05 !important;
-  letter-spacing:-.055em !important;
+  color:#111827 !important;
+  font-size:22px !important;
+  line-height:1.02 !important;
   font-weight:950 !important;
-  display:block !important;
+  letter-spacing:-.055em !important;
 }
 
 #mIncomeSource .income-modal-heading p{
   margin:7px 0 0 !important;
-  color:#758198 !important;
-  font-size:12px !important;
+  color:#72809a !important;
+  font-size:12.5px !important;
   line-height:1.35 !important;
   font-weight:750 !important;
 }
 
 #mIncomeSource .income-modal-amount-card,
 #mIncomeSource .income-modal-form-card,
-#mIncomeSource .income-modal-options{
-  border-radius:24px !important;
-  background:rgba(255,255,255,.92) !important;
-  border:1px solid rgba(119,132,170,.11) !important;
-  box-shadow:0 12px 30px rgba(30,40,90,.055) !important;
-}
-
-#mIncomeSource .income-modal-amount-card{
-  padding:16px !important;
-  margin-bottom:12px !important;
-  background:
-    radial-gradient(circle at 88% 0%,rgba(34,201,133,.12),transparent 34%),
-    rgba(255,255,255,.94) !important;
-}
-
-#mIncomeSource .income-modal-amount-card label,
-#mIncomeSource .form-group label{
-  display:block !important;
-  margin:0 0 8px !important;
-  color:#7a859c !important;
-  font-size:10px !important;
-  line-height:1 !important;
-  letter-spacing:.08em !important;
-  text-transform:uppercase !important;
-  font-weight:950 !important;
-}
-
-#mIncomeSource .income-modal-amount-input{
-  display:flex !important;
-  align-items:center !important;
-  gap:8px !important;
-  min-height:62px !important;
-  padding:0 14px !important;
-  border-radius:20px !important;
-  background:#f7f9ff !important;
-  border:1px solid rgba(101,71,246,.12) !important;
-}
-
-#mIncomeSource .income-modal-amount-input span{
-  color:var(--income-purple) !important;
-  font-family:var(--mono) !important;
-  font-size:24px !important;
-  font-weight:950 !important;
-}
-
-#mIncomeSource .income-modal-amount-input input{
+#mIncomeSource .income-toggle-box,
+#mIncomeSource .income-modal-notes{
   width:100% !important;
-  height:60px !important;
-  border:0 !important;
-  outline:0 !important;
-  background:transparent !important;
-  color:var(--income-ink) !important;
-  font-family:var(--mono) !important;
-  font-size:34px !important;
-  line-height:1 !important;
-  letter-spacing:-.065em !important;
-  font-weight:950 !important;
-  padding:0 !important;
-  box-shadow:none !important;
-}
-
-#mIncomeSource .income-modal-amount-input:focus-within{
-  background:#fff !important;
-  border-color:rgba(101,71,246,.42) !important;
-  box-shadow:0 0 0 4px rgba(101,71,246,.10) !important;
-}
-
-#mIncomeSource .income-modal-form-card{
+  margin:0 0 12px !important;
   padding:14px !important;
-  margin-bottom:12px !important;
+  border-radius:22px !important;
+  background:rgba(248,250,255,.78) !important;
+  border:1px solid rgba(119,132,170,.10) !important;
+  box-shadow:0 10px 24px rgba(30,40,90,.045) !important;
 }
 
 #mIncomeSource .income-modal-grid{
   display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:10px !important;
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+  margin:0 !important;
 }
 
 #mIncomeSource .form-group{
   margin:0 0 12px !important;
+  min-width:0 !important;
 }
 
 #mIncomeSource .income-modal-form-card .form-group:last-child,
-#mIncomeSource .income-full-row:last-child{
+#mIncomeSource .income-modal-grid:last-child .form-group:last-child{
   margin-bottom:0 !important;
 }
 
-#mIncomeSource .form-group input,
-#mIncomeSource .form-group select{
+#mIncomeSource label{
+  display:block !important;
+  margin:0 0 7px !important;
+  color:#7a86a0 !important;
+  font-size:10.5px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:.09em !important;
+  text-transform:uppercase !important;
+}
+
+#mIncomeSource input,
+#mIncomeSource textarea{
   width:100% !important;
-  height:48px !important;
-  border:1px solid rgba(119,132,170,.14) !important;
+  min-width:0 !important;
+  height:52px !important;
+  border:1px solid rgba(119,132,170,.12) !important;
   border-radius:17px !important;
-  background:#f7f9ff !important;
-  color:#20283a !important;
+  background:#fff !important;
+  color:#111827 !important;
+  padding:0 14px !important;
   font-size:14px !important;
   font-weight:850 !important;
-  padding:0 13px !important;
   outline:0 !important;
   box-shadow:none !important;
 }
 
-#mIncomeSource .form-group select{
-  padding-right:30px !important;
-}
-
-#mIncomeSource .form-group input:focus,
-#mIncomeSource .form-group select:focus{
-  background:#fff !important;
+#mIncomeSource input:focus,
+#mIncomeSource textarea:focus{
   border-color:rgba(101,71,246,.42) !important;
   box-shadow:0 0 0 4px rgba(101,71,246,.10) !important;
 }
 
-#mIncomeSource .income-modal-options{
+#mIncomeSource textarea{
+  min-height:54px !important;
+  height:auto !important;
+  padding:15px 14px !important;
+  resize:none !important;
+}
+
+/* Hide real native selects completely. JS still reads/writes their value. */
+#mIncomeSource select.income-native-select,
+#mIncomeSource select#fISCategory,
+#mIncomeSource select#fISType,
+#mIncomeSource select#fISRestriction,
+#mIncomeSource select#fISRestrictedCategory{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  min-width:1px !important;
+  min-height:1px !important;
+  max-width:1px !important;
+  max-height:1px !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  overflow:hidden !important;
+  clip:rect(0 0 0 0) !important;
+  clip-path:inset(50%) !important;
+  white-space:nowrap !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+}
+
+#mIncomeSource .income-custom-picker{
+  position:relative !important;
+  width:100% !important;
+  z-index:1 !important;
+}
+
+#mIncomeSource .income-custom-picker.is-open{
+  z-index:50 !important;
+}
+
+#mIncomeSource .income-picker-trigger{
+  width:100% !important;
+  min-height:54px !important;
+  padding:10px 12px !important;
   display:grid !important;
-  gap:9px !important;
-  padding:12px !important;
-  margin:0 0 12px !important;
+  grid-template-columns:34px minmax(0,1fr) 28px !important;
+  align-items:center !important;
+  gap:10px !important;
+  border:1px solid rgba(119,132,170,.12) !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  color:#111827 !important;
+  box-shadow:0 8px 18px rgba(30,40,90,.035) !important;
+}
+
+#mIncomeSource .income-picker-icon{
+  width:34px !important;
+  height:34px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:13px !important;
+  background:#f0ecff !important;
+  font-size:17px !important;
+}
+
+#mIncomeSource .income-picker-copy{
+  min-width:0 !important;
+  display:grid !important;
+  gap:2px !important;
+  text-align:left !important;
+}
+
+#mIncomeSource .income-picker-title{
+  display:block !important;
+  color:#111827 !important;
+  font-size:14px !important;
+  line-height:1.15 !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+#mIncomeSource .income-picker-desc{
+  display:block !important;
+  color:#7b86a0 !important;
+  font-size:10.5px !important;
+  line-height:1.15 !important;
+  font-weight:750 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+#mIncomeSource .income-picker-chevron{
+  width:28px !important;
+  height:28px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  background:#f0ecff !important;
+  color:#6547f6 !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+}
+
+#mIncomeSource .income-picker-menu{
+  position:static !important;
+  display:none !important;
+  width:100% !important;
+  max-height:260px !important;
+  margin-top:8px !important;
+  padding:8px !important;
+  overflow-y:auto !important;
+  border-radius:20px !important;
+  background:#fff !important;
+  border:1px solid rgba(119,132,170,.12) !important;
+  box-shadow:0 18px 44px rgba(15,23,42,.13) !important;
+}
+
+#mIncomeSource .income-custom-picker.is-open .income-picker-menu{
+  display:grid !important;
+  gap:7px !important;
+}
+
+#mIncomeSource .income-picker-option{
+  width:100% !important;
+  min-height:48px !important;
+  padding:8px 10px !important;
+  display:grid !important;
+  grid-template-columns:32px minmax(0,1fr) !important;
+  gap:10px !important;
+  align-items:center !important;
+  border:1px solid rgba(119,132,170,.08) !important;
+  border-radius:16px !important;
+  background:#f8faff !important;
+  color:#111827 !important;
+  text-align:left !important;
+}
+
+#mIncomeSource .income-picker-option.active{
+  background:linear-gradient(135deg,rgba(101,71,246,.12),rgba(255,255,255,.95)) !important;
+  border-color:rgba(101,71,246,.20) !important;
+}
+
+#mIncomeSource .income-picker-option > span:first-child{
+  width:32px !important;
+  height:32px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:12px !important;
+  background:#f0ecff !important;
+}
+
+#mIncomeSource .income-picker-option strong{
+  display:block !important;
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  line-height:1.1 !important;
+}
+
+#mIncomeSource .income-picker-option small{
+  display:block !important;
+  margin-top:3px !important;
+  color:#7b86a0 !important;
+  font-size:10.5px !important;
+  font-weight:750 !important;
+  line-height:1.15 !important;
 }
 
 #mIncomeSource .income-option-card{
-  position:relative !important;
   display:grid !important;
-  grid-template-columns:42px minmax(0,1fr) !important;
-  align-items:center !important;
+  grid-template-columns:22px 28px minmax(0,1fr) !important;
   gap:10px !important;
-  min-height:64px !important;
-  padding:10px 12px !important;
-  border-radius:20px !important;
-  background:#f7f9ff !important;
-  border:1px solid rgba(119,132,170,.10) !important;
-  cursor:pointer !important;
-  transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+  align-items:center !important;
+  margin:0 0 8px !important;
+  padding:10px !important;
+  border-radius:17px !important;
+  background:#fff !important;
+  border:1px solid rgba(119,132,170,.08) !important;
 }
 
-#mIncomeSource .income-option-card:active{
-  transform:scale(.99) !important;
+#mIncomeSource .income-option-card:last-child{
+  margin-bottom:0 !important;
 }
 
 #mIncomeSource .income-option-card input{
-  position:absolute !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-
-#mIncomeSource .income-option-icon{
-  width:42px !important;
-  height:42px !important;
-  border-radius:16px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  background:#fff !important;
-  box-shadow:0 8px 18px rgba(30,40,90,.055) !important;
-  font-size:19px !important;
+  width:18px !important;
+  height:18px !important;
+  min-width:18px !important;
+  accent-color:#6547f6 !important;
 }
 
 #mIncomeSource .income-option-copy strong{
   display:block !important;
-  color:var(--income-ink) !important;
-  font-size:14px !important;
-  line-height:1.1 !important;
+  color:#111827 !important;
+  font-size:12px !important;
   font-weight:950 !important;
 }
 
 #mIncomeSource .income-option-copy small{
   display:block !important;
-  margin-top:4px !important;
-  color:#7b86a2 !important;
-  font-size:11px !important;
-  line-height:1.25 !important;
+  color:#7b86a0 !important;
+  font-size:10px !important;
+  line-height:1.2 !important;
   font-weight:750 !important;
 }
 
-#mIncomeSource .income-option-card:has(input:checked){
-  background:linear-gradient(135deg,rgba(101,71,246,.10),rgba(34,201,133,.08)) !important;
-  border-color:rgba(101,71,246,.30) !important;
-  box-shadow:0 10px 26px rgba(101,71,246,.08) !important;
-}
-
-#mIncomeSource .income-option-card:has(input:checked)::after{
-  content:'✓' !important;
-  position:absolute !important;
-  right:12px !important;
-  top:12px !important;
-  width:22px !important;
-  height:22px !important;
-  border-radius:999px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  background:var(--income-purple) !important;
-  color:white !important;
-  font-size:13px !important;
-  font-weight:950 !important;
-}
-
-#mIncomeSource .income-notes-card{
-  margin-bottom:86px !important;
-}
-
-#mIncomeSource .income-modal-actions{
-  position:sticky !important;
-  left:0 !important;
-  right:0 !important;
-  bottom:0 !important;
-  z-index:6 !important;
-  margin:0 -16px calc(-18px - env(safe-area-inset-bottom)) !important;
-  padding:12px 16px calc(16px + env(safe-area-inset-bottom)) !important;
-  background:linear-gradient(180deg,rgba(248,250,255,0),rgba(248,250,255,.96) 28%,rgba(248,250,255,.98)) !important;
-  backdrop-filter:blur(14px) !important;
-  -webkit-backdrop-filter:blur(14px) !important;
-}
-
-#mIncomeSource .income-save-btn{
-  height:54px !important;
+#mIncomeSource #btnIncomeSource{
+  width:100% !important;
+  min-height:56px !important;
+  border:0 !important;
   border-radius:18px !important;
-  background:linear-gradient(135deg,#2d1a85,#704fff) !important;
-  color:white !important;
+  background:linear-gradient(135deg,#6547f6,#7c5cff) !important;
+  color:#fff !important;
+  box-shadow:0 16px 34px rgba(101,71,246,.24) !important;
   font-size:15px !important;
   font-weight:950 !important;
-  box-shadow:0 16px 34px rgba(101,71,246,.28) !important;
 }
 
-@media (min-width:768px){
-  #mIncomeSource.modal-overlay{
+@media (min-width:769px){
+  #mIncomeSource.income-source-overlay{
     align-items:center !important;
     padding:24px !important;
   }
 
   #mIncomeSource .income-source-modal{
-    border-radius:32px !important;
+    border-radius:30px !important;
     max-width:560px !important;
-    padding:18px 20px 22px !important;
-    transform:translateY(16px) scale(.98) !important;
-  }
-
-  #mIncomeSource.active .income-source-modal{
-    transform:translateY(0) scale(1) !important;
-  }
-
-  #mIncomeSource .income-source-modal::before{
-    display:none !important;
-  }
-
-  #mIncomeSource .income-modal-actions{
-    margin:0 !important;
-    padding:8px 0 0 !important;
-    position:static !important;
-    background:transparent !important;
-    backdrop-filter:none !important;
-  }
-
-  #mIncomeSource .income-notes-card{
-    margin-bottom:12px !important;
-  }
-}
-
-@media (max-width:390px){
-  #mIncomeSource .income-source-modal{
-    padding-left:14px !important;
-    padding-right:14px !important;
   }
 
   #mIncomeSource .income-modal-grid{
-    grid-template-columns:1fr !important;
-    gap:0 !important;
-  }
-
-  #mIncomeSource .income-modal-amount-input input{
-    font-size:30px !important;
-  }
-
-  #mIncomeSource .income-option-card{
-    min-height:58px !important;
-    padding:9px 10px !important;
+    grid-template-columns:1fr 1fr !important;
   }
 }
-
 
 /* ============================================================
-   INCOME MODAL — CUSTOM PICKERS V3
-   Native-select replacement with Quick Add style cards.
+   CAPVO — Income Sprint 2.1 Compact Final
+   Scope: CSS only. No auth/app/index changes.
+   Fixes: compact hero, remove duplicate donut, cleaner section rhythm,
+   Greek modal kicker, safer modal spacing.
    ============================================================ */
 
-body.modal-open .mobile-bottom-nav{
-  opacity:0 !important;
-  pointer-events:none !important;
-  transform:translateX(-50%) translateY(18px) scale(.98) !important;
-}
-
-#mIncomeSource .income-native-select{
-  display:none !important;
-}
-
-#mIncomeSource .form-group,
-#mIncomeSource .income-modal-grid{
-  overflow:visible !important;
-}
-
-#mIncomeSource .income-custom-picker{
-  position:relative;
-  width:100%;
-  z-index:4;
-}
-
-#mIncomeSource .income-custom-picker.is-open{
-  z-index:40;
-}
-
-#mIncomeSource .income-picker-trigger{
-  width:100%;
-  min-height:48px;
-  border:1px solid rgba(119,132,170,.16);
-  border-radius:16px;
-  background:#f7f9ff;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:8px 11px;
-  color:var(--income-ink);
-  text-align:left;
-  cursor:pointer;
-  font:inherit;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
-  transition:border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
-}
-
-#mIncomeSource .income-picker-trigger:active{
-  transform:scale(.99);
-}
-
-#mIncomeSource .income-custom-picker.is-open .income-picker-trigger{
-  border-color:rgba(101,71,246,.42);
-  background:#fff;
-  box-shadow:0 12px 26px rgba(101,71,246,.10);
-}
-
-#mIncomeSource .income-picker-icon{
-  width:34px;
-  height:34px;
-  border-radius:13px;
-  background:linear-gradient(135deg,#f1ecff,#eef4ff);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 34px;
-  font-size:17px;
-}
-
-#mIncomeSource .income-picker-copy{
-  min-width:0;
-  display:grid;
-  gap:1px;
-  flex:1;
-}
-
-#mIncomeSource .income-picker-title{
-  font-size:14px;
-  line-height:1.05;
-  font-weight:950;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#mIncomeSource .income-picker-desc{
-  color:#7f8aa7;
-  font-size:10px;
-  line-height:1.15;
-  font-weight:850;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#mIncomeSource .income-picker-chevron{
-  color:var(--income-purple);
-  font-size:15px;
-  font-weight:950;
-  transform:translateY(-1px);
-}
-
-#mIncomeSource .income-custom-picker.is-open .income-picker-chevron{
-  transform:rotate(180deg);
-}
-
-#mIncomeSource .income-picker-menu{
-  display:none;
-  position:absolute;
-  top:calc(100% + 8px);
-  left:0;
-  width:min(330px, calc(100vw - 52px));
-  max-height:250px;
-  overflow:auto;
-  padding:10px;
-  border-radius:20px;
-  background:rgba(255,255,255,.98);
-  border:1px solid rgba(147,132,255,.18);
-  box-shadow:0 24px 58px rgba(15,23,42,.18);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-}
-
-#mIncomeSource .income-custom-picker.is-open .income-picker-menu{
-  display:grid;
-}
-
-#mIncomeSource .income-picker-option{
-  min-height:52px;
-  padding:9px 10px;
-  border:0;
-  border-radius:16px;
-  background:#f4f6fb;
-  color:var(--income-ink);
-  display:flex;
-  align-items:center;
-  gap:8px;
-  text-align:left;
-  cursor:pointer;
-  font:inherit;
-  transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
-}
-
-#mIncomeSource .income-picker-option:active{
-  transform:scale(.98);
-}
-
-#mIncomeSource .income-picker-option.active{
-  background:linear-gradient(135deg,rgba(101,71,246,.16),rgba(124,92,255,.08));
-  box-shadow:inset 0 0 0 1px rgba(101,71,246,.22);
-}
-
-#mIncomeSource .income-picker-option > span:first-child{
-  width:30px;
-  height:30px;
-  border-radius:12px;
-  background:rgba(255,255,255,.78);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 30px;
-}
-
-#mIncomeSource .income-picker-option > span:last-child{
-  min-width:0;
-  display:grid;
-  gap:1px;
-}
-
-#mIncomeSource .income-picker-option strong{
-  font-size:12px;
-  line-height:1.1;
-  font-weight:950;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#mIncomeSource .income-picker-option small{
-  color:#7f8aa7;
-  font-size:9px;
-  line-height:1.1;
-  font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#mIncomeSource .income-modal-grid .form-group:nth-child(2) .income-picker-menu{
-  right:0;
-  left:auto;
-}
-
-@media (max-width: 430px){
-  #mIncomeSource .income-picker-menu{
-    width:min(312px, calc(100vw - 44px));
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    max-height:238px;
+@media (max-width: 768px){
+  /* Page rhythm */
+  #vIncome .page-grid{
+    gap:12px !important;
+    padding-top:10px !important;
+    padding-bottom:calc(140px + env(safe-area-inset-bottom)) !important;
   }
 
-  #mIncomeSource .income-picker-option{
-    min-height:49px;
-    padding:8px;
+  /* Compact hero: less height, less visual weight */
+  #vIncome .page-hero{
+    min-height:150px !important;
+    padding:20px 18px !important;
+    border-radius:28px !important;
+    align-items:flex-start !important;
+    gap:12px !important;
+    box-shadow:0 14px 34px rgba(30,40,90,.06) !important;
   }
 
-  #mIncomeSource .income-picker-option strong{
-    font-size:11px;
+  #vIncome .page-hero > div{
+    max-width:68% !important;
   }
 
-  #mIncomeSource .income-picker-option small{
-    font-size:8.5px;
+  #vIncome .page-hero::before{
+    opacity:.30 !important;
+    background-size:30px 30px !important;
+  }
+
+  #vIncome .page-hero::after{
+    right:18px !important;
+    top:34px !important;
+    width:72px !important;
+    height:72px !important;
+    border-radius:24px !important;
+    font-size:38px !important;
+    box-shadow:0 16px 34px rgba(101,71,246,.20) !important;
+  }
+
+  #vIncome .page-hero .eyebrow{
+    margin-bottom:8px !important;
+    font-size:10px !important;
+    letter-spacing:.15em !important;
+  }
+
+  #vIncome .page-hero h2{
+    max-width:220px !important;
+    font-size:24px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.06em !important;
+  }
+
+  #vIncome .page-hero p{
+    max-width:210px !important;
+    margin-top:8px !important;
+    font-size:11.5px !important;
+    line-height:1.35 !important;
+    display:-webkit-box !important;
+    -webkit-line-clamp:2 !important;
+    -webkit-box-orient:vertical !important;
+    overflow:hidden !important;
+  }
+
+  #vIncome .page-hero .primary-add{
+    position:absolute !important;
+    left:18px !important;
+    bottom:18px !important;
+    min-width:88px !important;
+    height:38px !important;
+    padding:0 14px !important;
+    border-radius:14px !important;
+    font-size:12px !important;
+    box-shadow:0 12px 24px rgba(101,71,246,.20) !important;
+  }
+
+  /* Summary cards tighter */
+  #vIncome .income-summary-grid{
+    gap:10px !important;
+    margin-top:2px !important;
+  }
+
+  #vIncome .income-summary-card{
+    min-height:92px !important;
+    padding:14px 10px !important;
+    border-radius:22px !important;
+  }
+
+  #vIncome .income-summary-card::before{
+    width:28px !important;
+    height:28px !important;
+    margin-bottom:8px !important;
+    font-size:15px !important;
+  }
+
+  #vIncome .income-summary-card .stat-label{
+    font-size:9.5px !important;
+    letter-spacing:.09em !important;
+  }
+
+  #vIncome .income-summary-card .stat-value{
+    margin-top:6px !important;
+    font-size:16px !important;
+  }
+
+  /* Remove duplicate income distribution donut for now.
+     Income sources list is more useful and already shows the same data. */
+  #vIncome .chart-container{
+    display:none !important;
+  }
+
+  /* Make income source section the main content */
+  #vIncome .list-widget{
+    margin-top:2px !important;
+    padding:18px 14px 14px !important;
+    border-radius:28px !important;
+    background:rgba(255,255,255,.94) !important;
+    box-shadow:0 16px 38px rgba(30,40,90,.065) !important;
+  }
+
+  #vIncome .list-widget .section-header,
+  #vIncome .list-widget .modern-list-header{
+    align-items:center !important;
+    gap:10px !important;
+    margin-bottom:12px !important;
+  }
+
+  #vIncome .list-widget .section-title{
+    font-size:21px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.055em !important;
+  }
+
+  #vIncome #incomeCount{
+    display:inline-flex !important;
+    min-height:24px !important;
+    align-items:center !important;
+    padding:0 9px !important;
+    border-radius:999px !important;
+    background:rgba(101,71,246,.10) !important;
+    color:#6547f6 !important;
+    font-size:11px !important;
+    font-weight:950 !important;
+  }
+
+  #vIncome .list-widget .section-add{
+    min-height:36px !important;
+    padding:0 12px !important;
+    border-radius:14px !important;
+    font-size:12px !important;
+  }
+
+  /* Income rows: slightly cleaner/tighter */
+  #vIncome .income-source-card,
+  #vIncome .income-source-row{
+    min-height:66px !important;
+    padding:12px !important;
+    border-radius:20px !important;
+  }
+
+  /* Modal top: remove English feel */
+  #mIncomeSource .income-modal-hero{
+    padding-top:4px !important;
+    margin-top:0 !important;
+  }
+
+  #mIncomeSource .income-modal-kicker{
+    font-size:0 !important;
+    line-height:1 !important;
+    margin-bottom:7px !important;
+  }
+
+  #mIncomeSource .income-modal-kicker::after{
+    content:'ΠΗΓΗ ΕΙΣΟΔΗΜΑΤΟΣ' !important;
+    display:block !important;
+    color:#6547f6 !important;
+    font-size:10px !important;
+    line-height:1 !important;
+    font-weight:950 !important;
+    letter-spacing:.16em !important;
+    text-transform:uppercase !important;
+  }
+
+  #mIncomeSource .income-modal-icon{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    border-radius:14px !important;
+    font-size:17px !important;
+  }
+
+  #mIncomeSource .income-modal-heading h2{
+    font-size:22px !important;
+    line-height:1 !important;
+    letter-spacing:-.055em !important;
+  }
+
+  #mIncomeSource .income-modal-heading p{
+    margin-top:8px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  #mIncomeSource .income-source-modal{
+    max-height:min(88vh,760px) !important;
+  }
+}
+
+@media (min-width: 769px){
+  /* Desktop/tablet: keep list-first logic, but do not remove data from JS. */
+  #vIncome .page-hero{
+    min-height:188px !important;
+  }
+
+  #vIncome .page-hero::after{
+    width:96px !important;
+    height:96px !important;
+    font-size:52px !important;
+  }
+
+  #vIncome .chart-container{
+    display:none !important;
+  }
+
+  #mIncomeSource .income-modal-kicker{
+    font-size:0 !important;
+  }
+
+  #mIncomeSource .income-modal-kicker::after{
+    content:'ΠΗΓΗ ΕΙΣΟΔΗΜΑΤΟΣ' !important;
+    font-size:11px !important;
+    color:#6547f6 !important;
+    font-weight:950 !important;
+    letter-spacing:.16em !important;
+  }
+}
+
+/* ============================================================
+   CAPVO — Income Sprint 2.1 Layout Fix v2
+   Fixes visible issues from mobile QA:
+   - Hero title/button no longer collide.
+   - Income sources header/count/add spacing fixed.
+   - Modal kicker is Greek and no old English text leaks.
+   CSS only. No auth/app/index changes.
+   ============================================================ */
+
+@media (max-width: 768px){
+  /* Hero: compact but readable */
+  #vIncome .page-hero{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 76px !important;
+    grid-template-rows:auto auto !important;
+    min-height:140px !important;
+    padding:18px !important;
+    align-items:start !important;
+    column-gap:12px !important;
+    row-gap:10px !important;
+  }
+
+  #vIncome .page-hero > div{
+    grid-column:1 / 2 !important;
+    grid-row:1 / 2 !important;
+    max-width:none !important;
+    min-width:0 !important;
+    padding-right:0 !important;
+  }
+
+  #vIncome .page-hero::after{
+    right:18px !important;
+    top:28px !important;
+    width:70px !important;
+    height:70px !important;
+    border-radius:23px !important;
+    font-size:36px !important;
+  }
+
+  #vIncome .page-hero h2{
+    max-width:190px !important;
+    font-size:22px !important;
+    line-height:1.03 !important;
+    letter-spacing:-.055em !important;
+  }
+
+  #vIncome .page-hero p{
+    display:none !important;
+  }
+
+  #vIncome .page-hero .primary-add{
+    grid-column:1 / 2 !important;
+    grid-row:2 / 3 !important;
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    top:auto !important;
+    width:max-content !important;
+    min-width:92px !important;
+    height:36px !important;
+    margin:0 !important;
+    padding:0 14px !important;
+    z-index:3 !important;
+  }
+
+  /* Income sources section header */
+  #vIncome .list-widget .section-header,
+  #vIncome .list-widget .modern-list-header{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:start !important;
+    gap:10px !important;
+    margin-bottom:14px !important;
+  }
+
+  #vIncome .list-widget .section-title-wrap{
+    display:flex !important;
+    align-items:flex-start !important;
+    gap:0 !important;
+    min-width:0 !important;
+  }
+
+  #vIncome .list-widget .section-dot{
+    display:none !important;
+  }
+
+  #vIncome .list-widget .section-title-wrap > div{
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  #vIncome .list-widget .section-title{
+    max-width:170px !important;
+    font-size:20px !important;
+    line-height:1.02 !important;
+    letter-spacing:-.055em !important;
+    white-space:normal !important;
+    overflow:visible !important;
+  }
+
+  #vIncome #incomeCount{
+    width:max-content !important;
+    max-width:100% !important;
+    margin-top:7px !important;
+    display:inline-flex !important;
+    vertical-align:top !important;
+  }
+
+  #vIncome .list-widget .section-add{
+    justify-self:end !important;
+    align-self:start !important;
+    white-space:nowrap !important;
+    margin-top:0 !important;
+  }
+
+  /* Modal: force Greek kicker and hide old English text */
+  #mIncomeSource .income-modal-kicker{
+    position:relative !important;
+    height:13px !important;
+    min-height:13px !important;
+    margin:0 0 7px !important;
+    overflow:visible !important;
+    color:transparent !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    text-indent:-9999px !important;
+  }
+
+  #mIncomeSource .income-modal-kicker::after{
+    content:'ΠΗΓΗ ΕΙΣΟΔΗΜΑΤΟΣ' !important;
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+    text-indent:0 !important;
+    color:#6547f6 !important;
+    font-size:10px !important;
+    line-height:1 !important;
+    font-weight:950 !important;
+    letter-spacing:.16em !important;
+    text-transform:uppercase !important;
+    white-space:nowrap !important;
+  }
+}
+
+@media (min-width: 769px){
+  #mIncomeSource .income-modal-kicker{
+    position:relative !important;
+    height:14px !important;
+    color:transparent !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    text-indent:-9999px !important;
+    overflow:visible !important;
+  }
+
+  #mIncomeSource .income-modal-kicker::after{
+    content:'ΠΗΓΗ ΕΙΣΟΔΗΜΑΤΟΣ' !important;
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+    text-indent:0 !important;
+    color:#6547f6 !important;
+    font-size:11px !important;
+    line-height:1 !important;
+    font-weight:950 !important;
+    letter-spacing:.16em !important;
+    text-transform:uppercase !important;
   }
 }

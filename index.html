@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CAPVO</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: mobile-first -->
   <link rel="stylesheet" href="css/variables.css">
@@ -17,7 +20,7 @@
   <link rel="stylesheet" href="css/expense-hero-mobile-v3-clean.css">
   <link rel="stylesheet" href="css/expense-hero-mobile-nav-v7.css">
   <link rel="stylesheet" href="css/expense-hero-quickadd-role-split-v1.css">
-  <link rel="stylesheet" href="css/expense-hero-income-page-v1.css">
+  <link rel="stylesheet" href="css/expense-hero-income-page-v1.css?v=2">
   <link rel="stylesheet" href="css/expense-hero-reports-page-v1.css">
   <link rel="stylesheet" href="css/expense-hero-debt-planner-v1.css">
   <link rel="stylesheet" href="css/expense-hero-advisor-page-v1.css">
@@ -29,6 +32,9 @@
   <link rel="stylesheet" href="css/transactions-complete-v3.css">
   <link rel="stylesheet" href="css/transactions-mobile-final-v7.css">
   <link rel="stylesheet" href="css/transactions-mobile-final-stable-v25.css">
+  <link rel="stylesheet" href="css/capvo-branding-v1.css?v=2">
+  <link rel="stylesheet" href="css/capvo-telegram-wizard-v1.css?v=3">
+  <link rel="stylesheet" href="css/capvo-transactions-redesign-v1.css?v=1">
   <!-- Fallback: αφαιρέσετε μόλις επαληθεύσετε τα πάντα -->
   <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
@@ -83,65 +89,92 @@
     </div>
 
     <!-- STEP 2: TELEGRAM LINK -->
-    <div id="telegramLinkBox" class="capvo-telegram-state" style="display:none">
-      <div class="auth-user-box capvo-user-box" id="authUserBox"></div>
+    <div id="telegramLinkBox" class="capvo-telegram-state capvo-telegram-wizard capvo-telegram-wizard-v2" style="display:none">
+      <div class="auth-user-box capvo-user-box capvo-wizard-user" id="authUserBox"></div>
 
-      <section class="capvo-login-hero capvo-telegram-hero">
+      <section class="capvo-wizard-hero capvo-wizard-hero-compact" aria-label="Telegram setup">
         <span class="capvo-kicker">Telegram Sync</span>
         <h2>Σύνδεσε το Telegram σου.</h2>
         <p>
-          Κάνε μία γρήγορη επιβεβαίωση για να περνάς έξοδα στέλνοντας απλά μηνύματα στο bot.
+          Άνοιξε το bot, στείλε /code και βάλε εδώ τα στοιχεία που θα σου επιστρέψει.
         </p>
       </section>
 
-      <div class="capvo-steps-card">
-        <div class="capvo-step"><b>1</b><span>Άνοιξε το bot <small>@myexpense_hero_tracker_bot</small></span></div>
-        <div class="capvo-step"><b>2</b><span>Στείλε <code>/id</code> και <code>/code</code></span></div>
-        <div class="capvo-step"><b>3</b><span>Κάνε επιβεβαίωση εδώ</span></div>
+      <div class="capvo-wizard-flow capvo-wizard-flow-compact" aria-label="Βήματα σύνδεσης Telegram">
+        <div class="capvo-wizard-step is-active">
+          <b>1</b>
+          <div>
+            <strong>Άνοιξε το bot</strong>
+            <span>@myexpense_hero_tracker_bot</span>
+          </div>
+        </div>
+        <div class="capvo-wizard-step">
+          <b>2</b>
+          <div>
+            <strong>Στείλε /code</strong>
+            <span>Το bot θα σου δώσει Chat ID και κωδικό σύνδεσης.</span>
+          </div>
+        </div>
+        <div class="capvo-wizard-step">
+          <b>3</b>
+          <div>
+            <strong>Επιβεβαίωση</strong>
+            <span>Βάλε Chat ID και κωδικό και πάτα σύνδεση.</span>
+          </div>
+        </div>
       </div>
 
-      <form class="auth-form capvo-auth-form" onsubmit="saveTelegramChatId(event)">
-        <label for="chatIdInput">Telegram Chat ID</label>
-        <div class="auth-input-wrap capvo-input-wrap">
-          <span>#</span>
-          <input
-            type="text"
-            id="chatIdInput"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="π.χ. 123456789"
-          >
+      <a class="capvo-bot-open capvo-bot-open-main" href="https://t.me/myexpense_hero_tracker_bot" target="_blank" rel="noopener">
+        Άνοιγμα Telegram Bot
+        <span>↗</span>
+      </a>
+
+      <form class="auth-form capvo-auth-form capvo-wizard-form capvo-wizard-form-v2" onsubmit="saveTelegramChatId(event)">
+        <div class="capvo-field-group capvo-code-first">
+          <label for="telegramCodeInput">Κωδικός σύνδεσης</label>
+          <div class="auth-input-wrap capvo-input-wrap capvo-code-input-wrap">
+            <span>🔐</span>
+            <input
+              type="text"
+              id="telegramCodeInput"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="6"
+              placeholder="π.χ. 482913"
+            >
+          </div>
         </div>
 
-        <label for="telegramCodeInput">Κωδικός σύνδεσης</label>
-        <div class="auth-input-wrap capvo-input-wrap">
-          <span>🔐</span>
-          <input
-            type="text"
-            id="telegramCodeInput"
-            inputmode="numeric"
-            autocomplete="off"
-            maxlength="6"
-            placeholder="π.χ. 482913"
-          >
+        <div class="capvo-field-group capvo-chatid-field">
+          <label for="chatIdInput">Telegram Chat ID</label>
+          <div class="auth-input-wrap capvo-input-wrap">
+            <span>#</span>
+            <input
+              type="text"
+              id="chatIdInput"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="π.χ. 123456789"
+            >
+          </div>
+          <p class="capvo-field-hint">Το παίρνεις μαζί με τον κωδικό όταν στείλεις <code>/code</code> στο bot.</p>
         </div>
 
-        <button type="submit" class="auth-submit capvo-google-btn" id="authSubmitBtn">
+        <button type="submit" class="auth-submit capvo-google-btn capvo-wizard-submit" id="authSubmitBtn">
           Σύνδεση Telegram
         </button>
       </form>
 
-      <div class="auth-help auth-compact-help capvo-help-card">
-        <div class="auth-help-title">Χρήσιμες εντολές</div>
-        <p>
-          <code>/id</code> για Chat ID, <code>/code</code> για κωδικό και <code>/help</code> για όλες τις οδηγίες.
-        </p>
-        <a class="auth-telegram-btn full capvo-secondary-btn" href="https://t.me/myexpense_hero_tracker_bot" target="_blank" rel="noopener">
-          Άνοιγμα Telegram Bot
-        </a>
+      <div class="capvo-command-strip capvo-command-strip-v3" aria-label="Γρήγορες εντολές">
+        <button type="button" onclick="copyTelegramCommand('/code')"><code>/code</code><span>Chat ID + Κωδικός</span></button>
+        <button type="button" onclick="copyTelegramCommand('/help')"><code>/help</code><span>Οδηγίες</span></button>
       </div>
 
-      <button type="button" class="auth-logout-btn auth-logout-card-btn capvo-logout-btn" onclick="signOutUser()">
+      <div class="capvo-wizard-note capvo-wizard-note-v2">
+        Μετά τη σύνδεση στέλνεις απλά έξοδα όπως <code>καφές 3</code> ή <code>βενζίνη 20</code>.
+      </div>
+
+      <button type="button" class="auth-logout-btn auth-logout-card-btn capvo-logout-btn capvo-wizard-logout" onclick="signOutUser()">
         Αποσύνδεση Google
       </button>
     </div>
@@ -152,13 +185,7 @@
 <!-- DESKTOP SIDEBAR NAVIGATION -->
 <aside class="desktop-sidebar" aria-label="Κύρια πλοήγηση">
   <div class="desktop-sidebar-brand">
-    <div class="desktop-sidebar-logo">
-      <svg viewBox="0 0 24 24">
-        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-        <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-        <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
-      </svg>
-    </div>
+    <div class="desktop-sidebar-logo capvo-brand-mark"><img src="assets/capvo-mark.png" alt="CAPVO"></div>
     <div>
       <strong>CAPVO</strong>
       <span>Track. Understand. Control.</span>
@@ -220,16 +247,10 @@
   <!-- HEADER -->
   <header class="header">
     <div class="header-left">
-      <div class="header-icon">
-        <svg viewBox="0 0 24 24">
-          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-          <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
-        </svg>
-      </div>
+      <div class="header-icon capvo-header-mark"><img src="assets/capvo-mark.png" alt="CAPVO"></div>
       <div>
         <h1>CAPVO</h1>
-        <p>Future Bento Dashboard</p>
+        <p>Track. Understand. Control.</p>
       </div>
     </div>
 
@@ -252,6 +273,7 @@
       <section class="modern-dashboard-main">
         <div class="modern-dashboard-topline">
           <div>
+            <div class="capvo-section-brand"><img src="assets/capvo-mark.png" alt=""><span>CAPVO Dashboard</span></div>
             <div class="modern-kicker">Money overview</div>
             <h2>Η οικονομική εικόνα σου</h2>
             <p>Μηνιαίο budget, έξοδα και καθαρή οικονομική εικόνα σε ένα dashboard.</p>
@@ -435,24 +457,28 @@
   <main class="view" id="vTransactions">
     <section class="page-grid transactions-page">
 
-      <div class="page-hero bento-card transactions-hero compact-transactions-hero transactions-hero-clean">
+      <div class="page-hero bento-card transactions-hero compact-transactions-hero transactions-hero-clean capvo-branded-hero capvo-hero-transactions">
         <div>
           <div class="eyebrow">Transactions</div>
-          <h2>Κινήσεις & Έξοδα</h2>
-          <p>Αναζήτησε, φίλτραρε και διαχειρίσου τις καθημερινές κινήσεις σου.</p>
+          <h2>Κινήσεις</h2>
+          <p>Οι καθημερινές κινήσεις σου καθαρά, ανά ημέρα και κατηγορία.</p>
         </div>
+
+        <button type="button" class="transactions-add-btn" onclick="(window.openAddCenterSheet?openAddCenterSheet('manual'):openModal('daily'))">
+          + Κίνηση
+        </button>
       </div>
 
       <div class="mobile-transactions-tools" aria-label="Φίλτρα κινήσεων">
         <label class="mobile-transaction-search">
           <span>⌕</span>
-          <input id="mobileTransactionSearch" type="search" placeholder="Αναζήτηση κινήσεων..." oninput="renderDailyList();">
+          <input id="mobileTransactionSearch" type="search" placeholder="Ψάξε όνομα, κατηγορία ή πληρωμή..." oninput="renderDailyList();">
         </label>
         <div class="mobile-transaction-chips">
           <button type="button" class="mobile-transaction-chip active" data-mobile-transaction-filter="all" onclick="setMobileTransactionFilter('all')">Όλα</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="expense" onclick="setMobileTransactionFilter('expense')">Έξοδα</button>
           <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="today" onclick="setMobileTransactionFilter('today')">Σήμερα</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">7 ημέρες</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">Εβδομάδα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="month" onclick="setMobileTransactionFilter('month')">Μήνας</button>
         </div>
       </div>
 
@@ -472,23 +498,49 @@
         <div class="expense-list" id="lDaily"></div>
       </section>
 
-      <section class="bento-card list-widget fixed-list-widget transactions-list-card">
-        <div class="section-header modern-list-header">
+
+    </section>
+  </main>
+
+<!-- RECURRING / FIXED EXPENSES -->
+  <main class="view" id="vRecurring">
+    <section class="page-grid recurring-page">
+
+      <div class="page-hero bento-card recurring-hero capvo-branded-hero capvo-hero-recurring">
+        <div>
+          <div class="eyebrow">Recurring</div>
+          <h2>Πάγια & Υποχρεώσεις</h2>
+          <p>Σταθερά έξοδα, συνδρομές και μηνιαίες υποχρεώσεις σε ξεχωριστό σημείο.</p>
+        </div>
+
+        <button type="button" class="recurring-add-btn" onclick="openModal('fixed')">
+          + Πάγιο
+        </button>
+      </div>
+
+      <section class="bento-card list-widget recurring-list-card">
+        <div class="section-header modern-list-header recurring-list-head">
           <div class="section-title-wrap">
             <div class="section-dot red-dot"></div>
             <div>
-              <div class="section-title">Πάγια έξοδα</div>
+              <div class="section-title">Σταθερές υποχρεώσεις</div>
               <div class="section-subtitle">
-                <span class="global-badge">🔒 Σταθερά</span>
+                <span class="global-badge">🔒 Επαναλαμβανόμενα</span>
                 <span id="cFixed"></span>
               </div>
             </div>
           </div>
 
-          <button class="section-add" onclick="openModal('fixed')">+ Προσθήκη</button>
+          <button class="section-add recurring-inline-add" onclick="openModal('fixed')">+ Προσθήκη</button>
         </div>
 
         <div class="expense-list" id="lFixed"></div>
+      </section>
+
+      <section class="bento-card recurring-info-card">
+        <span>Tip</span>
+        <strong>Οι ημερήσιες κινήσεις μένουν καθαρές.</strong>
+        <p>Τα πάγια υπολογίζονται κανονικά στο budget και στο υπόλοιπο του μήνα, αλλά εμφανίζονται εδώ για να μην μπερδεύονται με τις καθημερινές αγορές.</p>
       </section>
 
     </section>
@@ -498,9 +550,9 @@
 <main class="view" id="vIncome">
   <section class="page-grid">
 
-    <div class="page-hero bento-card">
+    <div class="page-hero bento-card capvo-branded-hero capvo-hero-income">
       <div>
-        <div class="eyebrow">Income planning</div>
+        <div class="eyebrow">INCOME</div>
         <h2>Έσοδα & Πηγές εισοδήματος</h2>
         <p>Δες από πού έρχεται το εισόδημά σου και ποιο ποσό μπαίνει πραγματικά στο μηνιαίο budget.</p>
       </div>
@@ -512,28 +564,29 @@
 
     <div class="income-summary-grid">
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Σύνολο εσόδων</div>
+        <div class="stat-label">Συνολικό εισόδημα</div>
         <div class="stat-value teal" id="incomeTotalBox">€0</div>
       </div>
 
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Μπαίνει στο budget</div>
+        <div class="stat-label">Διαθέσιμο budget</div>
         <div class="stat-value blue" id="incomeBudgetBox">€0</div>
       </div>
 
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Αποταμίευση / locked</div>
+        <div class="stat-label">Εκτός χρήσης</div>
         <div class="stat-value amber" id="incomeSavingsBox">€0</div>
       </div>
 
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Περιορισμένη χρήση</div>
+        <div class="stat-label">Voucher / Ticket</div>
         <div class="stat-value red" id="incomeRestrictedBox">€0</div>
       </div>
     </div>
 
     <div class="chart-container">
       <div class="chart-title">Κατανομή εισοδήματος</div>
+      <p class="income-chart-subtitle">Δες τι μπαίνει στο budget και τι είναι περιορισμένης χρήσης.</p>
 
       <div class="donut-layout">
         <div class="donut-chart" id="incomeDonut">
@@ -569,9 +622,9 @@
   <!-- CARDS -->
   <main class="view" id="vCards">
     <section class="page-grid">
-      <div class="page-hero bento-card">
+      <div class="page-hero bento-card capvo-branded-hero capvo-hero-debt">
         <div>
-          <div class="eyebrow">Debt planner</div>
+          <div class="eyebrow">DEBT PLANNER</div>
           <h2>Πιστωτικές κάρτες & δάνεια</h2>
           <p>Η δόση εμφανίζεται αυτόματα στα πάγια και αφαιρείται από το υπόλοιπο.</p>
         </div>
@@ -587,9 +640,9 @@
   <!-- ADVISOR -->
   <main class="view" id="vAdvisor">
     <section class="page-grid">
-      <div class="page-hero bento-card advisor-page-hero">
+      <div class="page-hero bento-card advisor-page-hero capvo-branded-hero capvo-hero-advisor">
         <div>
-          <div class="eyebrow">Financial intelligence</div>
+          <div class="eyebrow">FINANCIAL INTELLIGENCE</div>
           <h2>Οικονομικός σύμβουλος</h2>
           <p>Ανάλυση budget, κανόνες οικονομικής υγείας και προτάσεις με βάση τα δεδομένα σου.</p>
         </div>
@@ -603,9 +656,9 @@
   <main class="view" id="vStats">
     <section class="reports-page">
 
-      <div class="page-hero bento-card reports-hero">
+      <div class="page-hero bento-card reports-hero capvo-branded-hero capvo-hero-reports">
         <div>
-          <div class="eyebrow">Reports & Analytics</div>
+          <div class="eyebrow">REPORTS & ANALYTICS</div>
           <h2>Στατιστικά & Αναφορές</h2>
           <p>Κατανόησε πού πηγαίνουν τα χρήματά σου και βρες ευκαιρίες εξοικονόμησης.</p>
         </div>
@@ -696,9 +749,9 @@
   <!-- ARCHIVE -->
   <main class="view" id="vArchive">
     <section class="page-grid">
-      <div class="page-hero bento-card">
+      <div class="page-hero bento-card capvo-branded-hero capvo-hero-archive">
         <div>
-          <div class="eyebrow">History</div>
+          <div class="eyebrow">HISTORY</div>
           <h2>Αρχείο μηνών</h2>
           <p>Δες προηγούμενους μήνες και σύγκρινε έξοδα / υπόλοιπα.</p>
         </div>
@@ -712,9 +765,9 @@
   <main class="view" id="vSettings">
     <section class="settings-page page-grid">
 
-      <div class="settings-hero page-hero bento-card">
+      <div class="settings-hero page-hero bento-card capvo-branded-hero capvo-hero-settings">
         <div>
-          <div class="eyebrow">Settings</div>
+          <div class="eyebrow">SETTINGS</div>
           <h2>Ρυθμίσεις & λογαριασμός</h2>
           <p>Διαχειρίσου το Telegram, τα αντίγραφα ασφαλείας και τη σύνδεσή σου.</p>
         </div>
@@ -812,7 +865,7 @@
           <div>
             <span class="settings-kicker">Overview</span>
             <h3>Σύνοψη εφαρμογής</h3>
-            <p>Γρήγορη εικόνα για τα δεδομένα που υπάρχουν στο Expense Hero.</p>
+            <p>Γρήγορη εικόνα για τα δεδομένα που υπάρχουν στο CAPVO.</p>
           </div>
         </div>
 
@@ -872,10 +925,11 @@
         </div>
       </section>
 
-      <section class="settings-footer-card" aria-label="Πληροφορίες εφαρμογής">
+      <section class="settings-footer-card capvo-settings-brand-card" aria-label="Πληροφορίες εφαρμογής">
+        <img src="assets/capvo-mark.png" alt="CAPVO">
         <div>
           <strong>CAPVO</strong>
-          <span>Personal Finance Dashboard</span>
+          <span>Track. Understand. Control.</span>
         </div>
         <em>Version 1.0</em>
       </section>
@@ -887,7 +941,7 @@
   <!-- MORE / MOBILE HUB -->
   <main class="view" id="vMore">
     <section class="page-grid more-page">
-      <div class="page-hero bento-card more-hero">
+      <div class="page-hero bento-card more-hero capvo-branded-hero capvo-hero-more">
         <div>
           <div class="eyebrow">More</div>
           <h2>Περισσότερα</h2>
@@ -896,6 +950,12 @@
       </div>
 
       <section class="bento-card more-menu-card">
+        <button class="more-menu-item" onclick="go('vRecurring',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">🔁</span>
+          <span><strong>Πάγια & Υποχρεώσεις</strong><small>Σταθερά έξοδα, συνδρομές και επαναλαμβανόμενα</small></span>
+          <em>›</em>
+        </button>
+
         <button class="more-menu-item" onclick="go('vCards',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">💳</span>
           <span><strong>Κάρτες & Πηγές</strong><small>Πιστωτικές, πηγές πληρωμής και δόσεις</small></span>
@@ -1218,22 +1278,33 @@
         <input type="number" id="fFA" placeholder="0.00" step="0.01" min="0">
       </div>
 
-      <div class="form-group">
+      <div class="form-group fixed-category-field">
         <label>Κατηγορία</label>
-        <select id="fFC">
-          <option value="Στέγαση">🏠 Στέγαση</option>
-          <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
-          <option value="Συνδρομές">📱 Συνδρομές</option>
-          <option value="Μεταφορά">🚗 Μεταφορά</option>
-          <option value="Δάνεια">🏦 Δάνεια</option>
-          <option value="Υγεία">🏥 Υγεία</option>
-          <option value="Άλλο">📌 Άλλο</option>
-        </select>
+        <input type="hidden" id="fFC" value="Στέγαση">
+        <button type="button" class="fixed-category-trigger" id="fixedCategoryTrigger" onclick="toggleFixedCategoryPicker(event)">
+          <span id="fixedCategoryIcon">🏠</span>
+          <strong id="fixedCategoryLabel">Στέγαση</strong>
+          <em>⌄</em>
+        </button>
       </div>
     </div>
 
     <input type="hidden" id="fFID">
     <button class="btn btn-primary btn-block" id="btnFixed" onclick="saveFixed()">Αποθήκευση</button>
+
+    <div class="fixed-category-popover" id="fixedCategoryPopover" aria-hidden="true">
+      <div class="fixed-category-popover-head">
+        <span>Επιλογή κατηγορίας</span>
+        <button type="button" onclick="closeFixedCategoryPicker()">×</button>
+      </div>
+      <button type="button" class="fixed-category-option active" data-value="Στέγαση" onclick="selectFixedCategory('Στέγαση')"><span>🏠</span><strong>Στέγαση</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Λογαριασμοί" onclick="selectFixedCategory('Λογαριασμοί')"><span>💡</span><strong>Λογαριασμοί</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Συνδρομές" onclick="selectFixedCategory('Συνδρομές')"><span>📱</span><strong>Συνδρομές</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Μεταφορά" onclick="selectFixedCategory('Μεταφορά')"><span>🚗</span><strong>Μεταφορά</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Δάνεια" onclick="selectFixedCategory('Δάνεια')"><span>🏦</span><strong>Δάνεια</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Υγεία" onclick="selectFixedCategory('Υγεία')"><span>🏥</span><strong>Υγεία</strong></button>
+      <button type="button" class="fixed-category-option" data-value="Άλλο" onclick="selectFixedCategory('Άλλο')"><span>📌</span><strong>Άλλο</strong></button>
+    </div>
   </div>
 </div>
 

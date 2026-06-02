@@ -2035,3 +2035,281 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     }
   }
 }
+
+/* ============================================================
+   CAPVO QUICK ADD V2 POLISH
+   Smart preview + recent action cards. Safe additive layer.
+   ============================================================ */
+
+.add-center-v4 .add-center-recent,
+.add-center-recent{
+  display:grid !important;
+  gap:9px !important;
+  margin-top:12px !important;
+}
+
+.add-center-v4 .capvo-recent-card,
+.capvo-recent-card{
+  width:100% !important;
+  min-height:58px !important;
+  display:grid !important;
+  grid-template-columns:42px minmax(0,1fr) max-content !important;
+  align-items:center !important;
+  gap:10px !important;
+  padding:9px 12px !important;
+  border:1px solid rgba(120,130,180,.10) !important;
+  border-radius:20px !important;
+  background:rgba(255,255,255,.86) !important;
+  box-shadow:0 10px 24px rgba(30,40,90,.045) !important;
+  color:#111827 !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+
+.add-center-v4 .capvo-recent-card:active,
+.capvo-recent-card:active{
+  transform:scale(.985) !important;
+  background:#fff !important;
+}
+
+.capvo-recent-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:16px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:20px !important;
+  background:linear-gradient(135deg,#f1edff,#ffffff) !important;
+  box-shadow:inset 0 0 0 1px rgba(101,71,246,.08) !important;
+}
+
+.capvo-recent-main{
+  min-width:0 !important;
+  display:grid !important;
+  gap:3px !important;
+}
+
+.capvo-recent-main strong{
+  min-width:0 !important;
+  color:#111827 !important;
+  font-size:14px !important;
+  line-height:1.1 !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.capvo-recent-main small{
+  min-width:0 !important;
+  color:#7b879d !important;
+  font-size:11px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.capvo-recent-amount{
+  color:#ef4444 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  font-family:var(--mono,monospace) !important;
+  white-space:nowrap !important;
+}
+
+.add-center-v4 .capvo-smart-preview-card,
+.capvo-smart-preview-card{
+  border-radius:24px !important;
+  background:
+    radial-gradient(circle at 90% 6%,rgba(101,71,246,.12),transparent 32%),
+    rgba(255,255,255,.92) !important;
+  border:1px solid rgba(120,130,180,.10) !important;
+  box-shadow:0 14px 36px rgba(30,40,90,.065) !important;
+}
+
+.smart-preview-kicker{
+  margin-bottom:10px !important;
+  color:#6547f6 !important;
+  font-size:10px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+}
+
+.capvo-smart-preview-card.invalid{
+  background:#fff7f7 !important;
+  border-color:rgba(239,68,68,.14) !important;
+}
+
+.add-center-v4 .add-center-examples{
+  display:flex !important;
+  gap:8px !important;
+  overflow-x:auto !important;
+  padding-bottom:2px !important;
+  scrollbar-width:none !important;
+}
+
+.add-center-v4 .add-center-examples::-webkit-scrollbar{display:none !important;}
+
+.add-center-v4 .add-center-examples button{
+  flex:0 0 auto !important;
+  min-height:34px !important;
+  padding:0 12px !important;
+  border-radius:999px !important;
+  background:rgba(101,71,246,.08) !important;
+  color:#5947f5 !important;
+  border:1px solid rgba(101,71,246,.10) !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+
+
+/* ============================================================
+   CAPVO QUICK ADD V2.1 — final polish
+   - Smart preview spacing
+   - 3 recent items max via JS
+   - larger voice button
+   - disabled save until valid amount
+   - compact favorites chips
+   ============================================================ */
+
+.add-center-v4 .add-center-input-row,
+.add-center-input-row{
+  grid-template-columns:minmax(0,1fr) 62px !important;
+  gap:10px !important;
+}
+
+.add-center-v4 .add-center-voice,
+.add-center-voice{
+  width:62px !important;
+  min-width:62px !important;
+  height:58px !important;
+  border-radius:22px !important;
+  font-size:0 !important;
+  background:linear-gradient(135deg,#f7f8ff,#ffffff) !important;
+  border:1px solid rgba(120,130,180,.13) !important;
+  box-shadow:0 14px 30px rgba(30,40,90,.07) !important;
+  position:relative !important;
+}
+
+.add-center-v4 .add-center-voice::before,
+.add-center-voice::before{
+  content:'🎤' !important;
+  font-size:22px !important;
+  line-height:1 !important;
+}
+
+.add-center-v4 .add-center-preview,
+.add-center-preview{
+  margin-top:12px !important;
+}
+
+.capvo-smart-preview-card{
+  padding:14px !important;
+}
+
+.smart-preview-top{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+}
+
+.smart-preview-amount-big{
+  font-size:24px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  color:#ef4444 !important;
+  font-family:var(--mono,monospace) !important;
+}
+
+.smart-preview-name{
+  margin-top:4px !important;
+  font-size:15px !important;
+  line-height:1.12 !important;
+  font-weight:950 !important;
+  color:#111827 !important;
+}
+
+.smart-preview-chip{
+  width:44px !important;
+  height:44px !important;
+  border-radius:16px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f0edff !important;
+  font-size:22px !important;
+}
+
+.smart-preview-lines{
+  display:grid !important;
+  gap:6px !important;
+  margin-top:12px !important;
+}
+
+.smart-preview-line{
+  min-height:32px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  padding:0 10px !important;
+  border-radius:12px !important;
+  background:rgba(245,247,255,.78) !important;
+}
+
+.smart-preview-line span{
+  color:#7c879e !important;
+  font-size:11px !important;
+  font-weight:850 !important;
+}
+
+.smart-preview-line strong{
+  color:#12172b !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  text-align:right !important;
+}
+
+.add-center-submit:disabled,
+.quick-sheet-submit:disabled,
+#quickAddSheetSubmit:disabled{
+  opacity:.48 !important;
+  cursor:not-allowed !important;
+  box-shadow:none !important;
+  filter:saturate(.65) !important;
+}
+
+.add-center-v4 .add-center-examples,
+.add-center-examples{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:8px !important;
+  overflow:visible !important;
+}
+
+.add-center-v4 .add-center-examples button,
+.add-center-examples button{
+  min-width:0 !important;
+  width:100% !important;
+  min-height:38px !important;
+  padding:0 8px !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.add-center-v4 .add-center-recent,
+.add-center-recent{
+  gap:8px !important;
+}
+
+.add-center-v4 .capvo-recent-card,
+.capvo-recent-card{
+  min-height:56px !important;
+}

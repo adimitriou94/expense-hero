@@ -817,3 +817,24 @@ body.auth-pending .capvo-auth-screen{
     padding:8px 12px !important;
   }
 }
+
+
+/* CAPVO Sprint 1 asset logo safety overrides */
+.capvo-mark:has(.capvo-mark-img)::before,
+.capvo-mark:has(.capvo-mark-img)::after,
+.capvo-splash-mark:has(.capvo-mark-img)::before,
+.capvo-splash-mark:has(.capvo-mark-img)::after{
+  display:none !important;
+  content:none !important;
+}
+.capvo-mark .capvo-mark-img,
+.capvo-splash-mark .capvo-mark-img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  filter:drop-shadow(0 16px 28px rgba(35,45,110,.20));
+}
+.capvo-brand-lockup p,
+.capvo-splash-tagline{
+  letter-spacing:.01em;
+}
