@@ -1,0 +1,1464 @@
+// CAPVO app split: 06-modals-nav-auth.js
+// Source: js/legacy/app.monolith.backup.js
+// Keep classic <script> loading order from index.html.
+
+// ===== MODALS / SAVE ACTIONS / NAV / AUTH =====
+function closeM(){
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));
+  closeIncomeCustomPickers?.();
+  document.body.classList.remove('modal-open');
+}
+
+function openModal(t){
+  closeM();
+  document.body.classList.add('modal-open');
+
+  if(t==='daily'){
+    $('mDaily').classList.add('active');
+    $('mDailyTitle').innerHTML='Νέο ημερήσιο έξοδο<button class="modal-close" onclick="closeM()">×</button>';
+    $('fDN').value='';
+    $('fDA').value='';
+    $('fDD').value=new Date().toISOString().split('T')[0];
+    $('fDID').value='';
+    $('btnDaily').textContent='Αποθήκευση';
+
+    fillPaymentSourceSelect('');
+
+    $('fDN').focus();
+  }
+
+  if(t==='fixed'){
+    $('mFixed').classList.add('active');
+    $('mFixedTitle').innerHTML='🔒 Νέο πάγιο<button class="modal-close" onclick="closeM()">×</button>';
+    $('fFN').value='';
+    $('fFA').value='';
+    $('fFID').value='';
+    $('fFC').value='Στέγαση';
+    if(typeof syncFixedCategoryPicker==='function')syncFixedCategoryPicker('Στέγαση');
+    $('btnFixed').textContent='Αποθήκευση';
+    $('fFN').focus();
+  }
+
+  if(t==='cc'){
+    $('mCC').classList.add('active');
+    $('mCCTitle').textContent='Νέα κάρτα';
+    $('fCCN').value='';
+    $('fCCB').value='';
+    $('fCCR').value='';
+    $('fCCM').value='';
+    $('fCCL').value='';
+    $('fCCID').value='';
+    $('btnCC').textContent='Αποθήκευση';
+    $('fCCN').focus();
+  }
+
+  if(t==='incomeSource'){
+    $('mIncomeSource').classList.add('active');
+    $('mIncomeSourceTitle').textContent='Νέα πηγή εισοδήματος';
+
+    $('fISName').value='';
+    $('fISAmount').value='';
+    $('fISCategory').value='Μισθός';
+    $('fISType').value='bank';
+    $('fISRestriction').value='none';
+    $('fISRestrictedCategory').value='';
+    $('fISIncludeBudget').checked=true;
+    $('fISSavings').checked=false;
+    $('fISRecurring').checked=true;
+    $('fISNotes').value='';
+    $('fISID').value='';
+    $('btnIncomeSource').textContent='Αποθήκευση πηγής';
+
+    refreshIncomeCustomPickers();
+    $('fISName').focus();
+  }
+}
+
+function editExp(t,id){
+  closeM();
+
+  if(t==='fixed'){
+    const e=D.fixedExpenses.find(x=>x.id===id);
+    if(!e)return;
+
+    $('mFixed').classList.add('active');
+    $('mFixedTitle').innerHTML='✎ Επεξεργασία<button class="modal-close" onclick="closeM()">×</button>';
+    $('fFN').value=e.name;
+    $('fFA').value=e.amount;
+    $('fFC').value=e.category;
+    if(typeof syncFixedCategoryPicker==='function')syncFixedCategoryPicker(e.category||'Άλλο');
+    $('fFID').value=id;
+    $('btnFixed').textContent='Ενημέρωση';
+    $('fFN').focus();
+
+    return;
+  }
+
+  ensM(curM);
+
+  let e=null;
+
+  Object.values(D.months||{}).forEach(m=>{
+    const found=(m.daily||[]).find(x=>x.id===id);
+    if(found)e=found;
+  });
+
+  if(!e)return;
+
+  $('mDaily').classList.add('active');
+  $('mDailyTitle').innerHTML='✎ Επεξεργασία<button class="modal-close" onclick="closeM()">×</button>';
+  $('fDN').value=e.name;
+  $('fDA').value=e.amount;
+  $('fDC').value=e.category;
+  $('fDD').value=e.date;
+  $('fDID').value=id;
+  $('btnDaily').textContent='Ενημέρωση';
+
+  fillPaymentSourceSelect(e.paymentSourceId||'');
+
+  $('fDN').focus();
+}
+
+async function saveDailyExpenseRow(userId,expense){
+  const token=currentSession?.access_token;
+
+  if(!token)throw new Error('Δεν υπάρχει ενεργό session.');
+
+  const row={
+    id:expense.id,
+    user_chat_id:userId,
+    name:expense.name,
+    amount:expense.amount,
+    category:expense.category,
+    date:expense.date,
+    type:'daily',
+    month_key:expense.date.substring(0,7),
+    payment_source_id:expense.paymentSourceId||null,
+    payment_source_name:expense.paymentSourceName||null,
+    payment_source_type:expense.paymentSourceType||null
+  };
+
+  const res=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/expenses`,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      apikey:CONFIG.SUPABASE_ANON_KEY,
+      Authorization:'Bearer '+token,
+      Prefer:'resolution=merge-duplicates'
+    },
+    body:JSON.stringify(row)
+  });
+
+  if(!res.ok){
+    const txt=await res.text();
+    throw new Error(txt);
+  }
+}
+
+
+
+async function saveDaily(){
+  const n=$('fDN').value.trim();
+  const a=parseFloat($('fDA').value);
+  const id=$('fDID').value;
+  const date=$('fDD').value||new Date().toISOString().split('T')[0];
+  const category=$('fDC').value;
+  const paymentSourceId=$('fDPay')?.value||'';
+  const paymentSource=paymentSourceById(paymentSourceId);
+  const userId=localStorage.getItem(SK);
+  const btn=$('btnDaily');
+
+  if(!n){
+    $('fDN').style.borderColor='var(--red)';
+    return;
+  }
+
+  if(!a||a<=0){
+    $('fDA').style.borderColor='var(--red)';
+    return;
+  }
+
+  if(!userId){
+    showMiniToast(
+      '❌ Σύνδεσε πρώτα το Telegram',
+      'error'
+    );
+    return;
+  }
+
+  const monthKey=date.substring(0,7);
+  ensM(monthKey);
+
+  let expense;
+
+  if(id){
+    Object.values(D.months).forEach(m=>{
+      m.daily=m.daily.filter(e=>e.id!==id);
+    });
+
+    expense={
+      id,
+      name:n,
+      amount:a,
+      category,
+      date,
+      paymentSourceId,
+      paymentSourceName:paymentSource?.name||'',
+      paymentSourceType:paymentSource?.incomeType||''
+    };
+  }else{
+    expense={
+      id:gid(),
+      name:n,
+      amount:a,
+      category,
+      date,
+      paymentSourceId,
+      paymentSourceName:paymentSource?.name||'',
+      paymentSourceType:paymentSource?.incomeType||''
+    };
+  }
+
+  D.months[monthKey].daily.push(expense);
+
+  try{
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='Αποθήκευση...';
+    }
+
+    await saveDailyExpenseRow(userId,expense);
+
+    closeM();
+    render();
+
+  }catch(e){
+    console.error('saveDaily failed:',e);
+    showMiniToast(
+      '❌ Αποτυχία αποθήκευσης',
+      'error'
+    );
+
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Αποθήκευση';
+    }
+  }
+}
+
+async function saveFixedExpenseRow(userId,expense){
+  const {error}=await supabaseClient
+    .from('fixed_expenses')
+    .upsert({
+      id:expense.id,
+      user_chat_id:userId,
+      name:expense.name,
+      amount:expense.amount,
+      category:expense.category
+    },{onConflict:'id'});
+
+  if(error)throw error;
+}
+
+async function saveFixed(){
+  const n=$('fFN').value.trim();
+  const a=parseFloat($('fFA').value);
+  const id=$('fFID').value;
+  const category=$('fFC').value;
+  const userId=localStorage.getItem(SK);
+  const btn=$('btnFixed');
+
+  if(!n){
+    $('fFN').style.borderColor='var(--red)';
+    return;
+  }
+
+  if(!a||a<=0){
+    $('fFA').style.borderColor='var(--red)';
+    return;
+  }
+
+  if(!userId){
+    showMiniToast(
+      '❌ Σύνδεσε πρώτα το Telegram',
+      'error'
+    );
+    return;
+  }
+
+  let expense;
+
+  if(id){
+    expense=D.fixedExpenses.find(x=>x.id===id);
+
+    if(expense){
+      expense.name=n;
+      expense.amount=a;
+      expense.category=category;
+    }
+  }else{
+    expense={
+      id:gid(),
+      name:n,
+      amount:a,
+      category
+    };
+
+    D.fixedExpenses.push(expense);
+  }
+
+  if(!expense)return;
+
+  try{
+    if(btn){
+      btn.disabled=true;
+      btn.textContent='Αποθήκευση...';
+    }
+
+    await saveFixedExpenseRow(userId,expense);
+
+    D.fixedExpenses=(D.fixedExpenses||[])
+      .slice()
+      .sort((a,b)=>fixedExpenseSortTime(b)-fixedExpenseSortTime(a));
+
+    closeM();
+    render();
+
+  }catch(e){
+    console.error('saveFixed failed:',e);
+    showMiniToast(
+      '❌ Αποτυχία αποθήκευσης',
+      'error'
+    );
+
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Αποθήκευση';
+    }
+  }
+}
+
+
+async function deleteExpenseRow(type,id){
+  const table=type==='fixed'?'fixed_expenses':'expenses';
+  await deleteRowsFromTable(table,[id]);
+}
+
+async function delExp(t,id){
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή εξόδου',
+    message:'Θέλεις να διαγράψεις αυτή την εγγραφή;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
+
+  try{
+    await deleteExpenseRow(t,id);
+
+    if(t==='fixed'){
+      D.fixedExpenses=D.fixedExpenses.filter(e=>e.id!==id);
+    }else{
+      Object.values(D.months||{}).forEach(m=>{
+        m.daily=(m.daily||[]).filter(e=>e.id!==id);
+      });
+    }
+
+    render();
+
+    showMiniToast('✅ Η εγγραφή διαγράφηκε');
+
+  }catch(e){
+    console.error('Delete error:',e);
+
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
+  }
+}
+
+let quickVoiceRecognition=null;
+let quickVoiceListening=false;
+
+function getSpeechRecognition(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function setQuickVoiceState(isListening){
+  quickVoiceListening=isListening;
+
+  const btn=$('quickVoiceBtn');
+  if(!btn)return;
+
+  btn.textContent=isListening?'⏹️':'🎤';
+  btn.classList.toggle('listening',isListening);
+}
+
+function startQuickVoice(targetInputId='quickAddInput'){
+  const Recognition=getSpeechRecognition();
+
+  if(!Recognition){
+    showMiniToast(
+      '❌ Ο browser δεν υποστηρίζει voice input',
+      'error'
+    );
+    return;
+  }
+
+  if(quickVoiceListening && quickVoiceRecognition){
+    quickVoiceRecognition.stop();
+    return;
+  }
+
+  const input=$(targetInputId) || $('quickAddInput');
+
+  quickVoiceRecognition=new Recognition();
+  quickVoiceRecognition.lang='el-GR';
+  quickVoiceRecognition.interimResults=false;
+  quickVoiceRecognition.maxAlternatives=1;
+  quickVoiceRecognition.continuous=false;
+
+  quickVoiceRecognition.onstart=()=>{
+    setQuickVoiceState(true);
+  };
+
+  quickVoiceRecognition.onresult=e=>{
+    const text=e.results?.[0]?.[0]?.transcript||'';
+
+    if(input && text){
+      input.value=text;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.focus();
+    }
+  };
+
+  quickVoiceRecognition.onerror=e=>{
+    console.warn('Voice recognition error:',e.error);
+
+    if(e.error==='not-allowed'){
+
+      showMiniToast(
+        '❌ Δεν δόθηκε άδεια μικροφώνου',
+        'error'
+      );
+    
+    }else{
+    
+      showMiniToast(
+        '❌ Δεν μπόρεσα να ακούσω καθαρά',
+        'error'
+      );
+    }
+  };
+
+  quickVoiceRecognition.onend=()=>{
+    setQuickVoiceState(false);
+  };
+
+  quickVoiceRecognition.start();
+}
+
+function setQuickAddInlineError(message,targetId='quickAddError'){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  el.classList.add('visible');
+  el.classList.remove('hidden');
+
+  el.innerHTML=`
+    <span class="quick-add-error-icon">⚠️</span>
+    <span>${esc(message)}</span>
+  `;
+}
+
+function clearQuickAddInlineError(targetId='quickAddError'){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  el.classList.remove('visible');
+  el.classList.add('hidden');
+  el.innerHTML='';
+}
+
+function getQuickAddParsed(text){
+  const value=(text||'').trim();
+  if(!value)return null;
+
+  if(typeof quickAddPreviewData==='function'){
+    return quickAddPreviewData(value);
+  }
+
+  if(typeof parseExpense==='function'){
+    try{
+      return parseExpense(value);
+    }catch(e){
+      console.warn('quick add parser failed',e);
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function quickAddExpense(sourceInputId='quickAddInput',options={}){
+  const input=$(sourceInputId) || $('quickAddInput');
+  const text=(input?.value||'').trim();
+  const isSheet=sourceInputId==='quickAddSheetInput';
+  const errorTarget=options.errorTarget || (isSheet ? 'quickAddSheetError' : null);
+  const fallbackToSheet=!!options.fallbackToSheet;
+
+  if(errorTarget) clearQuickAddInlineError(errorTarget);
+
+  if(!text){
+    input?.focus();
+    return false;
+  }
+
+  const parsed=getQuickAddParsed(text);
+  const invalidMessage='Δεν βρέθηκε έγκυρο ποσό. Δοκίμασε π.χ. “καφές 3”.';
+
+  if(!parsed || !Number(parsed.amount)){
+    if(fallbackToSheet && !isSheet && typeof openQuickAddSheet==='function'){
+      openQuickAddSheet(text,invalidMessage);
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      return false;
+    }
+
+    if(errorTarget){
+      setQuickAddInlineError(invalidMessage,errorTarget);
+    }else{
+      showMiniToast('⚠️ Γράψε ποσό, π.χ. καφές 3','error');
+    }
+
+    input?.focus();
+    return false;
+  }
+
+  const userId=localStorage.getItem(SK);
+
+  if(!userId){
+    const message='Σύνδεσε πρώτα το Telegram/Google για να αποθηκευτεί το έξοδο.';
+
+    if(errorTarget){
+      setQuickAddInlineError(message,errorTarget);
+    }else{
+      showMiniToast('❌ Δεν υπάρχει ενεργή σύνδεση','error');
+    }
+
+    return false;
+  }
+
+  const expense={
+    id:gid(),
+    name:parsed.name || 'Έξοδο',
+    amount:Number(parsed.amount)||0,
+    category:parsed.category || 'Άλλο',
+    date:parsed.date||new Date().toISOString().split('T')[0],
+    paymentSourceId:parsed.paymentSourceId||'',
+    paymentSourceName:parsed.paymentSourceName||'',
+    paymentSourceType:parsed.paymentSourceType||''
+  };
+
+  const monthKey=expense.date.substring(0,7);
+  ensM(monthKey);
+
+  try{
+    D.months[monthKey].daily.push(expense);
+
+    await saveDailyExpenseRow(userId,expense);
+
+    input.value='';
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    curM=monthKey;
+
+    if(errorTarget) clearQuickAddInlineError(errorTarget);
+
+    render();
+    showMiniToast('✅ Το έξοδο προστέθηκε');
+
+    return true;
+
+  }catch(e){
+    D.months[monthKey].daily=D.months[monthKey].daily.filter(x=>x.id!==expense.id);
+
+    console.error('quickAddExpense failed:',e);
+
+    if(errorTarget){
+      setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.',errorTarget);
+    }else{
+      showMiniToast('❌ Δεν μπόρεσα να αποθηκεύσω το έξοδο','error');
+    }
+
+    return false;
+  }
+}
+
+function doExport(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='expense_tracker_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(a.href)}
+
+function doImport(ev){
+  const f=ev.target.files[0];
+  if(!f)return;
+
+  const r=new FileReader();
+
+  r.onload=async e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+
+      if(!d.months && !d.fixedExpenses){
+        showMiniToast(
+          '❌ Μη έγκυρο αρχείο',
+          'error'
+        );
+        return;
+      }
+
+      D=d;
+
+      if(!D.incomeSources)D.incomeSources=[];
+      if(!D.fixedExpenses)D.fixedExpenses=[];
+      if(!D.creditCards)D.creditCards=[];
+      if(!D.months)D.months={};
+
+      refreshComputedIncome();
+
+      await saveToSupabase();
+
+      render();
+      showMiniToast('✅ Η εισαγωγή ολοκληρώθηκε');
+
+    }catch(err){
+      console.error('Import error:',err);
+      showMiniToast(
+        '❌ Σφάλμα εισαγωγής',
+        'error'
+      );
+    }
+  };
+
+  r.readAsText(f);
+  ev.target.value='';
+}
+
+async function doReset(){
+
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή δεδομένων',
+    message:'Θέλεις να διαγράψεις όλα τα δεδομένα σου;',
+    confirmText:'Διαγραφή'
+  });
+
+  if(!confirmed)return;
+
+  const doubleConfirmed=await showConfirmModal({
+    title:'Τελική επιβεβαίωση',
+    message:'Η ενέργεια δεν αναιρείται.',
+    confirmText:'Οριστική διαγραφή'
+  });
+
+  if(!doubleConfirmed)return;
+
+  try{
+
+    localStorage.removeItem(SK);
+
+    showMiniToast('✅ Τα δεδομένα διαγράφηκαν');
+
+    setTimeout(()=>{
+      location.reload();
+    },900);
+
+  }catch(e){
+
+    console.error('Reset failed:',e);
+
+    showMiniToast(
+      '❌ Σφάλμα διαγραφής',
+      'error'
+    );
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeM();
+
+  if(e.key==='Enter'){
+
+    if(document.activeElement&&document.activeElement.id==='quickAddInput'){
+      quickAddExpense('quickAddInput',{fallbackToSheet:true});
+      return;
+    }
+
+    if($('authScreen')&&document.body.classList.contains('auth-pending')){
+      if(document.activeElement&&document.activeElement.id==='chatIdInput'){
+        connectWithChatId(e);
+      }
+      return;
+    }
+
+    if($('mDaily').classList.contains('active'))saveDaily();
+    if($('mFixed').classList.contains('active'))saveFixed();
+    if($('mCC').classList.contains('active'))saveCC();
+  }
+});
+
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeM()}));
+['fDN','fDA','fFN','fFA','fCCN'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',function(){this.style.borderColor=''})});
+
+function go(v,b){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+
+  const target=$(v);
+  if(target)target.classList.add('active');
+
+  const mobileMoreViews=new Set(['vCards','vAdvisor','vStats','vArchive','vSettings']);
+  const activeNavView=mobileMoreViews.has(v) ? 'vMore' : v;
+
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll(`.nav-btn[data-v="${activeNavView}"]`).forEach(el=>el.classList.add('active'));
+
+  if(b && b.classList && b.classList.contains('nav-btn')){
+    b.classList.add('active');
+  }
+}
+function chMonth(d){const[y,mo]=curM.split('-').map(Number);let nm=mo+d,ny=y;if(nm>12){nm=1;ny++}if(nm<1){nm=12;ny--}curM=ny+'-'+String(nm).padStart(2,'0');ensM(curM);render()}
+function goM(k){curM=k;ensM(k);go('vDash',document.querySelector('[data-v="vDash"]'));render()}
+
+async function signInWithGoogle(){
+  const redirectTo=window.location.origin+window.location.pathname;
+
+  const {error}=await supabaseClient.auth.signInWithOAuth({
+    provider:'google',
+    options:{
+      redirectTo,
+      queryParams:{
+        access_type:'offline'
+      }
+    }
+  });
+
+  if(error){
+    const err=$('authError');
+    if(err)err.textContent='Σφάλμα Google login: '+error.message;
+  }
+}
+
+async function signOutUser(){
+  try{
+    await supabaseClient.auth.signOut({
+      scope:'global'
+    });
+  }catch(e){
+    console.warn('Supabase signOut failed:',e);
+  }
+
+  try{
+    localStorage.removeItem(SK);
+    localStorage.removeItem('expense-hero-auth');
+    localStorage.removeItem('expense-hero-auth-code-verifier');
+
+    Object.keys(localStorage)
+      .filter(k=>k.startsWith('sb-') || k.includes('supabase'))
+      .forEach(k=>localStorage.removeItem(k));
+
+    sessionStorage.clear();
+
+  }catch(e){
+    console.warn('Storage cleanup failed:',e);
+  }
+
+  currentSession=null;
+  currentUser=null;
+  currentProfile=null;
+
+  window.location.href=window.location.origin+window.location.pathname;
+}
+
+async function getOrCreateProfile(user){
+  const metadata=user.user_metadata||{};
+
+  const profilePayload={
+    user_id:user.id,
+    email:user.email||'',
+    full_name:metadata.full_name||metadata.name||'',
+    avatar_url:metadata.avatar_url||metadata.picture||'',
+    updated_at:new Date().toISOString()
+  };
+
+  // IMPORTANT:
+  // Do not blindly upsert on every auth check, because it can wipe/lose
+  // telegram_chat_id depending on the Supabase/PostgREST merge behaviour.
+  // First read the profile, then update only the metadata fields.
+  const {data:existing,error:selectError}=await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('user_id',user.id)
+    .maybeSingle();
+
+  if(selectError)throw selectError;
+
+  if(existing){
+    const {data,error}=await supabaseClient
+      .from('profiles')
+      .update(profilePayload)
+      .eq('user_id',user.id)
+      .select('*')
+      .single();
+
+    if(error){
+      console.warn('Profile metadata update failed, using existing profile:',error);
+      return {...existing,...profilePayload};
+    }
+
+    return data;
+  }
+
+  const {data,error}=await supabaseClient
+    .from('profiles')
+    .insert(profilePayload)
+    .select('*')
+    .single();
+
+  if(error)throw error;
+
+  return data;
+}
+
+async function saveTelegramChatId(ev){
+  if(ev)ev.preventDefault();
+
+  const input=$('chatIdInput');
+  const codeInput=$('telegramCodeInput');
+  const err=$('authError');
+
+  const chatId=(input?.value||'').trim();
+  const code=(codeInput?.value||'').trim();
+
+  if(err)err.textContent='';
+
+  if(!currentUser){
+    if(err)err.textContent='Πρέπει πρώτα να συνδεθείς με Google.';
+    return;
+  }
+
+  if(!chatId){
+    if(err)err.textContent='Βάλε το Telegram Chat ID σου.';
+    input?.focus();
+    return;
+  }
+
+  if(!/^\d+$/.test(chatId)){
+    if(err)err.textContent='Το Chat ID πρέπει να περιέχει μόνο αριθμούς.';
+    input?.focus();
+    return;
+  }
+
+  if(!code){
+    if(err)err.textContent='Βάλε τον κωδικό σύνδεσης από το Telegram.';
+    codeInput?.focus();
+    return;
+  }
+
+  if(!/^\d{6}$/.test(code)){
+    if(err)err.textContent='Ο κωδικός πρέπει να είναι 6 ψηφία.';
+    codeInput?.focus();
+    return;
+  }
+
+  setAuthLoading(true);
+
+  try{
+    const token=currentSession?.access_token;
+
+    if(!token){
+      throw new Error('Δεν υπάρχει ενεργό session.');
+    }
+
+    const workerUrl=(CONFIG.WORKER_URL||'').replace(/\/+$/,'');
+    const verifyUrl=`${workerUrl}/verify-link`;
+
+    console.log('verify-link url:', `${workerUrl}/verify-link`);
+
+    const res=await fetch(verifyUrl,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:'Bearer '+token
+      },
+      body:JSON.stringify({
+        chat_id:chatId,
+        code
+      })
+    });
+
+    const data=await res.json();
+
+    if(!res.ok || data.error){
+      throw new Error(data.error||'Verification failed');
+    }
+
+    let verifiedProfile=data.profile||null;
+
+    // Some Worker responses may verify successfully but not return the updated
+    // profile row. Persist the Telegram Chat ID client-side as well, so the
+    // next auth check does not send the user back to the login/Telegram step.
+    if(!verifiedProfile?.telegram_chat_id || String(verifiedProfile.telegram_chat_id)!==String(chatId)){
+      const {data:profileData,error:profileError}=await supabaseClient
+        .from('profiles')
+        .update({
+          telegram_chat_id:chatId,
+          updated_at:new Date().toISOString()
+        })
+        .eq('user_id',currentUser.id)
+        .select('*')
+        .single();
+
+      if(profileError){
+        console.warn('Profile telegram_chat_id update fallback failed:',profileError);
+      }else{
+        verifiedProfile=profileData;
+      }
+    }
+
+    currentProfile={
+      ...(currentProfile||{}),
+      ...(verifiedProfile||{}),
+      telegram_chat_id:chatId
+    };
+
+    changingTelegramId=false;
+    localStorage.setItem(SK,chatId);
+
+    const btn=$('authSubmitBtn');
+
+    if(btn){
+      btn.disabled=true;
+      btn.innerHTML='⏳ Φόρτωση...';
+    }
+
+    showMiniToast('✅ Το Telegram συνδέθηκε');
+
+    await loadUserData(chatId);
+
+    return;
+
+  }catch(e){
+    console.error('saveTelegramChatId error:',e);
+
+    if(err){
+      err.textContent='Δεν έγινε επιβεβαίωση. Έλεγξε Chat ID και κωδικό.';
+    }
+  }finally{
+    setAuthLoading(false);
+  }
+}
+
+function showApp(){
+  document.body.classList.remove('auth-pending');
+
+  const auth=$('authScreen');
+
+  if(auth){
+    auth.classList.add('auth-hidden');
+    auth.style.display='none';
+    auth.style.pointerEvents='none';
+    auth.style.opacity='0';
+    auth.style.visibility='hidden';
+  }
+}
+
+function renderAuthState(){
+  const googleBox=$('googleLoginBox');
+  const telegramBox=$('telegramLinkBox');
+  const userBox=$('authUserBox');
+  const err=$('authError');
+
+  if(err)err.textContent='';
+
+  if(!currentUser){
+    if(googleBox)googleBox.style.display='block';
+    if(telegramBox)telegramBox.style.display='none';
+    return;
+  }
+
+  if(googleBox)googleBox.style.display='none';
+  if(telegramBox)telegramBox.style.display='block';
+
+  if(userBox){
+    userBox.innerHTML=`
+      Συνδέθηκες ως:<br>
+      <strong>${esc(currentUser.email||'Google user')}</strong>
+    `;
+  }
+
+  if(currentProfile?.telegram_chat_id && !changingTelegramId){
+    const input=$('chatIdInput');
+    if(input)input.value=currentProfile.telegram_chat_id;
+  }
+}
+
+function setAuthLoading(isLoading){const btn=$('authSubmitBtn');if(!btn)return;btn.disabled=isLoading;btn.textContent=isLoading?'Σύνδεση...':'Σύνδεση'}
+
+function showAuth(message){
+  document.body.classList.add('auth-pending');
+
+  const auth=$('authScreen');
+  const input=$('chatIdInput');
+  const err=$('authError');
+
+  if(auth){
+    auth.classList.remove('auth-hidden');
+    auth.style.display='flex';
+    auth.style.pointerEvents='auto';
+    auth.style.opacity='1';
+    auth.style.visibility='visible';
+    auth.style.zIndex='9999';
+  }
+
+  if(err)err.textContent=message||'';
+  if(input)setTimeout(()=>input.focus(),80);
+}
+
+function hideAuth(){
+  document.body.classList.remove('auth-pending');
+
+  const auth=$('authScreen');
+
+  if(auth){
+    auth.classList.add('auth-hidden');
+    auth.style.display='none';
+    auth.style.pointerEvents='none';
+    auth.style.opacity='0';
+    auth.style.visibility='hidden';
+    auth.style.zIndex='-1';
+  }
+}
+
+async function loadUserData(userId){await fetchAllData(userId);curM=curMK();ensM(curM);render();go('vDash',document.querySelector('[data-v="vDash"]'));hideAuth()}
+
+async function connectWithChatId(ev){
+  return saveTelegramChatId(ev);
+}
+
+function switchChatId(){
+
+  changingTelegramId=true;
+
+  closeM();
+
+  const input=$('chatIdInput');
+  if(input)input.value='';
+
+  showAuth('Σύνδεσε νέο Telegram Chat ID.');
+  renderAuthState();
+
+  const btn=$('authSubmitBtn');
+
+  if(btn){
+    btn.disabled=false;
+    btn.textContent='Σύνδεση Telegram';
+  }
+
+  setTimeout(()=>{
+    input?.focus();
+  },100);
+}
+
+function cleanOAuthUrl(){
+  if(window.location.search.includes('code=')){
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.origin + window.location.pathname
+    );
+  }
+}
+
+async function handleOAuthCallback(){
+  const url=new URL(window.location.href);
+  const code=url.searchParams.get('code');
+
+  if(!code)return null;
+
+  try{
+    const {data,error}=await supabaseClient.auth.exchangeCodeForSession(code);
+
+    cleanOAuthUrl();
+
+    if(error){
+      console.error('OAuth exchange failed:',error);
+      return null;
+    }
+
+    return data?.session||null;
+
+  }catch(e){
+    console.error('OAuth exchange failed:',e);
+
+    cleanOAuthUrl();
+
+    return null;
+  }
+}
+
+async function saveTelegramLinkRequest(row, env) {
+  const res = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/telegram_link_requests`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        chat_id: row.chat_id,
+        code: row.code
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error('Telegram link request insert failed: ' + txt);
+  }
+}
+
+async function initApp(){
+  if(appInitStarted){
+    return;
+  }
+
+  appInitStarted=true;
+  authBooting=true;
+
+  try{
+    const callbackSession=await handleOAuthCallback();
+
+    let session=callbackSession;
+
+    if(!session){
+      const result=await supabaseClient.auth.getSession();
+
+      if(result.error)throw result.error;
+
+      session=result.data?.session||null;
+    }
+
+    currentSession=session;
+    currentUser=session?.user||null;
+
+    if(!currentUser){
+      showAuth();
+      renderAuthState();
+      return;
+    }
+
+    currentProfile=await getOrCreateProfile(currentUser);
+    renderAuthState();
+
+    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
+
+    if(!chatId){
+      showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
+      return;
+    }
+
+    if(!currentProfile?.telegram_chat_id){
+      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
+    }
+
+    localStorage.setItem(SK,chatId);
+    await loadUserData(chatId);
+
+  }catch(e){
+    console.error('Init error:',e);
+    showAuth('Σφάλμα φόρτωσης: '+e.message);
+    renderAuthState();
+
+  }finally{
+    authBooting=false;
+  }
+}
+
+supabaseClient.auth.onAuthStateChange(async (event,session)=>{
+  // During the manual PKCE callback (?code=...), initApp() is responsible for
+  // exchanging the code. Supabase may emit a temporary null INITIAL_SESSION before
+  // the exchange completes; do not show the login screen from that transient event.
+  if(authBooting || window.location.search.includes('code='))return;
+
+  currentSession=session;
+  currentUser=session?.user||null;
+
+  if(event==='SIGNED_IN' || event==='INITIAL_SESSION'){
+    cleanOAuthUrl();
+  }
+
+  if(!currentUser){
+    currentProfile=null;
+
+    // Only clear the linked chat id on an explicit sign out.
+    // Other transient auth events can momentarily have no user/session and
+    // should not wipe the Telegram link.
+    if(event==='SIGNED_OUT'){
+      localStorage.removeItem(SK);
+    }
+
+    showAuth();
+    renderAuthState();
+    return;
+  }
+
+  try{
+    currentProfile=await getOrCreateProfile(currentUser);
+    renderAuthState();
+
+    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
+
+    if(!chatId){
+      showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
+      return;
+    }
+
+    if(!currentProfile?.telegram_chat_id){
+      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
+    }
+
+    localStorage.setItem(SK,chatId);
+    await loadUserData(chatId);
+
+  }catch(e){
+    console.error('Auth state error:',e);
+    showAuth('Σφάλμα authentication: '+e.message);
+    renderAuthState();
+  }
+});
+
+function quickAddFallbackParse(text){
+  const raw=(text||'').trim();
+  const amountMatch=raw.match(/(\d+[,.]?\d*)/);
+  if(!amountMatch)return null;
+
+  const amount=Number(amountMatch[1].replace(',','.'))||0;
+  if(amount<=0)return null;
+
+  const name=raw.replace(amountMatch[0],'').replace(/\b(ticket|voucher|κάρτα|card|μετρητά|cash)\b/gi,'').trim() || 'Έξοδο';
+  const lower=raw.toLowerCase();
+
+  let category='Άλλο';
+  if(/καφ|coffee/.test(lower)) category='Καφέδες';
+  else if(/σουπερ|super|market|μάρκετ|ψώνια/.test(lower)) category='Τρόφιμα';
+  else if(/φαγη|food|burger|pizza|πίτσα|σουβλ/.test(lower)) category='Φαγητό έξω';
+  else if(/βενζ|καυσ|ταξι|taxi|μεταφ/.test(lower)) category='Μεταφορά';
+
+  let paymentSourceName='';
+  if(/ticket|voucher/.test(lower)) paymentSourceName='Ticket';
+  else if(/καρτα|κάρτα|card/.test(lower)) paymentSourceName='Κάρτα';
+  else if(/cash|μετρη/.test(lower)) paymentSourceName='Μετρητά';
+
+  return {name,amount,category,paymentSourceName};
+}
+
+function quickAddPreviewData(text){
+  const value=(text||'').trim();
+  if(!value)return null;
+
+  if(typeof parseExpense==='function'){
+    try{
+      const parsed=parseExpense(value);
+      if(parsed)return parsed;
+    }catch(e){
+      console.warn('quick preview parser failed',e);
+    }
+  }
+
+  return quickAddFallbackParse(value);
+}
+
+function renderSmartQuickPreview(targetId,text){
+  const el=document.getElementById(targetId);
+  if(!el)return;
+
+  const value=(text||'').trim();
+  const parsed=quickAddPreviewData(value);
+
+  if(!value){
+    el.classList.remove('visible','invalid');
+    el.innerHTML='';
+    return;
+  }
+
+  if(!parsed){
+    el.classList.add('visible','invalid');
+    el.innerHTML=`
+      <div class="smart-preview-icon">?</div>
+      <div class="smart-preview-main">
+        <strong>Δεν βρήκα ποσό</strong>
+        <span>Δοκίμασε κάτι σαν “καφές 3”</span>
+      </div>
+    `;
+    return;
+  }
+
+  const icon=(typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌';
+  const amount=(typeof fmt==='function') ? fmt(parsed.amount) : `€${Number(parsed.amount||0).toFixed(2)}`;
+  const payment=parsed.paymentSourceName || 'Budget';
+
+  el.classList.add('visible');
+  el.classList.remove('invalid');
+  el.innerHTML=`
+    <div class="smart-preview-icon">${icon}</div>
+    <div class="smart-preview-main">
+      <strong>${esc(parsed.name || 'Έξοδο')}</strong>
+      <span>${esc(parsed.category || 'Άλλο')} · ${esc(payment)}</span>
+    </div>
+    <div class="smart-preview-amount">-${amount}</div>
+  `;
+}
+
+function renderQuickRepeatChips(){
+  const el=document.getElementById('quickRepeatChips');
+  if(!el || typeof D==='undefined' || typeof curM==='undefined')return;
+
+  const daily=(D.months[curM]?.daily || [])
+    .slice()
+    .sort((a,b)=>String(b.id||'').localeCompare(String(a.id||'')))
+    .slice(0,3);
+
+  if(daily.length===0){
+    el.innerHTML='';
+    return;
+  }
+
+  el.innerHTML=daily.map(e=>{
+    const text=`${e.name} ${String(Number(e.amount)||0).replace('.',',')}`;
+    return `<button type="button" onclick="fillQuickAdd('${esc(text)}')">+ ${esc(e.name)} ${fmt(e.amount)}</button>`;
+  }).join('');
+}
+
+function fillQuickAdd(text){
+  const input=document.getElementById('quickAddInput');
+  if(!input)return;
+  input.value=text;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+}
+
+function setupQuickAddMobileState(){
+  const input=document.getElementById('quickAddInput');
+
+  if(input){
+    const sync=()=>{
+      // Dashboard quick add is intentionally minimal:
+      // input + voice + chips only. No preview, no inline error, no large submit button.
+    };
+
+    input.addEventListener('input',sync);
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        e.stopPropagation();
+        quickAddExpense('quickAddInput',{fallbackToSheet:true});
+      }
+    });
+    sync();
+  }
+
+  const sheetInput=document.getElementById('quickAddSheetInput');
+  const sheetSubmit=document.getElementById('quickAddSheetSubmit');
+
+  if(sheetInput){
+    const syncSheet=()=>{
+      const hasValue=sheetInput.value.trim().length>0;
+      sheetSubmit?.classList.toggle('is-visible',hasValue);
+      renderSmartQuickPreview('quickAddSheetPreview',sheetInput.value);
+      if(hasValue) clearQuickAddInlineError('quickAddSheetError');
+    };
+
+    sheetInput.addEventListener('input',syncSheet);
+    sheetInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        e.stopPropagation();
+        submitQuickAddSheet();
+      }
+    });
+    syncSheet();
+  }
+
+  renderQuickRepeatChips();
+}
+
+function openQuickAddSheet(prefill='',errorMessage=''){
+  const sheet=document.getElementById('quickAddSheet');
+  const input=document.getElementById('quickAddSheetInput');
+  if(!sheet)return;
+
+  sheet.classList.add('active');
+  document.body.classList.add('quick-sheet-open');
+
+  if(input && typeof prefill==='string' && prefill.trim()){
+    input.value=prefill.trim();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  clearQuickAddInlineError('quickAddSheetError');
+
+  if(errorMessage){
+    setQuickAddInlineError(errorMessage,'quickAddSheetError');
+  }
+
+  setTimeout(()=>input?.focus(),120);
+}
+
+function closeQuickAddSheet(event){
+  if(event && event.target && event.target.id!=='quickAddSheet')return;
+
+  const sheet=document.getElementById('quickAddSheet');
+  sheet?.classList.remove('active');
+  document.body.classList.remove('quick-sheet-open');
+}
+
+function fillQuickAddSheet(text){
+  const input=document.getElementById('quickAddSheetInput');
+  if(!input)return;
+  input.value=text;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+}
+
+async function submitQuickAddSheet(){
+  const sheetInput=document.getElementById('quickAddSheetInput');
+
+  clearQuickAddInlineError('quickAddSheetError');
+
+  const text=(sheetInput?.value || '').trim();
+
+  if(!text){
+    sheetInput?.focus();
+    return false;
+  }
+
+  const saved=await quickAddExpense('quickAddSheetInput',{errorTarget:'quickAddSheetError'});
+
+  if(!saved){
+    return false;
+  }
+
+  if(sheetInput){
+    sheetInput.value='';
+    sheetInput.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+
+  closeQuickAddSheet();
+  return true;
+}
+
+document.addEventListener('DOMContentLoaded', setupQuickAddMobileState);
+// initApp() is called from advisor.js

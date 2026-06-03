@@ -6,12 +6,12 @@ const CONFIG = {
 
   // ===== SUPABASE =====
   // Από: supabase.com → Project Settings → API
-  SUPABASE_URL:      'https://gqjejalqoruclppraxus.supabase.co',
-  SUPABASE_ANON_KEY: 'sb_publishable_PjKnfKJQKXrsoqW8sQe5Uw_ItxjbraS',
+  SUPABASE_URL: 'https://YOUR_PROJECT.supabase.co',
+  SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
 
   // ===== CLOUDFLARE WORKER =====
   // Το URL του Worker σου μετά το deploy
-  WORKER_URL: 'https://blue-breeze-e6c5.adimitriou94.workers.dev/',
+  WORKER_URL: 'https://YOUR_WORKER.workers.dev/',
 
 };
 

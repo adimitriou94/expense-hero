@@ -322,20 +322,109 @@ async function syncFromTelegram(){
   }
 }
 
+
+function syncPickerOptionsHtml(options, selectedValue){
+  return (options||[]).map(o=>{
+    const value=String(o.value??'');
+    const label=String(o.label??value);
+    const desc=String(o.desc??'');
+    const icon=String(o.icon??'');
+    const active=value===String(selectedValue??'');
+    return `
+      <button type="button" class="capvo-sync-picker-option ${active?'active':''}" onclick="selectSyncPickerValue(event,'${esc(value)}','${esc(label)}')">
+        ${icon?`<span class="capvo-sync-picker-icon">${esc(icon)}</span>`:''}
+        <span class="capvo-sync-picker-copy">
+          <strong>${esc(label)}</strong>
+          ${desc?`<small>${esc(desc)}</small>`:''}
+        </span>
+      </button>`;
+  }).join('');
+}
+
+function buildSyncPicker(selectId, options, selectedValue){
+  const current=(options||[]).find(o=>String(o.value)===String(selectedValue)) || (options||[])[0] || {value:'',label:'—'};
+  const hiddenOptions=(options||[]).map(o=>`<option value="${esc(o.value)}" ${String(o.value)===String(selectedValue)?'selected':''}>${esc(o.label)}</option>`).join('');
+
+  return `
+    <select class="sync-select capvo-sync-native-select" id="${selectId}" aria-hidden="true" tabindex="-1">
+      ${hiddenOptions}
+    </select>
+    <div class="capvo-sync-picker" data-select-id="${selectId}">
+      <button type="button" class="capvo-sync-picker-trigger" onclick="toggleSyncPicker(event,this)">
+        ${current.icon?`<span class="capvo-sync-picker-icon">${esc(current.icon)}</span>`:''}
+        <span class="capvo-sync-picker-copy">
+          <strong>${esc(current.label)}</strong>
+          ${current.desc?`<small>${esc(current.desc)}</small>`:''}
+        </span>
+        <span class="capvo-sync-picker-chevron">⌄</span>
+      </button>
+      <div class="capvo-sync-picker-menu">
+        ${syncPickerOptionsHtml(options,selectedValue)}
+      </div>
+    </div>`;
+}
+
+function toggleSyncPicker(event,btn){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const picker=btn.closest('.capvo-sync-picker');
+  if(!picker)return;
+  const shouldOpen=!picker.classList.contains('is-open');
+  document.querySelectorAll('.capvo-sync-picker.is-open').forEach(p=>{
+    if(p!==picker)p.classList.remove('is-open');
+  });
+  picker.classList.toggle('is-open',shouldOpen);
+}
+
+function selectSyncPickerValue(event,value,label){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const option=event.currentTarget;
+  const picker=option.closest('.capvo-sync-picker');
+  if(!picker)return;
+  const select=$(picker.dataset.selectId);
+  if(select){
+    select.value=value;
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  const trigger=picker.querySelector('.capvo-sync-picker-trigger');
+  const copy=option.querySelector('.capvo-sync-picker-copy')?.innerHTML || `<strong>${esc(label)}</strong>`;
+  const icon=option.querySelector('.capvo-sync-picker-icon')?.outerHTML || '';
+  if(trigger){
+    trigger.innerHTML=`${icon}<span class="capvo-sync-picker-copy">${copy}</span><span class="capvo-sync-picker-chevron">⌄</span>`;
+  }
+  picker.querySelectorAll('.capvo-sync-picker-option').forEach(o=>o.classList.remove('active'));
+  option.classList.add('active');
+  picker.classList.remove('is-open');
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest?.('.capvo-sync-picker')){
+    document.querySelectorAll('.capvo-sync-picker.is-open').forEach(p=>p.classList.remove('is-open'));
+  }
+});
 function openSyncPreview(items){
   let overlay=$('mSyncPreview');
 
   if(!overlay){
     overlay=document.createElement('div');
-    overlay.className='modal-overlay';
+    overlay.className='modal-overlay capvo-sync-review-overlay';
     overlay.id='mSyncPreview';
-    overlay.innerHTML='<div class="modal modal-wide" id="mSyncPreviewInner"></div>';
+    overlay.innerHTML='<div class="modal modal-wide capvo-sync-review-sheet" id="mSyncPreviewInner"></div>';
     document.body.appendChild(overlay);
 
     overlay.addEventListener('click',e=>{
       if(e.target===overlay)closeSyncPreview();
     });
+  }else{
+    overlay.classList.add('capvo-sync-review-overlay');
+    overlay.innerHTML='<div class="modal modal-wide capvo-sync-review-sheet" id="mSyncPreviewInner"></div>';
   }
+
+  const invalidCount=items.filter(item=>{
+    const duplicate=expenseExistsById(telegramExpenseId(getCurrentChatId(),item.message_id));
+    return item.skip||duplicate;
+  }).length;
 
   const rows=items.map((item,idx)=>{
     const e=item.expense||{
@@ -354,68 +443,98 @@ function openSyncPreview(items){
 
     const invalid=item.skip||duplicate;
     const skipChecked=invalid?'checked':'';
-    const dimmed=invalid?'style="opacity:0.4;pointer-events:none"':'';
+    const dimmed=invalid?'style="opacity:0.45;pointer-events:none"':'';
 
     return`
-      <div class="sync-row ${invalid?'skipped':''}" id="syncRow${idx}" data-invalid="${invalid}">
-        <div class="sync-row-original">
-          📨 <em>${esc(item.original)}</em>
-          ${duplicate?'<span class="sync-badge duplicate">Ήδη υπάρχει</span>':''}
-          ${item.skip?'<span class="sync-badge invalid">Δεν αναγνωρίστηκε</span>':''}
+      <article class="sync-row capvo-sync-row ${invalid?'skipped':''}" id="syncRow${idx}" data-invalid="${invalid}">
+        <div class="sync-row-original capvo-sync-original">
+          <span class="capvo-sync-msg-icon">💬</span>
+          <div class="capvo-sync-original-copy">
+            <small>Μήνυμα Telegram</small>
+            <strong>${esc(item.original)}</strong>
+          </div>
+          <div class="capvo-sync-badges">
+            ${duplicate?'<span class="sync-badge duplicate">Ήδη υπάρχει</span>':''}
+            ${item.skip?'<span class="sync-badge invalid">Θέλει έλεγχο</span>':''}
+          </div>
         </div>
 
-        <div class="sync-row-fields" id="syncFields${idx}" ${dimmed}>
-          <input class="sync-input" type="text" id="sName${idx}" value="${esc(e.name)}" placeholder="Περιγραφή">
-          <input class="sync-input sync-amount" type="number" id="sAmt${idx}" value="${e.amount}" placeholder="€" step="0.01" min="0">
+        <div class="sync-row-fields capvo-sync-fields" id="syncFields${idx}" ${dimmed}>
+          <label class="capvo-sync-field capvo-sync-field-name">
+            <span>Περιγραφή</span>
+            <input class="sync-input" type="text" id="sName${idx}" value="${esc(e.name)}" placeholder="π.χ. Καφές">
+          </label>
 
-          <select class="sync-select" id="sCat${idx}">
-            ${ALL_CATS.map(c=>`<option value="${c}" ${e.category===c?'selected':''}>${c}</option>`).join('')}
-          </select>
+          <label class="capvo-sync-field capvo-sync-field-amount">
+            <span>Ποσό</span>
+            <input class="sync-input sync-amount" type="number" id="sAmt${idx}" value="${e.amount}" placeholder="€" step="0.01" min="0">
+          </label>
 
-          <input class="sync-input sync-date" type="date" id="sDate${idx}" value="${e.date}">
-          <select class="sync-select" id="sPay${idx}">
-              <option value="">Κανονικό budget</option>
-                ${availablePaymentSources().map(s=>`
-              <option value="${s.id}" ${e.paymentSourceId===s.id?'selected':''}>
-                ${esc(s.name)}
-              </option>
-          `).join('')}
-</select>
+          <label class="capvo-sync-field capvo-sync-field-category">
+            <span>Κατηγορία</span>
+            ${buildSyncPicker(`sCat${idx}`, ALL_CATS.map(c=>({
+                value:c,
+                label:c,
+                icon:(typeof CEMO!=='undefined' && CEMO[c]) ? CEMO[c] : ''
+              })), e.category)}
+          </label>
+
+          <label class="capvo-sync-field capvo-sync-field-date">
+            <span>Ημερομηνία</span>
+            <input class="sync-input sync-date" type="date" id="sDate${idx}" value="${e.date}">
+          </label>
+
+          <label class="capvo-sync-field capvo-sync-field-pay">
+            <span>Πληρωμή</span>
+            ${buildSyncPicker(`sPay${idx}`, [
+                {value:'',label:'Κανονικό budget',icon:'💳',desc:'Χωρίς Ticket / Voucher'},
+                ...availablePaymentSources().map(src=>({
+                  value:src.id,
+                  label:src.name,
+                  icon:'🎫',
+                  desc:'Πηγή πληρωμής'
+                }))
+              ], e.paymentSourceId||'')}
+          </label>
         </div>
 
-        <label class="sync-skip-label">
+        <label class="sync-skip-label capvo-sync-skip">
           <input type="checkbox" id="sSkip${idx}" ${skipChecked} onchange="toggleSyncRow(${idx})">
-          Παράλειψη
+          <span>Παράλειψη αυτής της κίνησης</span>
         </label>
-      </div>`;
+      </article>`;
   }).join('');
 
   const msgIds=JSON.stringify(items.map(i=>i.message_id));
 
   $('mSyncPreviewInner').innerHTML=`
-    <h2>
-      📋 Έλεγχος εξόδων (${items.length})
-      <button class="modal-close" onclick="closeSyncPreview()">×</button>
-    </h2>
+    <div class="capvo-sync-review-head">
+      <button class="modal-close capvo-sync-close" onclick="closeSyncPreview()" aria-label="Κλείσιμο">×</button>
+      <span class="capvo-sync-kicker">TELEGRAM SYNC</span>
+      <h2>Έλεγχος εξόδων</h2>
+      <p>Δες τις κινήσεις που βρέθηκαν από το Telegram, διόρθωσε ό,τι χρειάζεται και πάτα αποθήκευση.</p>
 
-    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
-      Διόρθωσε αν χρειάζεται και πάτα <strong>Αποθήκευση</strong>.
-    </p>
+      <div class="capvo-sync-summary">
+        <div><strong>${items.length}</strong><span>κινήσεις</span></div>
+        <div><strong>${Math.max(0,items.length-invalidCount)}</strong><span>έτοιμες</span></div>
+        <div class="${invalidCount?'has-warning':''}"><strong>${invalidCount}</strong><span>για έλεγχο</span></div>
+      </div>
+    </div>
 
-    <div class="sync-toolbar">
-      <button class="mini-action" onclick="setAllSyncRows(false)">Επιλογή όλων</button>
+    <div class="sync-toolbar capvo-sync-toolbar">
+      <button class="mini-action" onclick="setAllSyncRows(false)">✓ Επιλογή όλων</button>
       <button class="mini-action" onclick="setAllSyncRows(true)">Παράλειψη όλων</button>
       <button class="mini-action" onclick="setOnlyInvalidSyncRows()">Μόνο προβληματικά</button>
     </div>
 
-    <div id="syncRowsList">${rows}</div>
+    <div id="syncRowsList" class="capvo-sync-rows">${rows}</div>
 
-    <div class="sync-actions-sticky" style="display:flex;gap:10px">
-      <button type="button" class="btn btn-primary" id="btnConfirmSync" style="flex:1">
-        ✅ Αποθήκευση
+    <div class="sync-actions-sticky capvo-sync-actions">
+      <button type="button" class="btn btn-primary" id="btnConfirmSync">
+        Αποθήκευση κινήσεων
       </button>
 
-      <button class="btn btn-secondary" style="flex:1" onclick="closeSyncPreview()">
+      <button class="btn btn-secondary" onclick="closeSyncPreview()">
         Ακύρωση
       </button>
     </div>
@@ -424,18 +543,18 @@ function openSyncPreview(items){
   overlay.style.display='';
   overlay.style.pointerEvents='';
   overlay.classList.add('active');
+  document.body.style.overflow='hidden';
   window.currentSyncMessageIds=items.map(i=>i.message_id);
 
-    setTimeout(()=>{
-      const btn=$('btnConfirmSync');
-      if(btn){
-        btn.onclick=()=>{
-          confirmSync(window.currentSyncMessageIds);
-        };
-      }
-    },0);
+  setTimeout(()=>{
+    const btn=$('btnConfirmSync');
+    if(btn){
+      btn.onclick=()=>{
+        confirmSync(window.currentSyncMessageIds);
+      };
+    }
+  },0);
 }
-
 function toggleSyncRow(idx){
   const skip=$('sSkip'+idx).checked;
   const fields=$('syncFields'+idx);
@@ -443,7 +562,7 @@ function toggleSyncRow(idx){
   fields.style.opacity=skip?'0.4':'1';
   fields.style.pointerEvents=skip?'none':'';
 
-  $('syncRow'+idx).className='sync-row'+(skip?' skipped':'');
+  $('syncRow'+idx).className='sync-row capvo-sync-row'+(skip?' skipped':'');
 }
 
 function setAllSyncRows(skip){

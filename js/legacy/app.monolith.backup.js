@@ -737,6 +737,7 @@ function render(){
   $('dBar').style.width=pct+'%';
   $('dPct').textContent=pct+'%';
   $('dSpent').textContent=fmt(tot)+' / '+fmt(D.income);
+  renderDashboardAllowanceCards(bal);
 
   $('sFixed').textContent=fmt(fxS);
   $('sCC').textContent=fmt(ccS);
@@ -1142,6 +1143,196 @@ function renderDashboardPreview(){
       </div>
     </div>
   `).join('');
+}
+
+
+function dashboardRemainingDays(){
+  const key=curM||curMK();
+  const [y,m]=String(key).split('-').map(Number);
+  const daysInMonth=new Date(y,(m||1),0).getDate();
+  const today=new Date();
+
+  if(key===curMK()){
+    return Math.max(1,daysInMonth-today.getDate()+1);
+  }
+
+  return daysInMonth;
+}
+
+function ensureDashboardAllowanceStyles(){
+  if(document.getElementById('dashboardAllowanceCardsStyles'))return;
+
+  const style=document.createElement('style');
+  style.id='dashboardAllowanceCardsStyles';
+  style.textContent=`
+    .modern-hero-card{
+      overflow:hidden !important;
+    }
+
+    .dashboard-allowance-cards{
+      position:relative !important;
+      z-index:3 !important;
+      width:100% !important;
+      margin:14px 0 0 !important;
+      padding:8px !important;
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:8px !important;
+      border-radius:22px !important;
+      background:rgba(255,255,255,.10) !important;
+      border:1px solid rgba(255,255,255,.14) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        0 12px 28px rgba(0,0,0,.08) !important;
+      backdrop-filter:blur(12px) saturate(1.15) !important;
+      -webkit-backdrop-filter:blur(12px) saturate(1.15) !important;
+    }
+
+    .dashboard-allowance-card{
+      min-width:0 !important;
+      min-height:54px !important;
+      padding:9px 6px !important;
+      border-radius:16px !important;
+      background:rgba(255,255,255,.10) !important;
+      border:1px solid rgba(255,255,255,.12) !important;
+      display:grid !important;
+      align-content:center !important;
+      justify-items:center !important;
+      text-align:center !important;
+      gap:4px !important;
+    }
+
+    .dashboard-allowance-card span{
+      color:rgba(255,255,255,.62) !important;
+      font-size:9px !important;
+      line-height:1 !important;
+      font-weight:950 !important;
+      letter-spacing:.08em !important;
+      text-transform:uppercase !important;
+      white-space:nowrap !important;
+    }
+
+    .dashboard-allowance-card strong{
+      color:#ffffff !important;
+      font-family:var(--mono,monospace) !important;
+      font-size:16px !important;
+      line-height:1 !important;
+      font-weight:950 !important;
+      letter-spacing:-.06em !important;
+      white-space:nowrap !important;
+    }
+
+    .dashboard-allowance-card small{
+      color:rgba(255,255,255,.56) !important;
+      font-size:8px !important;
+      line-height:1 !important;
+      font-weight:800 !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      max-width:100% !important;
+    }
+
+    .dashboard-allowance-card.is-primary{
+      background:rgba(255,255,255,.16) !important;
+      border-color:rgba(255,255,255,.18) !important;
+    }
+
+    .dashboard-allowance-card.is-primary strong{
+      color:#ffffff !important;
+    }
+
+    .dashboard-allowance-card.is-danger strong{
+      color:#fecaca !important;
+    }
+
+    @media (max-width:768px){
+      .modern-hero-card{
+        margin-bottom:14px !important;
+      }
+
+      .dashboard-allowance-cards{
+        margin-top:12px !important;
+        padding:6px !important;
+        gap:6px !important;
+        border-radius:19px !important;
+      }
+
+      .dashboard-allowance-card{
+        min-height:48px !important;
+        padding:7px 4px !important;
+        border-radius:14px !important;
+      }
+
+      .dashboard-allowance-card span{
+        font-size:7.5px !important;
+      }
+
+      .dashboard-allowance-card strong{
+        font-size:13.2px !important;
+      }
+
+      .dashboard-allowance-card small{
+        font-size:7px !important;
+      }
+    }
+
+    @media (max-width:370px){
+      .dashboard-allowance-card strong{font-size:12px !important;}
+      .dashboard-allowance-card small{display:none !important;}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function renderDashboardAllowanceCards(balanceOverride=null){
+  const hero=document.querySelector('.modern-hero-card');
+  if(!hero)return;
+
+  ensureDashboardAllowanceStyles();
+
+  let el=document.getElementById('dashboardAllowanceCards');
+  if(!el){
+    el=document.createElement('section');
+    el.id='dashboardAllowanceCards';
+    hero.appendChild(el);
+  }
+
+  el.className='dashboard-allowance-cards hero-budget-metrics';
+
+  const fxS=fixedTotal();
+  const ccS=ccPayTotal();
+  const cashDaily=dailyCashTotal();
+  const spent=fxS+ccS+cashDaily;
+  const income=Number(D.income)||0;
+  const balance=balanceOverride!==null && balanceOverride!==undefined
+    ? Number(balanceOverride)||0
+    : income-spent;
+
+  const remainingDays=dashboardRemainingDays();
+  const safeBalance=Math.max(0,balance);
+  const daily=remainingDays>0?safeBalance/remainingDays:0;
+  const weekly=daily*7;
+
+  el.innerHTML=`
+    <article class="dashboard-allowance-card is-primary">
+      <span>Ημέρα</span>
+      <strong>${fmt(daily)}</strong>
+      <small>ανά ημέρα</small>
+    </article>
+
+    <article class="dashboard-allowance-card">
+      <span>Εβδομάδα</span>
+      <strong>${fmt(weekly)}</strong>
+      <small>ανά 7 ημέρες</small>
+    </article>
+
+    <article class="dashboard-allowance-card ${balance<0?'is-danger':''}">
+      <span>Μέρες</span>
+      <strong>${remainingDays}</strong>
+      <small>${balance<0?'υπέρβαση':'ακόμη'}</small>
+    </article>
+  `;
 }
 
 function paymentSourceExists(id){
@@ -4841,7 +5032,10 @@ async function saveAddCenterManualExpense(){
   };
 
   window.closeAddCenterSheet=function(event){
-    if(event && event.target && event.target.id && event.target.id!=='addCenterSheet')return;
+    const overlay=qav5('addCenterSheet');
+    // Close only when tapping the overlay background.
+    // Previously, clicks on suggestion chips/buttons bubbled here and closed the sheet.
+    if(event && event.target !== overlay)return;
 
     if(typeof addCenterEditState!=='undefined')addCenterEditState=null;
 
