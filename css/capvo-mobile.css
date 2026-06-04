@@ -6574,3 +6574,167 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     display:none !important;
   }
 }
+
+/* ============================================================
+   CAPVO — iPhone Safari Stability Pass V1
+   Purpose: prevent the custom bottom dock + Safari toolbar from
+   covering page content; fix Reports category layout on mobile.
+   ============================================================ */
+
+@media (max-width: 768px){
+  :root{
+    --capvo-dock-safe-space: calc(220px + env(safe-area-inset-bottom));
+    --capvo-sheet-safe-space: calc(104px + env(safe-area-inset-bottom));
+  }
+
+  html{
+    scroll-padding-bottom: var(--capvo-dock-safe-space) !important;
+  }
+
+  body:not(.auth-pending){
+    padding-bottom: var(--capvo-dock-safe-space) !important;
+  }
+
+  .app,
+  .view,
+  .view.active{
+    padding-bottom: var(--capvo-dock-safe-space) !important;
+  }
+
+  #vHome,
+  #vTransactions,
+  #vIncome,
+  #vCards,
+  #vAdvisor,
+  #vStats,
+  #vArchive,
+  #vSettings{
+    padding-bottom: var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom: var(--capvo-dock-safe-space) !important;
+  }
+
+  #vHome .modern-dashboard-shell,
+  #vTransactions .transactions-page,
+  #vIncome .page-grid,
+  #vCards .page-grid,
+  #vAdvisor .page-grid,
+  #vStats .reports-page,
+  #vArchive .page-grid,
+  #vSettings .settings-page{
+    padding-bottom: var(--capvo-dock-safe-space) !important;
+  }
+
+  .mobile-bottom-nav{
+    z-index: 9999 !important;
+  }
+
+  /* Bottom sheets / modals should leave room for Safari toolbar. */
+  .modal,
+  .modal-wide .modal,
+  .quick-sheet,
+  .add-center-sheet,
+  .capvo-sync-review-sheet,
+  .mobile-transaction-detail-sheet{
+    max-height: min(86dvh, 760px) !important;
+    padding-bottom: var(--capvo-sheet-safe-space) !important;
+    scroll-padding-bottom: var(--capvo-sheet-safe-space) !important;
+  }
+
+  .capvo-sync-review-actions,
+  .sync-review-actions{
+    padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Reports: the side-by-side donut/list layout is too wide for iPhone. */
+  #vStats .reports-breakdown-layout{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:18px !important;
+    align-items:stretch !important;
+    overflow:hidden !important;
+  }
+
+  #vStats .reports-donut-wrap{
+    width:100% !important;
+    justify-content:center !important;
+  }
+
+  #vStats .donut-chart{
+    width:168px !important;
+    height:168px !important;
+    min-width:168px !important;
+    min-height:168px !important;
+  }
+
+  #vStats .reports-category-list{
+    width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+  }
+
+  #vStats .reports-category-row{
+    width:100% !important;
+    min-width:0 !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) max-content !important;
+    gap:10px !important;
+    padding:10px 12px !important;
+    min-height:50px !important;
+  }
+
+  #vStats .donut-legend-left{
+    min-width:0 !important;
+    overflow:hidden !important;
+  }
+
+  #vStats .donut-legend-left span:last-child{
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #vStats .donut-legend-right{
+    min-width:max-content !important;
+    max-width:104px !important;
+  }
+
+  #vStats .donut-legend-right strong,
+  #vStats .donut-legend-right small{
+    max-width:104px !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #vStats .reports-more-categories{
+    width:100% !important;
+    justify-content:center !important;
+    gap:8px !important;
+    white-space:normal !important;
+    text-align:center !important;
+    min-height:48px !important;
+  }
+
+  /* Dashboard mobile category rows: keep amounts visible. */
+  .mobile-category-card{
+    overflow:hidden !important;
+  }
+
+  .mobile-category-row{
+    min-width:0 !important;
+  }
+
+  .mobile-category-row strong{
+    white-space:nowrap !important;
+  }
+
+  /* Long finance texts should wrap instead of sitting under the nav. */
+  #vCards,
+  #vAdvisor,
+  #vArchive,
+  #vStats{
+    overflow-wrap:anywhere;
+  }
+}

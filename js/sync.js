@@ -544,6 +544,12 @@ function openSyncPreview(items){
   overlay.style.pointerEvents='';
   overlay.classList.add('active');
   document.body.style.overflow='hidden';
+
+  // Always open review at the top on iOS/Safari.
+  const reviewInner=$('mSyncPreviewInner');
+  if(reviewInner) reviewInner.scrollTop=0;
+  overlay.scrollTop=0;
+
   window.currentSyncMessageIds=items.map(i=>i.message_id);
 
   setTimeout(()=>{
@@ -684,7 +690,10 @@ async function confirmSync(...messageIds){
 
     if(newExpenseRows.length>0){
       await saveSyncedExpenses(newExpenseRows);
-      
+
+      // Keep dashboard/reports/advisor canonical after Telegram sync.
+      // We save to Supabase first, then reload all data so the local state
+      // uses the exact same structure/calculations as a normal page refresh.
       localStorage.setItem('needs_data_reload','1');
     }
 
@@ -701,9 +710,19 @@ async function confirmSync(...messageIds){
 
     localStorage.setItem(getSyncKey(),maxId.toString());
 
+    // Re-fetch after successful Telegram import so dashboard balance,
+    // category totals, reports and advisor all include the synced rows.
+    if(newExpenseRows.length>0 && chatId){
+      try{
+        await fetchAllData(chatId);
+      }catch(reloadErr){
+        console.warn('Telegram sync saved, but data reload failed:',reloadErr);
+      }
+    }
+
     closeSyncPreview();
     render();
-  
+
     statusEl.style.display='block';
     statusEl.className='sync-status success';
     statusEl.textContent=`✅ Προστέθηκαν ${added} έξοδα${skipped>0?` (${skipped} παραλείφθηκαν)`:''}`;
