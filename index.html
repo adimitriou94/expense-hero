@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>CAPVO</title>
+  <!-- PWA / iOS install support -->
+  <meta name="theme-color" content="#f3f6ff">
+  <meta name="application-name" content="CAPVO">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CAPVO">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png">
@@ -1516,6 +1524,17 @@
     <div id="mobileTransactionDetailContent"></div>
   </div>
 </div>
+
+<script>
+  // PWA Phase 1: register app shell service worker.
+  // Cloudflare Worker integration remains in js/config.js; do not confuse it with this file.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .catch(err => console.warn('CAPVO service worker registration failed:', err));
+    });
+  }
+</script>
 
 </body>
 </html>

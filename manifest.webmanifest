@@ -1,21 +1,36 @@
 {
-  "name": "CAPVO",
+  "id": "./",
+  "name": "CAPVO - Personal Finance Dashboard",
   "short_name": "CAPVO",
   "description": "Track. Understand. Control.",
+  "lang": "el-GR",
+  "dir": "ltr",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#f3f6ff",
-  "theme_color": "#6547f6",
+  "theme_color": "#f3f6ff",
+  "categories": ["finance", "productivity"],
   "icons": [
+    {
+      "src": "assets/capvo-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "assets/capvo-icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/capvo-icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
