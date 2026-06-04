@@ -95,65 +95,24 @@ document.addEventListener('click',e=>{
 
 
 // ============================================================
-// CAPVO — Dynamic floating dock clearance
-// Measures the real bottom dock position and exposes it as CSS variable.
-// This fixes PWA/Safari cases where hardcoded bottom padding either leaves
-// a huge blank area or lets the final card hide behind the floating nav.
+// CAPVO — Dock Clearance V6 (PWA stable, no scroll jitter)
+// Why:
+// - V5 recalculated the dock clearance during scroll/touch/visualViewport scroll.
+// - On iOS/PWA, when the user reaches the very bottom, rubber-band/bounce changes
+//   the measured dock position by a few px and the page padding updates repeatedly.
+// - That creates the small "tremble" the user sees at the bottom.
+// Fix:
+// - Measure on layout-changing events only: load, resize, orientation, tab click,
+//   and content mutations.
+// - Do NOT update while the page is actively scrolling.
+// - Use hysteresis: ignore tiny changes under 6px.
 // ============================================================
-(function capvoDynamicDockClearance(){
+(function capvoDockClearanceV6(){
+  const root = document.documentElement;
   let raf = 0;
-
-  function setDockSpace(){
-    raf = 0;
-    const nav = document.querySelector('.mobile-bottom-nav');
-    const root = document.documentElement;
-    if(!nav || window.innerWidth > 768){
-      root.style.removeProperty('--capvo-dock-real-space');
-      return;
-    }
-
-    const rect = nav.getBoundingClientRect();
-    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-
-    // Space from the top of the dock to the bottom of the visible viewport.
-    // Add breathing room so the last card is fully readable above the glass dock.
-    const coveredByDock = Math.max(0, viewportHeight - rect.top);
-    const fallback = rect.height + 48;
-    const clearance = Math.ceil(Math.max(132, coveredByDock + 30, fallback));
-
-    root.style.setProperty('--capvo-dock-real-space', clearance + 'px');
-  }
-
-  function scheduleDockSpace(){
-    if(raf) return;
-    raf = requestAnimationFrame(setDockSpace);
-  }
-
-  window.capvoUpdateDockSpace = scheduleDockSpace;
-
-  ['DOMContentLoaded','load','resize','orientationchange'].forEach(evt=>{
-    window.addEventListener(evt, scheduleDockSpace, {passive:true});
-  });
-
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', scheduleDockSpace, {passive:true});
-    window.visualViewport.addEventListener('scroll', scheduleDockSpace, {passive:true});
-  }
-
-  document.addEventListener('click', ()=>setTimeout(scheduleDockSpace, 60), true);
-  setTimeout(scheduleDockSpace, 0);
-  setTimeout(scheduleDockSpace, 350);
-})();
-
-// ============================================================
-// CAPVO — Dynamic Dock Clearance V5 (PWA initial-load stable)
-// Why: on first PWA open, iOS can report an unstable dock position before
-// layout settles. The old measurement could create a huge blank area until
-// the user tapped a tab. This version clamps the clearance and re-measures
-// after render/scroll/content mutations.
-// ============================================================
-(function capvoDynamicDockClearanceV5(){
-  let raf = 0;
+  let lastValue = 0;
+  let scrollTimer = 0;
+  let isScrolling = false;
   let mutationTimer = 0;
 
   function clamp(n, min, max){
@@ -164,13 +123,13 @@ document.addEventListener('click',e=>{
     return document.querySelector('.mobile-bottom-nav');
   }
 
-  function setDockSpace(){
+  function measureDockSpace(){
     raf = 0;
-    const root = document.documentElement;
-    const nav = getDock();
 
+    const nav = getDock();
     if(!nav || window.innerWidth > 768){
       root.style.removeProperty('--capvo-dock-real-space');
+      lastValue = 0;
       return;
     }
 
@@ -178,54 +137,89 @@ document.addEventListener('click',e=>{
     const vv = window.visualViewport;
     const viewportHeight = vv ? vv.height : window.innerHeight;
 
-    // If iOS measures before the dock has settled, rect.top may be nonsense.
-    // In that case use a sane fallback instead of creating a huge scroll gap.
-    const dockLooksSettled = rect.height > 40 && rect.top > viewportHeight * 0.55;
+    // Ignore unstable measurements during active scroll/rubber-band.
+    // A delayed pass after scrollend/touchend will correct it if needed.
+    if(isScrolling && lastValue){
+      return;
+    }
+
+    const dockLooksSettled = rect.height > 40 && rect.top > viewportHeight * 0.52;
     const measuredCover = dockLooksSettled ? Math.max(0, viewportHeight - rect.top) : 0;
-    const fallback = (rect.height > 40 ? rect.height : 78) + 34;
-
-    // Real desired clearance: dock height + its bottom offset + small breathing room.
-    // Clamp prevents both extremes: hidden final card and giant blank area.
+    const fallback = (rect.height > 40 ? rect.height : 78) + 38;
     const wanted = measuredCover ? measuredCover + 24 : fallback;
-    const clearance = Math.ceil(clamp(wanted, 116, 172));
 
-    root.style.setProperty('--capvo-dock-real-space', clearance + 'px');
+    // Keep this stable. It should be enough for the last card, but never create
+    // the huge blank area from the first attempts.
+    const nextValue = Math.ceil(clamp(wanted, 124, 168));
+
+    // Hysteresis: avoid 1-5px changes causing visual shaking at scroll limits.
+    if(lastValue && Math.abs(nextValue - lastValue) < 6){
+      return;
+    }
+
+    lastValue = nextValue;
+    root.style.setProperty('--capvo-dock-real-space', nextValue + 'px');
     root.classList.add('capvo-dock-ready');
   }
 
-  function scheduleDockSpace(delay){
+  function schedule(delay){
     if(delay){
-      setTimeout(scheduleDockSpace, delay);
+      setTimeout(schedule, delay);
       return;
     }
     if(raf) return;
-    raf = requestAnimationFrame(setDockSpace);
+    raf = requestAnimationFrame(measureDockSpace);
   }
 
-  window.capvoUpdateDockSpace = scheduleDockSpace;
+  function markScrolling(){
+    isScrolling = true;
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(()=>{
+      isScrolling = false;
+      schedule(80);
+    }, 180);
+  }
 
-  ['DOMContentLoaded','load','resize','orientationchange','scroll'].forEach(evt=>{
-    window.addEventListener(evt, ()=>scheduleDockSpace(), {passive:true});
+  window.capvoUpdateDockSpace = schedule;
+
+  ['DOMContentLoaded','load','resize','orientationchange'].forEach(evt=>{
+    window.addEventListener(evt, ()=>schedule(), {passive:true});
   });
 
-  ['touchstart','touchmove','pointerdown','click'].forEach(evt=>{
-    document.addEventListener(evt, ()=>scheduleDockSpace(40), {passive:true, capture:true});
+  // Scroll only marks state; it does not update the CSS variable continuously.
+  window.addEventListener('scroll', markScrolling, {passive:true});
+  document.addEventListener('touchmove', markScrolling, {passive:true});
+  document.addEventListener('touchend', ()=>{ isScrolling=false; schedule(120); }, {passive:true});
+
+  // Tab clicks, modal opens, and UI interactions can change active content height.
+  ['click','pointerdown'].forEach(evt=>{
+    document.addEventListener(evt, ()=>schedule(90), {passive:true, capture:true});
   });
 
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', ()=>scheduleDockSpace(), {passive:true});
-    window.visualViewport.addEventListener('scroll', ()=>scheduleDockSpace(), {passive:true});
+    // Resize matters (keyboard/orientation). visualViewport scroll is intentionally
+    // ignored because it fires during iOS toolbar/bounce and caused jitter.
+    window.visualViewport.addEventListener('resize', ()=>schedule(80), {passive:true});
   }
 
-  // Re-measure when views render async data, when a tab changes, or when cards appear.
+  if('ResizeObserver' in window){
+    const ro = new ResizeObserver(()=>schedule(60));
+    const tryObserve = ()=>{
+      const nav = getDock();
+      if(nav) ro.observe(nav);
+    };
+    tryObserve();
+    setTimeout(tryObserve, 500);
+  }
+
   if('MutationObserver' in window){
     const observer = new MutationObserver(()=>{
       clearTimeout(mutationTimer);
-      mutationTimer = setTimeout(()=>scheduleDockSpace(), 80);
+      mutationTimer = setTimeout(()=>schedule(), 120);
     });
     observer.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class','style']});
   }
 
-  // iOS PWA needs a few delayed passes after first paint and after data render.
-  [0, 80, 180, 350, 700, 1200, 2000].forEach(ms=>scheduleDockSpace(ms));
+  // Initial PWA passes after first paint/data render.
+  [0, 120, 300, 700, 1200].forEach(ms=>schedule(ms));
 })();
