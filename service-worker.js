@@ -1,7 +1,7 @@
 /* CAPVO PWA service worker — dynamic dock fix release
    App-shell cache only. Supabase/Cloudflare API requests are never cached. */
 
-const CACHE_NAME = 'capvo-app-shell-v1.0.2';
+const CACHE_NAME = 'capvo-app-shell-v1.0.3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -26,7 +26,9 @@ const APP_SHELL = [
   './assets/capvo-mark.png',
   './assets/capvo-icon-180.png',
   './assets/capvo-icon-192.png',
-  './assets/capvo-icon-512.png'
+  './assets/capvo-icon-512.png',
+  './assets/capvo-icon-1024.png',
+  './assets/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {
