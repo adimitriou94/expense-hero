@@ -1,7 +1,7 @@
-/* CAPVO PWA Phase 1 service worker
-   App-shell cache only. Supabase/Cloudflare API requests are always network-first and are not cached. */
+/* CAPVO PWA service worker — dynamic dock fix release
+   App-shell cache only. Supabase/Cloudflare API requests are never cached. */
 
-const CACHE_NAME = 'capvo-app-shell-v1';
+const CACHE_NAME = 'capvo-app-shell-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -50,12 +50,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
 
   if (req.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
 
-  // Never cache Supabase, Cloudflare Worker, auth, Telegram sync, or other external API calls.
-  const isExternal = url.origin !== self.location.origin;
-  if (isExternal) return;
-
-  // HTML/navigation: network first so new deployments are picked up quickly.
   if (req.mode === 'navigate' || req.destination === 'document') {
     event.respondWith(
       fetch(req)
@@ -69,7 +65,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static files: cache first, refresh in background.
   event.respondWith(
     caches.match(req).then(cached => {
       const network = fetch(req).then(res => {

@@ -6382,3 +6382,86 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     box-sizing:border-box !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO — Quick Add recent chips containment V4
+   Purpose: prevent recent chips from wrapping over the Save button on iPhone.
+   ============================================================ */
+
+@media (max-width:768px){
+  .add-center-recent,
+  .add-center-v4 .add-center-recent,
+  #addCenterRecentChips{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    gap:8px !important;
+    width:100% !important;
+    max-width:100% !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    white-space:nowrap !important;
+    padding:2px 0 6px !important;
+    margin-bottom:10px !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:none !important;
+  }
+
+  .add-center-recent::-webkit-scrollbar,
+  .add-center-v4 .add-center-recent::-webkit-scrollbar,
+  #addCenterRecentChips::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  .add-center-recent button,
+  .add-center-v4 .add-center-recent button,
+  .add-center-recent .capvo-recent-card,
+  .capvo-recent-card{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+    max-width:min(72vw, 260px) !important;
+  }
+
+  .add-center-submit,
+  .quick-sheet-submit,
+  #quickAddSheetSubmit{
+    position:relative !important;
+    z-index:3 !important;
+    margin-top:10px !important;
+  }
+}
+
+/* ============================================================
+   CAPVO — Quick Add recent chips V5
+   Prevent recent chips from wrapping onto the save button on small iPhones.
+   ============================================================ */
+@media (max-width: 768px){
+  .add-center-recent-list,
+  .quick-sheet-examples,
+  .smart-quick-repeat,
+  #quickRepeatChips{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    gap:8px !important;
+    max-width:100% !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:none !important;
+  }
+
+  .add-center-recent-list::-webkit-scrollbar,
+  .quick-sheet-examples::-webkit-scrollbar,
+  .smart-quick-repeat::-webkit-scrollbar,
+  #quickRepeatChips::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  .add-center-recent-list > *,
+  .quick-sheet-examples > *,
+  .smart-quick-repeat > *,
+  #quickRepeatChips > *{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+  }
+}

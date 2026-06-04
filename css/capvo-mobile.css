@@ -6894,3 +6894,164 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     scroll-padding-bottom:var(--capvo-sheet-safe-space) !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO — Dynamic Dock Clearance V4
+   Purpose:
+   - Stop content exactly above the floating bottom nav in Safari/PWA.
+   - Use the real measured dock position from JS instead of hardcoded padding.
+   - Fix previous wrong #vHome selector by targeting #vDash and all real views.
+   ============================================================ */
+
+@media (max-width: 768px){
+  :root{
+    --capvo-dock-real-space: 156px;
+    --capvo-dock-safe-space: max(132px, var(--capvo-dock-real-space));
+    --capvo-sheet-safe-space: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  html,
+  body{
+    width:100% !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+    overscroll-behavior-x:none !important;
+  }
+
+  body:not(.auth-pending),
+  .app,
+  .view,
+  .view.active,
+  #vDash,
+  #vTransactions,
+  #vRecurring,
+  #vIncome,
+  #vCards,
+  #vAdvisor,
+  #vStats,
+  #vArchive,
+  #vSettings,
+  #vMore{
+    padding-bottom:0 !important;
+    overflow-x:hidden !important;
+    max-width:100% !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  /* One and only one bottom clearance: the real scroll containers. */
+  #vDash .modern-dashboard-shell,
+  #vTransactions .transactions-page,
+  #vRecurring .page-grid,
+  #vIncome .page-grid,
+  #vCards .page-grid,
+  #vAdvisor .page-grid,
+  #vStats .reports-page,
+  #vArchive .page-grid,
+  #vSettings .settings-page,
+  #vMore .more-page{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  /* The final card should be able to sit fully above the dock without a huge blank screen. */
+  #vDash .modern-dashboard-shell > *:last-child,
+  #vTransactions .transactions-page > *:last-child,
+  #vRecurring .page-grid > *:last-child,
+  #vIncome .page-grid > *:last-child,
+  #vCards .page-grid > *:last-child,
+  #vAdvisor .page-grid > *:last-child,
+  #vStats .reports-page > *:last-child,
+  #vArchive .page-grid > *:last-child,
+  #vSettings .settings-page > *:last-child,
+  #vMore .more-page > *:last-child{
+    margin-bottom:0 !important;
+  }
+
+  .mobile-bottom-nav{
+    bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .modal,
+  .modal-wide .modal,
+  .quick-sheet,
+  .add-center-sheet,
+  .add-center-v4,
+  .capvo-sync-review-sheet,
+  .mobile-transaction-detail-sheet,
+  .reports-sheet{
+    padding-bottom:var(--capvo-sheet-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-sheet-safe-space) !important;
+  }
+}
+
+/* ============================================================
+   CAPVO — PWA Dock Clearance V5 final override
+   Fixes initial-load dashboard blank gap before first tap/tab switch.
+   Uses a clamped dynamic variable from 08-auth-bootstrap.js.
+   ============================================================ */
+@media (max-width: 768px){
+  :root{
+    --capvo-dock-real-space: 136px;
+    --capvo-dock-safe-space: clamp(116px, var(--capvo-dock-real-space), 172px);
+    --capvo-sheet-safe-space: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  html,
+  body,
+  .app,
+  .view,
+  .view.active{
+    overflow-x:hidden !important;
+    max-width:100% !important;
+  }
+
+  body:not(.auth-pending),
+  .app,
+  .view,
+  .view.active,
+  #vDash,
+  #vTransactions,
+  #vRecurring,
+  #vIncome,
+  #vCards,
+  #vAdvisor,
+  #vStats,
+  #vArchive,
+  #vSettings,
+  #vMore{
+    padding-bottom:0 !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  #vDash .modern-dashboard-shell,
+  #vTransactions .transactions-page,
+  #vRecurring .page-grid,
+  #vIncome .page-grid,
+  #vCards .page-grid,
+  #vAdvisor .page-grid,
+  #vStats .reports-page,
+  #vArchive .page-grid,
+  #vSettings .settings-page,
+  #vMore .more-page{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  #vDash .modern-dashboard-shell > *:last-child,
+  #vTransactions .transactions-page > *:last-child,
+  #vRecurring .page-grid > *:last-child,
+  #vIncome .page-grid > *:last-child,
+  #vCards .page-grid > *:last-child,
+  #vAdvisor .page-grid > *:last-child,
+  #vStats .reports-page > *:last-child,
+  #vArchive .page-grid > *:last-child,
+  #vSettings .settings-page > *:last-child,
+  #vMore .more-page > *:last-child{
+    margin-bottom:0 !important;
+  }
+
+  .mobile-bottom-nav{
+    bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+}
