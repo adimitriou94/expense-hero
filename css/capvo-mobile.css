@@ -6738,3 +6738,159 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     overflow-wrap:anywhere;
   }
 }
+
+
+/* ============================================================
+   CAPVO — Safari Spacing Tuning V2
+   Purpose:
+   - Reduce the excessive blank space caused by the first safe-area pass.
+   - Keep enough space so the bottom dock/Safari toolbar do not cover content.
+   - Avoid cumulative bottom padding from body + app + view + page containers.
+   ============================================================ */
+
+@media (max-width: 768px){
+  :root{
+    --capvo-dock-safe-space: calc(148px + env(safe-area-inset-bottom));
+    --capvo-sheet-safe-space: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  html,
+  body{
+    max-width:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  body:not(.auth-pending){
+    padding-bottom:0 !important;
+  }
+
+  .app{
+    padding-bottom:0 !important;
+    overflow-x:hidden !important;
+  }
+
+  .view,
+  .view.active{
+    padding-bottom:0 !important;
+    overflow-x:hidden !important;
+    max-width:100% !important;
+  }
+
+  #vHome,
+  #vTransactions,
+  #vIncome,
+  #vCards,
+  #vAdvisor,
+  #vStats,
+  #vArchive,
+  #vSettings{
+    padding-bottom:0 !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+    overflow-x:hidden !important;
+  }
+
+  #vHome .modern-dashboard-shell,
+  #vTransactions .transactions-page,
+  #vIncome .page-grid,
+  #vCards .page-grid,
+  #vAdvisor .page-grid,
+  #vStats .reports-page,
+  #vArchive .page-grid,
+  #vSettings .settings-page{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  .modal,
+  .modal-wide .modal,
+  .quick-sheet,
+  .add-center-sheet,
+  .add-center-v4,
+  .capvo-sync-review-sheet,
+  .mobile-transaction-detail-sheet{
+    max-height:min(86dvh,760px) !important;
+    padding-bottom:var(--capvo-sheet-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-sheet-safe-space) !important;
+  }
+}
+
+/* ============================================================
+   CAPVO — Safari Dynamic Bottom Space V3
+   Purpose:
+   - V2 reduced the huge blank area too much, so the dock covered cards.
+   - This pass uses ONE non-cumulative responsive bottom space on page content.
+   - It is tuned for iPhone Safari but remains reasonable on smaller screens.
+   ============================================================ */
+
+@media (max-width: 768px){
+  :root{
+    /* One source of truth for page bottom breathing room. */
+    --capvo-dock-safe-space: clamp(174px, 21dvh, 198px);
+    --capvo-sheet-safe-space: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  html,
+  body{
+    width:100% !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  body:not(.auth-pending),
+  .app,
+  .view,
+  .view.active,
+  #vHome,
+  #vTransactions,
+  #vIncome,
+  #vCards,
+  #vAdvisor,
+  #vStats,
+  #vArchive,
+  #vSettings{
+    padding-bottom:0 !important;
+    overflow-x:hidden !important;
+    max-width:100% !important;
+  }
+
+  /* Apply bottom spacing ONLY to the actual page scroll content, not every wrapper. */
+  #vHome .modern-dashboard-shell,
+  #vTransactions .transactions-page,
+  #vIncome .page-grid,
+  #vCards .page-grid,
+  #vAdvisor .page-grid,
+  #vStats .reports-page,
+  #vArchive .page-grid,
+  #vSettings .settings-page{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+
+  /* Give isolated lower cards enough clearance without creating a full empty screen. */
+  .modern-dashboard-lists,
+  .modern-dashboard-preview,
+  #vIncome .income-sources-card,
+  #vCards .page-grid > *:last-child,
+  #vAdvisor .page-grid > *:last-child,
+  #vStats .reports-page > *:last-child,
+  #vArchive .page-grid > *:last-child,
+  #vSettings .settings-page > *:last-child{
+    margin-bottom:18px !important;
+  }
+
+  .mobile-bottom-nav{
+    bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Sheets need their own bottom safe area, but not page-sized padding. */
+  .modal,
+  .modal-wide .modal,
+  .quick-sheet,
+  .add-center-sheet,
+  .add-center-v4,
+  .capvo-sync-review-sheet,
+  .mobile-transaction-detail-sheet{
+    max-height:min(86dvh,760px) !important;
+    padding-bottom:var(--capvo-sheet-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-sheet-safe-space) !important;
+  }
+}
