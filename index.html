@@ -2,18 +2,23 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>CAPVO</title>
+  <meta name="theme-color" content="#6547f6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CAPVO">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css">
-  <link rel="stylesheet" href="css/capvo-components.css">
-  <link rel="stylesheet" href="css/capvo-pages.css">
-  <link rel="stylesheet" href="css/capvo-mobile.css">
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.0.2">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.0.2">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.0.2">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.0.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.0.2">
   <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
 
@@ -906,7 +911,7 @@
           <strong>CAPVO</strong>
           <span>Track. Understand. Control.</span>
         </div>
-        <em>Version 1.0.1</em>
+        <em id="capvoVersionLabel">Version 1.0.2</em>
       </section>
 
     </section>
@@ -1488,24 +1493,25 @@
   </div>
 </div>
 
+<script src="js/app-version.js?v=1.0.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
+<script src="js/config.js?v=1.0.2"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=47-js-split"></script>
-<script src="js/app/01-ui-selection-toast.js?v=47-js-split"></script>
-<script src="js/app/02-supabase-data.js?v=47-js-split"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=47-js-split"></script>
-<script src="js/app/04-reports-archive.js?v=47-js-split"></script>
-<script src="js/app/05-income-pickers.js?v=47-js-split"></script>
-<script src="js/app/06-modals-nav-auth.js?v=47-js-split"></script>
-<script src="js/app/07-add-center.js?v=47-js-split"></script>
-<script src="js/app/08-auth-bootstrap.js?v=47-js-split"></script>
+<script src="js/app/00-core-state.js?v=1.0.2"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.0.2"></script>
+<script src="js/app/02-supabase-data.js?v=1.0.2"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.0.2"></script>
+<script src="js/app/04-reports-archive.js?v=1.0.2"></script>
+<script src="js/app/05-income-pickers.js?v=1.0.2"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.0.2"></script>
+<script src="js/app/07-add-center.js?v=1.0.2"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.0.2"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=47-js-split"></script>
-<script src="js/sync.js?v=47-js-split"></script>
-<script src="js/advisor.js?v=47-js-split"></script>
+<script src="js/cards.js?v=1.0.2"></script>
+<script src="js/sync.js?v=1.0.2"></script>
+<script src="js/advisor.js?v=1.0.2"></script>
 
 
 

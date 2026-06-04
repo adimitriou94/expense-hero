@@ -6465,3 +6465,22 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     white-space:nowrap !important;
   }
 }
+
+/* ============================================================
+   CAPVO v1.0.2 — Strong tap behavior / no accidental zoom
+   ============================================================ */
+@media (max-width: 768px){
+  button,
+  a,
+  [role="button"],
+  .btn,
+  .mobile-nav-item,
+  .mobile-nav-fab,
+  .section-add,
+  .add-center-tab,
+  .quick-sheet-examples button,
+  .smart-quick-repeat button{
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

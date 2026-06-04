@@ -4,10 +4,10 @@
 
 
 // ============================================================
-// CAPVO PWA v1.0.1 — Service worker registration + zoom guard
+// CAPVO PWA v1.0.2 — Service worker registration + zoom guard
 // ============================================================
 (function capvoPwaRuntimeGuards(){
-  window.CAPVO_VERSION = window.CAPVO_VERSION || '1.0.1';
+  window.CAPVO_VERSION = window.CAPVO_VERSION || '1.0.2';
 
   // iOS Safari/PWA: prevent accidental pinch/double-tap zoom.
   // The viewport meta handles most cases; gesture/touch guards cover iOS edge cases.
@@ -16,6 +16,26 @@
       e.preventDefault();
     }, { passive:false });
   });
+
+  // Extra iOS/PWA guard: stop pinch zoom even on charts/SVG/canvas areas.
+  document.addEventListener('touchstart', function(e){
+    if(e.touches && e.touches.length > 1){
+      e.preventDefault();
+    }
+  }, { passive:false });
+
+  document.addEventListener('touchmove', function(e){
+    if(e.touches && e.touches.length > 1){
+      e.preventDefault();
+    }
+  }, { passive:false });
+
+  // Desktop/mobile web edge case: Ctrl/trackpad zoom.
+  document.addEventListener('wheel', function(e){
+    if(e.ctrlKey){
+      e.preventDefault();
+    }
+  }, { passive:false });
 
   var lastTouchEnd = 0;
   document.addEventListener('touchend', function(e){
@@ -33,7 +53,7 @@
       navigator.serviceWorker.register('./service-worker.js')
         .then(function(reg){
           if(reg && reg.update) reg.update();
-          console.info('[CAPVO] PWA service worker registered v1.0.1');
+          console.info('[CAPVO] PWA service worker registered v' + window.CAPVO_VERSION);
         })
         .catch(function(err){
           console.warn('[CAPVO] PWA service worker registration failed', err);
