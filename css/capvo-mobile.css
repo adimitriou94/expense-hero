@@ -7055,3 +7055,35 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     bottom:calc(12px + env(safe-area-inset-bottom)) !important;
   }
 }
+/* ============================================================
+   CAPVO PWA v1.0.1 — iOS zoom prevention + stable viewport
+   Prevents accidental double-tap/input zoom in standalone PWA.
+   ============================================================ */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    overflow-x: hidden !important;
+    overscroll-behavior-x: none !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  button,
+  a,
+  [role="button"],
+  .mobile-nav-item,
+  .mobile-nav-fab,
+  .add-center-tab,
+  .add-center-close {
+    touch-action: manipulation;
+  }
+}
