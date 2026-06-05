@@ -165,7 +165,7 @@ async function saveDaily(){
   const category=$('fDC').value;
   const paymentSourceId=$('fDPay')?.value||'';
   const paymentSource=paymentSourceById(paymentSourceId);
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
   const btn=$('btnDaily');
 
   if(!n){
@@ -180,7 +180,7 @@ async function saveDaily(){
 
   if(!userId){
     showMiniToast(
-      '❌ Σύνδεσε πρώτα το Telegram',
+      '❌ Δεν υπάρχει ενεργή σύνδεση Google',
       'error'
     );
     return;
@@ -266,7 +266,7 @@ async function saveFixed(){
   const a=parseFloat($('fFA').value);
   const id=$('fFID').value;
   const category=$('fFC').value;
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
   const btn=$('btnFixed');
 
   if(!n){
@@ -281,7 +281,7 @@ async function saveFixed(){
 
   if(!userId){
     showMiniToast(
-      '❌ Σύνδεσε πρώτα το Telegram',
+      '❌ Δεν υπάρχει ενεργή σύνδεση Google',
       'error'
     );
     return;
@@ -539,10 +539,10 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
     return false;
   }
 
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
 
   if(!userId){
-    const message='Σύνδεσε πρώτα το Telegram/Google για να αποθηκευτεί το έξοδο.';
+    const message='Δεν υπάρχει ενεργή σύνδεση Google για να αποθηκευτεί το έξοδο.';
 
     if(errorTarget){
       setQuickAddInlineError(message,errorTarget);
@@ -781,8 +781,9 @@ async function signOutUser(){
 
 async function getOrCreateProfile(user){
   const metadata=user.user_metadata||{};
+  const syntheticOwnerId=getSyntheticOwnerId(user);
 
-  const profilePayload={
+  const metadataPayload={
     user_id:user.id,
     email:user.email||'',
     full_name:metadata.full_name||metadata.name||'',
@@ -790,10 +791,6 @@ async function getOrCreateProfile(user){
     updated_at:new Date().toISOString()
   };
 
-  // IMPORTANT:
-  // Do not blindly upsert on every auth check, because it can wipe/lose
-  // telegram_chat_id depending on the Supabase/PostgREST merge behaviour.
-  // First read the profile, then update only the metadata fields.
   const {data:existing,error:selectError}=await supabaseClient
     .from('profiles')
     .select('*')
@@ -803,30 +800,71 @@ async function getOrCreateProfile(user){
   if(selectError)throw selectError;
 
   if(existing){
+    const updatePayload={...metadataPayload};
+
+    // Telegram is now optional, but the current RLS/data model still expects an
+    // owner value in profiles.telegram_chat_id for rows that use user_chat_id.
+    // For users that have not linked Telegram yet, keep an internal non-numeric
+    // owner id. It is NOT treated as a real Telegram connection in the UI.
+    if(!existing.telegram_chat_id && syntheticOwnerId){
+      updatePayload.telegram_chat_id=syntheticOwnerId;
+    }
+
     const {data,error}=await supabaseClient
       .from('profiles')
-      .update(profilePayload)
+      .update(updatePayload)
       .eq('user_id',user.id)
       .select('*')
       .single();
 
     if(error){
-      console.warn('Profile metadata update failed, using existing profile:',error);
-      return {...existing,...profilePayload};
+      console.warn('Profile metadata/owner update failed, using existing profile:',error);
+      return {...existing,...updatePayload};
     }
 
     return data;
   }
 
+  const insertPayload={
+    ...metadataPayload,
+    telegram_chat_id:syntheticOwnerId||null
+  };
+
   const {data,error}=await supabaseClient
     .from('profiles')
-    .insert(profilePayload)
+    .insert(insertPayload)
     .select('*')
     .single();
 
   if(error)throw error;
 
   return data;
+}
+
+
+async function migrateLocalOwnerDataToTelegram(previousOwnerId,newTelegramChatId){
+  if(!previousOwnerId || !newTelegramChatId || String(previousOwnerId)===String(newTelegramChatId))return;
+
+  const ownerTables=['expenses','fixed_expenses','income_sources','credit_cards'];
+
+  for(const table of ownerTables){
+    const {error}=await supabaseClient
+      .from(table)
+      .update({user_chat_id:newTelegramChatId})
+      .eq('user_chat_id',previousOwnerId);
+
+    if(error){
+      console.warn(`Owner migration skipped for ${table}:`,error);
+    }
+  }
+
+  try{
+    await supabaseClient
+      .from('users')
+      .upsert({chat_id:newTelegramChatId,income:D.income||0},{onConflict:'chat_id'});
+  }catch(e){
+    console.warn('Owner migration users upsert skipped:',e);
+  }
 }
 
 async function saveTelegramChatId(ev){
@@ -838,6 +876,7 @@ async function saveTelegramChatId(ev){
 
   const chatId=(input?.value||'').trim();
   const code=(codeInput?.value||'').trim();
+  const previousOwnerId=getDataOwnerId();
 
   if(err)err.textContent='';
 
@@ -896,10 +935,23 @@ async function saveTelegramChatId(ev){
       })
     });
 
-    const data=await res.json();
+    let data={};
+
+    try{
+      data=await res.json();
+    }catch(jsonError){
+      data={
+        error:'Verification response was not JSON',
+        message:'Δεν μπορέσαμε να διαβάσουμε την απάντηση επιβεβαίωσης. Δοκίμασε ξανά.'
+      };
+    }
 
     if(!res.ok || data.error){
-      throw new Error(data.error||'Verification failed');
+      const verificationError=new Error(data.message||data.error||'Verification failed');
+      verificationError.code=data.code||'';
+      verificationError.status=res.status;
+      verificationError.detail=data.detail||'';
+      throw verificationError;
     }
 
     let verifiedProfile=data.profile||null;
@@ -934,6 +986,8 @@ async function saveTelegramChatId(ev){
     changingTelegramId=false;
     localStorage.setItem(SK,chatId);
 
+    await migrateLocalOwnerDataToTelegram(previousOwnerId,chatId);
+
     const btn=$('authSubmitBtn');
 
     if(btn){
@@ -951,7 +1005,22 @@ async function saveTelegramChatId(ev){
     console.error('saveTelegramChatId error:',e);
 
     if(err){
-      err.textContent='Δεν έγινε επιβεβαίωση. Έλεγξε Chat ID και κωδικό.';
+      const code=e?.code||'';
+      let message=e?.message||'Δεν έγινε επιβεβαίωση. Έλεγξε Chat ID και κωδικό.';
+
+      if(code==='TELEGRAM_ALREADY_LINKED_TO_OTHER_ACCOUNT'){
+        message='Αυτό το Telegram είναι ήδη συνδεδεμένο με άλλο λογαριασμό. Για test, καθάρισε πρώτα το telegram_chat_id από το παλιό profile ή μπες με τον παλιό λογαριασμό.';
+      }else if(code==='TELEGRAM_LINK_CODE_INVALID_OR_EXPIRED'){
+        message='Ο κωδικός δεν είναι σωστός ή έχει λήξει. Στείλε ξανά /code στο Telegram bot και δοκίμασε ξανά.';
+      }else if(code==='TELEGRAM_LINK_INVALID_FORMAT'){
+        message='Το Chat ID πρέπει να είναι αριθμός και ο κωδικός πρέπει να είναι 6 ψηφία.';
+      }else if(code==='TELEGRAM_LINK_PROFILE_UPDATE_FAILED'){
+        message='Ο κωδικός επιβεβαιώθηκε, αλλά δεν μπορέσαμε να συνδέσουμε το Telegram στο profile. Δοκίμασε ξανά.';
+      }else if(!message || message==='Verification failed' || message==='Profile update failed'){
+        message='Δεν έγινε επιβεβαίωση. Έλεγξε Chat ID και κωδικό.';
+      }
+
+      err.textContent=message;
     }
   }finally{
     setAuthLoading(false);
@@ -996,9 +1065,11 @@ function renderAuthState(){
     `;
   }
 
-  if(currentProfile?.telegram_chat_id && !changingTelegramId){
+  const realTelegramChatId=getTelegramChatId();
+
+  if(realTelegramChatId && !changingTelegramId){
     const input=$('chatIdInput');
-    if(input)input.value=currentProfile.telegram_chat_id;
+    if(input)input.value=realTelegramChatId;
   }
 }
 
@@ -1039,7 +1110,7 @@ function hideAuth(){
   }
 }
 
-async function loadUserData(userId){await fetchAllData(userId);curM=curMK();ensM(curM);render();go('vDash',document.querySelector('[data-v="vDash"]'));hideAuth()}
+async function loadUserData(userId){const ownerId=userId||getDataOwnerId();await fetchAllData(ownerId);curM=curMK();ensM(curM);render();go('vDash',document.querySelector('[data-v="vDash"]'));hideAuth()}
 
 async function connectWithChatId(ev){
   return saveTelegramChatId(ev);
@@ -1054,7 +1125,7 @@ function switchChatId(){
   const input=$('chatIdInput');
   if(input)input.value='';
 
-  showAuth('Σύνδεσε νέο Telegram Chat ID.');
+  showAuth(getTelegramChatId()?'Σύνδεσε νέο Telegram Chat ID. Μέχρι να ολοκληρωθεί η αλλαγή, η παλιά σύνδεση παραμένει ενεργή.':'Σύνδεσε το Telegram για να ενεργοποιήσεις το Sync.');
   renderAuthState();
 
   const btn=$('authSubmitBtn');
@@ -1163,19 +1234,18 @@ async function initApp(){
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
-    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
+    const chatId=getTelegramChatId();
 
-    if(!chatId){
-      showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
-      return;
+    if(chatId){
+      if(!isRealTelegramChatId(currentProfile?.telegram_chat_id)){
+        currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
+      }
+      localStorage.setItem(SK,chatId);
+    }else{
+      localStorage.removeItem(SK);
     }
 
-    if(!currentProfile?.telegram_chat_id){
-      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
-    }
-
-    localStorage.setItem(SK,chatId);
-    await loadUserData(chatId);
+    await loadUserData(getDataOwnerId());
 
   }catch(e){
     console.error('Init error:',e);
@@ -1219,19 +1289,18 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
-    const chatId=currentProfile?.telegram_chat_id || localStorage.getItem(SK);
+    const chatId=getTelegramChatId();
 
-    if(!chatId){
-      showAuth('Σύνδεσε το Telegram Chat ID σου για να συνεχίσεις.');
-      return;
+    if(chatId){
+      if(!isRealTelegramChatId(currentProfile?.telegram_chat_id)){
+        currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
+      }
+      localStorage.setItem(SK,chatId);
+    }else{
+      localStorage.removeItem(SK);
     }
 
-    if(!currentProfile?.telegram_chat_id){
-      currentProfile={...(currentProfile||{}),telegram_chat_id:chatId};
-    }
-
-    localStorage.setItem(SK,chatId);
-    await loadUserData(chatId);
+    await loadUserData(getDataOwnerId());
 
   }catch(e){
     console.error('Auth state error:',e);

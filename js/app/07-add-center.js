@@ -321,7 +321,7 @@ async function saveAddCenterManualExpense(){
   const paymentSourceId=payEl?.value||'';
   const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
   const date=dateEl?.value||addCenterToday();
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
 
   if(!name){
     setQuickAddInlineError('Συμπλήρωσε τίτλο εξόδου.','addCenterManualError');
@@ -814,7 +814,7 @@ async function saveAddCenterManualExpense(){
   const paymentSourceId=payEl?.value||'';
   const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
   const date=dateEl?.value||addCenterToday();
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
   const editing=addCenterEditState?.type==='daily';
   const id=editing ? addCenterEditState.id : gid();
 

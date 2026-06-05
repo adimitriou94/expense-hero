@@ -11,14 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.0.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.0.8.1">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.0.2">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.0.2">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.0.2">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.0.2">
-  <link rel="manifest" href="manifest.webmanifest?v=1.0.3">
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.0.8.1">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.0.8.1">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.0.8.1">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.0.8.1">
+  <link rel="manifest" href="manifest.webmanifest?v=1.0.8.1">
   <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
 
@@ -254,19 +254,6 @@
 
       <!-- TOP SUMMARY / HERO -->
       <section class="modern-dashboard-main">
-        <div class="modern-dashboard-topline">
-          <div>
-            <div class="capvo-section-brand"><img src="assets/capvo-mark.png" alt=""><span>CAPVO Dashboard</span></div>
-            <div class="modern-kicker">Money overview</div>
-            <h2>Η οικονομική εικόνα σου</h2>
-            <p>Μηνιαίο budget, έξοδα και καθαρή οικονομική εικόνα σε ένα dashboard.</p>
-          </div>
-
-          <button class="modern-month-chip" type="button" onclick="chMonth(0)">
-            <span id="modernMonthMirror">Τρέχων μήνας</span>
-          </button>
-        </div>
-
         <div class="bento-card hero-card modern-hero-card">
           <div class="hero-glow"></div>
           <div class="modern-hero-pattern"></div>
@@ -806,7 +793,7 @@
 
         <div class="settings-actions">
           <button class="settings-primary-action" id="syncBtn" onclick="syncFromTelegram()">Συγχρονισμός τώρα</button>
-          <button class="settings-secondary-action" onclick="switchChatId()">Αλλαγή Telegram</button>
+          <button class="settings-secondary-action" id="changeTelegramBtn" onclick="switchChatId()">Αλλαγή Telegram</button>
         </div>
 
         <div id="syncStatus" class="settings-sync-status" style="display:none"></div>
@@ -911,7 +898,7 @@
           <strong>CAPVO</strong>
           <span>Track. Understand. Control.</span>
         </div>
-        <em id="capvoVersionLabel">Version 1.0.3</em>
+        <em id="capvoVersionLabel">Version 1.0.7</em>
       </section>
 
     </section>
@@ -1493,25 +1480,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.0.3"></script>
+<script src="js/app-version.js?v=1.0.8.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.0.2"></script>
+<script src="js/config.js?v=1.0.8.1"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.0.2"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.0.2"></script>
-<script src="js/app/02-supabase-data.js?v=1.0.2"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.0.2"></script>
-<script src="js/app/04-reports-archive.js?v=1.0.2"></script>
-<script src="js/app/05-income-pickers.js?v=1.0.2"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.0.2"></script>
-<script src="js/app/07-add-center.js?v=1.0.2"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.0.2"></script>
+<script src="js/app/00-core-state.js?v=1.0.8.1"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.0.8.1"></script>
+<script src="js/app/02-supabase-data.js?v=1.0.8.1"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.0.8.1"></script>
+<script src="js/app/04-reports-archive.js?v=1.0.8.1"></script>
+<script src="js/app/05-income-pickers.js?v=1.0.8.1"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.0.8.1"></script>
+<script src="js/app/07-add-center.js?v=1.0.8.1"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.0.8.1"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.0.2"></script>
-<script src="js/sync.js?v=1.0.2"></script>
-<script src="js/advisor.js?v=1.0.2"></script>
+<script src="js/cards.js?v=1.0.8.1"></script>
+<script src="js/sync.js?v=1.0.8.1"></script>
+<script src="js/advisor.js?v=1.0.8.1"></script>
 
 
 

@@ -5,16 +5,29 @@
 // ===== SUPABASE DATA OPERATIONS =====
 async function fetchAllData(userId){
   try{
+    if(!userId){
+      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{}};
+      refreshComputedIncome();
+      return;
+    }
     let {data:user,error:errUser}=await supabaseClient.from('users').select('income').eq('chat_id',userId).single();
 
     if(errUser&&errUser.code==='PGRST116'){
-      await supabaseClient.from('users').upsert({chat_id:userId,income:0},{onConflict:'chat_id'});
+      const {error:createUserError}=await supabaseClient
+        .from('users')
+        .upsert({chat_id:userId,income:0},{onConflict:'chat_id'});
+
+      if(createUserError){
+        console.warn('User income row create skipped:',createUserError);
+      }
+
       user={income:0};
     }else if(errUser){
-      throw errUser;
+      console.warn('User income row fetch skipped:',errUser);
+      user={income:0};
     }
 
-    D.income=user.income||0;
+    D.income=user?.income||0;
 
     const {data:incomeSources,error:errIncomeSources}=await supabaseClient
     .from('income_sources')
@@ -152,13 +165,19 @@ async function syncIncomeSources(userId){
 }
 
 async function saveToSupabase(){
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
   if(!userId) return;
 
   try{
     refreshComputedIncome();
 
-    await supabaseClient.from('users').upsert({chat_id:userId,income:D.income},{onConflict:'chat_id'});
+    const {error:userSaveError}=await supabaseClient
+      .from('users')
+      .upsert({chat_id:userId,income:D.income},{onConflict:'chat_id'});
+
+    if(userSaveError){
+      console.warn('User income row save skipped:',userSaveError);
+    }
 
     await syncIncomeSources(userId);
 
@@ -285,7 +304,7 @@ function renderSettingsPage(){
   const root=$('vSettings');
   if(!root)return;
 
-  const chatId=localStorage.getItem(SK)||'';
+  const chatId=getTelegramChatId();
   const months=Object.keys(D.months||{}).sort();
   const dailyCount=Object.values(D.months||{})
     .reduce((sum,m)=>sum+((m.daily||[]).length),0);
@@ -303,14 +322,43 @@ function renderSettingsPage(){
   };
 
   const memberSince=monthLabel(months[0]||curM||curMK());
-  const syncKey=typeof getSyncKey==='function'?getSyncKey():'';
+  const syncKey=chatId && typeof getSyncKey==='function'?getSyncKey():'';
   const lastTelegramId=syncKey?localStorage.getItem(syncKey):'';
-  const syncLabel=lastTelegramId?'Έχει γίνει sync':'Μετά τον πρώτο συγχρονισμό';
+  const syncLabel=chatId
+    ? (lastTelegramId?'Έχει γίνει sync':'Μετά τον πρώτο συγχρονισμό')
+    : 'Σύνδεσε Telegram για sync';
 
   setText('settingsTelegramState',chatId?'Συνδεδεμένο':'Δεν έχει συνδεθεί');
   setText('settingsTelegramLabel',chatId?'🟢 Συνδεδεμένο':'⚪ Δεν έχει συνδεθεί');
   setText('settingsChatId',chatId||'—');
   setText('settingsTelegramLastSync',syncLabel);
+
+  const telegramCard=document.querySelector('.settings-telegram-card');
+  const telegramDesc=telegramCard?.querySelector('.settings-card-head p');
+  const syncBtn=$('syncBtn');
+  const switchBtn=$('changeTelegramBtn');
+
+  if(telegramDesc){
+    telegramDesc.innerHTML=chatId
+      ? 'Τράβα αυτόματα τα έξοδα που έστειλες στο Telegram Bot.'
+      : 'Σύνδεσε το Telegram bot για να καταχωρείς έξοδα με μήνυμα ή φωνή, χωρίς να ανοίγεις την εφαρμογή.<br><small>Παραδείγματα: “καφές 3”, “βενζίνη 20”, “σούπερ 25 ticket”</small>';
+  }
+
+  if(syncBtn){
+    syncBtn.textContent=chatId?'Συγχρονισμός τώρα':'Σύνδεση Telegram';
+    syncBtn.onclick=()=>{
+      if(chatId){
+        if(typeof syncFromTelegram==='function')syncFromTelegram();
+      }else{
+        switchChatId();
+      }
+    };
+  }
+
+  if(switchBtn){
+    switchBtn.style.display=chatId?'':'none';
+    switchBtn.textContent='Αλλαγή Telegram';
+  }
   setText('settingsDataCount',String(totalData));
   setText('settingsMonthCount',String(months.length));
   setText('settingsTxCount',String(dailyCount));

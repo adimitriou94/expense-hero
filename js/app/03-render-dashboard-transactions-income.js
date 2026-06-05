@@ -2,6 +2,34 @@
 // Source: js/legacy/app.monolith.backup.js
 // Keep classic <script> loading order from index.html.
 
+
+function capvoDashboardFirstName(){
+  try{
+    const meta=currentUser?.user_metadata||{};
+    const raw=(currentProfile?.full_name||meta.full_name||meta.name||currentUser?.email||'').trim();
+    if(!raw)return 'σου';
+    if(/andreas|adimitriou/i.test(raw))return 'Ανδρέα';
+    const clean=raw.includes('@')?raw.split('@')[0]:raw;
+    const first=clean.split(/[\s._-]+/).filter(Boolean)[0]||'σου';
+    return first.charAt(0).toUpperCase()+first.slice(1);
+  }catch(e){
+    return 'σου';
+  }
+}
+
+function renderDashboardGreeting(){
+  const title=$('capvoGreetingTitle');
+  const sub=$('capvoGreetingSub');
+  if(!title&&!sub)return;
+  const name=capvoDashboardFirstName();
+  if(title)title.textContent=name==='σου'?'Γεια σου 👋':`Γεια σου, ${name} 👋`;
+  if(sub){
+    const parts=String(curM||curMK()).split('-');
+    const monthName=MG[(parseInt(parts[1]||'1',10)-1)]||'μήνας';
+    sub.textContent=`Ο ${monthName} είναι ενημερωμένος.`;
+  }
+}
+
 // ===== MAIN RENDER =====
 function render(){
   refreshComputedIncome();
@@ -18,6 +46,7 @@ function render(){
   const[y,mo]=curM.split('-');
 
   $('mLabel').textContent=MG[parseInt(mo)-1]+' '+y;
+  renderDashboardGreeting();
   $('dIncome').textContent=fmt(D.income);
   $('dBalance').textContent=fmt(bal);
   $('dBalance').style.color=bal<0?'#fca5a5':'#ffffff';
@@ -900,7 +929,7 @@ async function saveIncomeSource(){
   const id=$('fISID').value;
   const name=$('fISName').value.trim();
   const amount=parseFloat($('fISAmount').value)||0;
-  const userId=localStorage.getItem(SK);
+  const userId=getDataOwnerId();
   const btn=$('btnIncomeSource');
 
   if(!name){
@@ -915,7 +944,7 @@ async function saveIncomeSource(){
 
   if(!userId){
     showMiniToast(
-      '❌ Δεν βρέθηκε Telegram σύνδεση',
+      '❌ Δεν υπάρχει ενεργή σύνδεση Google',
       'error'
     );
     return;

@@ -8821,3 +8821,180 @@ body:has(#mCC.active) .mobile-nav-fab{
     grid-column:1 / -1 !important;
   }
 }
+
+/* ============================================================
+   CAPVO Dashboard Compact Greeting — Version 1.0.4
+   Replaces the landing-style dashboard intro with a smaller,
+   more app-like personal greeting.
+   ============================================================ */
+.modern-dashboard-topline.capvo-dashboard-compact-topline{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  gap:0 !important;
+  margin:0 0 10px !important;
+  padding:0 4px 2px !important;
+}
+
+.capvo-dashboard-greeting{
+  display:grid !important;
+  gap:4px !important;
+  min-width:0 !important;
+}
+
+.capvo-dashboard-greeting h2{
+  margin:0 !important;
+  color:#111827 !important;
+  font-size:clamp(24px, 5.8vw, 34px) !important;
+  line-height:1.04 !important;
+  letter-spacing:-.055em !important;
+  font-weight:950 !important;
+}
+
+.capvo-dashboard-greeting p{
+  margin:0 !important;
+  max-width:100% !important;
+  color:#7b86a0 !important;
+  font-size:13.5px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+}
+
+@media (max-width:768px){
+  .modern-dashboard-topline.capvo-dashboard-compact-topline{
+    margin-bottom:8px !important;
+    padding:0 2px 0 !important;
+  }
+
+  .capvo-dashboard-greeting h2{
+    font-size:25px !important;
+  }
+
+  .capvo-dashboard-greeting p{
+    font-size:12.8px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO DASHBOARD GREETING POLISH V1.0.5
+   Compact app-like greeting above dashboard hero.
+   ============================================================ */
+#vDash .modern-dashboard-topline.capvo-dashboard-compact-topline{
+  display:block !important;
+  margin:0 0 12px !important;
+  padding:0 !important;
+}
+
+#vDash .capvo-dashboard-greeting{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:42px minmax(0,1fr) !important;
+  column-gap:12px !important;
+  row-gap:2px !important;
+  align-items:center !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  padding:12px 14px !important;
+  border-radius:24px !important;
+  border:1px solid rgba(255,255,255,.78) !important;
+  background:
+    radial-gradient(circle at 10% 10%,rgba(124,92,255,.13),transparent 34%),
+    radial-gradient(circle at 96% 0%,rgba(34,211,238,.10),transparent 34%),
+    rgba(255,255,255,.72) !important;
+  box-shadow:0 14px 34px rgba(35,45,100,.055) !important;
+  backdrop-filter:blur(18px) saturate(1.25) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.25) !important;
+  overflow:hidden !important;
+}
+
+#vDash .capvo-dashboard-greeting::before{
+  content:'👋';
+  grid-row:1 / span 2;
+  width:42px;
+  height:42px;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  background:linear-gradient(135deg,#f2efff,#ffffff) !important;
+  box-shadow:inset 0 0 0 1px rgba(99,91,255,.08), 0 10px 22px rgba(91,79,255,.10);
+}
+
+#vDash .capvo-dashboard-greeting h2{
+  grid-column:2 !important;
+  margin:0 !important;
+  color:#111827 !important;
+  font-size:19px !important;
+  line-height:1.05 !important;
+  letter-spacing:-.035em !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+#vDash .capvo-dashboard-greeting p{
+  grid-column:2 !important;
+  margin:0 !important;
+  color:#7b86a0 !important;
+  font-size:12.5px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+@media (max-width:768px){
+  #vDash .modern-dashboard-main{
+    padding-top:2px !important;
+  }
+
+  #vDash .modern-dashboard-topline.capvo-dashboard-compact-topline{
+    margin:0 0 10px !important;
+  }
+
+  #vDash .capvo-dashboard-greeting{
+    margin:0 !important;
+    padding:11px 12px !important;
+    border-radius:22px !important;
+    grid-template-columns:40px minmax(0,1fr) !important;
+    column-gap:11px !important;
+  }
+
+  #vDash .capvo-dashboard-greeting::before{
+    width:40px;
+    height:40px;
+    border-radius:14px;
+    font-size:19px;
+  }
+
+  #vDash .capvo-dashboard-greeting h2{
+    font-size:18px !important;
+  }
+
+  #vDash .capvo-dashboard-greeting p{
+    font-size:12px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO 1.0.6 — Dashboard starts directly with financial hero
+   ============================================================ */
+#vDash .modern-dashboard-topline.capvo-dashboard-compact-topline,
+#vDash .capvo-dashboard-greeting{
+  display:none !important;
+}
+
+@media (max-width:768px){
+  #vDash .modern-dashboard-main{
+    padding-top:0 !important;
+  }
+  #vDash .modern-hero-card{
+    margin-top:0 !important;
+  }
+}

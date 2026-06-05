@@ -20,7 +20,13 @@ const CAT_KEYWORDS={
 const ALL_CATS=['Τρόφιμα','Καφέδες','Μεταφορά','Ψυχαγωγία','Φαγητό έξω','Στέγαση','Λογαριασμοί','Υγεία','Ρούχα','Συνδρομές','Δάνεια','Άλλο'];
 
 function getCurrentChatId(){
+  if(typeof getTelegramChatId==='function')return getTelegramChatId();
   return localStorage.getItem('current_chat_id');
+}
+
+function getCurrentDataOwnerId(){
+  if(typeof getDataOwnerId==='function')return getDataOwnerId();
+  return getCurrentChatId();
 }
 
 function getSyncKey(){
@@ -238,7 +244,13 @@ async function syncFromTelegram(){
     statusEl.textContent='Έλεγχος σύνδεσης...';
 
     if(!chatId){
-      throw new Error('Δεν υπάρχει Chat ID. Κάνε σύνδεση ξανά.');
+      statusEl.className='sync-status info';
+      statusEl.innerHTML='Για να χρησιμοποιήσεις Telegram Sync, σύνδεσε πρώτα το Telegram bot.';
+      btn.disabled=false;
+      btn.textContent='Σύνδεση Telegram';
+      btn.onclick=()=>{ if(typeof switchChatId==='function')switchChatId(); };
+      setTimeout(()=>{ if(typeof switchChatId==='function')switchChatId(); },150);
+      return;
     }
 
     const token=await getSupabaseAccessToken();
@@ -317,8 +329,10 @@ async function syncFromTelegram(){
 
   }finally{
     syncRunning=false;
-    btn.disabled=false;
-    btn.textContent='📥 Συγχρονισμός';
+    if(btn){
+      btn.disabled=false;
+      btn.textContent=getCurrentChatId()?'Συγχρονισμός τώρα':'Σύνδεση Telegram';
+    }
   }
 }
 
@@ -606,6 +620,7 @@ async function confirmSync(...messageIds){
   const ids=messageIds.flat();
   const rows=document.querySelectorAll('.sync-row');
   const chatId=getCurrentChatId();
+  const dataOwnerId=getCurrentDataOwnerId();
 
   const importedIds=[];
   const skippedIds=[];
@@ -671,7 +686,7 @@ async function confirmSync(...messageIds){
       date,
       type:'daily',
       month_key:monthKey,
-      user_chat_id:chatId,
+      user_chat_id:dataOwnerId,
       payment_source_id:paymentSourceId||null,
       payment_source_name:paymentSource?.name||null,
       payment_source_type:paymentSource?.incomeType||null
@@ -714,7 +729,7 @@ async function confirmSync(...messageIds){
     // category totals, reports and advisor all include the synced rows.
     if(newExpenseRows.length>0 && chatId){
       try{
-        await fetchAllData(chatId);
+        await fetchAllData(dataOwnerId);
       }catch(reloadErr){
         console.warn('Telegram sync saved, but data reload failed:',reloadErr);
       }

@@ -77,6 +77,49 @@ let selectionMode = { fixed:false, daily:false };
 let selectedFixed = new Set();
 let selectedDaily = new Set();
 
+function isRealTelegramChatId(value){
+  return /^\d+$/.test(String(value||'').trim());
+}
+
+function getSyntheticOwnerId(user=currentUser||currentSession?.user){
+  const id=user?.id||'';
+  return id?`capvo_${id}`:'';
+}
+
+function getProfileOwnerId(){
+  return String(currentProfile?.telegram_chat_id||'').trim();
+}
+
+function getTelegramChatId(){
+  const profileChatId=getProfileOwnerId();
+  if(profileChatId)return isRealTelegramChatId(profileChatId)?profileChatId:'';
+
+  const storedChatId=String(localStorage.getItem(SK)||'').trim();
+  return isRealTelegramChatId(storedChatId)?storedChatId:'';
+}
+
+function hasTelegramConnection(){
+  return !!getTelegramChatId();
+}
+
+function getDataOwnerId(){
+  const profileOwnerId=getProfileOwnerId();
+  if(profileOwnerId)return profileOwnerId;
+
+  const telegramChatId=getTelegramChatId();
+  if(telegramChatId)return telegramChatId;
+
+  const syntheticOwnerId=getSyntheticOwnerId();
+  if(syntheticOwnerId)return syntheticOwnerId;
+
+  const authUserId=currentUser?.id || currentSession?.user?.id || '';
+  return String(authUserId || '').trim();
+}
+
+function getTelegramOptionalMessage(){
+  return 'Για να χρησιμοποιήσεις Telegram Sync, σύνδεσε πρώτα το Telegram bot.';
+}
+
 // ===== HELPERS =====
 function curMK(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function ensM(k){if(!D.months[k])D.months[k]={daily:[]}}
