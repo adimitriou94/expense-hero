@@ -1,7 +1,7 @@
 // CAPVO version source of truth
 // Bump this value for each deploy/patch.
-window.CAPVO_VERSION = '1.0.8.1';
-window.CAPVO_CACHE_VERSION = 'capvo-app-shell-v1.0.8.1';
+window.CAPVO_VERSION = '1.0.11';
+window.CAPVO_CACHE_VERSION = 'capvo-app-shell-v1.0.11';
 
 (function applyCapvoVersionLabel(){
   function apply(){

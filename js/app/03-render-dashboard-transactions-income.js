@@ -54,6 +54,7 @@ function render(){
   $('dPct').textContent=pct+'%';
   $('dSpent').textContent=fmt(tot)+' / '+fmt(D.income);
   renderDashboardAllowanceCards(bal);
+  renderFirstUseBudgetPrompt();
 
   $('sFixed').textContent=fmt(fxS);
   $('sCC').textContent=fmt(ccS);
@@ -565,6 +566,112 @@ function ensureDashboardAllowanceStyles(){
       color:#fecaca !important;
     }
 
+
+
+    .dashboard-budget-start-card{
+      display:grid;
+      grid-template-columns:28px minmax(0,1fr) auto;
+      align-items:center;
+      gap:8px;
+      margin:8px 8px 8px;
+      padding:8px 9px;
+      border-radius:18px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(226,232,240,.92);
+      box-shadow:0 8px 20px rgba(15,23,42,.045);
+    }
+
+    .dashboard-budget-start-icon{
+      width:28px;
+      height:28px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(79,70,229,.10),rgba(34,211,238,.08));
+      color:#4f46e5;
+      font-size:13px;
+      flex-shrink:0;
+    }
+
+    .dashboard-budget-start-copy{
+      min-width:0;
+    }
+
+    .dashboard-budget-start-card strong{
+      display:block;
+      color:#0f172a;
+      font-size:12.5px;
+      line-height:1.05;
+      font-weight:760;
+      letter-spacing:-.014em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+
+    .dashboard-budget-start-actions{
+      grid-column:auto;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-top:0;
+      justify-content:flex-end;
+      min-width:max-content;
+    }
+
+    .dashboard-budget-start-actions button{
+      border:0;
+      border-radius:999px;
+      padding:8px 10px;
+      font-weight:740;
+      font-size:10.5px;
+      cursor:pointer;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .dashboard-budget-start-primary{
+      color:#ffffff;
+      background:linear-gradient(135deg,#111827,#312e81);
+      box-shadow:0 6px 14px rgba(79,70,229,.12);
+    }
+
+    .dashboard-budget-start-secondary{
+      color:#64748b;
+      background:#eef2f7;
+    }
+
+    .dashboard-budget-start-card + .mobile-dashboard-insights{
+      margin-top:8px !important;
+    }
+
+    @media (max-width:390px){
+      .dashboard-budget-start-card{
+        grid-template-columns:26px minmax(0,1fr);
+        margin:7px 6px 8px;
+        padding:8px;
+        gap:7px;
+      }
+
+      .dashboard-budget-start-icon{
+        width:26px;
+        height:26px;
+      }
+
+      .dashboard-budget-start-actions{
+        grid-column:1 / -1;
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr auto;
+        gap:7px;
+      }
+
+      .dashboard-budget-start-actions button{
+        padding:8px 10px;
+      }
+    }
+
     @media (max-width:768px){
       .modern-hero-card{
         margin-bottom:14px !important;
@@ -603,6 +710,50 @@ function ensureDashboardAllowanceStyles(){
   `;
   document.head.appendChild(style);
 }
+
+
+
+function renderFirstUseBudgetPrompt(){
+  const hero=document.querySelector('.modern-hero-card');
+  if(!hero)return;
+
+  let el=document.getElementById('dashboardBudgetStartCard');
+  const legacyDismissed=localStorage.getItem('capvo_budget_start_dismissed')==='1';
+  if(legacyDismissed && !localStorage.getItem('capvo_budget_start_dismissed_at')){
+    localStorage.setItem('capvo_budget_start_dismissed_at',String(Date.now()));
+    localStorage.removeItem('capvo_budget_start_dismissed');
+  }
+
+  const dismissedAt=Number(localStorage.getItem('capvo_budget_start_dismissed_at')||0);
+  const dismissWindowMs=24*60*60*1000;
+  const dismissed=!!dismissedAt && (Date.now()-dismissedAt)<dismissWindowMs;
+  const hasBudget=hasBudgetIncomeConfigured();
+  const hasAnyData=(D.incomeSources||[]).length>0 || fixedTotal()>0 || dailyTotal()>0 || (D.creditCards||[]).length>0;
+
+  if(hasBudget || dismissed){
+    if(el)el.remove();
+    return;
+  }
+
+  if(!el){
+    el=document.createElement('section');
+    el.id='dashboardBudgetStartCard';
+    el.className='dashboard-budget-start-card';
+    hero.insertAdjacentElement('afterend',el);
+  }
+
+  el.innerHTML=`
+    <div class="dashboard-budget-start-icon" aria-hidden="true">💡</div>
+    <div class="dashboard-budget-start-copy">
+      <strong>${hasAnyData?'Οργάνωσε το budget σου':'Ξεκίνα με budget'}</strong>
+    </div>
+    <div class="dashboard-budget-start-actions">
+      <button type="button" class="dashboard-budget-start-primary" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'));setTimeout(()=>openModal('incomeSource'),120);">Προσθήκη budget</button>
+      <button type="button" class="dashboard-budget-start-secondary" onclick="localStorage.setItem('capvo_budget_start_dismissed_at',String(Date.now()));localStorage.removeItem('capvo_budget_start_dismissed');document.getElementById('dashboardBudgetStartCard')?.remove();">Αργότερα</button>
+    </div>
+  `;
+}
+
 
 function renderDashboardAllowanceCards(balanceOverride=null){
   const hero=document.querySelector('.modern-hero-card');
@@ -843,7 +994,9 @@ function editIncomeSource(id){
   closeM();
 
   $('mIncomeSource').classList.add('active');
-  $('mIncomeSourceTitle').textContent='Επεξεργασία πηγής εισοδήματος';
+  $('mIncomeSourceTitle').textContent='Επεξεργασία πηγής';
+  if($('incomeModalKicker'))$('incomeModalKicker').textContent='Income source';
+  if($('incomeModalIntro'))$('incomeModalIntro').textContent='Ενημέρωσε το ποσό, τον τύπο και το πώς επηρεάζει το budget σου.';
 
   $('fISName').value=i.name;
   $('fISAmount').value=i.amount;
@@ -858,6 +1011,8 @@ function editIncomeSource(id){
   $('fISID').value=id;
 
   $('btnIncomeSource').textContent='Ενημέρωση πηγής';
+  if(typeof clearIncomeValidation==='function')clearIncomeValidation();
+  document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>btn.classList.remove('active'));
   document.body.classList.add('modal-open');
   refreshIncomeCustomPickers();
 }
@@ -925,22 +1080,189 @@ async function deleteIncomeSourceRow(id){
   if(error)throw error;
 }
 
-async function saveIncomeSource(){
-  const id=$('fISID').value;
+function setIncomeModalFeedback(message,type='error'){
+  const el=$('incomeModalFeedback');
+  if(!el)return;
+
+  if(!message){
+    el.textContent='';
+    el.className='income-modal-feedback hidden';
+    return;
+  }
+
+  el.textContent=message;
+  el.className='income-modal-feedback '+type;
+}
+
+function clearIncomeValidation(){
+  ['fISName','fISAmount','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+    const el=$(id);
+    if(el)el.classList.remove('income-field-error');
+  });
+  setIncomeModalFeedback('');
+}
+
+function markIncomeFieldError(id){
+  const el=$(id);
+  if(!el)return;
+  el.classList.add('income-field-error');
+  try{el.focus({preventScroll:false});}catch(e){el.focus();}
+}
+
+function parseIncomeAmountValue(value){
+  const normalized=String(value||'').trim().replace(',','.');
+  if(!normalized)return NaN;
+  return Number(normalized);
+}
+
+function setIncomeSelectValue(id,value){
+  const el=$(id);
+  if(!el)return;
+  el.value=value;
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+function applyIncomePreset(type){
+  clearIncomeValidation();
+
+  const presets={
+    salary:{
+      name:'Μισθός',
+      category:'Μισθός',
+      incomeType:'bank',
+      restriction:'none',
+      restrictedCategory:'',
+      includeInBudget:true,
+      isSavings:false,
+      isRecurring:true,
+      notes:''
+    },
+    budget:{
+      name:'Budget μήνα',
+      category:'Άλλο',
+      incomeType:'bank',
+      restriction:'none',
+      restrictedCategory:'',
+      includeInBudget:true,
+      isSavings:false,
+      isRecurring:true,
+      notes:''
+    },
+    ticket:{
+      name:'Ticket Restaurant',
+      category:'Ticket Restaurant',
+      incomeType:'voucher',
+      restriction:'food_only',
+      restrictedCategory:'Φαγητό έξω',
+      includeInBudget:false,
+      isSavings:false,
+      isRecurring:true,
+      notes:'Χρήση για φαγητό / τρόφιμα'
+    },
+    voucher:{
+      name:'Voucher',
+      category:'Άυλη κάρτα',
+      incomeType:'voucher',
+      restriction:'card_only',
+      restrictedCategory:'',
+      includeInBudget:false,
+      isSavings:false,
+      isRecurring:true,
+      notes:'Περιορισμένη πηγή πληρωμής'
+    },
+    extra:{
+      name:'Έκτακτο εισόδημα',
+      category:'Bonus',
+      incomeType:'bank',
+      restriction:'none',
+      restrictedCategory:'',
+      includeInBudget:true,
+      isSavings:false,
+      isRecurring:false,
+      notes:''
+    }
+  };
+
+  const preset=presets[type]||presets.salary;
+
+  $('fISName').value=preset.name;
+  setIncomeSelectValue('fISCategory',preset.category);
+  setIncomeSelectValue('fISType',preset.incomeType);
+  setIncomeSelectValue('fISRestriction',preset.restriction);
+  setIncomeSelectValue('fISRestrictedCategory',preset.restrictedCategory);
+  $('fISIncludeBudget').checked=!!preset.includeInBudget;
+  $('fISSavings').checked=!!preset.isSavings;
+  $('fISRecurring').checked=!!preset.isRecurring;
+  $('fISNotes').value=preset.notes||'';
+
+  document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>{
+    btn.classList.toggle('active',btn.getAttribute('onclick')?.includes("'"+type+"'"));
+  });
+
+  refreshIncomeCustomPickers?.();
+
+  if(!$('fISAmount').value){
+    setTimeout(()=>$('fISAmount')?.focus(),80);
+  }
+}
+
+function validateIncomeSourceForm(){
+  clearIncomeValidation();
+
   const name=$('fISName').value.trim();
-  const amount=parseFloat($('fISAmount').value)||0;
-  const userId=getDataOwnerId();
-  const btn=$('btnIncomeSource');
+  const rawAmount=$('fISAmount').value;
+  const amount=parseIncomeAmountValue(rawAmount);
 
   if(!name){
-    $('fISName').style.borderColor='var(--red)';
-    return;
+    setIncomeModalFeedback('Συμπλήρωσε όνομα πηγής, π.χ. Μισθός ή Budget μήνα.','error');
+    showMiniToast('Συμπλήρωσε όνομα πηγής','error');
+    markIncomeFieldError('fISName');
+    return null;
+  }
+
+  if(String(rawAmount||'').trim()===''){
+    setIncomeModalFeedback('Συμπλήρωσε ποσό για το budget / εισόδημα.','error');
+    showMiniToast('Συμπλήρωσε ποσό','error');
+    markIncomeFieldError('fISAmount');
+    return null;
+  }
+
+  if(!Number.isFinite(amount)){
+    setIncomeModalFeedback('Το ποσό δεν είναι έγκυρο. Γράψε π.χ. 1200 ή 1200,50.','error');
+    showMiniToast('Το ποσό δεν είναι έγκυρο','error');
+    markIncomeFieldError('fISAmount');
+    return null;
   }
 
   if(amount<=0){
-    $('fISAmount').style.borderColor='var(--red)';
-    return;
+    setIncomeModalFeedback('Το ποσό πρέπει να είναι μεγαλύτερο από 0.','error');
+    showMiniToast('Το ποσό πρέπει να είναι μεγαλύτερο από 0','error');
+    markIncomeFieldError('fISAmount');
+    return null;
   }
+
+  const incomeType=$('fISType').value;
+  const restriction=$('fISRestriction').value;
+  const includeInBudget=$('fISIncludeBudget').checked;
+  const isSavings=$('fISSavings').checked;
+
+  if((restriction==='locked' || restriction==='investment') && includeInBudget && !isSavings){
+    setIncomeModalFeedback('Αν η πηγή είναι locked/επένδυση, βάλε την εκτός ελεύθερου budget ή ως αποταμίευση.','error');
+    showMiniToast('Έλεγξε τον περιορισμό της πηγής','error');
+    markIncomeFieldError('fISRestriction');
+    return null;
+  }
+
+  return {name,amount,incomeType,restriction,includeInBudget,isSavings};
+}
+
+async function saveIncomeSource(){
+  const id=$('fISID').value;
+  const validation=validateIncomeSourceForm();
+  if(!validation)return;
+
+  const userId=getDataOwnerId();
+  const btn=$('btnIncomeSource');
 
   if(!userId){
     showMiniToast(
@@ -952,14 +1274,14 @@ async function saveIncomeSource(){
 
   const obj={
     id:id||gid(),
-    name,
-    amount,
+    name:validation.name,
+    amount:validation.amount,
     category:$('fISCategory').value,
-    incomeType:$('fISType').value,
-    includeInBudget:$('fISIncludeBudget').checked,
-    isSavings:$('fISSavings').checked,
+    incomeType:validation.incomeType,
+    includeInBudget:validation.includeInBudget,
+    isSavings:validation.isSavings,
     isRecurring:$('fISRecurring').checked,
-    restriction:$('fISRestriction').value,
+    restriction:validation.restriction,
     restrictedCategory:$('fISRestrictedCategory').value,
     notes:$('fISNotes').value.trim()
   };
@@ -967,7 +1289,7 @@ async function saveIncomeSource(){
   try{
     if(btn){
       btn.disabled=true;
-      btn.textContent='Αποθήκευση...';
+      btn.textContent=id?'Ενημέρωση...':'Αποθήκευση...';
     }
 
     await saveIncomeSourceRow(userId,obj);
@@ -984,8 +1306,11 @@ async function saveIncomeSource(){
     closeM();
     render();
 
+    showMiniToast(id?'✅ Η πηγή ενημερώθηκε':'✅ Το budget προστέθηκε');
+
   }catch(e){
     console.error('saveIncomeSource failed:',e);
+    setIncomeModalFeedback('Δεν μπόρεσα να αποθηκεύσω την πηγή. Δοκίμασε ξανά.','error');
     showMiniToast(
       '❌ Αποτυχία αποθήκευσης',
       'error'
@@ -994,7 +1319,7 @@ async function saveIncomeSource(){
   }finally{
     if(btn){
       btn.disabled=false;
-      btn.textContent='Αποθήκευση';
+      btn.textContent=id?'Ενημέρωση πηγής':'Αποθήκευση budget';
     }
   }
 }
@@ -1028,3 +1353,25 @@ async function deleteIncomeSource(id){
     );
   }
 }
+
+// v1.0.11 — clear inline validation while user edits Add Income/Budget fields
+(function setupIncomeSourceValidationCleanup(){
+  function bind(){
+    ['fISName','fISAmount','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+      const el=$(id);
+      if(!el || el.dataset.incomeValidationCleanup==='1')return;
+      el.dataset.incomeValidationCleanup='1';
+      el.addEventListener('input',()=>{
+        el.classList.remove('income-field-error');
+        setIncomeModalFeedback?.('');
+      });
+      el.addEventListener('change',()=>{
+        el.classList.remove('income-field-error');
+        setIncomeModalFeedback?.('');
+      });
+    });
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});
+  else bind();
+})();

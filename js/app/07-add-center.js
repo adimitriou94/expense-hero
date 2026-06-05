@@ -353,6 +353,10 @@ async function saveAddCenterManualExpense(){
 
   const monthKey=date.substring(0,7);
   ensM(monthKey);
+
+  const canSave=await validateExpenseBeforeSave(expense,{errorTarget:'addCenterManualError'});
+  if(!canSave)return false;
+
   D.months[monthKey].daily.push(expense);
 
   try{
@@ -848,6 +852,9 @@ async function saveAddCenterManualExpense(){
 
   const monthKey=date.substring(0,7);
   ensM(monthKey);
+
+  const canSave=await validateExpenseBeforeSave(expense,{editing,errorTarget:'addCenterManualError'});
+  if(!canSave)return false;
 
   // Optimistic local update. For edits, remove the old copy from every month first.
   if(editing){

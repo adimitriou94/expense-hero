@@ -7189,3 +7189,439 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     box-sizing:border-box !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.0.9.1 — Add Center compact quick preview + modal typography
+   Fixes:
+   - Save button appearing too low after Quick preview on iPhone/PWA.
+   - Removes unnecessary Recent block while the user is actively composing.
+   - Normalizes Greek/Latin weight rendering in confirmation buttons.
+   ============================================================ */
+@media (max-width:768px){
+  .confirm-modal,
+  .confirm-modal *,
+  .confirm-actions button{
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    -webkit-font-smoothing:antialiased !important;
+    text-rendering:geometricPrecision !important;
+  }
+
+  .confirm-modal h3{
+    font-weight:900 !important;
+    letter-spacing:-.035em !important;
+  }
+
+  .confirm-modal p{
+    font-weight:600 !important;
+    line-height:1.5 !important;
+  }
+
+  .confirm-actions button{
+    font-weight:850 !important;
+    letter-spacing:-.025em !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-recent-title,
+  #quickAddSheetPreview:not(:empty) ~ #addCenterRecentChips{
+    display:none !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-section-title{
+    margin-top:9px !important;
+    margin-bottom:7px !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-examples{
+    margin-bottom:8px !important;
+    padding-bottom:0 !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-examples button{
+    min-height:30px !important;
+    padding:7px 10px !important;
+    font-size:11.5px !important;
+    border-radius:14px !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ #quickAddSheetSubmit{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    width:100% !important;
+    height:50px !important;
+    margin-top:12px !important;
+    margin-bottom:10px !important;
+    border-radius:18px !important;
+    z-index:1 !important;
+    flex:0 0 auto !important;
+  }
+
+  #addCenterQuickPanel:has(#quickAddSheetPreview:not(:empty)){
+    padding-bottom:14px !important;
+  }
+
+  #quickAddSheetPreview:not(:empty){
+    margin-bottom:6px !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) .smart-preview-card{
+    padding:14px !important;
+    border-radius:22px !important;
+  }
+}
+
+/* CAPVO v1.0.9.2 — Quick Add save button should be part of the flow, not an overlay */
+@media (max-width:768px){
+  #addCenterQuickPanel #quickAddSheetSubmit{
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    width:100% !important;
+    z-index:1 !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-examples{
+    margin-bottom:0 !important;
+  }
+
+  #quickAddSheetPreview:not(:empty) ~ .add-center-examples button:last-child{
+    margin-bottom:0 !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.0.10 — Quick Add Voice Orb
+   Upgrades the small mic into a visible voice action with pulse state.
+   ============================================================ */
+@media (max-width: 768px){
+  .add-center-panel#addCenterQuickPanel .add-center-input-row{
+    grid-template-columns:1fr !important;
+    gap:0 !important;
+  }
+
+  .add-center-panel#addCenterQuickPanel .add-center-input-row input#quickAddSheetInput{
+    width:100% !important;
+    min-height:54px !important;
+  }
+
+  .add-center-voice-inline{
+    display:none !important;
+  }
+
+  .add-center-voice-orb{
+    width:100% !important;
+    min-height:58px !important;
+    margin:10px 0 12px !important;
+    padding:10px 14px !important;
+    border:1px solid rgba(99,102,241,.22) !important;
+    border-radius:24px !important;
+    background:linear-gradient(135deg, rgba(250,250,255,.98), rgba(239,238,255,.96)) !important;
+    box-shadow:0 14px 32px rgba(31,41,55,.08), inset 0 1px 0 rgba(255,255,255,.88) !important;
+    color:#111827 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:12px !important;
+    text-align:left !important;
+    cursor:pointer !important;
+    position:relative !important;
+    overflow:hidden !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .add-center-voice-orb::before{
+    content:"";
+    position:absolute;
+    inset:-35% auto auto -15%;
+    width:92px;
+    height:92px;
+    border-radius:999px;
+    background:radial-gradient(circle, rgba(99,102,241,.22), transparent 68%);
+    pointer-events:none;
+  }
+
+  .add-center-voice-orb-icon{
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+    border-radius:18px !important;
+    display:grid !important;
+    place-items:center !important;
+    background:linear-gradient(135deg, #2b217f, #6d4cff) !important;
+    color:#fff !important;
+    box-shadow:0 12px 24px rgba(91,76,255,.30) !important;
+    position:relative !important;
+    z-index:1 !important;
+    font-size:19px !important;
+  }
+
+  .add-center-voice-orb-copy{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:2px !important;
+    position:relative !important;
+    z-index:1 !important;
+    min-width:0 !important;
+  }
+
+  .add-center-voice-orb-copy strong{
+    font-size:13.5px !important;
+    line-height:1.1 !important;
+    font-weight:850 !important;
+    letter-spacing:-.02em !important;
+    color:#111827 !important;
+  }
+
+  .add-center-voice-orb-copy small{
+    font-size:11px !important;
+    line-height:1.25 !important;
+    font-weight:650 !important;
+    color:#7b86a1 !important;
+    white-space:normal !important;
+  }
+
+  .add-center-voice-orb:active{
+    transform:scale(.985) !important;
+  }
+
+
+  .add-center-voice-retry{
+    align-self:flex-start !important;
+    margin-top:4px !important;
+    padding:5px 10px !important;
+    border-radius:999px !important;
+    background:rgba(99,102,241,.10) !important;
+    color:#4f46e5 !important;
+    font-size:10.5px !important;
+    line-height:1 !important;
+    font-weight:850 !important;
+    letter-spacing:.01em !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.75) !important;
+  }
+
+  .add-center-voice-retry.hidden{
+    display:none !important;
+  }
+
+  .add-center-voice-orb.is-error{
+    border-color:rgba(239,68,68,.28) !important;
+    background:linear-gradient(135deg, rgba(255,247,247,.99), rgba(255,241,242,.96)) !important;
+    box-shadow:0 14px 34px rgba(239,68,68,.10), inset 0 1px 0 rgba(255,255,255,.92) !important;
+  }
+
+  .add-center-voice-orb.is-error .add-center-voice-orb-icon{
+    background:linear-gradient(135deg, #ef4444, #fb7185) !important;
+    box-shadow:0 12px 24px rgba(239,68,68,.24) !important;
+  }
+
+  .add-center-voice-orb.is-success{
+    border-color:rgba(16,185,129,.26) !important;
+    background:linear-gradient(135deg, rgba(240,253,250,.99), rgba(236,253,245,.96)) !important;
+    box-shadow:0 14px 34px rgba(16,185,129,.10), inset 0 1px 0 rgba(255,255,255,.92) !important;
+  }
+
+  .add-center-voice-orb.is-success .add-center-voice-orb-icon{
+    background:linear-gradient(135deg, #059669, #34d399) !important;
+    box-shadow:0 12px 24px rgba(16,185,129,.22) !important;
+  }
+
+  .add-center-voice-orb.is-listening{
+    border-color:rgba(99,102,241,.48) !important;
+    background:linear-gradient(135deg, rgba(240,238,255,.98), rgba(231,229,255,.96)) !important;
+    box-shadow:0 18px 40px rgba(91,76,255,.18), inset 0 1px 0 rgba(255,255,255,.92) !important;
+  }
+
+  .add-center-voice-orb.is-listening .add-center-voice-orb-icon{
+    animation:capvoVoiceOrbPulse 1.05s ease-in-out infinite !important;
+  }
+
+  .add-center-voice-orb.is-listening .add-center-voice-orb-icon::after{
+    content:"";
+    position:absolute;
+    inset:-8px;
+    border-radius:24px;
+    border:2px solid rgba(109,76,255,.28);
+    animation:capvoVoiceRingPulse 1.05s ease-out infinite;
+  }
+
+  .add-center-voice-orb.is-processing .add-center-voice-orb-icon{
+    animation:capvoVoiceOrbProcessing .75s ease-in-out infinite alternate !important;
+  }
+
+  @keyframes capvoVoiceOrbPulse{
+    0%,100%{transform:scale(1); box-shadow:0 12px 24px rgba(91,76,255,.30);}
+    50%{transform:scale(1.08); box-shadow:0 18px 34px rgba(91,76,255,.42);}
+  }
+
+  @keyframes capvoVoiceRingPulse{
+    0%{transform:scale(.84); opacity:.65;}
+    100%{transform:scale(1.3); opacity:0;}
+  }
+
+  @keyframes capvoVoiceOrbProcessing{
+    from{filter:saturate(1); transform:translateY(0);}
+    to{filter:saturate(1.25); transform:translateY(-1px);}
+  }
+}
+
+/* =========================================================
+   CAPVO v1.0.11 — Income Add / Budget setup polish
+   ========================================================= */
+#mIncomeSource .income-source-modal{
+  overflow:auto !important;
+}
+
+#mIncomeSource .income-modal-kicker{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  width:max-content !important;
+  padding:5px 9px !important;
+  border-radius:999px !important;
+  background:rgba(99,102,241,.10) !important;
+  color:#5145cd !important;
+  font-size:10px !important;
+  line-height:1 !important;
+  font-weight:850 !important;
+  letter-spacing:.04em !important;
+  text-transform:uppercase !important;
+}
+
+#mIncomeSource .income-modal-heading h2{
+  letter-spacing:-.035em !important;
+}
+
+#mIncomeSource .income-modal-heading p{
+  max-width:34rem !important;
+}
+
+.income-modal-quick-presets{
+  display:flex !important;
+  gap:8px !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding:2px 2px 8px !important;
+  margin:2px 0 10px !important;
+  scrollbar-width:none !important;
+}
+
+.income-modal-quick-presets::-webkit-scrollbar{
+  display:none !important;
+}
+
+.income-modal-quick-presets button{
+  flex:0 0 auto !important;
+  border:1px solid rgba(15,23,42,.09) !important;
+  background:linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,250,252,.96)) !important;
+  color:#111827 !important;
+  border-radius:999px !important;
+  padding:9px 11px !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:800 !important;
+  box-shadow:0 8px 20px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+.income-modal-quick-presets button.active,
+.income-modal-quick-presets button:active{
+  color:#fff !important;
+  border-color:rgba(99,102,241,.25) !important;
+  background:linear-gradient(135deg, #5145cd, #7c5cff) !important;
+  box-shadow:0 12px 26px rgba(99,102,241,.22) !important;
+}
+
+.income-modal-feedback{
+  margin:0 0 10px !important;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+  font-size:12px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+  border:1px solid rgba(239,68,68,.18) !important;
+  color:#991b1b !important;
+  background:linear-gradient(135deg, rgba(255,247,247,.98), rgba(255,241,242,.94)) !important;
+  box-shadow:0 10px 24px rgba(239,68,68,.08) !important;
+}
+
+.income-modal-feedback.success{
+  border-color:rgba(16,185,129,.18) !important;
+  color:#065f46 !important;
+  background:linear-gradient(135deg, rgba(240,253,250,.98), rgba(236,253,245,.94)) !important;
+  box-shadow:0 10px 24px rgba(16,185,129,.08) !important;
+}
+
+.income-modal-feedback.hidden{
+  display:none !important;
+}
+
+#mIncomeSource .income-field-error,
+#mIncomeSource .income-field-error + .income-custom-picker .income-picker-trigger{
+  border-color:rgba(239,68,68,.75) !important;
+  box-shadow:0 0 0 4px rgba(239,68,68,.10) !important;
+}
+
+#mIncomeSource .income-modal-amount-card{
+  margin-top:0 !important;
+}
+
+#mIncomeSource .income-modal-amount-input input.income-field-error{
+  color:#991b1b !important;
+}
+
+#mIncomeSource .income-save-btn{
+  min-height:52px !important;
+  border-radius:18px !important;
+  font-weight:850 !important;
+  letter-spacing:-.01em !important;
+}
+
+@media (max-width:768px){
+  #mIncomeSource .income-source-modal{
+    padding-top:18px !important;
+  }
+
+  #mIncomeSource .income-modal-hero{
+    gap:10px !important;
+    margin-bottom:10px !important;
+  }
+
+  #mIncomeSource .income-modal-icon{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    border-radius:16px !important;
+    font-size:20px !important;
+  }
+
+  #mIncomeSource .income-modal-heading h2{
+    font-size:22px !important;
+    line-height:1.06 !important;
+  }
+
+  #mIncomeSource .income-modal-heading p{
+    font-size:12px !important;
+    line-height:1.35 !important;
+    margin-top:5px !important;
+  }
+
+  #mIncomeSource .income-modal-quick-presets{
+    margin-bottom:8px !important;
+  }
+
+  #mIncomeSource .income-modal-amount-card,
+  #mIncomeSource .income-modal-form-card,
+  #mIncomeSource .income-toggle-box{
+    border-radius:20px !important;
+  }
+
+  #mIncomeSource .income-modal-actions{
+    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
+  }
+}

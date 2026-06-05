@@ -145,7 +145,10 @@ function detectPaymentSourceFromText(text){
 }
 
 function parseExpense(text){
-  const t=text.toLowerCase().trim();
+  const normalized=(typeof window!=='undefined' && typeof window.normalizeQuickExpenseText==='function')
+    ? window.normalizeQuickExpenseText(text)
+    : String(text||'');
+  const t=normalized.toLowerCase().trim();
   const amountMatch=t.match(/(\d+([.,]\d{1,2})?)\s*(ευρώ|ευρω|euro|€)?/);
 
   if(!amountMatch)return null;
@@ -162,7 +165,7 @@ function parseExpense(text){
     }
   }
 
-  let name=text
+  let name=normalized
     .replace(/\d+([.,]\d{1,2})?\s*(ευρώ|ευρω|euro|€)?/gi,'')
     .replace(/\b(σήμερα|χθες|αύριο|πρωί|βράδυ|μεσημέρι)\b/gi,'')
     .trim();
@@ -178,7 +181,7 @@ function parseExpense(text){
     date=y.toISOString().split('T')[0];
   }
 
-  const paymentSource=detectPaymentSourceFromText(text);
+  const paymentSource=detectPaymentSourceFromText(normalized);
 
   return{
     amount,

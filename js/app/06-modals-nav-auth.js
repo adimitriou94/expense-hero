@@ -54,7 +54,9 @@ function openModal(t){
 
   if(t==='incomeSource'){
     $('mIncomeSource').classList.add('active');
-    $('mIncomeSourceTitle').textContent='Νέα πηγή εισοδήματος';
+    $('mIncomeSourceTitle').textContent='Προσθήκη budget';
+    if($('incomeModalKicker'))$('incomeModalKicker').textContent='Budget setup';
+    if($('incomeModalIntro'))$('incomeModalIntro').textContent='Πρόσθεσε το βασικό σου εισόδημα ή ένα διαθέσιμο μηνιαίο budget για να υπολογίζεται σωστά το υπόλοιπο.';
 
     $('fISName').value='';
     $('fISAmount').value='';
@@ -67,10 +69,12 @@ function openModal(t){
     $('fISRecurring').checked=true;
     $('fISNotes').value='';
     $('fISID').value='';
-    $('btnIncomeSource').textContent='Αποθήκευση πηγής';
+    $('btnIncomeSource').textContent='Αποθήκευση budget';
+    if(typeof clearIncomeValidation==='function')clearIncomeValidation();
+    document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>btn.classList.remove('active'));
 
     refreshIncomeCustomPickers();
-    $('fISName').focus();
+    $('fISAmount').focus();
   }
 }
 
@@ -157,6 +161,125 @@ async function saveDailyExpenseRow(userId,expense){
 
 
 
+
+
+function getExistingDailyExpenseById(id){
+  if(!id)return null;
+
+  for(const month of Object.values(D.months||{})){
+    const found=(month.daily||[]).find(e=>e.id===id);
+    if(found)return found;
+  }
+
+  return null;
+}
+
+function hasBudgetIncomeConfigured(){
+  return (D.incomeSources||[]).some(i=>i.includeInBudget && (Number(i.amount)||0)>0);
+}
+
+function expenseUsesRestrictedSource(expense){
+  const source=paymentSourceById(expense?.paymentSourceId||'');
+  return !!(source && source.restriction && source.restriction!=='none');
+}
+
+function projectedRestrictedRemainingAfterExpense(expense,{editing=false}={}){
+  const source=paymentSourceById(expense?.paymentSourceId||'');
+
+  if(!source || !source.restriction || source.restriction==='none'){
+    return {source:null,remainingAfter:null,available:null};
+  }
+
+  let available=paymentSourceRemaining(source);
+
+  if(editing){
+    const old=getExistingDailyExpenseById(expense.id);
+    if(old && old.paymentSourceId===source.id){
+      available+=(Number(old.amount)||0);
+    }
+  }
+
+  const remainingAfter=available-(Number(expense.amount)||0);
+  return {source,remainingAfter,available};
+}
+
+function projectedNormalBudgetAfterExpense(expense,{editing=false}={}){
+  let currentCashDaily=dailyCashTotal();
+
+  if(editing){
+    const old=getExistingDailyExpenseById(expense.id);
+    if(old && !old.paymentSourceId){
+      currentCashDaily-=Number(old.amount)||0;
+    }
+  }
+
+  const newCashDaily=expense?.paymentSourceId
+    ? currentCashDaily
+    : currentCashDaily+(Number(expense.amount)||0);
+
+  return (Number(D.income)||0)-fixedTotal()-ccPayTotal()-newCashDaily;
+}
+
+async function validateExpenseBeforeSave(expense,{editing=false,errorTarget=null}={}){
+  const amount=Number(expense?.amount)||0;
+
+  const fail=(message)=>{
+    if(errorTarget && typeof setQuickAddInlineError==='function'){
+      setQuickAddInlineError(message,errorTarget);
+    }else if(typeof showMiniToast==='function'){
+      showMiniToast(message,'error');
+    }
+    return false;
+  };
+
+  const restrictedCheck=projectedRestrictedRemainingAfterExpense(expense,{editing});
+
+  if(restrictedCheck.source && restrictedCheck.remainingAfter<0){
+    return fail(
+      `Το υπόλοιπο ${restrictedCheck.source.name} δεν επαρκεί. Διαθέσιμο: ${fmt(restrictedCheck.available)}.`
+    );
+  }
+
+  if(!hasBudgetIncomeConfigured()){
+    const proceed=await showConfirmModal({
+      title:'Δεν έχεις ορίσει budget',
+      message:'Μπορείς να καταχωρίσεις το έξοδο, αλλά το CAPVO δεν θα μπορεί να υπολογίσει σωστά το υπόλοιπο του μήνα. Θέλεις να συνεχίσεις;',
+      confirmText:'Καταχώρηση εξόδου',
+      cancelText:'Προσθήκη εισοδήματος'
+    });
+
+    if(!proceed){
+      if(typeof go==='function'){
+        go('vIncome',document.querySelector('[data-v=vIncome]'));
+      }
+      setTimeout(()=>{
+        try{openModal('incomeSource');}catch(e){}
+      },120);
+      return false;
+    }
+
+    return true;
+  }
+
+  if(!expense?.paymentSourceId){
+    const projected=projectedNormalBudgetAfterExpense(expense,{editing});
+
+    if(projected<0){
+      const proceed=await showConfirmModal({
+        title:'Υπέρβαση budget',
+        message:`Με αυτή την καταχώρηση το διαθέσιμο budget θα πάει στα ${fmt(projected)}. Θέλεις να συνεχίσεις;`,
+        confirmText:'Καταχώρηση anyway',
+        cancelText:'Ακύρωση'
+      });
+
+      if(!proceed)return false;
+    }
+  }
+
+  return true;
+}
+
+
 async function saveDaily(){
   const n=$('fDN').value.trim();
   const a=parseFloat($('fDA').value);
@@ -192,10 +315,6 @@ async function saveDaily(){
   let expense;
 
   if(id){
-    Object.values(D.months).forEach(m=>{
-      m.daily=m.daily.filter(e=>e.id!==id);
-    });
-
     expense={
       id,
       name:n,
@@ -217,6 +336,15 @@ async function saveDaily(){
       paymentSourceName:paymentSource?.name||'',
       paymentSourceType:paymentSource?.incomeType||''
     };
+  }
+
+  const canSave=await validateExpenseBeforeSave(expense,{editing:!!id});
+  if(!canSave)return;
+
+  if(id){
+    Object.values(D.months||{}).forEach(m=>{
+      m.daily=(m.daily||[]).filter(e=>e.id!==id);
+    });
   }
 
   D.months[monthKey].daily.push(expense);
@@ -383,25 +511,77 @@ async function delExp(t,id){
 
 let quickVoiceRecognition=null;
 let quickVoiceListening=false;
+let quickVoiceHadResult=false;
+let quickVoiceHadError=false;
+let quickVoiceResetTimer=null;
+let quickVoiceLastTargetId='quickAddInput';
 
 function getSpeechRecognition(){
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }
 
-function setQuickVoiceState(isListening){
+function clearQuickVoiceResetTimer(){
+  if(quickVoiceResetTimer){
+    clearTimeout(quickVoiceResetTimer);
+    quickVoiceResetTimer=null;
+  }
+}
+
+function setQuickVoiceState(isListening,stateText='idle',customHint){
   quickVoiceListening=isListening;
 
   const btn=$('quickVoiceBtn');
-  if(!btn)return;
+  if(btn){
+    btn.textContent=isListening?'⏹️':'🎤';
+    btn.classList.toggle('listening',isListening);
+  }
 
-  btn.textContent=isListening?'⏹️':'🎤';
-  btn.classList.toggle('listening',isListening);
+  const inlineBtn=document.querySelector('.add-center-voice-inline');
+  if(inlineBtn){
+    inlineBtn.textContent=isListening?'⏹️':'🎤';
+    inlineBtn.classList.toggle('listening',isListening);
+  }
+
+  const orb=$('addCenterVoiceOrb');
+  const title=$('addCenterVoiceTitle');
+  const hint=$('addCenterVoiceHint');
+  const retry=$('addCenterVoiceRetry');
+
+  if(orb){
+    orb.classList.toggle('is-listening',isListening);
+    orb.classList.toggle('is-processing',stateText==='processing');
+    orb.classList.toggle('is-error',stateText==='error');
+    orb.classList.toggle('is-success',stateText==='success');
+  }
+
+  if(title){
+    if(isListening) title.textContent='Ακούω...';
+    else if(stateText==='processing') title.textContent='Επεξεργασία...';
+    else if(stateText==='success') title.textContent='Το βρήκα';
+    else if(stateText==='error') title.textContent='Δεν άκουσα καθαρά';
+    else title.textContent='Πες το έξοδο';
+  }
+
+  if(hint){
+    if(customHint) hint.textContent=customHint;
+    else if(isListening) hint.textContent='Πες “καφές 3” ή πάτα ξανά για stop';
+    else if(stateText==='processing') hint.textContent='Μετατρέπω τη φωνή σε έξοδο...';
+    else if(stateText==='success') hint.textContent='Συμπλήρωσα το πεδίο. Έλεγξε το preview και αποθήκευσε.';
+    else if(stateText==='error') hint.textContent='Πάτα “Ξανά” ή γράψε το έξοδο με λέξεις.';
+    else hint.textContent='Π.χ. “καφές 3” ή “σούπερ 25 ticket”';
+  }
+
+  if(retry){
+    retry.classList.toggle('hidden',stateText!=='error');
+  }
 }
 
 function startQuickVoice(targetInputId='quickAddInput'){
   const Recognition=getSpeechRecognition();
+  quickVoiceLastTargetId=targetInputId || quickVoiceLastTargetId || 'quickAddInput';
 
   if(!Recognition){
+    setQuickVoiceState(false,'error','Ο browser δεν υποστηρίζει φωνητική καταχώρηση.');
     showMiniToast(
       '❌ Ο browser δεν υποστηρίζει voice input',
       'error'
@@ -414,12 +594,16 @@ function startQuickVoice(targetInputId='quickAddInput'){
     return;
   }
 
-  const input=$(targetInputId) || $('quickAddInput');
+  clearQuickVoiceResetTimer();
+  quickVoiceHadResult=false;
+  quickVoiceHadError=false;
+
+  const input=$(quickVoiceLastTargetId) || $('quickAddInput');
 
   quickVoiceRecognition=new Recognition();
   quickVoiceRecognition.lang='el-GR';
   quickVoiceRecognition.interimResults=false;
-  quickVoiceRecognition.maxAlternatives=1;
+  quickVoiceRecognition.maxAlternatives=3;
   quickVoiceRecognition.continuous=false;
 
   quickVoiceRecognition.onstart=()=>{
@@ -428,26 +612,44 @@ function startQuickVoice(targetInputId='quickAddInput'){
 
   quickVoiceRecognition.onresult=e=>{
     const text=e.results?.[0]?.[0]?.transcript||'';
+    const normalized=(typeof normalizeQuickExpenseText==='function') ? normalizeQuickExpenseText(text) : text;
+    quickVoiceHadResult=Boolean(normalized && normalized.trim());
 
-    if(input && text){
-      input.value=text;
-      input.dispatchEvent(new Event('input',{bubbles:true}));
-      input.focus();
+    if(!quickVoiceHadResult){
+      setQuickVoiceState(false,'error','Δεν έπιασα καθαρή φράση. Πάτα “Ξανά”.');
+      return;
     }
+
+    setQuickVoiceState(false,'processing');
+
+    window.setTimeout(()=>{
+      if(input && normalized){
+        input.value=normalized.trim();
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        input.focus();
+      }
+      setQuickVoiceState(false,'success');
+      clearQuickVoiceResetTimer();
+      quickVoiceResetTimer=window.setTimeout(()=>setQuickVoiceState(false),1400);
+    },180);
   };
 
   quickVoiceRecognition.onerror=e=>{
     console.warn('Voice recognition error:',e.error);
+    quickVoiceHadError=true;
 
-    if(e.error==='not-allowed'){
-
+    if(e.error==='not-allowed' || e.error==='service-not-allowed'){
+      setQuickVoiceState(false,'error','Δώσε άδεια μικροφώνου από τις ρυθμίσεις του browser/PWA.');
       showMiniToast(
         '❌ Δεν δόθηκε άδεια μικροφώνου',
         'error'
       );
-    
+    }else if(e.error==='no-speech'){
+      setQuickVoiceState(false,'error','Δεν άκουσα κάτι. Πάτα “Ξανά” και πες π.χ. “καφές 3”.');
+    }else if(e.error==='audio-capture'){
+      setQuickVoiceState(false,'error','Δεν βρέθηκε μικρόφωνο ή δεν είναι διαθέσιμο.');
     }else{
-    
+      setQuickVoiceState(false,'error','Δεν μπόρεσα να ακούσω καθαρά. Πάτα “Ξανά”.');
       showMiniToast(
         '❌ Δεν μπόρεσα να ακούσω καθαρά',
         'error'
@@ -456,10 +658,23 @@ function startQuickVoice(targetInputId='quickAddInput'){
   };
 
   quickVoiceRecognition.onend=()=>{
-    setQuickVoiceState(false);
+    if(quickVoiceHadResult || quickVoiceHadError){
+      quickVoiceListening=false;
+      return;
+    }
+    setQuickVoiceState(false,'error','Δεν άκουσα κάτι. Πάτα “Ξανά” και πες π.χ. “καφές 3”.');
   };
 
-  quickVoiceRecognition.start();
+  try{
+    quickVoiceRecognition.start();
+  }catch(e){
+    console.warn('Voice recognition start failed:',e);
+    setQuickVoiceState(false,'error','Δεν μπόρεσα να ανοίξω το μικρόφωνο. Δοκίμασε ξανά.');
+  }
+}
+
+function retryQuickVoice(){
+  startQuickVoice(quickVoiceLastTargetId || 'quickAddSheetInput');
 }
 
 function setQuickAddInlineError(message,targetId='quickAddError'){
@@ -484,8 +699,89 @@ function clearQuickAddInlineError(targetId='quickAddError'){
   el.innerHTML='';
 }
 
+
+// CAPVO v1.0.10 — normalize common Greek speech numbers for Quick Add.
+// Web Speech often returns “καφές τρία” instead of “καφές 3”.
+function normalizeQuickExpenseText(text){
+  let value=String(text||'').toLowerCase().trim();
+  if(!value)return '';
+
+  value=value
+    .replace(/[άὰᾶ]/g,'α')
+    .replace(/[έὲ]/g,'ε')
+    .replace(/[ήὴ]/g,'η')
+    .replace(/[ίϊΐὶ]/g,'ι')
+    .replace(/[όὸ]/g,'ο')
+    .replace(/[ύϋΰὺ]/g,'υ')
+    .replace(/[ώὼ]/g,'ω')
+    .replace(/\s+/g,' ');
+
+  const units={
+    'μηδεν':0,'μηδενικο':0,
+    'ενα':1,'ενας':1,'μια':1,'μιαν':1,'εναμιση':1.5,'ενάμιση':1.5,
+    'δυο':2,'δυομισι':2.5,'δυόμισι':2.5,
+    'τρια':3,'τρεις':3,
+    'τεσσερα':4,'τεσσερις':4,
+    'πεντε':5,
+    'εξι':6,
+    'επτα':7,'εφτα':7,
+    'οκτω':8,'οχτω':8,
+    'εννεα':9,'εννια':9,
+    'δεκα':10,
+    'εντεκα':11,
+    'δωδεκα':12,
+    'δεκατρια':13,'δεκατρεις':13,
+    'δεκατεσσερα':14,'δεκατεσσερις':14,
+    'δεκαπεντε':15,
+    'δεκαεξι':16,
+    'δεκαεπτα':17,'δεκαεφτα':17,
+    'δεκαοκτω':18,'δεκαοχτω':18,
+    'δεκαεννεα':19,'δεκαεννια':19
+  };
+  const tens={
+    'εικοσι':20,'εικοσιν':20,
+    'τριαντα':30,
+    'σαραντα':40,
+    'πενηντα':50,
+    'εξηντα':60,
+    'εβδομηντα':70,
+    'ογδοντα':80,
+    'ενενηντα':90
+  };
+
+  const tokens=value.split(' ');
+  const out=[];
+
+  for(let i=0;i<tokens.length;i++){
+    const token=tokens[i].replace(/[.,;:!?]/g,'');
+    const next=(tokens[i+1]||'').replace(/[.,;:!?]/g,'');
+
+    if(tens[token]!==undefined && units[next]!==undefined && units[next] < 10){
+      out.push(String(tens[token]+units[next]));
+      i++;
+      continue;
+    }
+
+    if(tens[token]!==undefined){
+      out.push(String(tens[token]));
+      continue;
+    }
+
+    if(units[token]!==undefined){
+      out.push(String(units[token]).replace('.',','));
+      continue;
+    }
+
+    out.push(tokens[i]);
+  }
+
+  return out.join(' ').replace(/\s+/g,' ').trim();
+}
+
+window.normalizeQuickExpenseText=window.normalizeQuickExpenseText || normalizeQuickExpenseText;
+
 function getQuickAddParsed(text){
-  const value=(text||'').trim();
+  const value=(typeof normalizeQuickExpenseText==='function' ? normalizeQuickExpenseText(text) : (text||'')).trim();
   if(!value)return null;
 
   if(typeof quickAddPreviewData==='function'){
@@ -566,6 +862,9 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
 
   const monthKey=expense.date.substring(0,7);
   ensM(monthKey);
+
+  const canSave=await validateExpenseBeforeSave(expense,{errorTarget});
+  if(!canSave)return false;
 
   try{
     D.months[monthKey].daily.push(expense);
@@ -1335,7 +1634,7 @@ function quickAddFallbackParse(text){
 }
 
 function quickAddPreviewData(text){
-  const value=(text||'').trim();
+  const value=(typeof normalizeQuickExpenseText==='function' ? normalizeQuickExpenseText(text) : (text||'')).trim();
   if(!value)return null;
 
   if(typeof parseExpense==='function'){

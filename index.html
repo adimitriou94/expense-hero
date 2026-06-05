@@ -11,14 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.0.8.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.0.11">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.0.8.1">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.0.8.1">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.0.8.1">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.0.8.1">
-  <link rel="manifest" href="manifest.webmanifest?v=1.0.8.1">
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.0.11">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.0.11">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.0.11">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.0.11">
+  <link rel="manifest" href="manifest.webmanifest?v=1.0.11">
   <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
 
@@ -1068,8 +1068,17 @@
           placeholder="π.χ. καφές 3 ticket"
           autocomplete="off"
         >
-        <button type="button" class="add-center-voice" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Φωνητική καταχώρηση">🎤</button>
+        <button type="button" class="add-center-voice add-center-voice-inline" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Φωνητική καταχώρηση">🎤</button>
       </div>
+
+      <button type="button" class="add-center-voice-orb" id="addCenterVoiceOrb" onclick="startQuickVoice('quickAddSheetInput')" aria-label="Πες το έξοδο με φωνή">
+        <span class="add-center-voice-orb-icon">🎙</span>
+        <span class="add-center-voice-orb-copy">
+          <strong id="addCenterVoiceTitle">Πες το έξοδο</strong>
+          <small id="addCenterVoiceHint">Π.χ. “καφές 3” ή “σούπερ 25 ticket”</small>
+          <span class="add-center-voice-retry hidden" id="addCenterVoiceRetry" onclick="event.stopPropagation();retryQuickVoice();">Ξανά</span>
+        </span>
+      </button>
 
       <div class="smart-quick-preview add-center-preview" id="quickAddSheetPreview" aria-live="polite"></div>
       <div class="quick-add-error hidden add-center-error" id="quickAddSheetError" aria-live="polite"></div>
@@ -1335,14 +1344,24 @@
     <div class="income-modal-hero">
       <div class="income-modal-icon">💰</div>
       <div class="income-modal-heading">
-        <div class="income-modal-kicker">Income source</div>
-        <h2 id="mIncomeSourceTitle">Νέα πηγή εισοδήματος</h2>
-        <p>Καταχώρησε το μηνιαίο εισόδημα και όρισε πώς επηρεάζει το budget σου.</p>
+        <div class="income-modal-kicker" id="incomeModalKicker">Budget setup</div>
+        <h2 id="mIncomeSourceTitle">Προσθήκη budget</h2>
+        <p id="incomeModalIntro">Πρόσθεσε το βασικό σου εισόδημα ή ένα διαθέσιμο μηνιαίο budget για να υπολογίζεται σωστά το υπόλοιπο.</p>
       </div>
     </div>
 
+    <div class="income-modal-quick-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
+      <button type="button" onclick="applyIncomePreset('salary')">💼 Μισθός</button>
+      <button type="button" onclick="applyIncomePreset('budget')">📊 Budget μήνα</button>
+      <button type="button" onclick="applyIncomePreset('ticket')">🎫 Ticket</button>
+      <button type="button" onclick="applyIncomePreset('voucher')">💳 Voucher</button>
+      <button type="button" onclick="applyIncomePreset('extra')">✨ Έκτακτο</button>
+    </div>
+
+    <div class="income-modal-feedback hidden" id="incomeModalFeedback" role="status"></div>
+
     <div class="income-modal-amount-card">
-      <label for="fISAmount">Ποσό εισοδήματος</label>
+      <label for="fISAmount">Ποσό budget / εισοδήματος</label>
       <div class="income-modal-amount-input">
         <span>€</span>
         <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0">
@@ -1351,8 +1370,8 @@
 
     <div class="income-modal-form-card">
       <div class="form-group income-full-row">
-        <label>Όνομα εισοδήματος</label>
-        <input type="text" id="fISName" placeholder="π.χ. Μισθός, Ticket Restaurant, Ενοίκιο">
+        <label>Όνομα πηγής</label>
+        <input type="text" id="fISName" placeholder="π.χ. Μισθός, Budget μήνα, Ticket">
       </div>
 
       <div class="income-modal-grid">
@@ -1451,7 +1470,7 @@
 
     <div class="income-modal-actions">
       <button class="btn btn-primary btn-block income-save-btn" id="btnIncomeSource" onclick="saveIncomeSource()">
-        Αποθήκευση πηγής
+        Αποθήκευση budget
       </button>
     </div>
   </div>
@@ -1480,25 +1499,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.0.8.1"></script>
+<script src="js/app-version.js?v=1.0.11"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.0.8.1"></script>
+<script src="js/config.js?v=1.0.11"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.0.8.1"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.0.8.1"></script>
-<script src="js/app/02-supabase-data.js?v=1.0.8.1"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.0.8.1"></script>
-<script src="js/app/04-reports-archive.js?v=1.0.8.1"></script>
-<script src="js/app/05-income-pickers.js?v=1.0.8.1"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.0.8.1"></script>
-<script src="js/app/07-add-center.js?v=1.0.8.1"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.0.8.1"></script>
+<script src="js/app/00-core-state.js?v=1.0.11"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.0.11"></script>
+<script src="js/app/02-supabase-data.js?v=1.0.11"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.0.11"></script>
+<script src="js/app/04-reports-archive.js?v=1.0.11"></script>
+<script src="js/app/05-income-pickers.js?v=1.0.11"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.0.11"></script>
+<script src="js/app/07-add-center.js?v=1.0.11"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.0.11"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.0.8.1"></script>
-<script src="js/sync.js?v=1.0.8.1"></script>
-<script src="js/advisor.js?v=1.0.8.1"></script>
+<script src="js/cards.js?v=1.0.11"></script>
+<script src="js/sync.js?v=1.0.11"></script>
+<script src="js/advisor.js?v=1.0.11"></script>
 
 
 
