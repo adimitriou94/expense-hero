@@ -1050,11 +1050,17 @@ function fillPaymentSourceSelect(selectedId=''){
 
 
 async function saveIncomeSourceRow(userId,item){
+  const ownerUserId=String(userId || getDataOwnerId() || '').trim();
+  const legacyOwner=String((typeof getLegacyOwnerId==='function' ? getLegacyOwnerId() : '') || ownerUserId).trim();
+
+  if(!ownerUserId)throw new Error('Missing authenticated user id.');
+
   const {error}=await supabaseClient
     .from('income_sources')
     .upsert({
       id:item.id,
-      user_chat_id:userId,
+      user_id:ownerUserId,
+      user_chat_id:legacyOwner,
       name:item.name,
       amount:item.amount,
       category:item.category,

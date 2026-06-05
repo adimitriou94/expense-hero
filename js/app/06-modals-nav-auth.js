@@ -125,12 +125,15 @@ function editExp(t,id){
 
 async function saveDailyExpenseRow(userId,expense){
   const token=currentSession?.access_token;
+  const ownerUserId=String(userId || getDataOwnerId() || '').trim();
 
   if(!token)throw new Error('Δεν υπάρχει ενεργό session.');
+  if(!ownerUserId)throw new Error('Missing authenticated user id.');
 
   const row={
     id:expense.id,
-    user_chat_id:userId,
+    user_id:ownerUserId,
+    user_chat_id:null,
     name:expense.name,
     amount:expense.amount,
     category:expense.category,
@@ -376,11 +379,15 @@ async function saveDaily(){
 }
 
 async function saveFixedExpenseRow(userId,expense){
+  const ownerUserId=String(userId || getDataOwnerId() || '').trim();
+  if(!ownerUserId)throw new Error('Missing authenticated user id.');
+
   const {error}=await supabaseClient
     .from('fixed_expenses')
     .upsert({
       id:expense.id,
-      user_chat_id:userId,
+      user_id:ownerUserId,
+      user_chat_id:null,
       name:expense.name,
       amount:expense.amount,
       category:expense.category
@@ -1080,7 +1087,6 @@ async function signOutUser(){
 
 async function getOrCreateProfile(user){
   const metadata=user.user_metadata||{};
-  const syntheticOwnerId=getSyntheticOwnerId(user);
 
   const metadataPayload={
     user_id:user.id,
@@ -1101,12 +1107,11 @@ async function getOrCreateProfile(user){
   if(existing){
     const updatePayload={...metadataPayload};
 
-    // Telegram is now optional, but the current RLS/data model still expects an
-    // owner value in profiles.telegram_chat_id for rows that use user_chat_id.
-    // For users that have not linked Telegram yet, keep an internal non-numeric
-    // owner id. It is NOT treated as a real Telegram connection in the UI.
-    if(!existing.telegram_chat_id && syntheticOwnerId){
-      updatePayload.telegram_chat_id=syntheticOwnerId;
+    // Production ownership now uses auth user_id. Older MVP builds stored
+    // synthetic values like capvo_<user_id> in telegram_chat_id only to satisfy
+    // Telegram-first RLS. Clear those values so Telegram remains a real optional link.
+    if(existing.telegram_chat_id && !isRealTelegramChatId(existing.telegram_chat_id)){
+      updatePayload.telegram_chat_id=null;
     }
 
     const {data,error}=await supabaseClient
@@ -1117,7 +1122,7 @@ async function getOrCreateProfile(user){
       .single();
 
     if(error){
-      console.warn('Profile metadata/owner update failed, using existing profile:',error);
+      console.warn('Profile metadata update failed, using existing profile:',error);
       return {...existing,...updatePayload};
     }
 
@@ -1126,7 +1131,7 @@ async function getOrCreateProfile(user){
 
   const insertPayload={
     ...metadataPayload,
-    telegram_chat_id:syntheticOwnerId||null
+    telegram_chat_id:null
   };
 
   const {data,error}=await supabaseClient
@@ -1142,29 +1147,11 @@ async function getOrCreateProfile(user){
 
 
 async function migrateLocalOwnerDataToTelegram(previousOwnerId,newTelegramChatId){
-  if(!previousOwnerId || !newTelegramChatId || String(previousOwnerId)===String(newTelegramChatId))return;
-
-  const ownerTables=['expenses','fixed_expenses','income_sources','credit_cards'];
-
-  for(const table of ownerTables){
-    const {error}=await supabaseClient
-      .from(table)
-      .update({user_chat_id:newTelegramChatId})
-      .eq('user_chat_id',previousOwnerId);
-
-    if(error){
-      console.warn(`Owner migration skipped for ${table}:`,error);
-    }
-  }
-
-  try{
-    await supabaseClient
-      .from('users')
-      .upsert({chat_id:newTelegramChatId,income:D.income||0},{onConflict:'chat_id'});
-  }catch(e){
-    console.warn('Owner migration users upsert skipped:',e);
-  }
+  // No-op after production ownership migration.
+  // Finance data belongs to auth user_id; Telegram is only a linked input channel.
+  return;
 }
+
 
 async function saveTelegramChatId(ev){
   if(ev)ev.preventDefault();
@@ -1255,27 +1242,9 @@ async function saveTelegramChatId(ev){
 
     let verifiedProfile=data.profile||null;
 
-    // Some Worker responses may verify successfully but not return the updated
-    // profile row. Persist the Telegram Chat ID client-side as well, so the
-    // next auth check does not send the user back to the login/Telegram step.
-    if(!verifiedProfile?.telegram_chat_id || String(verifiedProfile.telegram_chat_id)!==String(chatId)){
-      const {data:profileData,error:profileError}=await supabaseClient
-        .from('profiles')
-        .update({
-          telegram_chat_id:chatId,
-          updated_at:new Date().toISOString()
-        })
-        .eq('user_id',currentUser.id)
-        .select('*')
-        .single();
-
-      if(profileError){
-        console.warn('Profile telegram_chat_id update fallback failed:',profileError);
-      }else{
-        verifiedProfile=profileData;
-      }
-    }
-
+    // Telegram linking is a privileged operation and must be completed by the
+    // Worker after validating the Telegram /code. The frontend must not update
+    // profiles.telegram_chat_id directly.
     currentProfile={
       ...(currentProfile||{}),
       ...(verifiedProfile||{}),
@@ -1284,8 +1253,6 @@ async function saveTelegramChatId(ev){
 
     changingTelegramId=false;
     localStorage.setItem(SK,chatId);
-
-    await migrateLocalOwnerDataToTelegram(previousOwnerId,chatId);
 
     const btn=$('authSubmitBtn');
 
@@ -1296,7 +1263,7 @@ async function saveTelegramChatId(ev){
 
     showMiniToast('✅ Το Telegram συνδέθηκε');
 
-    await loadUserData(chatId);
+    await loadUserData();
 
     return;
 
@@ -1544,7 +1511,7 @@ async function initApp(){
       localStorage.removeItem(SK);
     }
 
-    await loadUserData(getDataOwnerId());
+    await loadUserData();
 
   }catch(e){
     console.error('Init error:',e);
@@ -1599,7 +1566,7 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
       localStorage.removeItem(SK);
     }
 
-    await loadUserData(getDataOwnerId());
+    await loadUserData();
 
   }catch(e){
     console.error('Auth state error:',e);

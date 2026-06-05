@@ -26,7 +26,7 @@ function getCurrentChatId(){
 
 function getCurrentDataOwnerId(){
   if(typeof getDataOwnerId==='function')return getDataOwnerId();
-  return getCurrentChatId();
+  return String(currentUser?.id || currentSession?.user?.id || '').trim();
 }
 
 function getSyncKey(){
@@ -683,13 +683,14 @@ async function confirmSync(...messageIds){
 
     newExpenseRows.push({
       id,
+      user_id:dataOwnerId,
+      user_chat_id:chatId || null,
       name,
       amount,
       category:cat,
       date,
       type:'daily',
       month_key:monthKey,
-      user_chat_id:dataOwnerId,
       payment_source_id:paymentSourceId||null,
       payment_source_name:paymentSource?.name||null,
       payment_source_type:paymentSource?.incomeType||null

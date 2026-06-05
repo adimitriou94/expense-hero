@@ -3,73 +3,70 @@
 // Keep classic <script> loading order from index.html.
 
 // ===== SUPABASE DATA OPERATIONS =====
+function getFinanceUserId(explicitUserId){
+  return String(explicitUserId || getDataOwnerId() || '').trim();
+}
+
+function legacyUserChatId(){
+  return String((typeof getLegacyOwnerId==='function' ? getLegacyOwnerId() : '') || '').trim();
+}
+
 async function fetchAllData(userId){
+  const ownerUserId=getFinanceUserId(userId);
+
   try{
-    if(!userId){
+    if(!ownerUserId){
       D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{}};
       refreshComputedIncome();
       return;
     }
-    let {data:user,error:errUser}=await supabaseClient.from('users').select('income').eq('chat_id',userId).single();
-
-    if(errUser&&errUser.code==='PGRST116'){
-      const {error:createUserError}=await supabaseClient
-        .from('users')
-        .upsert({chat_id:userId,income:0},{onConflict:'chat_id'});
-
-      if(createUserError){
-        console.warn('User income row create skipped:',createUserError);
-      }
-
-      user={income:0};
-    }else if(errUser){
-      console.warn('User income row fetch skipped:',errUser);
-      user={income:0};
-    }
-
-    D.income=user?.income||0;
 
     const {data:incomeSources,error:errIncomeSources}=await supabaseClient
-    .from('income_sources')
-    .select('*')
-    .eq('user_chat_id',userId);
-  
-  if(errIncomeSources)throw errIncomeSources;
-  
-  D.incomeSources=(incomeSources||[]).map(i=>({
-    id:i.id,
-    name:i.name,
-    amount:Number(i.amount)||0,
-    category:i.category||'Άλλο',
-    incomeType:i.income_type||'cash',
-    includeInBudget:i.include_in_budget,
-    isSavings:i.is_savings,
-    isRecurring:i.is_recurring,
-    restriction:i.restriction||'none',
-    restrictedCategory:i.restricted_category||'',
-    notes:i.notes||''
-  }));
-  
-  refreshComputedIncome();
+      .from('income_sources')
+      .select('*')
+      .eq('user_id',ownerUserId);
+
+    if(errIncomeSources)throw errIncomeSources;
+
+    D.incomeSources=(incomeSources||[]).map(i=>({
+      id:i.id,
+      name:i.name,
+      amount:Number(i.amount)||0,
+      category:i.category||'Άλλο',
+      incomeType:i.income_type||'cash',
+      includeInBudget:i.include_in_budget,
+      isSavings:i.is_savings,
+      isRecurring:i.is_recurring,
+      restriction:i.restriction||'none',
+      restrictedCategory:i.restricted_category||'',
+      notes:i.notes||''
+    }));
+
+    refreshComputedIncome();
 
     const {data:fixed,error:errFixed}=await supabaseClient
       .from('fixed_expenses')
-      .select('id,user_chat_id,name,amount,category')
-      .eq('user_chat_id',userId);
+      .select('id,user_id,user_chat_id,name,amount,category,created_at')
+      .eq('user_id',ownerUserId);
 
-    if(errFixed) throw errFixed;
+    if(errFixed)throw errFixed;
 
     D.fixedExpenses=(fixed||[])
       .map(e=>({
         id:e.id,
         name:e.name,
         amount:Number(e.amount)||0,
-        category:e.category||'Άλλο'
+        category:e.category||'Άλλο',
+        createdAt:e.created_at||''
       }))
       .sort((a,b)=>fixedExpenseSortTime(b)-fixedExpenseSortTime(a));
 
-    const {data:cards,error:errCards}=await supabaseClient.from('credit_cards').select('*').eq('user_chat_id',userId);
-    if(errCards) throw errCards;
+    const {data:cards,error:errCards}=await supabaseClient
+      .from('credit_cards')
+      .select('*')
+      .eq('user_id',ownerUserId);
+
+    if(errCards)throw errCards;
 
     D.creditCards=(cards||[]).map(c=>({
       id:c.id,
@@ -81,14 +78,18 @@ async function fetchAllData(userId){
       chosenPay:c.chosen_pay||0
     }));
 
-    const {data:daily,error:errDaily}=await supabaseClient.from('expenses').select('*').eq('user_chat_id',userId);
-    if(errDaily) throw errDaily;
+    const {data:daily,error:errDaily}=await supabaseClient
+      .from('expenses')
+      .select('*')
+      .eq('user_id',ownerUserId);
+
+    if(errDaily)throw errDaily;
 
     D.months={};
 
     (daily||[]).forEach(e=>{
       const mk=e.month_key||(e.date?e.date.substring(0,7):curMK());
-      if(!D.months[mk]) D.months[mk]={daily:[]};
+      if(!D.months[mk])D.months[mk]={daily:[]};
       D.months[mk].daily.push({
         id:e.id,
         name:e.name,
@@ -108,13 +109,23 @@ async function fetchAllData(userId){
 }
 
 async function syncIncomeSources(userId){
-  if((D.incomeSources||[]).length>0){
+  const ownerUserId=getFinanceUserId(userId);
+  const legacyOwner=legacyUserChatId() || ownerUserId;
+
+  if(!ownerUserId)throw new Error('Missing authenticated user id.');
+
+  if(!Array.isArray(D.incomeSources)){
+    D.incomeSources=[];
+  }
+
+  if(D.incomeSources.length>0){
     const {error}=await supabaseClient
       .from('income_sources')
       .upsert(
         D.incomeSources.map(i=>({
           id:i.id,
-          user_chat_id:userId,
+          user_id:ownerUserId,
+          user_chat_id:legacyOwner,
           name:i.name,
           amount:i.amount,
           category:i.category,
@@ -133,18 +144,14 @@ async function syncIncomeSources(userId){
     if(error)throw error;
   }
 
-  if(!Array.isArray(D.incomeSources)){
-    D.incomeSources=[];
-  }
-
   const {data:dbRows,error:fetchError}=await supabaseClient
     .from('income_sources')
     .select('id')
-    .eq('user_chat_id',userId);
+    .eq('user_id',ownerUserId);
 
   if(fetchError)throw fetchError;
 
-   const appIds=new Set(
+  const appIds=new Set(
     D.incomeSources
       .filter(i=>i && i.id)
       .map(i=>i.id)
@@ -165,90 +172,117 @@ async function syncIncomeSources(userId){
 }
 
 async function saveToSupabase(){
-  const userId=getDataOwnerId();
-  if(!userId) return;
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId)return;
 
   try{
     refreshComputedIncome();
 
-    const {error:userSaveError}=await supabaseClient
-      .from('users')
-      .upsert({chat_id:userId,income:D.income},{onConflict:'chat_id'});
-
-    if(userSaveError){
-      console.warn('User income row save skipped:',userSaveError);
-    }
-
-    await syncIncomeSources(userId);
+    await syncIncomeSources(ownerUserId);
 
     if(D.fixedExpenses.length>0){
-      await supabaseClient.from('fixed_expenses').upsert(
-        D.fixedExpenses.map(e=>({id:e.id,name:e.name,amount:e.amount,category:e.category,user_chat_id:userId})),
-        {onConflict:'id'}
-      );
-    }
-
-    const {data:dbFixed}=await supabaseClient.from('fixed_expenses').select('id').eq('user_chat_id',userId);
-    const fixedIds=new Set(D.fixedExpenses.map(e=>e.id));
-    const fixedToDelete=(dbFixed||[]).filter(e=>!fixedIds.has(e.id)).map(e=>e.id);
-    if(fixedToDelete.length>0) await supabaseClient.from('fixed_expenses').delete().in('id',fixedToDelete);
-
-    if(D.creditCards.length>0){
-      await supabaseClient.from('credit_cards').upsert(
-        D.creditCards.map(c=>({
-          id:c.id,name:c.name,balance:c.balance,rate:c.rate,
-          min_pay:c.minPay,limit_amount:c.limit,chosen_pay:c.chosenPay,user_chat_id:userId
+      const {error}=await supabaseClient.from('fixed_expenses').upsert(
+        D.fixedExpenses.map(e=>({
+          id:e.id,
+          user_id:ownerUserId,
+          user_chat_id:null,
+          name:e.name,
+          amount:e.amount,
+          category:e.category
         })),
         {onConflict:'id'}
       );
+      if(error)throw error;
     }
 
-    const {data:dbCards}=await supabaseClient.from('credit_cards').select('id').eq('user_chat_id',userId);
+    const {data:dbFixed,error:fixedFetchError}=await supabaseClient
+      .from('fixed_expenses')
+      .select('id')
+      .eq('user_id',ownerUserId);
+    if(fixedFetchError)throw fixedFetchError;
+
+    const fixedIds=new Set(D.fixedExpenses.map(e=>e.id));
+    const fixedToDelete=(dbFixed||[]).filter(e=>!fixedIds.has(e.id)).map(e=>e.id);
+    if(fixedToDelete.length>0){
+      const {error}=await supabaseClient.from('fixed_expenses').delete().in('id',fixedToDelete);
+      if(error)throw error;
+    }
+
+    if(D.creditCards.length>0){
+      const {error}=await supabaseClient.from('credit_cards').upsert(
+        D.creditCards.map(c=>({
+          id:c.id,
+          user_id:ownerUserId,
+          user_chat_id:null,
+          name:c.name,
+          balance:c.balance,
+          rate:c.rate,
+          min_pay:c.minPay,
+          limit_amount:c.limit,
+          chosen_pay:c.chosenPay
+        })),
+        {onConflict:'id'}
+      );
+      if(error)throw error;
+    }
+
+    const {data:dbCards,error:cardsFetchError}=await supabaseClient
+      .from('credit_cards')
+      .select('id')
+      .eq('user_id',ownerUserId);
+    if(cardsFetchError)throw cardsFetchError;
+
     const cardIds=new Set(D.creditCards.map(c=>c.id));
     const cardsToDelete=(dbCards||[]).filter(c=>!cardIds.has(c.id)).map(c=>c.id);
-    if(cardsToDelete.length>0) await supabaseClient.from('credit_cards').delete().in('id',cardsToDelete);
+    if(cardsToDelete.length>0){
+      const {error}=await supabaseClient.from('credit_cards').delete().in('id',cardsToDelete);
+      if(error)throw error;
+    }
 
     const allDaily=[];
 
     Object.entries(D.months).forEach(([monthKey,m])=>{
-      m.daily.forEach(e=>{
+      (m.daily||[]).forEach(e=>{
         allDaily.push({
           id:e.id,
+          user_id:ownerUserId,
+          user_chat_id:null,
           name:e.name,
           amount:e.amount,
           category:e.category,
           date:e.date,
           type:'daily',
           month_key:monthKey,
-          user_chat_id:userId,
           payment_source_id:e.paymentSourceId||null,
           payment_source_name:e.paymentSourceName||null,
           payment_source_type:e.paymentSourceType||null
         });
       });
     });
-    
+
     if(allDaily.length>0){
-      await supabaseClient
+      const {error}=await supabaseClient
         .from('expenses')
         .upsert(allDaily,{onConflict:'id'});
+      if(error)throw error;
     }
-    
-    const {data:dbExpenses}=await supabaseClient
+
+    const {data:dbExpenses,error:expensesFetchError}=await supabaseClient
       .from('expenses')
       .select('id')
-      .eq('user_chat_id',userId);
-    
+      .eq('user_id',ownerUserId);
+    if(expensesFetchError)throw expensesFetchError;
+
     const dbIds=new Set((dbExpenses||[]).map(e=>e.id));
     const appIds=new Set(allDaily.map(e=>e.id));
-    
     const toDelete=[...dbIds].filter(id=>!appIds.has(id));
-    
+
     if(toDelete.length>0){
-      await supabaseClient
+      const {error}=await supabaseClient
         .from('expenses')
         .delete()
         .in('id',toDelete);
+      if(error)throw error;
     }
 
   }catch(e){

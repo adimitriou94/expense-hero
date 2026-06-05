@@ -86,13 +86,17 @@ function getSyntheticOwnerId(user=currentUser||currentSession?.user){
   return id?`capvo_${id}`:'';
 }
 
+function getAppUserId(){
+  return String(currentUser?.id || currentSession?.user?.id || '').trim();
+}
+
 function getProfileOwnerId(){
   return String(currentProfile?.telegram_chat_id||'').trim();
 }
 
 function getTelegramChatId(){
   const profileChatId=getProfileOwnerId();
-  if(profileChatId)return isRealTelegramChatId(profileChatId)?profileChatId:'';
+  if(isRealTelegramChatId(profileChatId))return profileChatId;
 
   const storedChatId=String(localStorage.getItem(SK)||'').trim();
   return isRealTelegramChatId(storedChatId)?storedChatId:'';
@@ -102,18 +106,20 @@ function hasTelegramConnection(){
   return !!getTelegramChatId();
 }
 
-function getDataOwnerId(){
-  const profileOwnerId=getProfileOwnerId();
-  if(profileOwnerId)return profileOwnerId;
-
+function getLegacyOwnerId(){
+  // Legacy compatibility only. Finance ownership is now user_id.
   const telegramChatId=getTelegramChatId();
   if(telegramChatId)return telegramChatId;
 
   const syntheticOwnerId=getSyntheticOwnerId();
   if(syntheticOwnerId)return syntheticOwnerId;
 
-  const authUserId=currentUser?.id || currentSession?.user?.id || '';
-  return String(authUserId || '').trim();
+  return getAppUserId();
+}
+
+function getDataOwnerId(){
+  // Production ownership: the Supabase authenticated user owns finance data.
+  return getAppUserId();
 }
 
 function getTelegramOptionalMessage(){
