@@ -845,8 +845,11 @@ a {
 .payment-sources-grid {
   margin-top: 12px;
   display: flex;
-  flex-direction: column;
   gap: 10px;
+}
+
+.payment-sources-grid:not(.payment-sources-carousel) {
+  flex-direction: column;
 }
 
 .payment-source-mini-card {
@@ -857,6 +860,111 @@ a {
   border-radius: var(--radius-sm);
   background: var(--bg3);
   border: 1px solid var(--border);
+}
+
+.payment-sources-carousel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 4px 8px;
+  margin-left: -4px;
+  margin-right: -4px;
+}
+
+.payment-sources-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.payment-sources-carousel.is-single {
+  overflow: visible;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.payment-source-wallet-card {
+  position: relative;
+  flex: 0 0 176px;
+  min-height: 116px;
+  flex-direction: column;
+  gap: 10px;
+  scroll-snap-align: start;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,245,249,.88));
+  box-shadow: 0 14px 34px rgba(15,23,42,.07);
+}
+
+.payment-sources-carousel.is-single .payment-source-wallet-card {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.payment-source-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.payment-source-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(16,185,129,.11);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.payment-source-wallet-card.is-low .payment-source-chip {
+  background: rgba(245,158,11,.13);
+  color: var(--amber);
+}
+
+.payment-source-wallet-card.is-empty .payment-source-chip {
+  background: rgba(239,68,68,.12);
+  color: var(--red);
+}
+
+.payment-source-view-all {
+  flex: 0 0 138px;
+  min-height: 116px;
+  border: 0;
+  border-radius: 20px;
+  padding: 14px 12px;
+  scroll-snap-align: start;
+  background: #111827;
+  color: #fff;
+  font-family: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  box-shadow: 0 16px 34px rgba(17,24,39,.22);
+  cursor: pointer;
+}
+
+.payment-source-view-all span {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.payment-source-view-all strong {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.payment-source-view-all small {
+  font-size: 10px;
+  opacity: .72;
+  font-weight: 800;
 }
 
 .payment-source-mini-content {

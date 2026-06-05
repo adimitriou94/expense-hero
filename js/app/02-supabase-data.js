@@ -265,39 +265,81 @@ function renderPaymentSourcesSummary(){
   const el=$('paymentSourcesSummary');
   if(!el)return;
 
+  const widget=el.closest('.payment-sources-widget');
+  const titleEl=widget?.querySelector('.section-title');
   const restricted=(D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none');
+    .filter(i=>i.restriction && i.restriction!=='none')
+    .map(i=>({
+      ...i,
+      _remaining:paymentSourceRemaining(i),
+      _total:Number(i.amount)||0
+    }))
+    .sort((a,b)=>(b._remaining||0)-(a._remaining||0));
 
   if(restricted.length===0){
-    el.closest('.payment-sources-widget').style.display='none';
+    if(widget)widget.style.display='none';
+    if(titleEl)titleEl.textContent='🎫 Voucher / Ticket';
     el.innerHTML='';
+    el.className='payment-sources-grid';
     return;
   }
 
-  el.closest('.payment-sources-widget').style.display='block';
+  const totalAvailable=restricted.reduce((sum,i)=>sum+(Number(i._remaining)||0),0);
+  const totalLimit=restricted.reduce((sum,i)=>sum+(Number(i._total)||0),0);
+  const countLabel=restricted.length===1?'1 πηγή':`${restricted.length} πηγές`;
 
-  el.innerHTML=restricted.map(i=>{
-    const remaining=paymentSourceRemaining(i);
-    const total=Number(i.amount)||0;
+  if(widget){
+    widget.style.display='block';
+    widget.classList.toggle('has-many-payment-sources',restricted.length>1);
+  }
+
+  if(titleEl){
+    titleEl.innerHTML=`
+      <span class="payment-sources-title-main">🎫 Voucher / Ticket</span>
+      <small class="payment-sources-title-sub">${countLabel} • ${fmt(totalAvailable)} διαθέσιμα</small>
+    `;
+  }
+
+  el.className=`payment-sources-grid payment-sources-carousel ${restricted.length===1?'is-single':'is-carousel'}`;
+
+  const cards=restricted.map(i=>{
+    const remaining=Number(i._remaining)||0;
+    const total=Number(i._total)||0;
     const used=Math.max(0,total-remaining);
-    const pct=total>0?Math.round(used/total*100):0;
+    const pct=total>0?Math.min(100,Math.round(used/total*100)):0;
+    const remainingPct=total>0?Math.max(0,Math.round(remaining/total*100)):0;
+    const icon=i.restriction==='food_only'?'🍽️':'🎫';
+    const status=remaining<=0?'empty':(remainingPct<=20?'low':'ok');
 
     return`
-      <div class="payment-source-mini-card">
-        <div class="widget-icon teal">🎫</div>
+      <article class="payment-source-mini-card payment-source-wallet-card is-${status}">
+        <div class="payment-source-card-top">
+          <div class="widget-icon teal">${icon}</div>
+          <span class="payment-source-chip">${remainingPct}%</span>
+        </div>
 
         <div class="payment-source-mini-content">
           <div class="stat-label">${esc(i.name)}</div>
           <div class="stat-value teal">${fmt(remaining)}</div>
           <div class="payment-mini-meta">διαθέσιμα / ${fmt(total)}</div>
 
-          <div class="payment-mini-bar">
+          <div class="payment-mini-bar" aria-label="Χρήση ${pct}%">
             <div class="payment-mini-fill" style="width:${pct}%"></div>
           </div>
         </div>
-      </div>
+      </article>
     `;
   }).join('');
+
+  const viewAll=`
+    <button type="button" class="payment-source-view-all" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'))">
+      <span>Προβολή όλων</span>
+      <strong>${fmt(totalAvailable)}</strong>
+      <small>σύνολο διαθέσιμο</small>
+    </button>
+  `;
+
+  el.innerHTML=cards+(restricted.length>1?viewAll:'');
 }
 
 function renderSettingsPage(){
