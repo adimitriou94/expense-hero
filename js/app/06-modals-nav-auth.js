@@ -69,13 +69,13 @@ function openModal(t){
     $('fISIncludeBudget').checked=true;
     $('fISSavings').checked=false;
     $('fISRecurring').checked=true;
+    if($('fISPrimary'))$('fISPrimary').checked=false;
     $('fISNotes').value='';
     $('fISID').value='';
     $('btnIncomeSource').textContent='Αποθήκευση budget';
     if(typeof clearIncomeValidation==='function')clearIncomeValidation();
-    document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>btn.classList.remove('active'));
-
-    refreshIncomeCustomPickers();
+    if(typeof applyIncomePreset==='function')applyIncomePreset('budget');
+    else refreshIncomeCustomPickers();
     // autofocus disabled: user taps the field when ready;
   }
 }

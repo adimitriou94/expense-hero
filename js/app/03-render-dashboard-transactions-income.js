@@ -24,9 +24,8 @@ function renderDashboardGreeting(){
   const name=capvoDashboardFirstName();
   if(title)title.textContent=name==='σου'?'Γεια σου 👋':`Γεια σου, ${name} 👋`;
   if(sub){
-    const parts=String(curM||curMK()).split('-');
-    const monthName=MG[(parseInt(parts[1]||'1',10)-1)]||'μήνας';
-    sub.textContent=`Ο ${monthName} είναι ενημερωμένος.`;
+    const cycle=getCurrentBudgetCycle();
+    sub.textContent=`Ο κύκλος ${cycle.label} είναι ενημερωμένος.`;
   }
 }
 
@@ -43,9 +42,13 @@ function render(){
   const bal=D.income-tot;
 
   const pct=D.income>0?Math.min(100,Math.round(tot/D.income*100)):0;
-  const[y,mo]=curM.split('-');
+  const cycle=getCurrentBudgetCycle();
 
-  $('mLabel').textContent=MG[parseInt(mo)-1]+' '+y;
+  $('mLabel').textContent=cycle.label;
+  const eyebrow=document.querySelector('.modern-hero-card .eyebrow');
+  if(eyebrow)eyebrow.textContent='Υπόλοιπο κύκλου';
+  const heroCaption=document.querySelector('.modern-hero-caption');
+  if(heroCaption)heroCaption.textContent=`Τρέχων οικονομικός κύκλος: ${cycle.label}.`;
   renderDashboardGreeting();
   $('dIncome').textContent=fmt(D.income);
   $('dBalance').textContent=fmt(bal);
@@ -321,10 +324,10 @@ function closeMobileTransactionDetail(){
 }
 
 function renderDailyList(){
-  const m=D.months[curM]||{daily:[]};
+  const m={daily:getCurrentCycleDailyExpenses()};
 
   $('cDaily').innerHTML=`
-    ${m.daily.length} εγγραφές
+    ${m.daily.length} εγγραφές κύκλου
     <button class="mini-action" onclick="toggleSelectMode('daily')">${selectionMode.daily?'Άκυρο':'Επιλογή'}</button>
     ${selectionMode.daily?`
       <button class="mini-action" onclick="selectAllVisible('daily')">Όλα</button>
@@ -397,10 +400,10 @@ function renderMobileCategoryInsights(){
 
   if(!donut || !list || !totalEl) return;
 
-  const m = D.months[curM] || {daily:[]};
+  const dailyRows = getCurrentCycleDailyExpenses();
   const totals = {};
 
-  (m.daily || []).forEach(e=>{
+  (dailyRows || []).forEach(e=>{
     const cat = e.category || 'Άλλο';
     totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
   });
@@ -458,8 +461,7 @@ function renderDashboardPreview(){
   const el = $('dashRecentList');
   if(!el)return;
 
-  const m = D.months[curM] || {daily:[]};
-  const recent = [...(m.daily || [])]
+  const recent = [...getCurrentCycleDailyExpenses()]
     .sort((a,b)=>
       String(b.date || '').localeCompare(String(a.date || '')) ||
       String(b.id || '').localeCompare(String(a.id || ''))
@@ -469,7 +471,7 @@ function renderDashboardPreview(){
   if(recent.length === 0){
     el.innerHTML = `
       <div class="empty mini-empty">
-        Δεν υπάρχουν πρόσφατες κινήσεις για αυτόν τον μήνα.
+        Δεν υπάρχουν πρόσφατες κινήσεις για αυτόν τον κύκλο.
       </div>
     `;
     return;
@@ -495,16 +497,7 @@ function renderDashboardPreview(){
 
 
 function dashboardRemainingDays(){
-  const key=curM||curMK();
-  const [y,m]=String(key).split('-').map(Number);
-  const daysInMonth=new Date(y,(m||1),0).getDate();
-  const today=new Date();
-
-  if(key===curMK()){
-    return Math.max(1,daysInMonth-today.getDate()+1);
-  }
-
-  return daysInMonth;
+  return budgetCycleRemainingDays();
 }
 
 function ensureDashboardAllowanceStyles(){
@@ -994,6 +987,7 @@ function renderIncomeList(){
           <div class="income-source-meta">${esc(i.category)} · ${esc(i.incomeType)} · ${i.isRecurring?'Μηνιαίο':'One-time'}</div>
 
           <div class="income-badges">
+            ${i.isPrimaryIncome?'<span class="income-badge budget">Βασικό budget</span>':''}
             ${i.includeInBudget?'<span class="income-badge budget">Στο budget</span>':'<span class="income-badge savings">Εκτός budget</span>'}
             ${i.isSavings?'<span class="income-badge savings">Αποταμίευση</span>':''}
             ${i.restriction&&i.restriction!=='none'
@@ -1023,8 +1017,10 @@ function editIncomeSource(id){
 
   $('mIncomeSource').classList.add('active');
   $('mIncomeSourceTitle').textContent='Επεξεργασία πηγής';
-  if($('incomeModalKicker'))$('incomeModalKicker').textContent='Income source';
-  if($('incomeModalIntro'))$('incomeModalIntro').textContent='Ενημέρωσε το ποσό, τον τύπο και το πώς επηρεάζει το budget σου.';
+  const mode=inferIncomePresetFromSource(i);
+  setIncomeWizardMode(mode,{keepAdvanced:true});
+  if($('incomeModalKicker'))$('incomeModalKicker').textContent='Επεξεργασία πηγής';
+  if($('incomeModalIntro'))$('incomeModalIntro').textContent='Ενημέρωσε το ποσό και τις ρυθμίσεις της πηγής.';
 
   $('fISName').value=i.name;
   $('fISAmount').value=i.amount;
@@ -1035,6 +1031,7 @@ function editIncomeSource(id){
   $('fISIncludeBudget').checked=!!i.includeInBudget;
   $('fISSavings').checked=!!i.isSavings;
   $('fISRecurring').checked=!!i.isRecurring;
+  if($('fISPrimary'))$('fISPrimary').checked=!!i.isPrimaryIncome;
   $('fISNotes').value=i.notes||'';
   $('fISID').value=id;
 
@@ -1099,6 +1096,7 @@ async function saveIncomeSourceRow(userId,item){
       restriction:item.restriction,
       restricted_category:item.restrictedCategory||null,
       notes:item.notes||null,
+      is_primary_income:!!item.isPrimaryIncome,
       updated_at:new Date().toISOString()
     },{onConflict:'id'});
 
@@ -1156,6 +1154,151 @@ function setIncomeSelectValue(id,value){
   el.dispatchEvent(new Event('change',{bubbles:true}));
 }
 
+
+function getIncomePresetConfig(type){
+  const configs={
+    salary:{
+      icon:'💼',
+      kicker:'Πηγή εισοδήματος',
+      title:'Προσθήκη μισθού',
+      intro:'Βάλε το βασικό σου μηνιαίο εισόδημα για να υπολογίζεται σωστά το υπόλοιπο.',
+      summaryTitle:'Μισθός',
+      summaryText:'Σταθερό μηνιαίο εισόδημα που μετράει στο budget σου.',
+      amountLabel:'Πόσο είναι ο μηνιαίος μισθός;',
+      amountHint:'Θα προστεθεί στο διαθέσιμο budget κάθε μήνα.',
+      nameLabel:'Πώς να εμφανίζεται;',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Συνήθως ο μισθός δεν χρειάζεται περιορισμό.',
+      saveText:'Αποθήκευση μισθού',
+      successText:'✅ Ο μισθός προστέθηκε',
+      showRestricted:false,
+      advancedHint:'Προαιρετικά'
+    },
+    budget:{
+      icon:'💰',
+      kicker:'Πηγή εισοδήματος',
+      title:'Προσθήκη budget',
+      intro:'Δήλωσε το ποσό που έχεις διαθέσιμο για τον μήνα.',
+      summaryTitle:'Budget μήνα',
+      summaryText:'Το βασικό ποσό που θες να χρησιμοποιείς μέσα στον μήνα.',
+      amountLabel:'Πόσο budget έχεις διαθέσιμο;',
+      amountHint:'Το CAPVO θα το χρησιμοποιήσει για υπόλοιπο, ημερήσιο διαθέσιμο και progress.',
+      nameLabel:'Πώς να το ονομάσουμε;',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Το γενικό budget συνήθως δεν χρειάζεται περιορισμό.',
+      saveText:'Αποθήκευση budget',
+      successText:'✅ Το budget προστέθηκε',
+      showRestricted:false,
+      advancedHint:'Προαιρετικά'
+    },
+    ticket:{
+      icon:'🎫',
+      kicker:'Restricted source',
+      title:'Προσθήκη Ticket',
+      intro:'Πρόσθεσε διαθέσιμο Ticket για φαγητό ή τρόφιμα.',
+      summaryTitle:'Ticket',
+      summaryText:'Περιορισμένη πηγή πληρωμής που δεν αυξάνει το ελεύθερο budget.',
+      amountLabel:'Πόσο Ticket έχεις διαθέσιμο;',
+      amountHint:'Το ποσό θα φαίνεται στο Voucher / Ticket section και θα μειώνεται με αντίστοιχα έξοδα.',
+      nameLabel:'Όνομα Ticket',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Προτίμησε Τρόφιμα ή Φαγητό έξω, ανάλογα με τη χρήση.',
+      saveText:'Αποθήκευση Ticket',
+      successText:'✅ Το Ticket προστέθηκε',
+      showRestricted:true,
+      advancedHint:'Ρυθμίσεις Ticket'
+    },
+    voucher:{
+      icon:'💳',
+      kicker:'Restricted source',
+      title:'Προσθήκη Voucher',
+      intro:'Πρόσθεσε άυλη κάρτα ή voucher για ξεχωριστή παρακολούθηση.',
+      summaryTitle:'Voucher / Άυλη κάρτα',
+      summaryText:'Ξεχωριστή πηγή πληρωμής που εμφανίζεται στο dashboard χωρίς να μπερδεύει το budget.',
+      amountLabel:'Πόσο υπόλοιπο έχει η άυλη κάρτα;',
+      amountHint:'Το υπόλοιπο θα παρακολουθείται ξεχωριστά από το κανονικό budget.',
+      nameLabel:'Όνομα άυλης κάρτας',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Άφησέ το κενό αν δεν αφορά συγκεκριμένη κατηγορία.',
+      saveText:'Αποθήκευση Voucher',
+      successText:'✅ Το Voucher προστέθηκε',
+      showRestricted:true,
+      advancedHint:'Ρυθμίσεις Voucher'
+    },
+    extra:{
+      icon:'✨',
+      kicker:'Έκτακτο ποσό',
+      title:'Προσθήκη έκτακτου ποσού',
+      intro:'Καταχώρησε χρήματα που δεν επαναλαμβάνονται κάθε μήνα.',
+      summaryTitle:'Έκτακτο εισόδημα',
+      summaryText:'One-time ποσό, χρήσιμο για bonus, επιστροφές ή δώρα.',
+      amountLabel:'Πόσο είναι το έκτακτο ποσό;',
+      amountHint:'Δεν θα επαναλαμβάνεται κάθε μήνα, εκτός αν το αλλάξεις στις ρυθμίσεις.',
+      nameLabel:'Πώς να εμφανίζεται;',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Συνήθως δεν χρειάζεται περιορισμό.',
+      saveText:'Αποθήκευση ποσού',
+      successText:'✅ Το έκτακτο ποσό προστέθηκε',
+      showRestricted:false,
+      advancedHint:'Προαιρετικά'
+    }
+  };
+  return configs[type]||configs.budget;
+}
+
+function setIncomeWizardMode(type,opts={}){
+  const modal=document.querySelector('#mIncomeSource .income-source-modal');
+  const cfg=getIncomePresetConfig(type);
+  if(modal){
+    modal.dataset.incomePreset=type;
+    if(!opts.keepAdvanced)modal.dataset.advancedOpen='false';
+    modal.classList.toggle('income-restricted-mode',!!cfg.showRestricted);
+  }
+
+  if($('incomeWizardIcon'))$('incomeWizardIcon').textContent=cfg.icon;
+  if($('incomeModalKicker'))$('incomeModalKicker').textContent=cfg.kicker;
+  if($('mIncomeSourceTitle'))$('mIncomeSourceTitle').textContent=cfg.title;
+  if($('incomeModalIntro'))$('incomeModalIntro').textContent=cfg.intro;
+  if($('incomeAmountLabel'))$('incomeAmountLabel').textContent=cfg.amountLabel;
+  if($('incomeAmountHint'))$('incomeAmountHint').textContent=cfg.amountHint;
+  if($('incomeNameLabel'))$('incomeNameLabel').textContent=cfg.nameLabel;
+  if($('incomeRestrictedCategoryLabel'))$('incomeRestrictedCategoryLabel').textContent=cfg.restrictedLabel;
+  if($('incomeRestrictedHint'))$('incomeRestrictedHint').textContent=cfg.restrictedHint;
+  if($('incomeAdvancedToggleHint'))$('incomeAdvancedToggleHint').textContent=cfg.advancedHint;
+  if($('btnIncomeSource'))$('btnIncomeSource').textContent=cfg.saveText;
+  if($('incomeWizardSummary')){
+    $('incomeWizardSummary').innerHTML=`<strong>${esc(cfg.summaryTitle)}</strong><span>${esc(cfg.summaryText)}</span>`;
+  }
+
+  document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.incomePreset===type);
+  });
+}
+
+function inferIncomePresetFromSource(i){
+  if(!i)return 'budget';
+  if(i.restriction==='food_only' || i.category==='Ticket Restaurant')return 'ticket';
+  if(i.restriction==='card_only' || i.category==='Άυλη κάρτα')return 'voucher';
+  if(i.isRecurring===false)return 'extra';
+  if(i.category==='Μισθός')return 'salary';
+  return 'budget';
+}
+
+function getCurrentIncomeWizardMode(){
+  return document.querySelector('#mIncomeSource .income-source-modal')?.dataset.incomePreset || 'budget';
+}
+
+function toggleIncomeAdvanced(force){
+  const modal=document.querySelector('#mIncomeSource .income-source-modal');
+  if(!modal)return;
+  const next=typeof force==='boolean'?force:modal.dataset.advancedOpen!=='true';
+  modal.dataset.advancedOpen=next?'true':'false';
+  if($('incomeAdvancedToggle')){
+    $('incomeAdvancedToggle').classList.toggle('is-open',next);
+  }
+  setTimeout(()=>refreshIncomeCustomPickers?.(),30);
+}
+
 function applyIncomePreset(type){
   clearIncomeValidation();
 
@@ -1169,7 +1312,8 @@ function applyIncomePreset(type){
       includeInBudget:true,
       isSavings:false,
       isRecurring:true,
-      notes:''
+      notes:'',
+      isPrimaryIncome:false
     },
     budget:{
       name:'Budget μήνα',
@@ -1180,18 +1324,20 @@ function applyIncomePreset(type){
       includeInBudget:true,
       isSavings:false,
       isRecurring:true,
-      notes:''
+      notes:'',
+      isPrimaryIncome:false
     },
     ticket:{
       name:'Ticket Restaurant',
       category:'Ticket Restaurant',
       incomeType:'voucher',
       restriction:'food_only',
-      restrictedCategory:'Φαγητό έξω',
+      restrictedCategory:'Τρόφιμα',
       includeInBudget:false,
       isSavings:false,
       isRecurring:true,
-      notes:'Χρήση για φαγητό / τρόφιμα'
+      notes:'Χρήση για φαγητό / τρόφιμα',
+      isPrimaryIncome:false
     },
     voucher:{
       name:'Voucher',
@@ -1202,7 +1348,8 @@ function applyIncomePreset(type){
       includeInBudget:false,
       isSavings:false,
       isRecurring:true,
-      notes:'Περιορισμένη πηγή πληρωμής'
+      notes:'Περιορισμένη πηγή πληρωμής',
+      isPrimaryIncome:false
     },
     extra:{
       name:'Έκτακτο εισόδημα',
@@ -1213,13 +1360,17 @@ function applyIncomePreset(type){
       includeInBudget:true,
       isSavings:false,
       isRecurring:false,
-      notes:''
+      notes:'',
+      isPrimaryIncome:false
     }
   };
 
-  const preset=presets[type]||presets.salary;
+  const preset=presets[type]||presets.budget;
+  setIncomeWizardMode(type);
 
+  const currentAmount=$('fISAmount')?.value || '';
   $('fISName').value=preset.name;
+  if($('fISAmount'))$('fISAmount').value=currentAmount;
   setIncomeSelectValue('fISCategory',preset.category);
   setIncomeSelectValue('fISType',preset.incomeType);
   setIncomeSelectValue('fISRestriction',preset.restriction);
@@ -1227,11 +1378,8 @@ function applyIncomePreset(type){
   $('fISIncludeBudget').checked=!!preset.includeInBudget;
   $('fISSavings').checked=!!preset.isSavings;
   $('fISRecurring').checked=!!preset.isRecurring;
+  if($('fISPrimary'))$('fISPrimary').checked=!!preset.isPrimaryIncome;
   $('fISNotes').value=preset.notes||'';
-
-  document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>{
-    btn.classList.toggle('active',btn.getAttribute('onclick')?.includes("'"+type+"'"));
-  });
 
   refreshIncomeCustomPickers?.();
 
@@ -1285,7 +1433,7 @@ function validateIncomeSourceForm(){
     return null;
   }
 
-  return {name,amount,incomeType,restriction,includeInBudget,isSavings};
+  return {name,amount,incomeType,restriction,includeInBudget,isSavings,isPrimaryIncome:!!$('fISPrimary')?.checked};
 }
 
 async function saveIncomeSource(){
@@ -1315,10 +1463,17 @@ async function saveIncomeSource(){
     isRecurring:$('fISRecurring').checked,
     restriction:validation.restriction,
     restrictedCategory:$('fISRestrictedCategory').value,
-    notes:$('fISNotes').value.trim()
+    notes:$('fISNotes').value.trim(),
+    isPrimaryIncome:!!validation.isPrimaryIncome
   };
 
   try{
+    if(obj.isPrimaryIncome){
+      // Keep one primary budget source per user in local state; DB unique index enforces this too.
+      (D.incomeSources||[]).forEach(src=>{ if(src.id!==obj.id)src.isPrimaryIncome=false; });
+      await supabaseClient.from('income_sources').update({is_primary_income:false}).eq('user_id',userId).neq('id',obj.id);
+    }
+
     if(btn){
       btn.disabled=true;
       btn.textContent=id?'Ενημέρωση...':'Αποθήκευση...';
@@ -1338,7 +1493,8 @@ async function saveIncomeSource(){
     closeM();
     render();
 
-    showMiniToast(id?'✅ Η πηγή ενημερώθηκε':'✅ Το budget προστέθηκε');
+    const cfg=getIncomePresetConfig(getCurrentIncomeWizardMode());
+    showMiniToast(id?'✅ Η πηγή ενημερώθηκε':cfg.successText);
 
   }catch(e){
     console.error('saveIncomeSource failed:',e);
@@ -1351,7 +1507,7 @@ async function saveIncomeSource(){
   }finally{
     if(btn){
       btn.disabled=false;
-      btn.textContent=id?'Ενημέρωση πηγής':'Αποθήκευση budget';
+      btn.textContent=id?'Ενημέρωση πηγής':getIncomePresetConfig(getCurrentIncomeWizardMode()).saveText;
     }
   }
 }

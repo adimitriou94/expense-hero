@@ -7625,3 +7625,1000 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.1.0.7 — Quick Add dynamic sheet height
+   Fixes the large empty white area in the Quick Add sheet when
+   there is no preview yet. The sheet now fits its content and
+   only grows when preview/manual content needs space.
+   ============================================================ */
+@media (max-width:768px){
+  body.add-center-open:not(.add-center-manual-active) .add-center-overlay{
+    align-items:flex-end !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) .add-center-sheet{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:min(88dvh, 760px) !important;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important;
+    overflow-y:auto !important;
+    scrollbar-width:none !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) .add-center-sheet::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel{
+    display:block !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+    padding-bottom:0 !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel #quickAddSheetSubmit{
+    position:relative !important;
+    bottom:auto !important;
+    margin-top:12px !important;
+    margin-bottom:0 !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel .add-center-recent{
+    margin-bottom:8px !important;
+    padding-bottom:2px !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel .add-center-recent:empty,
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel #addCenterRecentChips:empty{
+    min-height:0 !important;
+    margin-bottom:4px !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) #addCenterQuickPanel:has(#quickAddSheetPreview:not(:empty)){
+    overflow:visible !important;
+  }
+
+  body.add-center-open:not(.add-center-manual-active) .add-center-sheet:has(#quickAddSheetPreview:not(:empty)){
+    max-height:min(90dvh, 780px) !important;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.add-center-open.add-center-manual-active .add-center-sheet{
+    max-height:min(88dvh,760px) !important;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important;
+    overflow-y:auto !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.0.8 — Manual Add compact sheet polish
+   Purpose:
+   - Manual Add should feel like the new Quick Add: compact, native, and usable.
+   - Reduce oversized gaps, prevent the form from looking cut off, and keep save reachable.
+   - CSS-only: no save/data/voice/database logic changed.
+   ============================================================ */
+@media (max-width:768px){
+  /* Manual mode should not occupy a huge fixed-looking sheet when content is moderate. */
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-sheet{
+    max-height:min(90dvh, 760px) !important;
+    padding:8px 14px calc(12px + env(safe-area-inset-bottom)) !important;
+    border-radius:30px 30px 24px 24px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-handle{
+    margin:1px auto 10px !important;
+    height:4px !important;
+    width:42px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-header{
+    margin-bottom:9px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-kicker{
+    font-size:9.5px !important;
+    letter-spacing:.15em !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-header h2{
+    font-size:22px !important;
+    line-height:1.02 !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-header p{
+    margin-top:5px !important;
+    font-size:11.5px !important;
+    line-height:1.28 !important;
+    max-width:265px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-close{
+    width:38px !important;
+    height:38px !important;
+    flex-basis:38px !important;
+    border-radius:15px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tabs{
+    height:46px !important;
+    margin-bottom:10px !important;
+    padding:4px !important;
+    border-radius:18px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tab{
+    height:38px !important;
+    border-radius:15px !important;
+    font-size:12.5px !important;
+  }
+
+  /* Manual panel gets the scroll, not the whole page; scrollbar stays hidden. */
+  #addCenterManualPanel.active{
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    max-height:calc(90dvh - 146px) !important;
+    padding:0 1px 4px !important;
+    scrollbar-width:none !important;
+  }
+
+  #addCenterManualPanel.active::-webkit-scrollbar{
+    width:0 !important;
+    height:0 !important;
+    display:none !important;
+  }
+
+  #addCenterManualPanel .add-center-manual-form{
+    gap:7px !important;
+    padding:0 0 8px !important;
+  }
+
+  #addCenterManualPanel .add-center-field{
+    margin:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-field label{
+    margin:0 0 4px !important;
+    font-size:10px !important;
+    line-height:1.1 !important;
+    letter-spacing:.105em !important;
+    color:#59677d !important;
+  }
+
+  #addCenterManualPanel .add-center-field label span{
+    font-size:9px !important;
+    letter-spacing:.02em !important;
+    opacity:.72 !important;
+  }
+
+  #addCenterManualPanel .add-center-field input,
+  #addCenterManualPanel .add-center-picker-button{
+    height:45px !important;
+    min-height:45px !important;
+    border-radius:15px !important;
+    padding-top:0 !important;
+    padding-bottom:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-field input{
+    padding-left:14px !important;
+    padding-right:14px !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button{
+    padding:0 12px !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-icon{
+    width:28px !important;
+    height:28px !important;
+    flex-basis:28px !important;
+    border-radius:11px !important;
+    font-size:14px !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-left{
+    gap:9px !important;
+    min-width:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-left span:last-child{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #addCenterManualPanel .add-center-field textarea{
+    min-height:54px !important;
+    max-height:74px !important;
+    border-radius:15px !important;
+    padding:12px 14px !important;
+    resize:none !important;
+  }
+
+  #addCenterManualPanel .add-center-category-list,
+  #addCenterManualPanel .add-center-payment-list{
+    margin-top:6px !important;
+    padding:7px !important;
+    border-radius:17px !important;
+    max-height:220px !important;
+    overflow-y:auto !important;
+    scrollbar-width:none !important;
+  }
+
+  #addCenterManualPanel .add-center-category-list::-webkit-scrollbar,
+  #addCenterManualPanel .add-center-payment-list::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  #addCenterManualPanel .add-center-category-list button,
+  #addCenterManualPanel .add-center-payment-list button{
+    min-height:38px !important;
+    border-radius:13px !important;
+    padding:8px 10px !important;
+  }
+
+  #addCenterManualPanel #addCenterManualError{
+    margin:6px 0 0 !important;
+    border-radius:16px !important;
+    padding:10px 12px !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  /* Keep the primary action reachable, but make it part of the manual flow. */
+  #addCenterManualPanel #addCenterManualSubmit{
+    position:sticky !important;
+    bottom:0 !important;
+    height:50px !important;
+    min-height:50px !important;
+    margin:9px 0 0 !important;
+    border-radius:18px !important;
+    z-index:8 !important;
+  }
+
+  #addCenterManualPanel #addCenterManualSubmit::before{
+    content:'' !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    top:-14px !important;
+    height:14px !important;
+    background:linear-gradient(180deg,rgba(249,251,255,0),rgba(249,251,255,.96)) !important;
+    pointer-events:none !important;
+  }
+
+  /* On very short screens, hide the helper sentence to give fields breathing room. */
+  @media (max-height:740px){
+    #addCenterSheet:has(#addCenterManualPanel.active) .add-center-header p{
+      display:none !important;
+    }
+
+    #addCenterManualPanel.active{
+      max-height:calc(90dvh - 118px) !important;
+    }
+  }
+}
+
+
+/* =====================================================
+   CAPVO v1.1.0.9 — Manual Add field alignment polish
+   Fixes clipped first label, picker chevron alignment and compact scroll breathing.
+===================================================== */
+@media (max-width:768px){
+  /* Give the manual panel real breathing room below the tabs so the first label is never clipped. */
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tabs{
+    margin-bottom:16px !important;
+  }
+
+  #addCenterManualPanel.active{
+    padding-top:8px !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  #addCenterManualPanel .add-center-manual-form{
+    padding-top:2px !important;
+    gap:9px !important;
+  }
+
+  #addCenterManualPanel .add-center-field label{
+    display:block !important;
+    margin:0 0 5px 2px !important;
+    padding:0 !important;
+    line-height:1.15 !important;
+    min-height:12px !important;
+    overflow:visible !important;
+    transform:none !important;
+  }
+
+  /* Inputs stay compact but get enough vertical room to avoid visual clipping. */
+  #addCenterManualPanel .add-center-field input,
+  #addCenterManualPanel .add-center-picker-button{
+    height:48px !important;
+    min-height:48px !important;
+    border-radius:16px !important;
+  }
+
+  /* Picker buttons: align icon, text and chevron on the same baseline. */
+  #addCenterManualPanel .add-center-picker-button{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:10px !important;
+    padding:0 13px !important;
+    overflow:hidden !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-left{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    display:flex !important;
+    align-items:center !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-chevron{
+    flex:0 0 22px !important;
+    width:22px !important;
+    height:22px !important;
+    margin-left:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    line-height:1 !important;
+    font-size:20px !important;
+    color:#8b96ad !important;
+    transform:rotate(90deg) !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button.active .add-center-picker-chevron{
+    transform:rotate(-90deg) !important;
+    color:#5b4fff !important;
+  }
+
+  /* Notes should be compact but not make the form look cut. */
+  #addCenterManualPanel .add-center-field textarea{
+    min-height:62px !important;
+    max-height:82px !important;
+  }
+
+  #addCenterManualPanel #addCenterManualSubmit{
+    margin-top:11px !important;
+  }
+}
+
+
+/* =====================================================
+   CAPVO v1.1.0.10 — Manual Add top clipping fix
+   Fixes the first field label being visually clipped under the tab switcher.
+   CSS-only: no save/data logic changed.
+===================================================== */
+@media (max-width:768px){
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tabs{
+    position:relative !important;
+    z-index:3 !important;
+    margin-bottom:18px !important;
+  }
+
+  #addCenterManualPanel.active{
+    position:relative !important;
+    z-index:1 !important;
+    margin-top:0 !important;
+    padding-top:18px !important;
+    max-height:calc(90dvh - 154px) !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    scroll-padding-top:18px !important;
+    overscroll-behavior:contain !important;
+  }
+
+  #addCenterManualPanel .add-center-manual-form{
+    padding-top:8px !important;
+  }
+
+  #addCenterManualPanel .add-center-field:first-child{
+    margin-top:0 !important;
+    padding-top:2px !important;
+  }
+
+  #addCenterManualPanel .add-center-field:first-child label{
+    margin-top:0 !important;
+    padding-top:0 !important;
+    min-height:14px !important;
+  }
+
+  #addCenterManualPanel .add-center-field label{
+    line-height:1.25 !important;
+  }
+
+  /* Keep the save button visible after adding top breathing room. */
+  #addCenterManualPanel #addCenterManualSubmit{
+    margin-top:10px !important;
+  }
+}
+
+
+/* =====================================================
+   CAPVO v1.1.0.11 — Manual Add spacing + picker chevron fix
+   Fixes the remaining Manual Add visual issues:
+   - reduces the oversized empty band between tabs and first field
+   - keeps first label visible without clipping
+   - replaces the rotated text chevron with a clean CSS caret
+   CSS-only: no save/data logic changed.
+===================================================== */
+@media (max-width:768px){
+  /* Keep the panel compact, but avoid label clipping. */
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tabs{
+    margin-bottom:10px !important;
+  }
+
+  #addCenterManualPanel.active{
+    padding-top:8px !important;
+    scroll-padding-top:10px !important;
+    max-height:calc(90dvh - 144px) !important;
+  }
+
+  #addCenterManualPanel .add-center-manual-form{
+    padding-top:2px !important;
+    gap:8px !important;
+  }
+
+  #addCenterManualPanel .add-center-field:first-child{
+    padding-top:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-field:first-child label,
+  #addCenterManualPanel .add-center-field label{
+    min-height:12px !important;
+    margin:0 0 5px 2px !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+
+  /* Clean picker arrow: do not rely on the rotated › glyph, which looked broken on iOS. */
+  #addCenterManualPanel .add-center-picker-chevron{
+    position:relative !important;
+    flex:0 0 22px !important;
+    width:22px !important;
+    height:22px !important;
+    margin-left:auto !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    color:transparent !important;
+    font-size:0 !important;
+    line-height:0 !important;
+    transform:none !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-chevron::before{
+    content:'' !important;
+    width:7px !important;
+    height:7px !important;
+    border-right:2px solid #8b96ad !important;
+    border-bottom:2px solid #8b96ad !important;
+    transform:rotate(45deg) translateY(-1px) !important;
+    border-radius:1px !important;
+    transition:transform .18s ease,border-color .18s ease !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button.active .add-center-picker-chevron{
+    transform:none !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button.active .add-center-picker-chevron::before{
+    border-color:#5b4fff !important;
+    transform:rotate(225deg) translate(-1px,-1px) !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button{
+    padding-right:13px !important;
+  }
+}
+
+
+/* =====================================================
+   CAPVO v1.1.0.12 — Manual Add stable layout reset
+   This intentionally overrides the previous experimental spacing patches.
+   Goal: no clipped first label, no broken iOS chevron, compact but stable form.
+===================================================== */
+@media (max-width:768px){
+  body.add-center-open.add-center-manual-active #addCenterSheet .add-center-sheet,
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-sheet{
+    display:flex !important;
+    flex-direction:column !important;
+    max-height:min(90dvh,760px) !important;
+    height:auto !important;
+    overflow:hidden !important;
+    padding:8px 14px calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-header{
+    flex:0 0 auto !important;
+    margin-bottom:8px !important;
+  }
+
+  #addCenterSheet:has(#addCenterManualPanel.active) .add-center-tabs{
+    flex:0 0 auto !important;
+    height:46px !important;
+    min-height:46px !important;
+    margin:0 0 12px !important;
+    position:relative !important;
+    z-index:5 !important;
+    overflow:visible !important;
+  }
+
+  #addCenterManualPanel.active{
+    display:block !important;
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:none !important;
+    scroll-padding-top:0 !important;
+    overscroll-behavior:contain !important;
+    background:transparent !important;
+  }
+
+  #addCenterManualPanel.active::-webkit-scrollbar{
+    width:0 !important;
+    height:0 !important;
+    display:none !important;
+  }
+
+  #addCenterManualPanel .add-center-manual-form{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+    margin:0 !important;
+    padding:0 0 8px !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    overflow:visible !important;
+  }
+
+  #addCenterManualPanel .add-center-field{
+    display:block !important;
+    position:relative !important;
+    margin:0 !important;
+    padding:0 !important;
+    min-height:0 !important;
+    overflow:visible !important;
+    background:transparent !important;
+    border:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-field label{
+    display:block !important;
+    position:relative !important;
+    z-index:2 !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:14px !important;
+    margin:0 0 6px 2px !important;
+    padding:0 !important;
+    overflow:visible !important;
+    white-space:nowrap !important;
+    line-height:14px !important;
+    font-size:10px !important;
+    font-weight:950 !important;
+    letter-spacing:.11em !important;
+    text-transform:uppercase !important;
+    color:#667085 !important;
+    transform:none !important;
+    clip-path:none !important;
+  }
+
+  #addCenterManualPanel .add-center-field input,
+  #addCenterManualPanel .add-center-picker-button{
+    position:relative !important;
+    z-index:1 !important;
+    width:100% !important;
+    height:47px !important;
+    min-height:47px !important;
+    border-radius:16px !important;
+    margin:0 !important;
+  }
+
+  #addCenterManualPanel .add-center-field input{
+    padding:0 14px !important;
+  }
+
+  #addCenterManualPanel .add-center-field textarea{
+    position:relative !important;
+    z-index:1 !important;
+    min-height:70px !important;
+    max-height:88px !important;
+    border-radius:16px !important;
+    padding:12px 14px !important;
+    margin:0 !important;
+    resize:none !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    padding:0 13px !important;
+    overflow:hidden !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-left{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:9px !important;
+    overflow:hidden !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-left span:last-child{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-chevron{
+    position:relative !important;
+    flex:0 0 24px !important;
+    width:24px !important;
+    height:24px !important;
+    margin-left:8px !important;
+    color:transparent !important;
+    font-size:0 !important;
+    line-height:0 !important;
+    transform:none !important;
+    display:block !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-chevron::before{
+    content:'' !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    width:8px !important;
+    height:8px !important;
+    border-right:2px solid #8b96ad !important;
+    border-bottom:2px solid #8b96ad !important;
+    border-radius:1px !important;
+    transform:translate(-50%,-65%) rotate(45deg) !important;
+    transition:transform .18s ease,border-color .18s ease !important;
+  }
+
+  #addCenterManualPanel .add-center-picker-button.active .add-center-picker-chevron::before{
+    border-color:#5b4fff !important;
+    transform:translate(-50%,-35%) rotate(225deg) !important;
+  }
+
+  #addCenterManualPanel .add-center-category-list,
+  #addCenterManualPanel .add-center-payment-list{
+    margin-top:7px !important;
+    max-height:210px !important;
+    overflow-y:auto !important;
+    scrollbar-width:none !important;
+  }
+
+  #addCenterManualPanel .add-center-category-list::-webkit-scrollbar,
+  #addCenterManualPanel .add-center-payment-list::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  #addCenterManualPanel #addCenterManualSubmit{
+    position:sticky !important;
+    bottom:0 !important;
+    margin:10px 0 0 !important;
+    height:50px !important;
+    min-height:50px !important;
+    border-radius:18px !important;
+    z-index:10 !important;
+  }
+
+  #addCenterManualPanel #addCenterManualSubmit::before{
+    content:'' !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    top:-12px !important;
+    height:12px !important;
+    background:linear-gradient(180deg,rgba(249,251,255,0),rgba(249,251,255,.96)) !important;
+    pointer-events:none !important;
+  }
+}
+
+/* ============================================================
+   CAPVO v1.1.0.13 — Guided Budget / Income wizard
+   Makes Add Budget easier by showing only the fields that matter
+   for the selected preset, with advanced options collapsed.
+   ============================================================ */
+@media (max-width:768px){
+  #mIncomeSource .income-source-modal.income-wizard-modal{
+    max-height:min(88dvh,760px) !important;
+    padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px)) !important;
+    scrollbar-width:none !important;
+  }
+
+  #mIncomeSource .income-source-modal.income-wizard-modal::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  #mIncomeSource .income-wizard-hero{
+    padding-right:48px !important;
+    margin-bottom:8px !important;
+  }
+
+  #mIncomeSource .income-wizard-hero .income-modal-icon{
+    background:linear-gradient(135deg,#fff7ed,#eef2ff) !important;
+  }
+
+  #mIncomeSource .income-wizard-presets{
+    margin:0 0 8px !important;
+    padding:2px 2px 8px !important;
+    scroll-snap-type:x proximity !important;
+  }
+
+  #mIncomeSource .income-wizard-presets button{
+    scroll-snap-align:start !important;
+    min-height:34px !important;
+    padding:8px 10px !important;
+  }
+
+  #mIncomeSource .income-wizard-summary{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:3px !important;
+    padding:10px 12px !important;
+    margin:0 0 10px !important;
+    border-radius:18px !important;
+    background:linear-gradient(135deg,rgba(99,102,241,.09),rgba(255,255,255,.96)) !important;
+    border:1px solid rgba(99,102,241,.12) !important;
+    box-shadow:0 10px 22px rgba(30,40,90,.045) !important;
+  }
+
+  #mIncomeSource .income-wizard-summary strong{
+    font-size:13px !important;
+    line-height:1.05 !important;
+    letter-spacing:-.02em !important;
+    color:#121827 !important;
+    font-weight:900 !important;
+  }
+
+  #mIncomeSource .income-wizard-summary span{
+    font-size:11.5px !important;
+    line-height:1.25 !important;
+    color:#78849b !important;
+    font-weight:700 !important;
+  }
+
+  #mIncomeSource .income-wizard-card{
+    margin-bottom:10px !important;
+    padding:12px !important;
+    border-radius:20px !important;
+  }
+
+  #mIncomeSource .income-wizard-amount-card{
+    background:linear-gradient(135deg,rgba(248,250,255,.94),rgba(255,255,255,.98)) !important;
+  }
+
+  #mIncomeSource .income-modal-amount-input{
+    min-height:52px !important;
+  }
+
+  #mIncomeSource .income-wizard-field-hint{
+    margin:7px 2px 0 !important;
+    color:#8390a8 !important;
+    font-size:11px !important;
+    line-height:1.25 !important;
+    font-weight:700 !important;
+  }
+
+  #mIncomeSource .income-basic-card .form-group,
+  #mIncomeSource .income-restricted-card .form-group{
+    margin-bottom:0 !important;
+  }
+
+  #mIncomeSource .income-restricted-card{
+    display:none !important;
+  }
+
+  #mIncomeSource .income-source-modal.income-restricted-mode .income-restricted-card{
+    display:block !important;
+  }
+
+  #mIncomeSource .income-advanced-toggle{
+    width:100% !important;
+    min-height:42px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+    margin:0 0 10px !important;
+    padding:0 13px !important;
+    border:1px solid rgba(99,102,241,.11) !important;
+    border-radius:17px !important;
+    background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(247,248,255,.92)) !important;
+    color:#1e2340 !important;
+    box-shadow:0 8px 20px rgba(30,40,90,.045) !important;
+    font-size:12px !important;
+    line-height:1 !important;
+    font-weight:900 !important;
+  }
+
+  #mIncomeSource .income-advanced-toggle small{
+    color:#6657f6 !important;
+    background:rgba(101,71,246,.10) !important;
+    border-radius:999px !important;
+    padding:6px 8px !important;
+    font-size:10px !important;
+    font-weight:850 !important;
+  }
+
+  #mIncomeSource .income-advanced-toggle::after{
+    content:'' !important;
+    width:8px !important;
+    height:8px !important;
+    border-right:2px solid #7f8aa3 !important;
+    border-bottom:2px solid #7f8aa3 !important;
+    transform:rotate(45deg) translateY(-2px) !important;
+    transition:transform .18s ease !important;
+    margin-left:auto !important;
+  }
+
+  #mIncomeSource .income-source-modal[data-advanced-open="true"] .income-advanced-toggle::after{
+    transform:rotate(225deg) translateY(-2px) !important;
+  }
+
+  #mIncomeSource .income-advanced-panel{
+    display:none !important;
+  }
+
+  #mIncomeSource .income-source-modal[data-advanced-open="true"] .income-advanced-panel{
+    display:block !important;
+  }
+
+  #mIncomeSource .income-wizard-actions{
+    position:sticky !important;
+    bottom:0 !important;
+    z-index:3 !important;
+    padding:10px 0 0 !important;
+    margin-top:2px !important;
+    background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 34%,rgba(255,255,255,.99)) !important;
+  }
+
+  #mIncomeSource .income-save-btn{
+    min-height:52px !important;
+    border-radius:18px !important;
+  }
+
+  #mIncomeSource .income-source-modal[data-income-preset="ticket"] .income-wizard-summary,
+  #mIncomeSource .income-source-modal[data-income-preset="voucher"] .income-wizard-summary{
+    background:linear-gradient(135deg,rgba(236,253,245,.92),rgba(255,255,255,.98)) !important;
+    border-color:rgba(16,185,129,.14) !important;
+  }
+
+  #mIncomeSource .income-source-modal[data-income-preset="extra"] .income-wizard-summary{
+    background:linear-gradient(135deg,rgba(255,247,237,.96),rgba(255,255,255,.98)) !important;
+    border-color:rgba(249,115,22,.16) !important;
+  }
+}
+
+
+/* CAPVO v1.1.1 — Budget cycle settings */
+.settings-budget-cycle-card .settings-cycle-control{
+  margin-top:14px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(248,250,252,.92);
+  border:1px solid rgba(226,232,240,.95);
+}
+.settings-budget-cycle-card .settings-cycle-control label{
+  display:block;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:#64748b;
+  margin-bottom:8px;
+}
+.settings-cycle-input-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.settings-cycle-input-row input{
+  width:76px;
+  height:42px;
+  border:1px solid rgba(203,213,225,.95);
+  border-radius:14px;
+  padding:0 12px;
+  font-size:16px;
+  font-weight:850;
+  color:#0f172a;
+  background:#fff;
+  text-align:center;
+}
+.settings-cycle-input-row span{
+  color:#475569;
+  font-size:13px;
+  font-weight:700;
+}
+.settings-budget-cycle-card .settings-cycle-control small{
+  display:block;
+  margin-top:9px;
+  color:#64748b;
+  font-size:11px;
+  line-height:1.35;
+}
+.settings-budget-cycle-card .settings-primary-action{
+  min-height:42px;
+  padding:0 14px;
+  border-radius:14px;
+}
+@media(max-width:420px){
+  .settings-cycle-input-row .settings-primary-action{
+    width:100%;
+    justify-content:center;
+    margin-top:4px;
+  }
+}
+
+/* CAPVO v1.1.2 — Budget cycle paid-today UX */
+.settings-cycle-paid-card{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:18px;
+  background:rgba(248,250,252,.86);
+}
+.settings-info-list.compact{margin:0 0 10px 0;gap:6px;}
+.settings-cycle-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+.settings-secondary-action{
+  border:1px solid rgba(15,23,42,.10);
+  background:#fff;
+  color:#475569;
+  border-radius:14px;
+  padding:10px 12px;
+  font-weight:800;
+}
+.settings-paid-notice{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  margin:8px 0;
+  padding:10px 12px;
+  border-radius:15px;
+  background:rgba(34,197,94,.10);
+  color:#14532d;
+  font-size:12px;
+}
+.settings-paid-notice strong{font-size:13px;font-weight:850;}
+.settings-paid-notice span{opacity:.86;line-height:1.25;}
+.income-primary-option{
+  border-color:rgba(245,158,11,.22) !important;
+  background:rgba(255,251,235,.72) !important;
+}
+.income-primary-option .income-option-icon{background:rgba(245,158,11,.14);}
+@media(max-width:640px){
+  .settings-cycle-actions .settings-primary-action,
+  .settings-cycle-actions .settings-secondary-action{width:100%;justify-content:center;text-align:center;}
+}
+
+/* CAPVO v1.1.2.1 - Paid Today active state */
+.settings-primary-action:disabled{
+  opacity:.62 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.75) !important;
+}

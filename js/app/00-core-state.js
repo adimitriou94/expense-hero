@@ -150,7 +150,15 @@ let D = {
   incomeSources:[],
   fixedExpenses:[],
   creditCards:[],
-  months:{}
+  months:{},
+  preferences:{
+    budgetCycleType:'fixed_day',
+    budgetCycleStartDay:1,
+    currency:'EUR',
+    language:'el'
+  },
+  budgetCycles:[],
+  budgetCycleIncomes:[]
 };
 let curM;
 
@@ -216,6 +224,120 @@ function getTelegramOptionalMessage(){
 
 // ===== HELPERS =====
 function curMK(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+
+// ===== BUDGET CYCLE HELPERS =====
+function capvoPad2(n){return String(n).padStart(2,'0')}
+function capvoDateKey(date){
+  const d=date instanceof Date?date:new Date(date);
+  if(Number.isNaN(d.getTime()))return '';
+  return `${d.getFullYear()}-${capvoPad2(d.getMonth()+1)}-${capvoPad2(d.getDate())}`;
+}
+function capvoParseDateKey(value){
+  const s=String(value||'').slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return null;
+  const [y,m,d]=s.split('-').map(Number);
+  const dt=new Date(y,m-1,d,12,0,0,0);
+  return Number.isNaN(dt.getTime())?null:dt;
+}
+function capvoClampCycleDay(value){
+  const n=Math.round(Number(value)||1);
+  return Math.min(28,Math.max(1,n));
+}
+function getBudgetCycleStartDay(){
+  return capvoClampCycleDay(D?.preferences?.budgetCycleStartDay||1);
+}
+function getStandardBudgetCycle(refDate=new Date()){
+  const day=getBudgetCycleStartDay();
+  const today=refDate instanceof Date?new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),12):new Date();
+  let start=new Date(today.getFullYear(),today.getMonth(),day,12);
+  if(today<start){
+    start=new Date(today.getFullYear(),today.getMonth()-1,day,12);
+  }
+  const nextStart=new Date(start.getFullYear(),start.getMonth()+1,day,12);
+  const end=new Date(nextStart);
+  end.setDate(end.getDate()-1);
+  return {
+    id:'standard_'+capvoDateKey(start),
+    start,
+    end,
+    nextStart,
+    startKey:capvoDateKey(start),
+    endKey:capvoDateKey(end),
+    nextStartKey:capvoDateKey(nextStart),
+    startDay:day,
+    source:'normal',
+    note:'',
+    isGenerated:false,
+    label:formatBudgetCycleLabel(start,end)
+  };
+}
+function getActiveStoredBudgetCycle(refDate=new Date()){
+  const today=refDate instanceof Date?new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),12):new Date();
+  const cycles=(D?.budgetCycles||[])
+    .map(c=>{
+      const start=capvoParseDateKey(c.startDate||c.start_date);
+      const end=capvoParseDateKey(c.endDate||c.end_date);
+      if(!start||!end)return null;
+      return {
+        ...c,
+        start,
+        end,
+        nextStart:new Date(end.getFullYear(),end.getMonth(),end.getDate()+1,12),
+        startKey:capvoDateKey(start),
+        endKey:capvoDateKey(end),
+        nextStartKey:capvoDateKey(new Date(end.getFullYear(),end.getMonth(),end.getDate()+1,12)),
+        label:formatBudgetCycleLabel(start,end),
+        isGenerated:true
+      };
+    })
+    .filter(Boolean)
+    .filter(c=>today>=c.start && today<=c.end)
+    .sort((a,b)=>b.start-a.start);
+  return cycles[0]||null;
+}
+function getCurrentBudgetCycle(refDate=new Date()){
+  return getActiveStoredBudgetCycle(refDate) || getStandardBudgetCycle(refDate);
+}
+function getPrimaryIncomeSource(){
+  // Production rule: never guess the primary budget.
+  // The user must explicitly mark exactly one income source as primary.
+  const sources=(D?.incomeSources||[]);
+  return sources.find(i=>i.isPrimaryIncome) || null;
+}
+function getCycleIncomesForCycle(cycleId){
+  return (D?.budgetCycleIncomes||[]).filter(i=>String(i.cycleId||i.cycle_id)===String(cycleId||''));
+}
+function formatBudgetCycleLabel(start,end){
+  if(!(start instanceof Date)||!(end instanceof Date))return 'Τρέχων κύκλος';
+  const s=`${start.getDate()} ${MG[start.getMonth()]?.slice(0,3)||''}`;
+  const e=`${end.getDate()} ${MG[end.getMonth()]?.slice(0,3)||''}`;
+  return `${s} - ${e}`;
+}
+function isDateInCurrentBudgetCycle(value){
+  const dt=capvoParseDateKey(value);
+  if(!dt)return false;
+  const c=getCurrentBudgetCycle();
+  return dt>=c.start && dt<=c.end;
+}
+function getAllDailyExpenses(){
+  const rows=[];
+  Object.values(D.months||{}).forEach(m=>{
+    (m.daily||[]).forEach(e=>rows.push(e));
+  });
+  return rows;
+}
+function getCurrentCycleDailyExpenses(){
+  return getAllDailyExpenses().filter(e=>isDateInCurrentBudgetCycle(e.date));
+}
+function currentCycleKey(){return getCurrentBudgetCycle().startKey;}
+function budgetCycleRemainingDays(){
+  const c=getCurrentBudgetCycle();
+  const today=new Date();
+  const t=new Date(today.getFullYear(),today.getMonth(),today.getDate(),12);
+  const ms=24*60*60*1000;
+  return Math.max(1,Math.floor((c.end-t)/ms)+1);
+}
+
 function ensM(k){if(!D.months[k])D.months[k]={daily:[]}}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
 function fmt(n){n=Number(n)||0;return '€'+n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
@@ -264,7 +386,7 @@ function effectiveCardPayment(c){
 }
 function ccPayTotal(){return(D.creditCards||[]).filter(c=>c.balance>0).reduce((s,c)=>s+effectiveCardPayment(c),0)}
 function fixedTotal(){return(D.fixedExpenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0)}
-function dailyTotal(){return((D.months[curM]||{daily:[]}).daily).reduce((s,e)=>s+(Number(e.amount)||0),0)}
+function dailyTotal(){return getCurrentCycleDailyExpenses().reduce((s,e)=>s+(Number(e.amount)||0),0)}
 function allFixedTotal(){return fixedTotal()+ccPayTotal()}
 function incomeSourcesTotal(){
   return (D.incomeSources||[])
@@ -314,12 +436,10 @@ function categoryExpensesTotal(categories){
 
   let total=0;
 
-  Object.values(D.months||{}).forEach(month=>{
-    (month.daily||[]).forEach(exp=>{
-      if(allowed.has(exp.category)){
-        total+=Number(exp.amount)||0;
-      }
-    });
+  getCurrentCycleDailyExpenses().forEach(exp=>{
+    if(allowed.has(exp.category)){
+      total+=Number(exp.amount)||0;
+    }
   });
 
   return total;
@@ -330,12 +450,10 @@ function restrictedCoverageFor(source){
 
   let total=0;
 
-  Object.values(D.months||{}).forEach(month=>{
-    (month.daily||[]).forEach(exp=>{
-      if(exp.paymentSourceId===source.id){
-        total+=Number(exp.amount)||0;
-      }
-    });
+  getCurrentCycleDailyExpenses().forEach(exp=>{
+    if(exp.paymentSourceId===source.id){
+      total+=Number(exp.amount)||0;
+    }
   });
 
   return Math.min(
@@ -352,9 +470,7 @@ function paymentSourceRemaining(source){
 }
 
 function dailyCashTotal(){
-  const m=D.months[curM]||{daily:[]};
-
-  return (m.daily||[])
+  return getCurrentCycleDailyExpenses()
     .filter(e=>!e.paymentSourceId)
     .reduce((s,e)=>s+(Number(e.amount)||0),0);
 }

@@ -980,6 +980,16 @@ async function saveAddCenterManualExpense(){
     quickTab?.setAttribute('aria-selected',String(!isManual));
     manualTab?.setAttribute('aria-selected',String(isManual));
 
+    // Keep Add Center tabs predictable on mobile:
+    // every tab switch starts from the top of its own panel and never auto-focuses inputs.
+    try{
+      quickPanel && (quickPanel.scrollTop=0);
+      manualPanel && (manualPanel.scrollTop=0);
+      const sheet=document.querySelector('#addCenterSheet .add-center-sheet');
+      sheet && (sheet.scrollTop=0);
+      document.activeElement?.blur?.();
+    }catch(_){}
+
     setTimeout(()=>{
       // autofocus disabled: user taps the field when ready;
     },80);

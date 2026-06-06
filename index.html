@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.0.6">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.2.2">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.0.6">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.0.6">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.0.6">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.0.6">
-  <link rel="manifest" href="manifest.webmanifest?v=1.1.0.6">
-  <!-- <link rel="stylesheet" href="style.css?v=1.1.0.6"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.2.2">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.2.2">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.2.2">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.2.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.1.2.2">
+  <!-- <link rel="stylesheet" href="style.css?v=1.1.2.2"> -->
 </head>
 
 <body class="auth-pending">
@@ -293,10 +293,10 @@
         </div>
 
         <!-- MOBILE DASHBOARD INSIGHTS -->
-        <section class="mobile-dashboard-insights" aria-label="Κατηγορίες μήνα">
+        <section class="mobile-dashboard-insights" aria-label="Κατηγορίες κύκλου">
           <div class="mobile-insights-head">
             <div>
-              <h3>Κατηγορίες (Μήνας)</h3>
+              <h3>Κατηγορίες (Κύκλος)</h3>
               <p>Πού πήγαν τα ημερήσια έξοδα.</p>
             </div>
             <button type="button" onclick="go('vStats',document.querySelector('[data-v=vStats]'))">
@@ -768,6 +768,57 @@
             <strong id="settingsMonthCount">—</strong>
           </div>
         </article>
+      </section>
+
+      <section class="settings-section-card settings-budget-cycle-card">
+        <div class="settings-card-head">
+          <div class="settings-card-icon">🗓️</div>
+          <div>
+            <span class="settings-kicker">Οικονομικός κύκλος</span>
+            <h3>Ημέρα έναρξης budget</h3>
+            <p>Διάλεξε πότε ξεκινάει ο οικονομικός σου μήνας, με βάση το πότε πληρώνεσαι.</p>
+          </div>
+        </div>
+
+        <div class="settings-info-list">
+          <div class="settings-info-row">
+            <span>Τρέχων κύκλος</span>
+            <strong id="settingsBudgetCycleLabel">—</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Επόμενη έναρξη</span>
+            <strong id="settingsBudgetCycleNext">—</strong>
+          </div>
+        </div>
+
+        <div class="settings-cycle-control">
+          <label for="settingsBudgetCycleDay">Πληρώνομαι κάθε</label>
+          <div class="settings-cycle-input-row">
+            <input id="settingsBudgetCycleDay" type="number" inputmode="numeric" min="1" max="28" value="1" aria-label="Ημέρα έναρξης οικονομικού κύκλου">
+            <span>του μήνα</span>
+            <button type="button" class="settings-primary-action" onclick="saveBudgetCyclePreference()">Αποθήκευση</button>
+          </div>
+          <small>Για ημέρες 29-31 ή τελευταία εργάσιμη θα μπει ειδική ρύθμιση σε επόμενο βήμα.</small>
+        </div>
+
+        <div class="settings-cycle-paid-card">
+          <div class="settings-info-list compact">
+            <div class="settings-info-row">
+              <span>Τύπος κύκλου</span>
+              <strong id="settingsCycleSourceLabel">—</strong>
+            </div>
+            <div class="settings-info-row">
+              <span>Βασικό budget</span>
+              <strong id="settingsPrimaryIncomeLabel">—</strong>
+            </div>
+          </div>
+          <div class="settings-paid-notice" id="settingsPaidTodayNotice" style="display:none"></div>
+          <div class="settings-actions settings-cycle-actions">
+            <button type="button" class="settings-primary-action" id="settingsPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
+            <button type="button" class="settings-secondary-action" id="settingsUndoPaidTodayBtn" onclick="undoCurrentPaidTodayCycle()" style="display:none">Αναίρεση πρόωρης πληρωμής</button>
+          </div>
+          <small>Χρησιμοποίησέ το όταν ο μισθός μπήκε νωρίτερα. Δεν αλλάζει τη μόνιμη ημέρα πληρωμής.</small>
+        </div>
       </section>
 
       <section class="settings-section-card settings-telegram-card">
@@ -1357,137 +1408,164 @@
 </div>
 
 <div class="modal-overlay income-source-overlay" id="mIncomeSource">
-  <div class="modal income-source-modal">
+  <div class="modal income-source-modal income-wizard-modal" data-income-preset="budget" data-advanced-open="false">
     <button type="button" class="income-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
-    <div class="income-modal-hero">
-      <div class="income-modal-icon">💰</div>
+    <div class="income-modal-hero income-wizard-hero">
+      <div class="income-modal-icon" id="incomeWizardIcon">💰</div>
       <div class="income-modal-heading">
-        <div class="income-modal-kicker" id="incomeModalKicker">Budget setup</div>
+        <div class="income-modal-kicker" id="incomeModalKicker">Πηγή εισοδήματος</div>
         <h2 id="mIncomeSourceTitle">Προσθήκη budget</h2>
-        <p id="incomeModalIntro">Πρόσθεσε το βασικό σου εισόδημα ή ένα διαθέσιμο μηνιαίο budget για να υπολογίζεται σωστά το υπόλοιπο.</p>
+        <p id="incomeModalIntro">Διάλεξε τι προσθέτεις και κράτα μόνο τα απαραίτητα πεδία.</p>
       </div>
     </div>
 
-    <div class="income-modal-quick-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
-      <button type="button" onclick="applyIncomePreset('salary')">💼 Μισθός</button>
-      <button type="button" onclick="applyIncomePreset('budget')">📊 Budget μήνα</button>
-      <button type="button" onclick="applyIncomePreset('ticket')">🎫 Ticket</button>
-      <button type="button" onclick="applyIncomePreset('voucher')">💳 Voucher</button>
-      <button type="button" onclick="applyIncomePreset('extra')">✨ Έκτακτο</button>
+    <div class="income-modal-quick-presets income-wizard-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
+      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Μισθός</button>
+      <button type="button" data-income-preset="budget" onclick="applyIncomePreset('budget')">📊 Budget μήνα</button>
+      <button type="button" data-income-preset="ticket" onclick="applyIncomePreset('ticket')">🎫 Ticket</button>
+      <button type="button" data-income-preset="voucher" onclick="applyIncomePreset('voucher')">💳 Voucher</button>
+      <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">✨ Έκτακτο</button>
+    </div>
+
+    <div class="income-wizard-summary" id="incomeWizardSummary">
+      <strong>Budget μήνα</strong>
+      <span>Το βασικό ποσό που θες να χρησιμοποιείς μέσα στον μήνα.</span>
     </div>
 
     <div class="income-modal-feedback hidden" id="incomeModalFeedback" role="status"></div>
 
-    <div class="income-modal-amount-card">
-      <label for="fISAmount">Ποσό budget / εισοδήματος</label>
+    <div class="income-modal-amount-card income-wizard-card income-wizard-amount-card">
+      <label for="fISAmount" id="incomeAmountLabel">Πόσο έχεις διαθέσιμο;</label>
       <div class="income-modal-amount-input">
         <span>€</span>
-        <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0">
+        <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0" inputmode="decimal">
       </div>
+      <p class="income-wizard-field-hint" id="incomeAmountHint">Βάλε το ποσό που θες να υπολογίζεται στο dashboard.</p>
     </div>
 
-    <div class="income-modal-form-card">
+    <div class="income-modal-form-card income-wizard-card income-basic-card">
       <div class="form-group income-full-row">
-        <label>Όνομα πηγής</label>
+        <label for="fISName" id="incomeNameLabel">Πώς να το ονομάσουμε;</label>
         <input type="text" id="fISName" placeholder="π.χ. Μισθός, Budget μήνα, Ticket">
       </div>
-
-      <div class="income-modal-grid">
-        <div class="form-group">
-          <label>Κατηγορία</label>
-          <select id="fISCategory">
-            <option value="Μισθός">Μισθός</option>
-            <option value="Bonus">Bonus</option>
-            <option value="Ενοίκιο">Ενοίκιο</option>
-            <option value="Ticket Restaurant">Ticket Restaurant</option>
-            <option value="Άυλη κάρτα">Άυλη κάρτα</option>
-            <option value="Μερίσματα">Μερίσματα</option>
-            <option value="Freelance">Freelance</option>
-            <option value="Δώρο">Δώρο</option>
-            <option value="Άλλο">Άλλο</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Τύπος</label>
-          <select id="fISType">
-            <option value="bank">Τράπεζα</option>
-            <option value="cash">Μετρητά</option>
-            <option value="voucher">Voucher / Ticket</option>
-            <option value="card">Κάρτα</option>
-            <option value="investment">Επένδυση</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="income-modal-grid">
-        <div class="form-group">
-          <label>Περιορισμός</label>
-          <select id="fISRestriction">
-            <option value="none">Χωρίς περιορισμό</option>
-            <option value="food_only">Μόνο φαγητό</option>
-            <option value="card_only">Μόνο με κάρτα</option>
-            <option value="locked">Locked / δεν ξοδεύεται</option>
-            <option value="investment">Επένδυση</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Κατηγορία εξόδων</label>
-          <select id="fISRestrictedCategory">
-            <option value="">Καμία</option>
-            <option value="Τρόφιμα">Τρόφιμα</option>
-            <option value="Φαγητό έξω">Φαγητό έξω</option>
-            <option value="Μεταφορά">Μεταφορά</option>
-            <option value="Στέγαση">Στέγαση</option>
-            <option value="Λογαριασμοί">Λογαριασμοί</option>
-            <option value="Υγεία">Υγεία</option>
-            <option value="Άλλο">Άλλο</option>
-          </select>
-        </div>
-      </div>
     </div>
 
-    <div class="income-toggle-box income-modal-options">
-      <label class="income-option-card">
-        <input type="checkbox" id="fISIncludeBudget" checked>
-        <span class="income-option-icon">📊</span>
-        <span class="income-option-copy">
-          <strong>Στο budget</strong>
-          <small>Μετράει στο διαθέσιμο εισόδημα του dashboard.</small>
-        </span>
-      </label>
-
-      <label class="income-option-card">
-        <input type="checkbox" id="fISSavings">
-        <span class="income-option-icon">🔒</span>
-        <span class="income-option-copy">
-          <strong>Locked / αποταμίευση</strong>
-          <small>Δεν υπολογίζεται ως ελεύθερο ποσό για έξοδα.</small>
-        </span>
-      </label>
-
-      <label class="income-option-card">
-        <input type="checkbox" id="fISRecurring" checked>
-        <span class="income-option-icon">🔁</span>
-        <span class="income-option-copy">
-          <strong>Μηνιαίο</strong>
-          <small>Επαναλαμβάνεται κάθε μήνα.</small>
-        </span>
-      </label>
-    </div>
-
-    <div class="income-modal-form-card income-notes-card">
+    <div class="income-modal-form-card income-wizard-card income-restricted-card" id="incomeRestrictedCard">
       <div class="form-group">
-        <label>Σημειώσεις</label>
-        <input type="text" id="fISNotes" placeholder="προαιρετικά">
+        <label for="fISRestrictedCategory" id="incomeRestrictedCategoryLabel">Πού χρησιμοποιείται;</label>
+        <select id="fISRestrictedCategory">
+          <option value="">Καμία</option>
+          <option value="Τρόφιμα">Τρόφιμα</option>
+          <option value="Φαγητό έξω">Φαγητό έξω</option>
+          <option value="Μεταφορά">Μεταφορά</option>
+          <option value="Στέγαση">Στέγαση</option>
+          <option value="Λογαριασμοί">Λογαριασμοί</option>
+          <option value="Υγεία">Υγεία</option>
+          <option value="Άλλο">Άλλο</option>
+        </select>
+        <p class="income-wizard-field-hint" id="incomeRestrictedHint">Προαιρετικά, σύνδεσέ το με συγκεκριμένη κατηγορία εξόδων.</p>
+      </div>
+    </div>
+
+    <button type="button" class="income-advanced-toggle" id="incomeAdvancedToggle" onclick="toggleIncomeAdvanced()">
+      <span>Προχωρημένες ρυθμίσεις</span>
+      <small id="incomeAdvancedToggleHint">Προαιρετικά</small>
+    </button>
+
+    <div class="income-advanced-panel" id="incomeAdvancedPanel">
+      <div class="income-modal-form-card income-wizard-card">
+        <div class="income-modal-grid">
+          <div class="form-group">
+            <label>Κατηγορία</label>
+            <select id="fISCategory">
+              <option value="Μισθός">Μισθός</option>
+              <option value="Bonus">Bonus</option>
+              <option value="Ενοίκιο">Ενοίκιο</option>
+              <option value="Ticket Restaurant">Ticket Restaurant</option>
+              <option value="Άυλη κάρτα">Άυλη κάρτα</option>
+              <option value="Μερίσματα">Μερίσματα</option>
+              <option value="Freelance">Freelance</option>
+              <option value="Δώρο">Δώρο</option>
+              <option value="Άλλο">Άλλο</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Τύπος</label>
+            <select id="fISType">
+              <option value="bank">Τράπεζα</option>
+              <option value="cash">Μετρητά</option>
+              <option value="voucher">Voucher / Ticket</option>
+              <option value="card">Κάρτα</option>
+              <option value="investment">Επένδυση</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="income-modal-grid">
+          <div class="form-group">
+            <label>Περιορισμός</label>
+            <select id="fISRestriction">
+              <option value="none">Χωρίς περιορισμό</option>
+              <option value="food_only">Μόνο φαγητό</option>
+              <option value="card_only">Μόνο με κάρτα</option>
+              <option value="locked">Locked / δεν ξοδεύεται</option>
+              <option value="investment">Επένδυση</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="income-toggle-box income-modal-options income-wizard-card">
+        <label class="income-option-card">
+          <input type="checkbox" id="fISIncludeBudget" checked>
+          <span class="income-option-icon">📊</span>
+          <span class="income-option-copy">
+            <strong>Στο budget</strong>
+            <small>Μετράει στο διαθέσιμο εισόδημα του dashboard.</small>
+          </span>
+        </label>
+
+        <label class="income-option-card">
+          <input type="checkbox" id="fISSavings">
+          <span class="income-option-icon">🔒</span>
+          <span class="income-option-copy">
+            <strong>Locked / αποταμίευση</strong>
+            <small>Δεν υπολογίζεται ως ελεύθερο ποσό για έξοδα.</small>
+          </span>
+        </label>
+
+        <label class="income-option-card">
+          <input type="checkbox" id="fISRecurring" checked>
+          <span class="income-option-icon">🔁</span>
+          <span class="income-option-copy">
+            <strong>Μηνιαίο</strong>
+            <small>Επαναλαμβάνεται κάθε μήνα.</small>
+          </span>
+        </label>
+
+        <label class="income-option-card income-primary-option">
+          <input type="checkbox" id="fISPrimary">
+          <span class="income-option-icon">⭐</span>
+          <span class="income-option-copy">
+            <strong>Χρήση ως βασικό budget</strong>
+            <small>Το CAPVO θα χρησιμοποιεί αυτή την πηγή όταν πατάς “Πληρώθηκα σήμερα”.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="income-modal-form-card income-notes-card income-wizard-card">
+        <div class="form-group">
+          <label>Σημειώσεις</label>
+          <input type="text" id="fISNotes" placeholder="προαιρετικά">
+        </div>
       </div>
     </div>
 
     <input type="hidden" id="fISID">
 
-    <div class="income-modal-actions">
+    <div class="income-modal-actions income-wizard-actions">
       <button class="btn btn-primary btn-block income-save-btn" id="btnIncomeSource" onclick="saveIncomeSource()">
         Αποθήκευση budget
       </button>
@@ -1518,25 +1596,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.1.0.6"></script>
+<script src="js/app-version.js?v=1.1.2.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.1.0.6"></script>
+<script src="js/config.js?v=1.1.2.2"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.1.0.6"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.1.0.6"></script>
-<script src="js/app/02-supabase-data.js?v=1.1.0.6"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.0.6"></script>
-<script src="js/app/04-reports-archive.js?v=1.1.0.6"></script>
-<script src="js/app/05-income-pickers.js?v=1.1.0.6"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.1.0.6"></script>
-<script src="js/app/07-add-center.js?v=1.1.0.6"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.1.0.6"></script>
+<script src="js/app/00-core-state.js?v=1.1.2.2"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.1.2.2"></script>
+<script src="js/app/02-supabase-data.js?v=1.1.2.2"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.2.2"></script>
+<script src="js/app/04-reports-archive.js?v=1.1.2.2"></script>
+<script src="js/app/05-income-pickers.js?v=1.1.2.2"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.1.2.2"></script>
+<script src="js/app/07-add-center.js?v=1.1.2.2"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.1.2.2"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.1.0.6"></script>
-<script src="js/sync.js?v=1.1.0.6"></script>
-<script src="js/advisor.js?v=1.1.0.6"></script>
+<script src="js/cards.js?v=1.1.2.2"></script>
+<script src="js/sync.js?v=1.1.2.2"></script>
+<script src="js/advisor.js?v=1.1.2.2"></script>
 
 
 
