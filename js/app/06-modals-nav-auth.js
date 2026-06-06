@@ -10,6 +10,7 @@ function closeM(){
 }
 
 function openModal(t){
+  capvoSuppressAutoFocus?.(900);
   closeM();
   document.body.classList.add('modal-open');
 
@@ -24,7 +25,7 @@ function openModal(t){
 
     fillPaymentSourceSelect('');
 
-    $('fDN').focus();
+    // autofocus disabled: user taps the field when ready;
   }
 
   if(t==='fixed'){
@@ -36,7 +37,7 @@ function openModal(t){
     $('fFC').value='Στέγαση';
     if(typeof syncFixedCategoryPicker==='function')syncFixedCategoryPicker('Στέγαση');
     $('btnFixed').textContent='Αποθήκευση';
-    $('fFN').focus();
+    // autofocus disabled: user taps the field when ready;
   }
 
   if(t==='cc'){
@@ -50,7 +51,7 @@ function openModal(t){
     $('fCCID').value='';
     $('btnCC').textContent='Αποθήκευση κάρτας';
     if(typeof resetCCFormUI==='function') resetCCFormUI('credit');
-    $('fCCB').focus();
+    // autofocus disabled: user taps the field when ready;
   }
 
   if(t==='incomeSource'){
@@ -75,11 +76,12 @@ function openModal(t){
     document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>btn.classList.remove('active'));
 
     refreshIncomeCustomPickers();
-    $('fISAmount').focus();
+    // autofocus disabled: user taps the field when ready;
   }
 }
 
 function editExp(t,id){
+  capvoSuppressAutoFocus?.(900);
   closeM();
 
   if(t==='fixed'){
@@ -94,7 +96,7 @@ function editExp(t,id){
     if(typeof syncFixedCategoryPicker==='function')syncFixedCategoryPicker(e.category||'Άλλο');
     $('fFID').value=id;
     $('btnFixed').textContent='Ενημέρωση';
-    $('fFN').focus();
+    // autofocus disabled: user taps the field when ready;
 
     return;
   }
@@ -1018,6 +1020,7 @@ document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click
 ['fDN','fDA','fFN','fFA','fCCN'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',function(){this.style.borderColor=''})});
 
 function go(v,b){
+  capvoBlurActiveField?.();
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
 
   const target=$(v);
@@ -1032,6 +1035,8 @@ function go(v,b){
   if(b && b.classList && b.classList.contains('nav-btn')){
     b.classList.add('active');
   }
+
+  capvoScrollToTop?.();
 }
 function chMonth(d){const[y,mo]=curM.split('-').map(Number);let nm=mo+d,ny=y;if(nm>12){nm=1;ny++}if(nm<1){nm=12;ny--}curM=ny+'-'+String(nm).padStart(2,'0');ensM(curM);render()}
 function goM(k){curM=k;ensM(k);go('vDash',document.querySelector('[data-v="vDash"]'));render()}

@@ -213,6 +213,7 @@ function resetAddCenterManualForm(){
 }
 
 function switchAddCenterTab(tab='quick'){
+  capvoSuppressAutoFocus?.(600);
   const quickTab=document.getElementById('addCenterQuickTab');
   const manualTab=document.getElementById('addCenterManualTab');
   const quickPanel=document.getElementById('addCenterQuickPanel');
@@ -228,11 +229,7 @@ function switchAddCenterTab(tab='quick'){
   manualTab?.setAttribute('aria-selected',String(isManual));
 
   setTimeout(()=>{
-    if(isManual){
-      document.getElementById('acDN')?.focus();
-    }else{
-      document.getElementById('quickAddSheetInput')?.focus();
-    }
+    // autofocus disabled: user taps the field when ready;
   },80);
 }
 
@@ -258,6 +255,7 @@ function renderAddCenterRecentChips(){
 }
 
 function openAddCenterSheet(tab='quick',prefill='',errorMessage=''){
+  capvoSuppressAutoFocus?.(900);
   const sheet=document.getElementById('addCenterSheet') || document.getElementById('quickAddSheet');
   const input=document.getElementById('quickAddSheetInput');
   if(!sheet)return;
@@ -281,8 +279,7 @@ function openAddCenterSheet(tab='quick',prefill='',errorMessage=''){
   }
 
   setTimeout(()=>{
-    if(tab==='manual') document.getElementById('acDN')?.focus();
-    else input?.focus();
+    // autofocus disabled: user taps the field when ready;
   },140);
 }
 
@@ -533,7 +530,7 @@ function txCompleteOpenManualForEdit(type,id){
 
   setTimeout(()=>{
     txCompleteFillManualForm(e,{edit:true});
-    document.getElementById('acDN')?.focus();
+    // autofocus disabled: user taps the field when ready;
   },80);
 }
 
@@ -555,7 +552,7 @@ function txCompleteOpenManualForDuplicate(type,id){
   setTimeout(()=>{
     txCompleteFillManualForm(copy,{edit:false});
     showMiniToast('Έτοιμο αντίγραφο για αποθήκευση');
-    document.getElementById('acDN')?.focus();
+    // autofocus disabled: user taps the field when ready;
   },80);
 }
 
@@ -963,6 +960,7 @@ async function saveAddCenterManualExpense(){
   };
 
   window.switchAddCenterTab=function(tab='quick'){
+    capvoSuppressAutoFocus?.(600);
     const quickTab=acEl('addCenterQuickTab');
     const manualTab=acEl('addCenterManualTab');
     const quickPanel=acEl('addCenterQuickPanel');
@@ -983,12 +981,12 @@ async function saveAddCenterManualExpense(){
     manualTab?.setAttribute('aria-selected',String(isManual));
 
     setTimeout(()=>{
-      if(isManual) acEl('acDN')?.focus();
-      else acEl('quickAddSheetInput')?.focus();
+      // autofocus disabled: user taps the field when ready;
     },80);
   };
 
   window.openAddCenterSheet=function(tab='quick',prefill='',errorMessage=''){
+    capvoSuppressAutoFocus?.(900);
     const sheet=acEl('addCenterSheet');
     const input=acEl('quickAddSheetInput');
     if(!sheet)return;
@@ -1013,8 +1011,7 @@ async function saveAddCenterManualExpense(){
     if(errorMessage)setQuickAddInlineError(errorMessage,'quickAddSheetError');
 
     setTimeout(()=>{
-      if(tab==='manual') acEl('acDN')?.focus();
-      else input?.focus();
+      // autofocus disabled: user taps the field when ready;
     },180);
   };
 
@@ -1046,7 +1043,7 @@ async function saveAddCenterManualExpense(){
     if(!input)return;
     input.value=text;
     input.dispatchEvent(new Event('input',{bubbles:true}));
-    input.focus();
+    // keep keyboard closed after suggestion tap; user can tap input to edit;
   };
 
   window.showAddCenterSuccess=function(){
@@ -1146,6 +1143,7 @@ async function saveAddCenterManualExpense(){
 
   const previousOpenAddCenterSheet=window.openAddCenterSheet;
   window.openAddCenterSheet=function(tab='quick',prefill='',errorMessage=''){
+    capvoSuppressAutoFocus?.(900);
     if(typeof previousOpenAddCenterSheet==='function'){
       previousOpenAddCenterSheet(tab,prefill,errorMessage);
     }else{
@@ -1170,8 +1168,7 @@ async function saveAddCenterManualExpense(){
     }
 
     setTimeout(()=>{
-      if(isManual)qav5('acDN')?.focus();
-      else input?.focus();
+      // autofocus disabled: user taps the field when ready;
     },120);
   };
 

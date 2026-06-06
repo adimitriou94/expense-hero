@@ -9432,3 +9432,54 @@ html,body{
     font-size:17px;
   }
 }
+
+/* CAPVO v1.1.0.6 — Mobile navigation, portrait guard & keyboard polish */
+body.capvo-landscape-blocked{
+  overflow:hidden !important;
+  touch-action:none !important;
+}
+
+body.capvo-landscape-blocked::after{
+  content:'Κράτα τη συσκευή κάθετα για να χρησιμοποιήσεις το CAPVO.' !important;
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483647 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:34px !important;
+  text-align:center !important;
+  background:linear-gradient(145deg,#0f172a 0%,#271a78 52%,#111827 100%) !important;
+  color:#fff !important;
+  font-size:18px !important;
+  line-height:1.35 !important;
+  font-weight:850 !important;
+  letter-spacing:-.02em !important;
+  pointer-events:auto !important;
+  white-space:pre-line !important;
+}
+
+body.capvo-landscape-blocked::before{
+  content:'📱' !important;
+  position:fixed !important;
+  left:50% !important;
+  top:calc(50% - 78px) !important;
+  transform:translateX(-50%) !important;
+  z-index:2147483647 !important;
+  width:58px !important;
+  height:58px !important;
+  border-radius:22px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(255,255,255,.14) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.28) !important;
+  font-size:28px !important;
+  pointer-events:none !important;
+}
+
+body.capvo-suppress-autofocus input,
+body.capvo-suppress-autofocus textarea,
+body.capvo-suppress-autofocus select{
+  scroll-margin-top:0 !important;
+}

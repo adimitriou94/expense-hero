@@ -288,6 +288,7 @@ function applyCCPreset(type){
 }
 
 function editCC(id){
+  capvoSuppressAutoFocus?.(900);
   const c=D.creditCards.find(x=>x.id===id);if(!c)return;
   closeM();
   document.body.classList.add('modal-open');
@@ -301,7 +302,7 @@ function editCC(id){
   $('fCCID').value=id;
   $('btnCC').textContent='Ενημέρωση κάρτας';
   resetCCFormUI(Number(c.rate)===0?'zero':'credit');
-  $('fCCB').focus();
+  // autofocus disabled: user taps the field when ready;
 }
 
 function saveCC(){

@@ -54,6 +54,74 @@ if(document.readyState==='loading'){
 window.addEventListener('orientationchange',()=>setTimeout(lockCapvoPortraitOrientation,250));
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) lockCapvoPortraitOrientation(); });
 
+
+
+// ===== CAPVO MOBILE UX GUARDS =====
+// iOS/PWA does not allow a true hard orientation lock from web code.
+// We request portrait where supported and block the UI in landscape so the
+// app behaves as portrait-only from the user's point of view.
+function capvoSuppressAutoFocus(ms=700){
+  try{
+    window.CAPVO_SUPPRESS_PROGRAMMATIC_FOCUS = true;
+    document.body?.classList.add('capvo-suppress-autofocus');
+    clearTimeout(window.__capvoAutoFocusTimer);
+    window.__capvoAutoFocusTimer=setTimeout(()=>{
+      window.CAPVO_SUPPRESS_PROGRAMMATIC_FOCUS = false;
+      document.body?.classList.remove('capvo-suppress-autofocus');
+    },ms);
+  }catch(_){/* noop */}
+}
+
+(function installCapvoFocusGuard(){
+  if(window.__capvoFocusGuardInstalled)return;
+  window.__capvoFocusGuardInstalled=true;
+  const nativeFocus=HTMLElement.prototype.focus;
+  HTMLElement.prototype.focus=function(options){
+    try{
+      const isField=this && this.matches && this.matches('input, textarea, select');
+      if(window.CAPVO_SUPPRESS_PROGRAMMATIC_FOCUS && isField){
+        return;
+      }
+    }catch(_){/* fall through */}
+    return nativeFocus.call(this,options);
+  };
+})();
+
+function capvoBlurActiveField(){
+  try{
+    const el=document.activeElement;
+    if(el && el.blur && el.matches && el.matches('input, textarea, select'))el.blur();
+  }catch(_){/* noop */}
+}
+
+function capvoScrollToTop(){
+  const run=()=>{
+    try{capvoBlurActiveField();}catch(_){/* noop */}
+    try{window.scrollTo({top:0,left:0,behavior:'auto'});}catch(_){window.scrollTo(0,0);}
+    try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(_){/* noop */}
+    try{
+      document.querySelectorAll('.view,.view.active,.app,.app-shell,main,.page,.content,.screen,.modal-body,.mobile-page').forEach(el=>{
+        if(el && typeof el.scrollTop==='number')el.scrollTop=0;
+      });
+    }catch(_){/* noop */}
+  };
+  run();
+  requestAnimationFrame(run);
+  setTimeout(run,60);
+}
+
+function capvoUpdateOrientationState(){
+  try{
+    const landscape=window.matchMedia('(orientation: landscape)').matches;
+    document.body?.classList.toggle('capvo-landscape-blocked',landscape && window.innerWidth>window.innerHeight);
+  }catch(_){/* noop */}
+}
+
+window.addEventListener('resize',()=>setTimeout(capvoUpdateOrientationState,80));
+window.addEventListener('orientationchange',()=>setTimeout(capvoUpdateOrientationState,160));
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',capvoUpdateOrientationState,{once:true});
+else capvoUpdateOrientationState();
+
 // ===== CONSTANTS & STATE =====
 const SK = 'current_chat_id';
 

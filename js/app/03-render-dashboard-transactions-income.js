@@ -1235,9 +1235,7 @@ function applyIncomePreset(type){
 
   refreshIncomeCustomPickers?.();
 
-  if(!$('fISAmount').value){
-    setTimeout(()=>$('fISAmount')?.focus(),80);
-  }
+  // Do not auto-focus amount after preset; keep keyboard closed until user taps a field.
 }
 
 function validateIncomeSourceForm(){
