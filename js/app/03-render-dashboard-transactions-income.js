@@ -59,8 +59,7 @@ function render(){
   $('sFixed').textContent=fmt(fxS);
   $('sCC').textContent=fmt(ccS);
   $('sDaily').textContent=fmt(dlS);
-  $('sRemain').textContent=fmt(bal);
-  $('sRemain').className='stat-value '+(bal>=0?'teal':'red');
+  renderDashboardAdvisorSnapshot(pct,bal);
 
   renderFixedList();
   renderDailyList();
@@ -79,6 +78,35 @@ function render(){
   renderSettingsPage();
 }
 
+
+
+function renderDashboardAdvisorSnapshot(pct,bal){
+  const valueEl=$('sAdvisor');
+  const iconEl=$('sAdvisorIcon');
+  if(!valueEl)return;
+
+  let label='OK';
+  let tone='teal';
+  let icon='✅';
+
+  if(D.income<=0){
+    label='Setup';
+    tone='amber';
+    icon='💡';
+  }else if(bal<0 || pct>100){
+    label='Υπέρβαση';
+    tone='red';
+    icon='🚨';
+  }else if(pct>=70){
+    label='Προσοχή';
+    tone='amber';
+    icon='⚠️';
+  }
+
+  valueEl.textContent=label;
+  valueEl.className='stat-value '+tone;
+  if(iconEl)iconEl.textContent=icon;
+}
 
 function renderFixedList(){
   const ccCards=(D.creditCards||[]).filter(c=>c.balance>0);

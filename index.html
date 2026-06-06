@@ -11,14 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.0.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.0.4">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.0.1.1">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.0.1.1">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.0.1.1">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.0.1.1">
-  <link rel="manifest" href="manifest.webmanifest?v=1.1.0.1.1">
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.0.4">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.0.4">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.0.4">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.0.4">
+  <link rel="manifest" href="manifest.webmanifest?v=1.1.0.4">
   <!-- <link rel="stylesheet" href="style.css?v=20"> -->
 </head>
 
@@ -361,37 +361,41 @@
         </div>
 
         <div class="modern-stats-grid">
-          <div class="bento-card stat-widget stat-fixed modern-stat-card">
+          <button type="button" class="bento-card stat-widget stat-fixed modern-stat-card stat-nav-card" onclick="go('vRecurring',document.querySelector('[data-v=vMore]'))" aria-label="Άνοιγμα παγίων">
             <div class="widget-icon red">🏠</div>
             <div>
               <div class="stat-label">Πάγια</div>
               <div class="stat-value red" id="sFixed">€0</div>
             </div>
-          </div>
+            <span class="stat-chevron" aria-hidden="true">›</span>
+          </button>
 
-          <div class="bento-card stat-widget stat-cards modern-stat-card">
+          <button type="button" class="bento-card stat-widget stat-cards modern-stat-card stat-nav-card" onclick="go('vCards',document.querySelector('[data-v=vCards]'))" aria-label="Άνοιγμα καρτών και debt planner">
             <div class="widget-icon blue">💳</div>
             <div>
               <div class="stat-label">Κάρτες</div>
               <div class="stat-value blue" id="sCC">€0</div>
             </div>
-          </div>
+            <span class="stat-chevron" aria-hidden="true">›</span>
+          </button>
 
-          <div class="bento-card stat-widget stat-daily modern-stat-card">
+          <button type="button" class="bento-card stat-widget stat-daily modern-stat-card stat-nav-card" onclick="go('vTransactions',document.querySelector('[data-v=vTransactions]'))" aria-label="Άνοιγμα ημερήσιων κινήσεων">
             <div class="widget-icon amber">🧾</div>
             <div>
               <div class="stat-label">Ημερήσια</div>
               <div class="stat-value amber" id="sDaily">€0</div>
             </div>
-          </div>
+            <span class="stat-chevron" aria-hidden="true">›</span>
+          </button>
 
-          <div class="bento-card stat-widget stat-remain modern-stat-card modern-stat-primary">
-            <div class="widget-icon teal">✅</div>
+          <button type="button" class="bento-card stat-widget stat-advisor modern-stat-card modern-stat-primary stat-nav-card" onclick="go('vAdvisor',document.querySelector('[data-v=vAdvisor]'))" aria-label="Άνοιγμα advisor">
+            <div class="widget-icon teal" id="sAdvisorIcon">✅</div>
             <div>
-              <div class="stat-label">Υπόλοιπο</div>
-              <div class="stat-value teal" id="sRemain">€0</div>
+              <div class="stat-label">Advisor</div>
+              <div class="stat-value teal" id="sAdvisor">OK</div>
             </div>
-          </div>
+            <span class="stat-chevron" aria-hidden="true">›</span>
+          </button>
         </div>
 
         <section class="bento-card payment-sources-widget modern-payment-widget">
@@ -1293,46 +1297,61 @@
       <div class="debt-modal-heading">
         <div class="debt-modal-kicker">Debt planner</div>
         <h2 id="mCCTitle">Νέα κάρτα</h2>
-        <p>Καταχώρησε πιστωτική κάρτα ή δάνειο και υπολόγισε το πλάνο αποπληρωμής.</p>
+        <p>Πρόσθεσε πιστωτική, δάνειο ή υπόλοιπο αποπληρωμής για να υπολογίζεται σωστά το πλάνο σου.</p>
       </div>
     </div>
 
+    <div class="debt-modal-presets" aria-label="Γρήγορες επιλογές κάρτας">
+      <button type="button" class="debt-preset-chip active" data-card-preset="credit" onclick="applyCCPreset('credit')">💳 Πιστωτική</button>
+      <button type="button" class="debt-preset-chip" data-card-preset="loan" onclick="applyCCPreset('loan')">🏦 Δάνειο</button>
+      <button type="button" class="debt-preset-chip" data-card-preset="zero" onclick="applyCCPreset('zero')">✨ Άτοκο</button>
+    </div>
+
     <div class="debt-modal-amount-card">
-      <label for="fCCB">Συνολικό χρέος</label>
+      <div class="debt-modal-amount-head">
+        <label for="fCCB">Υπόλοιπο / χρέος</label>
+        <small>Πόσο απομένει σήμερα</small>
+      </div>
       <div class="debt-modal-amount-input">
         <span>€</span>
-        <input type="number" id="fCCB" placeholder="0,00" step="0.01" min="0">
+        <input type="number" id="fCCB" placeholder="0,00" step="0.01" min="0" inputmode="decimal">
       </div>
     </div>
 
     <div class="debt-modal-form-card">
       <div class="form-group debt-full-row">
         <label>Όνομα</label>
-        <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank">
+        <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank" autocomplete="off">
       </div>
 
       <div class="debt-modal-grid">
         <div class="form-group">
-          <label>Ετήσιο επιτόκιο</label>
-          <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0">
+          <label>Επιτόκιο %</label>
+          <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0" inputmode="decimal">
         </div>
 
         <div class="form-group">
           <label>Ελάχιστη δόση</label>
-          <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0">
+          <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
         </div>
 
         <div class="form-group debt-full-row">
-          <label>Πιστωτικό όριο</label>
-          <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0">
+          <label>Πιστωτικό όριο <span>προαιρετικό</span></label>
+          <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
         </div>
       </div>
+
+      <div class="debt-modal-hint">
+        Αν δεν ξέρεις την ελάχιστη δόση, άφησέ την 0 και το CAPVO θα κάνει εκτίμηση.
+      </div>
     </div>
+
+    <div class="debt-modal-error" id="ccFormError" aria-live="polite"></div>
 
     <input type="hidden" id="fCCID">
 
     <div class="debt-modal-savebar">
-      <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση</button>
+      <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση κάρτας</button>
     </div>
   </div>
 </div>
@@ -1499,25 +1518,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.1.0.1.1"></script>
+<script src="js/app-version.js?v=1.1.0.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.1.0.1.1"></script>
+<script src="js/config.js?v=1.1.0.4"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.1.0.1.1"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.1.0.1.1"></script>
-<script src="js/app/02-supabase-data.js?v=1.1.0.1.1"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.0.1.1"></script>
-<script src="js/app/04-reports-archive.js?v=1.1.0.1.1"></script>
-<script src="js/app/05-income-pickers.js?v=1.1.0.1.1"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.1.0.1.1"></script>
-<script src="js/app/07-add-center.js?v=1.1.0.1.1"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.1.0.1.1"></script>
+<script src="js/app/00-core-state.js?v=1.1.0.4"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.1.0.4"></script>
+<script src="js/app/02-supabase-data.js?v=1.1.0.4"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.0.4"></script>
+<script src="js/app/04-reports-archive.js?v=1.1.0.4"></script>
+<script src="js/app/05-income-pickers.js?v=1.1.0.4"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.1.0.4"></script>
+<script src="js/app/07-add-center.js?v=1.1.0.4"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.1.0.4"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.1.0.1.1"></script>
-<script src="js/sync.js?v=1.1.0.1.1"></script>
-<script src="js/advisor.js?v=1.1.0.1.1"></script>
+<script src="js/cards.js?v=1.1.0.4"></script>
+<script src="js/sync.js?v=1.1.0.4"></script>
+<script src="js/advisor.js?v=1.1.0.4"></script>
 
 
 

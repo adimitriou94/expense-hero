@@ -44,12 +44,13 @@ function openModal(t){
     $('mCCTitle').textContent='Νέα κάρτα';
     $('fCCN').value='';
     $('fCCB').value='';
-    $('fCCR').value='';
+    $('fCCR').value='18.5';
     $('fCCM').value='';
     $('fCCL').value='';
     $('fCCID').value='';
-    $('btnCC').textContent='Αποθήκευση';
-    $('fCCN').focus();
+    $('btnCC').textContent='Αποθήκευση κάρτας';
+    if(typeof resetCCFormUI==='function') resetCCFormUI('credit');
+    $('fCCB').focus();
   }
 
   if(t==='incomeSource'){

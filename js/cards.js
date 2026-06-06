@@ -121,9 +121,10 @@ function updatePay(idx,val,fromSlider=false){
   rCCSummary();
   rCCPlanAnalysis();
   $('sCC').textContent=fmt(ccPayTotal());
-  const bal=D.income-fixedTotal()-ccPayTotal()-dailyTotal();
-  $('sRemain').textContent=fmt(bal);
-  $('sRemain').className='stat-value '+(bal>=0?'teal':'red');
+  const spent=fixedTotal()+ccPayTotal()+dailyCashTotal();
+  const bal=D.income-spent;
+  const pct=D.income>0?Math.min(100,Math.round(spent/D.income*100)):0;
+  if(typeof renderDashboardAdvisorSnapshot==='function') renderDashboardAdvisorSnapshot(pct,bal);
 }
 
 function rCCSummary(){
@@ -232,14 +233,112 @@ function rCCPlanAnalysis(){
 }
 
 // ===== CC MODALS =====
-function editCC(id){const c=D.creditCards.find(x=>x.id===id);if(!c)return;closeM();document.body.classList.add('modal-open');$('mCC').classList.add('active');$('mCCTitle').textContent='Επεξεργασία κάρτας';$('fCCN').value=c.name;$('fCCB').value=c.balance;$('fCCR').value=c.rate;$('fCCM').value=c.minPay;$('fCCL').value=c.limit;$('fCCID').value=id;$('btnCC').textContent='Ενημέρωση';$('fCCN').focus()}
+function resetCCFormUI(activePreset='credit'){
+  const err=$('ccFormError');
+  if(err){err.textContent='';err.classList.remove('show')}
+  ['fCCN','fCCB','fCCR','fCCM','fCCL'].forEach(id=>{
+    const el=$(id);
+    if(el)el.classList.remove('field-error');
+  });
+  document.querySelectorAll('#mCC .debt-preset-chip').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.cardPreset===activePreset);
+  });
+}
+
+function ccError(message,fieldId){
+  const err=$('ccFormError');
+  if(err){err.textContent=message;err.classList.add('show')}
+  if(typeof showMiniToast==='function')showMiniToast(message,'error');
+  if(fieldId && $(fieldId)){
+    $(fieldId).classList.add('field-error');
+    $(fieldId).focus();
+  }
+}
+
+function applyCCPreset(type){
+  resetCCFormUI(type);
+
+  const nameEl=$('fCCN');
+  const rateEl=$('fCCR');
+  const minPayEl=$('fCCM');
+  const limitEl=$('fCCL');
+
+  // Presets are intentional shortcuts. When the user switches preset,
+  // update the preset-controlled fields immediately instead of keeping
+  // stale values from the previous selection. The balance/debt amount is
+  // preserved because it is the user's actual input.
+  if(type==='credit'){
+    if(nameEl)nameEl.value='Πιστωτική κάρτα';
+    if(rateEl)rateEl.value='18.5';
+    if(minPayEl && !minPayEl.value)minPayEl.value='0.00';
+    if(limitEl && !limitEl.value)limitEl.value='0.00';
+  }
+  else if(type==='loan'){
+    if(nameEl)nameEl.value='Δάνειο';
+    if(rateEl)rateEl.value='9.0';
+    if(minPayEl && !minPayEl.value)minPayEl.value='0.00';
+    if(limitEl)limitEl.value='0.00';
+  }
+  else if(type==='zero'){
+    if(nameEl)nameEl.value='Άτοκη δόση';
+    if(rateEl)rateEl.value='0';
+    if(minPayEl)minPayEl.value='0.00';
+    if(limitEl)limitEl.value='0.00';
+  }
+}
+
+function editCC(id){
+  const c=D.creditCards.find(x=>x.id===id);if(!c)return;
+  closeM();
+  document.body.classList.add('modal-open');
+  $('mCC').classList.add('active');
+  $('mCCTitle').textContent='Επεξεργασία κάρτας';
+  $('fCCN').value=c.name;
+  $('fCCB').value=c.balance;
+  $('fCCR').value=c.rate;
+  $('fCCM').value=c.minPay;
+  $('fCCL').value=c.limit;
+  $('fCCID').value=id;
+  $('btnCC').textContent='Ενημέρωση κάρτας';
+  resetCCFormUI(Number(c.rate)===0?'zero':'credit');
+  $('fCCB').focus();
+}
+
 function saveCC(){
+  resetCCFormUI();
   const n=$('fCCN').value.trim(),id=$('fCCID').value;
-  if(!n){$('fCCN').style.borderColor='var(--red)';return}
-  const obj={name:n,balance:parseFloat($('fCCB').value)||0,rate:parseFloat($('fCCR').value)||0,minPay:parseFloat($('fCCM').value)||0,limit:parseFloat($('fCCL').value)||0};
-  if(id){const c=D.creditCards.find(x=>x.id===id);if(c){const op=c.chosenPay;Object.assign(c,obj);c.chosenPay=op||obj.minPay}}
-  else{obj.id=gid();obj.chosenPay=obj.minPay;D.creditCards.push(obj)}
-  save();closeM();render();
+  const balance=parseFloat($('fCCB').value);
+  const rate=parseFloat($('fCCR').value||'0');
+  const minPay=parseFloat($('fCCM').value||'0');
+  const limit=parseFloat($('fCCL').value||'0');
+
+  if(!Number.isFinite(balance) || balance<=0){
+    ccError('Συμπλήρωσε υπόλοιπο/χρέος μεγαλύτερο από 0.','fCCB');
+    return;
+  }
+  if(!n){ccError('Συμπλήρωσε όνομα κάρτας ή δανείου.','fCCN');return}
+  if(!Number.isFinite(rate) || rate<0){ccError('Το επιτόκιο δεν μπορεί να είναι αρνητικό.','fCCR');return}
+  if(!Number.isFinite(minPay) || minPay<0){ccError('Η ελάχιστη δόση δεν μπορεί να είναι αρνητική.','fCCM');return}
+  if(!Number.isFinite(limit) || limit<0){ccError('Το πιστωτικό όριο δεν μπορεί να είναι αρνητικό.','fCCL');return}
+  if(limit>0 && balance>limit){
+    ccError('Το χρέος είναι μεγαλύτερο από το πιστωτικό όριο. Έλεγξε τα ποσά ή άφησε το όριο 0.','fCCL');
+    return;
+  }
+
+  const obj={name:n,balance,rate,minPay,limit};
+  if(id){
+    const c=D.creditCards.find(x=>x.id===id);
+    if(c){const op=c.chosenPay;Object.assign(c,obj);c.chosenPay=op||obj.minPay}
+  }
+  else{
+    obj.id=gid();
+    obj.chosenPay=obj.minPay;
+    D.creditCards.push(obj);
+  }
+  save();
+  closeM();
+  render();
+  if(typeof showMiniToast==='function')showMiniToast(id?'✅ Η κάρτα ενημερώθηκε':'✅ Η κάρτα προστέθηκε');
 }
 async function delCC(id){
 

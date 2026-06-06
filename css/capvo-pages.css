@@ -9134,3 +9134,301 @@ body:has(#mCC.active) .mobile-nav-fab{
     text-overflow:ellipsis !important;
   }
 }
+
+/* ============================================================
+   CAPVO v1.1.0.2 — Debt Planner card modal polish
+   Makes card/debt creation match the newer Add Center / Income flows.
+   ============================================================ */
+#mCC .debt-card-modal{
+  max-height:min(91vh,760px) !important;
+  padding:12px 16px calc(14px + env(safe-area-inset-bottom)) !important;
+  border-radius:28px !important;
+}
+
+#mCC .debt-card-modal::before{
+  margin-bottom:14px !important;
+}
+
+#mCC .debt-modal-hero{
+  grid-template-columns:44px minmax(0,1fr) !important;
+  gap:11px !important;
+  padding:0 48px 10px 0 !important;
+}
+
+#mCC .debt-modal-icon{
+  width:44px !important;
+  height:44px !important;
+  border-radius:16px !important;
+  font-size:23px !important;
+}
+
+#mCC .debt-modal-kicker{
+  margin:2px 0 5px !important;
+  font-size:10px !important;
+  letter-spacing:.16em !important;
+}
+
+#mCC .debt-modal-heading h2{
+  font-size:24px !important;
+  letter-spacing:-.045em !important;
+}
+
+#mCC .debt-modal-heading p{
+  margin-top:7px !important;
+  max-width:300px !important;
+  font-size:12px !important;
+  line-height:1.35 !important;
+  font-weight:650 !important;
+}
+
+#mCC .debt-modal-presets{
+  display:flex !important;
+  gap:8px !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none !important;
+  padding:2px 0 10px !important;
+  margin:0 !important;
+}
+
+#mCC .debt-modal-presets::-webkit-scrollbar{display:none !important;}
+
+#mCC .debt-preset-chip{
+  flex:0 0 auto !important;
+  height:36px !important;
+  padding:0 13px !important;
+  border:1px solid rgba(119,132,170,.16) !important;
+  border-radius:999px !important;
+  background:#f5f7fc !important;
+  color:#5f6b83 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.76) !important;
+}
+
+#mCC .debt-preset-chip.active{
+  border-color:rgba(101,71,246,.20) !important;
+  background:linear-gradient(135deg,#282070,#6547f6) !important;
+  color:#fff !important;
+  box-shadow:0 12px 24px rgba(101,71,246,.22) !important;
+}
+
+#mCC .debt-modal-amount-card,
+#mCC .debt-modal-form-card{
+  margin-top:8px !important;
+  padding:13px !important;
+  border-radius:22px !important;
+}
+
+#mCC .debt-modal-amount-card{
+  display:grid !important;
+  gap:9px !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(244,248,255,.94)) !important;
+}
+
+#mCC .debt-modal-amount-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:flex-end !important;
+  gap:10px !important;
+}
+
+#mCC .debt-modal-amount-head small{
+  color:#98a3b8 !important;
+  font-size:10px !important;
+  font-weight:850 !important;
+  white-space:nowrap !important;
+}
+
+#mCC .debt-modal-amount-input{
+  height:52px !important;
+  border-radius:17px !important;
+  background:#f7f9fd !important;
+}
+
+#mCC .debt-modal-amount-input input{
+  font-size:25px !important;
+  letter-spacing:-.03em !important;
+}
+
+#mCC .debt-modal-grid{
+  gap:10px !important;
+}
+
+#mCC .form-group input:not(#fCCB){
+  height:46px !important;
+  border-radius:15px !important;
+  font-weight:800 !important;
+  background:#f7f9fd !important;
+}
+
+#mCC label span{
+  font-size:9px !important;
+  color:#a0a9ba !important;
+  font-weight:900 !important;
+  letter-spacing:.07em !important;
+}
+
+#mCC .debt-modal-hint{
+  margin-top:10px !important;
+  padding:10px 12px !important;
+  border-radius:15px !important;
+  background:rgba(101,71,246,.07) !important;
+  color:#647089 !important;
+  font-size:11px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+}
+
+#mCC .debt-modal-error{
+  display:none !important;
+  margin-top:10px !important;
+  padding:11px 12px !important;
+  border-radius:16px !important;
+  background:#fff1f1 !important;
+  border:1px solid rgba(239,68,68,.18) !important;
+  color:#dc2626 !important;
+  font-size:12px !important;
+  font-weight:850 !important;
+  line-height:1.35 !important;
+}
+
+#mCC .debt-modal-error.show{display:block !important;}
+
+#mCC input.field-error{
+  border-color:rgba(239,68,68,.50) !important;
+  box-shadow:0 0 0 4px rgba(239,68,68,.10) !important;
+}
+
+#mCC .debt-modal-savebar{
+  margin-top:10px !important;
+  padding-top:10px !important;
+}
+
+#mCC #btnCC{
+  height:52px !important;
+  border-radius:17px !important;
+}
+
+@media (max-width:380px){
+  #mCC .debt-modal-heading h2{font-size:22px !important;}
+  #mCC .debt-modal-heading p{font-size:11.5px !important;}
+  #mCC .debt-modal-hero{grid-template-columns:40px minmax(0,1fr) !important;}
+  #mCC .debt-modal-icon{width:40px !important;height:40px !important;}
+  #mCC .debt-modal-amount-head{display:block !important;}
+  #mCC .debt-modal-amount-head small{display:block !important;margin-top:3px !important;}
+}
+
+
+/* ============================================================
+   CAPVO v1.1.0.3 — Card modal scrollbar, preset reset & portrait polish
+   ============================================================ */
+#mCC .debt-card-modal{
+  overflow-x:hidden !important;
+  scrollbar-width:none !important;
+  -ms-overflow-style:none !important;
+}
+
+#mCC .debt-card-modal::-webkit-scrollbar{
+  width:0 !important;
+  height:0 !important;
+  display:none !important;
+}
+
+#mCC .debt-modal-presets{
+  scroll-snap-type:x proximity !important;
+}
+
+#mCC .debt-preset-chip{
+  scroll-snap-align:start !important;
+  transition:background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease !important;
+}
+
+#mCC .debt-preset-chip:active{
+  transform:scale(.97) !important;
+}
+
+html,body{
+  max-width:100% !important;
+  overflow-x:hidden !important;
+}
+
+@media (orientation:landscape) and (max-height:520px){
+  body::after{
+    content:'Γύρισε τη συσκευή κάθετα για την καλύτερη εμπειρία CAPVO.' !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:2147483647 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:28px !important;
+    text-align:center !important;
+    background:linear-gradient(135deg,#111827,#3f2bc7) !important;
+    color:#fff !important;
+    font-size:18px !important;
+    line-height:1.35 !important;
+    font-weight:900 !important;
+    letter-spacing:-.02em !important;
+  }
+}
+
+/* CAPVO v1.1.0.4 — Dashboard snapshot navigation */
+.modern-stat-card.stat-nav-card{
+  position:relative;
+  width:100%;
+  appearance:none;
+  -webkit-appearance:none;
+  border:none;
+  text-align:left;
+  cursor:pointer;
+  color:inherit;
+  font-family:inherit;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.modern-stat-card.stat-nav-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 20px 38px rgba(15,23,42,.12) !important;
+}
+
+.modern-stat-card.stat-nav-card:active{
+  transform:scale(.985);
+}
+
+.modern-stat-card.stat-nav-card:focus-visible{
+  outline:3px solid rgba(109,93,252,.24);
+  outline-offset:3px;
+}
+
+.modern-stat-card .stat-chevron{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:rgba(241,245,249,.92);
+  color:#7c86a2;
+  font-size:18px;
+  font-weight:900;
+  line-height:1;
+  opacity:.88;
+}
+
+.modern-stat-card.stat-advisor .stat-value{
+  font-size:19px;
+  letter-spacing:-.05em;
+}
+
+@media (max-width:768px){
+  .modern-stat-card .stat-chevron{
+    top:12px;
+    right:12px;
+    width:20px;
+    height:20px;
+    font-size:17px;
+  }
+}

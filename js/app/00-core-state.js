@@ -34,6 +34,26 @@ const supabaseClient = window.supabase.createClient(
   }
 );
 
+
+// ===== MOBILE ORIENTATION LOCK (best effort) =====
+// The PWA manifest already requests portrait-primary. This helper covers
+// browsers/platforms that also support the Screen Orientation API.
+function lockCapvoPortraitOrientation(){
+  try{
+    if(screen && screen.orientation && typeof screen.orientation.lock==='function'){
+      screen.orientation.lock('portrait').catch(()=>{});
+    }
+  }catch(_){/* Some browsers/iOS ignore programmatic orientation locking. */}
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',lockCapvoPortraitOrientation,{once:true});
+}else{
+  lockCapvoPortraitOrientation();
+}
+window.addEventListener('orientationchange',()=>setTimeout(lockCapvoPortraitOrientation,250));
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) lockCapvoPortraitOrientation(); });
+
 // ===== CONSTANTS & STATE =====
 const SK = 'current_chat_id';
 
