@@ -16,7 +16,7 @@ async function fetchAllData(userId){
 
   try{
     if(!ownerUserId){
-      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el'},budgetCycles:[],budgetCycleIncomes:[]};
+      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el'},budgetCycles:[],budgetCycleIncomes:[],budgetCycleCarryovers:[],holidaysByYear:{},holidaysLoadedYears:{},holidayFetchStatus:'idle'};
       refreshComputedIncome();
       return;
     }
@@ -31,11 +31,15 @@ async function fetchAllData(userId){
 
     const prefs=(prefRows||[])[0]||{};
     D.preferences={
-      budgetCycleType:prefs.budget_cycle_type||'fixed_day',
+      budgetCycleType:normalizeBudgetCycleType(prefs.budget_cycle_type),
       budgetCycleStartDay:capvoClampCycleDay(prefs.budget_cycle_start_day||1),
       currency:prefs.currency||'EUR',
       language:prefs.language||'el'
     };
+
+    if(typeof capvoEnsureBudgetCycleHolidays==='function'){
+      await capvoEnsureBudgetCycleHolidays();
+    }
 
     const {data:incomeSources,error:errIncomeSources}=await supabaseClient
       .from('income_sources')
@@ -98,6 +102,34 @@ async function fetchAllData(userId){
       incomeType:i.income_type||'',
       createdAt:i.created_at||''
     }));
+
+    try{
+      const {data:carryovers,error:errCarryovers}=await supabaseClient
+        .from('budget_cycle_carryovers')
+        .select('*')
+        .eq('user_id',ownerUserId);
+
+      if(errCarryovers)throw errCarryovers;
+
+      D.budgetCycleCarryovers=(carryovers||[]).map(c=>({
+        id:c.id,
+        userId:c.user_id,
+        fromCycleKey:c.from_cycle_key,
+        fromCycleStart:c.from_cycle_start,
+        fromCycleEnd:c.from_cycle_end,
+        toCycleKey:c.to_cycle_key,
+        toCycleStart:c.to_cycle_start,
+        toCycleEnd:c.to_cycle_end,
+        amount:Number(c.amount)||0,
+        action:c.action||'skip',
+        note:c.note||'',
+        createdAt:c.created_at||'',
+        updatedAt:c.updated_at||''
+      }));
+    }catch(errCarryovers){
+      D.budgetCycleCarryovers=[];
+      console.warn('[CAPVO] budget_cycle_carryovers unavailable. Run v1.1.4.3 SQL migration.',errCarryovers?.message||errCarryovers);
+    }
 
     refreshComputedIncome();
 
@@ -435,11 +467,37 @@ function renderPaymentSourcesSummary(){
 }
 
 
-async function saveBudgetCyclePreference(){
+function getSelectedBudgetCycleType(){
+  const checked=document.querySelector('input[name="cycleManagerBudgetCycleType"]:checked');
+  return normalizeBudgetCycleType(checked?.value || D?.preferences?.budgetCycleType || 'fixed_day');
+}
+function syncBudgetCycleTypeControls(type=getBudgetCycleType()){
+  const normalized=normalizeBudgetCycleType(type);
+  document.querySelectorAll('input[name="cycleManagerBudgetCycleType"]').forEach(r=>{r.checked=r.value===normalized;});
+  const input=$('cycleManagerBudgetCycleDay')||$('settingsBudgetCycleDay');
+  if(input)input.disabled=normalized==='last_working_day';
+  const row=document.querySelector('.budget-cycle-rule-row');
+  if(row)row.classList.toggle('is-last-working-day',normalized==='last_working_day');
+  const ruleLabel=$('cycleManagerRuleLabel');
+  if(ruleLabel){
+    const day=capvoClampCycleDay(input?.value || D?.preferences?.budgetCycleStartDay || 1);
+    ruleLabel.textContent=normalized==='last_working_day'
+      ? 'Πληρώνομαι την τελευταία εργάσιμη του μήνα'
+      : `Πληρώνομαι κάθε ${day} του μήνα`;
+  }
+  const help=$('cycleManagerRuleHelp');
+  if(help){
+    help.textContent=normalized==='last_working_day'
+      ? `${typeof getHolidayAwareRuleText==='function'?getHolidayAwareRuleText():'Το CAPVO υπολογίζει Σαββατοκύριακα και ελληνικές αργίες.'} Η ημέρα πληρωμής ξεκινά τον επόμενο κύκλο.`
+      : 'Η ημέρα που επιλέγεις είναι η πρώτη μέρα του νέου οικονομικού κύκλου.';
+  }
+}
+async function saveBudgetCyclePreference(inputId='settingsBudgetCycleDay'){
   const ownerUserId=getFinanceUserId();
-  const input=$('settingsBudgetCycleDay');
+  const input=$(inputId)||$('settingsBudgetCycleDay')||$('cycleManagerBudgetCycleDay');
   const raw=input?input.value:1;
   const day=capvoClampCycleDay(raw);
+  const type=getSelectedBudgetCycleType();
 
   if(input)input.value=String(day);
   if(!ownerUserId){
@@ -450,7 +508,7 @@ async function saveBudgetCyclePreference(){
   try{
     const payload={
       user_id:ownerUserId,
-      budget_cycle_type:'fixed_day',
+      budget_cycle_type:type,
       budget_cycle_start_day:day,
       currency:D.preferences?.currency||'EUR',
       language:D.preferences?.language||'el',
@@ -465,14 +523,15 @@ async function saveBudgetCyclePreference(){
 
     D.preferences={
       ...(D.preferences||{}),
-      budgetCycleType:'fixed_day',
+      budgetCycleType:type,
       budgetCycleStartDay:day
     };
 
     curM=curMK();
     ensM(curM);
     render();
-    showMiniToast('✅ Ο οικονομικός κύκλος ενημερώθηκε');
+    renderBudgetCycleManager?.();
+    showMiniToast(type==='last_working_day'?'✅ Ο κύκλος θα ξεκινά την τελευταία εργάσιμη':'✅ Ο οικονομικός κύκλος ενημερώθηκε');
   }catch(e){
     console.error('saveBudgetCyclePreference failed:',e);
     showMiniToast('Δεν μπόρεσα να αποθηκεύσω τον οικονομικό κύκλο.','error');
@@ -480,11 +539,7 @@ async function saveBudgetCyclePreference(){
 }
 
 function getNextStandardCycleStartAfter(dateValue){
-  const day=getBudgetCycleStartDay();
-  const base=capvoParseDateKey(dateValue)||new Date();
-  let next=new Date(base.getFullYear(),base.getMonth(),day,12);
-  if(next<=base)next=new Date(base.getFullYear(),base.getMonth()+1,day,12);
-  return next;
+  return getNextPaydayAfter(dateValue,getBudgetCycleType());
 }
 function getPaidTodayCycleEnd(startKey){
   const start=capvoParseDateKey(startKey)||new Date();
@@ -518,7 +573,7 @@ async function createPaidTodayCycle(){
 
   const ok=await showConfirmModal({
     title:'Πληρώθηκες σήμερα;',
-    message:`Θα ξεκινήσει νέος οικονομικός κύκλος από σήμερα έως ${formatShortDate(endKey)} και θα χρησιμοποιηθεί το βασικό budget: ${primary.name} (${fmt(primary.amount)}). Τα έξοδά σου δεν θα διαγραφούν.`,
+    message:`Θα ξεκινήσει νέος οικονομικός κύκλος από σήμερα έως ${formatGreekFullDate(endKey)} και θα χρησιμοποιηθεί το βασικό budget: ${primary.name} (${fmt(primary.amount)}). Τα έξοδά σου δεν θα διαγραφούν.`,
     confirmText:'Ναι, πληρώθηκα'
   });
   if(!ok)return;
@@ -560,6 +615,7 @@ async function createPaidTodayCycle(){
 
   await fetchAllData(ownerUserId);
   render();
+  renderBudgetCycleManager?.();
   showMiniToast('✅ Ο νέος οικονομικός κύκλος ξεκίνησε');
 }
 async function undoCurrentPaidTodayCycle(){
@@ -590,7 +646,159 @@ async function undoCurrentPaidTodayCycle(){
 
   await fetchAllData(ownerUserId);
   render();
+  renderBudgetCycleManager?.();
   showMiniToast('✅ Η πρόωρη πληρωμή αναιρέθηκε');
+}
+
+
+async function saveCycleCarryoverDecision(action,options={}){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+
+  const pending=getPendingCycleCarryover();
+  if(!pending){showMiniToast('Δεν υπάρχει υπόλοιπο προηγούμενου κύκλου για διαχείριση.','info');return;}
+
+  const {previous,current,amount}=pending;
+  const normalizedAction=action==='carry_to_next'?'carry_to_next':'skip';
+
+  if(!options?.skipConfirm){
+    const ok=await showConfirmModal({
+      title:normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου':'Εκτός budget',
+      message:normalizedAction==='carry_to_next'
+        ? `Θα μεταφερθούν ${fmt(amount)} από τον προηγούμενο κύκλο (${previous.label}) στον τρέχοντα κύκλο (${current.label}).`
+        : `Το υπόλοιπο ${fmt(amount)} από τον προηγούμενο κύκλο δεν θα προστεθεί στον τρέχοντα κύκλο. Θα κρατηθεί εκτός budget και δεν θα εμφανιστεί ξανά για αυτόν τον κύκλο.`,
+      confirmText:normalizedAction==='carry_to_next'?'Μεταφορά':'Εκτός budget'
+    });
+    if(!ok)return;
+  }
+
+  const payload={
+    user_id:ownerUserId,
+    from_cycle_key:previous.startKey,
+    from_cycle_start:previous.startKey,
+    from_cycle_end:previous.endKey,
+    to_cycle_key:current.startKey,
+    to_cycle_start:current.startKey,
+    to_cycle_end:current.endKey,
+    amount:Number(amount)||0,
+    action:normalizedAction,
+    note:normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου προηγούμενου κύκλου':'Κρατήθηκε εκτός budget',
+    updated_at:new Date().toISOString()
+  };
+
+  const {error}=await supabaseClient
+    .from('budget_cycle_carryovers')
+    .upsert(payload,{onConflict:'user_id,from_cycle_key,to_cycle_key'});
+
+  if(error){
+    console.error('saveCycleCarryoverDecision failed:',error);
+    showMiniToast('Δεν αποθηκεύτηκε η επιλογή υπολοίπου. Έλεγξε αν έχει τρέξει το SQL migration.','error');
+    return;
+  }
+
+  if(typeof closeCycleCarryoverSheet==='function')closeCycleCarryoverSheet();
+  await fetchAllData(ownerUserId);
+  render();
+  renderBudgetCycleManager?.();
+  showMiniToast(normalizedAction==='carry_to_next'?'✅ Το υπόλοιπο μεταφέρθηκε στον κύκλο':'Το υπόλοιπο κρατήθηκε εκτός budget');
+}
+function carryOverPreviousCycle(options={}){return saveCycleCarryoverDecision('carry_to_next',options);}
+function skipPreviousCycleCarryover(options={}){return saveCycleCarryoverDecision('skip',options);}
+
+
+function cycleDaysRemaining(cycle){
+  try{
+    const today=new Date();
+    const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate(),12);
+    const end=cycle?.end instanceof Date?cycle.end:capvoParseDateKey(cycle?.endKey||cycle?.endDate);
+    if(!end)return 0;
+    return Math.max(0,Math.ceil((end-todayMid)/86400000)+1);
+  }catch(e){return 0;}
+}
+function openBudgetCycleManager(){
+  closeM();
+  document.body.classList.add('modal-open');
+  const modal=$('mBudgetCycle');
+  if(modal)modal.classList.add('active');
+  renderBudgetCycleManager();
+}
+function renderBudgetCycleManager(){
+  const cycle=getCurrentBudgetCycle();
+  const primary=getPrimaryIncomeSource();
+  const hasBudgetIncome=(D?.incomeSources||[]).some(i=>i.includeInBudget);
+  const cycleDay=getBudgetCycleStartDay();
+  const cycleType=getBudgetCycleType();
+  const remaining=cycleDaysRemaining(cycle);
+  const ruleLabel=getBudgetCycleRuleLabel();
+  const primaryLabel=primary?`${primary.name} · ${fmt(primary.amount)}`:'Δεν έχει οριστεί';
+  const primaryHelp=primary
+    ? 'Αυτό είναι το ποσό που θα χρησιμοποιηθεί όταν πατήσεις “Πληρώθηκα σήμερα”. Ορίζεται από τα Έσοδα με την επιλογή “Χρήση ως βασικό budget”.'
+    : hasBudgetIncome
+      ? 'Έχεις καταχωρημένο εισόδημα, αλλά δεν έχεις επιλέξει ποια πηγή θα χρησιμοποιείται όταν πατήσεις “Πληρώθηκα σήμερα”. Πήγαινε στα Έσοδα και ενεργοποίησε “Χρήση ως βασικό budget”.'
+      : 'Δεν υπάρχει ακόμα πηγή budget. Πρόσθεσε πρώτα εισόδημα από τα Έσοδα και όρισέ το ως βασικό budget.';
+  const sourceLabel=cycle?.source==='paid_today'?'Πρόωρη πληρωμή':'Κανονικός κανόνας';
+  const sourceText=cycle?.source==='paid_today'?'Ο κύκλος ξεκίνησε από το κουμπί “Πληρώθηκα σήμερα”.':'Ο κύκλος ακολουθεί τη μόνιμη ημέρα πληρωμής σου.';
+  const isPaid=cycle?.source==='paid_today';
+  const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+  const goToPrimaryBudget=()=>{
+    showMiniToast(primary?'Άνοιγμα εσόδων.':'Όρισε πρώτα ποια πηγή είναι το βασικό budget.','info');
+    go('vIncome',document.querySelector('[data-v=vIncome]'));
+    closeM();
+  };
+
+  setText('dashboardCycleLabel',cycle?.label||'—');
+  setText('dashboardCycleMeta',formatNextPaydayMeta(cycle,{prefix:'Πληρωμή'}));
+  const dashPaid=$('dashboardPaidTodayBtn');
+  if(dashPaid){
+    dashPaid.disabled=isPaid;
+    dashPaid.classList.toggle('needs-primary',!primary && !isPaid);
+    dashPaid.textContent=isPaid?'Πληρώθηκα ✓':primary?'Πληρώθηκα σήμερα':'Ορισμός budget';
+    dashPaid.title=isPaid?'Υπάρχει ήδη ενεργή πρόωρη πληρωμή.':primary?'Ξεκίνα νέο κύκλο από σήμερα.':'Πρώτα όρισε βασικό budget από τα Έσοδα.';
+    dashPaid.onclick=primary && !isPaid ? createPaidTodayCycle : goToPrimaryBudget;
+  }
+
+  setText('cycleManagerCurrentLabel',cycle?.label||'—');
+  setText('cycleManagerCurrentMeta',formatNextPaydayMeta(cycle));
+  setText('cycleManagerSourceBadge',sourceLabel);
+  setText('cycleManagerRuleLabel',ruleLabel);
+  setText('cycleManagerPrimaryIncomeLabel',primaryLabel);
+  setText('cycleManagerPrimaryIncomeHelp',primaryHelp);
+
+  syncBudgetCycleTypeControls(cycleType);
+  const input=$('cycleManagerBudgetCycleDay');
+  if(input && document.activeElement!==input)input.value=String(cycleDay);
+  if(input)input.disabled=cycleType==='last_working_day';
+
+  const paidNotice=$('cycleManagerPaidTodayNotice');
+  if(paidNotice){
+    paidNotice.classList.toggle('warning',!primary && !isPaid);
+    paidNotice.style.display=(isPaid || !primary)?'':'none';
+    paidNotice.innerHTML=isPaid
+      ? `<strong>Ενεργή πρόωρη πληρωμή</strong><span>${sourceText} Από ${formatGreekFullDate(cycle.startKey)} έως ${formatGreekFullDate(cycle.endKey)}.</span>`
+      : !primary
+        ? '<strong>Χρειάζεται βασικό budget</strong><span>Για να ξεκινήσει νέος κύκλος από σήμερα, όρισε πρώτα μία πηγή εισοδήματος ως βασικό budget.</span>'
+        : '';
+  }
+
+  const paidBtn=$('cycleManagerPaidTodayBtn');
+  if(paidBtn){
+    paidBtn.disabled=isPaid || !primary;
+    paidBtn.textContent=isPaid?'Πληρώθηκα σήμερα ✓':'Πληρώθηκα σήμερα';
+    paidBtn.title=!primary?'Πρώτα όρισε βασικό budget από τα Έσοδα.':isPaid?'Υπάρχει ήδη ενεργή πρόωρη πληρωμή.':'Ξεκίνα νέο κύκλο από σήμερα.';
+  }
+  const undoBtn=$('cycleManagerUndoPaidTodayBtn');
+  if(undoBtn)undoBtn.style.display=isPaid?'':'none';
+
+  const history=$('cycleManagerHistory');
+  if(history){
+    const rows=(D.budgetCycles||[]).slice()
+      .sort((a,b)=>String(b.startDate||'').localeCompare(String(a.startDate||'')))
+      .slice(0,3);
+    history.innerHTML=rows.length?rows.map(c=>{
+      const src=c.source==='paid_today'?'Πρόωρη πληρωμή':'Κύκλος';
+      return `<div class="budget-cycle-history-row"><span>${esc(formatBudgetCycleDateRange(c.startDate,c.endDate))}</span><strong>${esc(src)}</strong></div>`;
+    }).join(''):'<p>Δεν υπάρχουν αποθηκευμένοι ειδικοί κύκλοι ακόμα.</p>';
+  }
 }
 
 function renderSettingsPage(){
@@ -623,10 +831,14 @@ function renderSettingsPage(){
 
   const cycle=getCurrentBudgetCycle();
   const cycleDay=getBudgetCycleStartDay();
+  const cycleType=getBudgetCycleType();
+  renderBudgetCycleManager?.();
   const cycleInput=$('settingsBudgetCycleDay');
   if(cycleInput && document.activeElement!==cycleInput)cycleInput.value=String(cycleDay);
+  if(cycleInput)cycleInput.disabled=cycleType==='last_working_day';
   setText('settingsBudgetCycleLabel',cycle.label);
-  setText('settingsBudgetCycleNext',cycle.nextStartKey ? formatShortDate(cycle.nextStartKey) : '—');
+  setText('settingsBudgetCycleRuleLabel',getBudgetCycleRuleShortLabel());
+  setText('settingsBudgetCycleNext',cycle.nextStartKey ? formatGreekFullDate(cycle.nextStartKey) : '—');
   const primary=getPrimaryIncomeSource();
   setText('settingsPrimaryIncomeLabel',primary?`${primary.name} · ${fmt(primary.amount)}`:'Δεν έχει οριστεί');
   setText('settingsCycleSourceLabel',cycle.source==='paid_today'?'Πρόωρη πληρωμή':'Κανονικός κανόνας');
@@ -634,7 +846,7 @@ function renderSettingsPage(){
   if(paidNotice){
     paidNotice.style.display=cycle.source==='paid_today'?'':'none';
     paidNotice.innerHTML=cycle.source==='paid_today'
-      ? `<strong>Ενεργή πρόωρη πληρωμή</strong><span>Ο κύκλος ξεκίνησε ${formatShortDate(cycle.startKey)} και τελειώνει ${formatShortDate(cycle.endKey)}.</span>`
+      ? `<strong>Ενεργή πρόωρη πληρωμή</strong><span>Ο κύκλος ξεκίνησε ${formatGreekFullDate(cycle.startKey)} και τελειώνει ${formatGreekFullDate(cycle.endKey)}.</span>`
       : '';
   }
   const paidTodayBtn=$('settingsPaidTodayBtn');

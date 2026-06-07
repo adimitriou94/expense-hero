@@ -1,6 +1,7 @@
 // CAPVO app split: 03-render-dashboard-transactions-income.js
 // Source: js/legacy/app.monolith.backup.js
 // Keep classic <script> loading order from index.html.
+// CAPVO v1.1.4.8: carryover is shown as a compact pending pill inside the cycle card.
 
 
 function capvoDashboardFirstName(){
@@ -25,7 +26,7 @@ function renderDashboardGreeting(){
   if(title)title.textContent=name==='σου'?'Γεια σου 👋':`Γεια σου, ${name} 👋`;
   if(sub){
     const cycle=getCurrentBudgetCycle();
-    sub.textContent=`Ο κύκλος ${cycle.label} είναι ενημερωμένος.`;
+    sub.textContent=`${cycle.label} · ${formatNextPaydayMeta(cycle)}`;
   }
 }
 
@@ -48,7 +49,7 @@ function render(){
   const eyebrow=document.querySelector('.modern-hero-card .eyebrow');
   if(eyebrow)eyebrow.textContent='Υπόλοιπο κύκλου';
   const heroCaption=document.querySelector('.modern-hero-caption');
-  if(heroCaption)heroCaption.textContent=`Τρέχων οικονομικός κύκλος: ${cycle.label}.`;
+  if(heroCaption)heroCaption.textContent=`Τρέχων οικονομικός κύκλος: ${cycle.label}. ${formatNextPaydayMeta(cycle)}.`;
   renderDashboardGreeting();
   $('dIncome').textContent=fmt(D.income);
   $('dBalance').textContent=fmt(bal);
@@ -58,6 +59,7 @@ function render(){
   $('dSpent').textContent=fmt(tot)+' / '+fmt(D.income);
   renderDashboardAllowanceCards(bal);
   renderFirstUseBudgetPrompt();
+  renderCycleCarryoverPrompt();
 
   $('sFixed').textContent=fmt(fxS);
   $('sCC').textContent=fmt(ccS);
@@ -81,6 +83,140 @@ function render(){
   renderSettingsPage();
 }
 
+
+
+function renderCycleCarryoverPrompt(){
+  const anchor=document.getElementById('dashboardCycleSummaryCard');
+  if(!anchor)return;
+
+  const oldCard=document.getElementById('dashboardCarryoverCard');
+  if(oldCard)oldCard.remove();
+
+  let notice=document.getElementById('dashboardCarryoverNotice');
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+
+  // Applied carryover already affects the cycle totals. Do not keep a permanent dashboard card.
+  // Pending carryover belongs to the current cycle card, because it is a cycle decision.
+  if(!pending){
+    if(notice)notice.remove();
+    anchor.classList.remove('has-cycle-task');
+    const sheet=document.getElementById('cycleCarryoverSheet');
+    if(sheet)sheet.classList.remove('active');
+    return;
+  }
+
+  anchor.classList.add('has-cycle-task');
+
+  if(!notice){
+    notice=document.createElement('button');
+    notice.type='button';
+    notice.id='dashboardCarryoverNotice';
+    notice.onclick=openCycleCarryoverSheet;
+  }
+
+  notice.className='dashboard-carryover-notice dashboard-cycle-task';
+  if(notice.parentElement!==anchor){
+    const actions=anchor.querySelector('.dashboard-cycle-summary-actions');
+    if(actions)actions.insertAdjacentElement('beforebegin',notice);
+    else anchor.appendChild(notice);
+  }
+
+  notice.innerHTML=`
+    <span class="dashboard-carryover-notice-icon" aria-hidden="true">💡</span>
+    <span class="dashboard-carryover-notice-copy">
+      <strong>Εκκρεμεί υπόλοιπο ${fmt(pending.amount)}</strong>
+    </span>
+    <span class="dashboard-carryover-notice-action">Άνοιγμα ›</span>
+  `;
+
+  renderCycleCarryoverSheet(pending);
+}
+
+function ensureCycleCarryoverSheet(){
+  let overlay=document.getElementById('cycleCarryoverSheet');
+  if(overlay)return overlay;
+
+  overlay=document.createElement('div');
+  overlay.id='cycleCarryoverSheet';
+  overlay.className='cycle-carryover-sheet-overlay';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label','Υπόλοιπο προηγούμενου κύκλου');
+  overlay.onclick=function(event){
+    if(event.target===overlay)closeCycleCarryoverSheet();
+  };
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function renderCycleCarryoverSheet(pending){
+  const overlay=ensureCycleCarryoverSheet();
+  if(!pending){
+    overlay.innerHTML='';
+    return;
+  }
+
+  overlay.innerHTML=`
+    <section class="cycle-carryover-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeCycleCarryoverSheet()" aria-label="Κλείσιμο">×</button>
+
+      <div class="cycle-carryover-hero">
+        <div class="cycle-carryover-icon" aria-hidden="true">💡</div>
+        <div>
+          <span>Cycle review</span>
+          <h2>Υπόλοιπο προηγούμενου κύκλου</h2>
+          <p>Περίσσεψαν <strong>${fmt(pending.amount)}</strong> από τον κύκλο ${esc(pending.previous.label)}.</p>
+        </div>
+      </div>
+
+      <div class="cycle-carryover-question">
+        <strong>Τι θέλεις να γίνει;</strong>
+        <span>Διάλεξε αν το ποσό θα μπει στο διαθέσιμο budget του τρέχοντος κύκλου ή αν θα το κρατήσεις εκτός budget για αποταμίευση/άλλη χρήση.</span>
+      </div>
+
+      <div class="cycle-carryover-options">
+        <button type="button" class="cycle-carryover-option primary" onclick="carryOverPreviousCycle({skipConfirm:true})">
+          <span class="cycle-carryover-option-icon">➕</span>
+          <span>
+            <strong>Μεταφορά στον νέο κύκλο</strong>
+            <small>Πρόσθεσέ τα στο διαθέσιμο budget του τρέχοντος κύκλου.</small>
+          </span>
+        </button>
+
+        <button type="button" class="cycle-carryover-option" onclick="skipPreviousCycleCarryover({skipConfirm:true})">
+          <span class="cycle-carryover-option-icon">🔒</span>
+          <span>
+            <strong>Κράτησέ τα εκτός budget</strong>
+            <small>Δεν θα προστεθούν στον κύκλο. Δεν θα σε ξαναρωτήσω για αυτό το υπόλοιπο.</small>
+          </span>
+        </button>
+
+        <button type="button" class="cycle-carryover-later" onclick="closeCycleCarryoverSheet()">
+          Αργότερα
+        </button>
+      </div>
+    </section>
+  `;
+}
+
+function openCycleCarryoverSheet(){
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  if(!pending){
+    showMiniToast?.('Δεν υπάρχει εκκρεμές υπόλοιπο κύκλου.','info');
+    return;
+  }
+  renderCycleCarryoverSheet(pending);
+  const overlay=document.getElementById('cycleCarryoverSheet');
+  overlay?.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+function closeCycleCarryoverSheet(){
+  const overlay=document.getElementById('cycleCarryoverSheet');
+  overlay?.classList.remove('active');
+  document.body.classList.remove('modal-open');
+}
 
 
 function renderDashboardAdvisorSnapshot(pct,bal){

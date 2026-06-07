@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.2.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.4.8">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.2.2">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.2.2">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.2.2">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.2.2">
-  <link rel="manifest" href="manifest.webmanifest?v=1.1.2.2">
-  <!-- <link rel="stylesheet" href="style.css?v=1.1.2.2"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.4.8">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.4.8">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.4.8">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.4.8">
+  <link rel="manifest" href="manifest.webmanifest?v=1.1.4.8">
+  <!-- <link rel="stylesheet" href="style.css?v=1.1.4.8"> -->
 </head>
 
 <body class="auth-pending">
@@ -291,6 +291,18 @@
             </div>
           </div>
         </div>
+
+        <section class="dashboard-cycle-summary-card" id="dashboardCycleSummaryCard" aria-label="Οικονομικός κύκλος">
+          <div class="dashboard-cycle-summary-main">
+            <span class="dashboard-cycle-kicker">Οικονομικός κύκλος</span>
+            <strong id="dashboardCycleLabel">—</strong>
+            <p id="dashboardCycleMeta">—</p>
+          </div>
+          <div class="dashboard-cycle-summary-actions">
+            <button type="button" class="dashboard-cycle-paid-btn" id="dashboardPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
+            <button type="button" class="dashboard-cycle-manage-btn" onclick="openBudgetCycleManager()">Διαχείριση</button>
+          </div>
+        </section>
 
         <!-- MOBILE DASHBOARD INSIGHTS -->
         <section class="mobile-dashboard-insights" aria-label="Κατηγορίες κύκλου">
@@ -723,8 +735,8 @@
       <div class="page-hero bento-card capvo-branded-hero capvo-hero-archive">
         <div>
           <div class="eyebrow">HISTORY</div>
-          <h2>Αρχείο μηνών</h2>
-          <p>Δες προηγούμενους μήνες και σύγκρινε έξοδα / υπόλοιπα.</p>
+          <h2>Αρχείο κύκλων</h2>
+          <p>Δες οικονομικούς κύκλους, πρόωρες πληρωμές και μηνιαίο ιστορικό.</p>
         </div>
       </div>
 
@@ -770,55 +782,36 @@
         </article>
       </section>
 
-      <section class="settings-section-card settings-budget-cycle-card">
+      <section class="settings-section-card settings-budget-cycle-card settings-budget-cycle-shortcut">
         <div class="settings-card-head">
           <div class="settings-card-icon">🗓️</div>
           <div>
             <span class="settings-kicker">Οικονομικός κύκλος</span>
-            <h3>Ημέρα έναρξης budget</h3>
-            <p>Διάλεξε πότε ξεκινάει ο οικονομικός σου μήνας, με βάση το πότε πληρώνεσαι.</p>
+            <h3>Κύκλος budget & μισθοδοσία</h3>
+            <p>Δες τον τρέχοντα κύκλο, την ημέρα πληρωμής, το βασικό budget και την πρόωρη πληρωμή από μία καθαρή οθόνη.</p>
           </div>
         </div>
 
-        <div class="settings-info-list">
+        <div class="settings-info-list compact">
           <div class="settings-info-row">
             <span>Τρέχων κύκλος</span>
             <strong id="settingsBudgetCycleLabel">—</strong>
           </div>
           <div class="settings-info-row">
-            <span>Επόμενη έναρξη</span>
-            <strong id="settingsBudgetCycleNext">—</strong>
+            <span>Κανόνας πληρωμής</span>
+            <strong id="settingsBudgetCycleRuleLabel">—</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Βασικό budget</span>
+            <strong id="settingsPrimaryIncomeLabel">—</strong>
+          </div>
+          <div class="settings-info-row">
+            <span>Τύπος</span>
+            <strong id="settingsCycleSourceLabel">—</strong>
           </div>
         </div>
 
-        <div class="settings-cycle-control">
-          <label for="settingsBudgetCycleDay">Πληρώνομαι κάθε</label>
-          <div class="settings-cycle-input-row">
-            <input id="settingsBudgetCycleDay" type="number" inputmode="numeric" min="1" max="28" value="1" aria-label="Ημέρα έναρξης οικονομικού κύκλου">
-            <span>του μήνα</span>
-            <button type="button" class="settings-primary-action" onclick="saveBudgetCyclePreference()">Αποθήκευση</button>
-          </div>
-          <small>Για ημέρες 29-31 ή τελευταία εργάσιμη θα μπει ειδική ρύθμιση σε επόμενο βήμα.</small>
-        </div>
-
-        <div class="settings-cycle-paid-card">
-          <div class="settings-info-list compact">
-            <div class="settings-info-row">
-              <span>Τύπος κύκλου</span>
-              <strong id="settingsCycleSourceLabel">—</strong>
-            </div>
-            <div class="settings-info-row">
-              <span>Βασικό budget</span>
-              <strong id="settingsPrimaryIncomeLabel">—</strong>
-            </div>
-          </div>
-          <div class="settings-paid-notice" id="settingsPaidTodayNotice" style="display:none"></div>
-          <div class="settings-actions settings-cycle-actions">
-            <button type="button" class="settings-primary-action" id="settingsPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
-            <button type="button" class="settings-secondary-action" id="settingsUndoPaidTodayBtn" onclick="undoCurrentPaidTodayCycle()" style="display:none">Αναίρεση πρόωρης πληρωμής</button>
-          </div>
-          <small>Χρησιμοποίησέ το όταν ο μισθός μπήκε νωρίτερα. Δεν αλλάζει τη μόνιμη ημέρα πληρωμής.</small>
-        </div>
+        <button type="button" class="settings-primary-action settings-cycle-open-manager" onclick="openBudgetCycleManager()">Διαχείριση οικονομικού κύκλου</button>
       </section>
 
       <section class="settings-section-card settings-telegram-card">
@@ -998,7 +991,7 @@
 
         <button class="more-menu-item" onclick="go('vArchive',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">🗄️</span>
-          <span><strong>Αρχείο</strong><small>Προηγούμενοι μήνες και ιστορικό</small></span>
+          <span><strong>Αρχείο</strong><small>Οικονομικοί κύκλοι, μήνες και ιστορικό</small></span>
           <em>›</em>
         </button>
 
@@ -1596,28 +1589,120 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.1.2.2"></script>
+<script src="js/app-version.js?v=1.1.4.8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.1.2.2"></script>
+<script src="js/config.js?v=1.1.4.8"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.1.2.2"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.1.2.2"></script>
-<script src="js/app/02-supabase-data.js?v=1.1.2.2"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.2.2"></script>
-<script src="js/app/04-reports-archive.js?v=1.1.2.2"></script>
-<script src="js/app/05-income-pickers.js?v=1.1.2.2"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.1.2.2"></script>
-<script src="js/app/07-add-center.js?v=1.1.2.2"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.1.2.2"></script>
+<script src="js/app/00-core-state.js?v=1.1.4.8"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.1.4.8"></script>
+<script src="js/app/02-supabase-data.js?v=1.1.4.8"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.4.8"></script>
+<script src="js/app/04-reports-archive.js?v=1.1.4.8"></script>
+<script src="js/app/05-income-pickers.js?v=1.1.4.8"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.1.4.8"></script>
+<script src="js/app/07-add-center.js?v=1.1.4.8"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.1.4.8"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.1.2.2"></script>
-<script src="js/sync.js?v=1.1.2.2"></script>
-<script src="js/advisor.js?v=1.1.2.2"></script>
+<script src="js/cards.js?v=1.1.4.8"></script>
+<script src="js/sync.js?v=1.1.4.8"></script>
+<script src="js/advisor.js?v=1.1.4.8"></script>
 
 
 
+
+
+<div class="modal-overlay budget-cycle-overlay" id="mBudgetCycle">
+  <div class="modal budget-cycle-modal">
+    <button type="button" class="budget-cycle-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
+
+    <div class="budget-cycle-hero">
+      <div class="budget-cycle-icon">🗓️</div>
+      <div>
+        <div class="income-modal-kicker budget-cycle-kicker-label">Ρυθμίσεις budget</div>
+        <h2>Οικονομικός κύκλος</h2>
+        <p>Διαχειρίσου πότε ξεκινάει το budget σου και τι γίνεται αν πληρώθηκες νωρίτερα.</p>
+      </div>
+    </div>
+
+    <section class="budget-cycle-current-card">
+      <span>Τρέχων κύκλος</span>
+      <strong id="cycleManagerCurrentLabel">—</strong>
+      <p id="cycleManagerCurrentMeta">—</p>
+      <div class="budget-cycle-current-badge" id="cycleManagerSourceBadge">—</div>
+    </section>
+
+    <section class="budget-cycle-panel">
+      <div class="budget-cycle-panel-head">
+        <div>
+          <span>Κανόνας πληρωμής</span>
+          <strong id="cycleManagerRuleLabel">—</strong>
+        </div>
+      </div>
+
+      <div class="budget-cycle-type-options" role="radiogroup" aria-label="Τύπος κανόνα πληρωμής">
+        <label class="budget-cycle-type-option">
+          <input type="radio" name="cycleManagerBudgetCycleType" value="fixed_day" onchange="syncBudgetCycleTypeControls('fixed_day')">
+          <span>
+            <strong>Συγκεκριμένη ημέρα</strong>
+            <small>Π.χ. κάθε 1 ή 25 του μήνα.</small>
+          </span>
+        </label>
+        <label class="budget-cycle-type-option">
+          <input type="radio" name="cycleManagerBudgetCycleType" value="last_working_day" onchange="syncBudgetCycleTypeControls('last_working_day')">
+          <span>
+            <strong>Τελευταία εργάσιμη</strong>
+            <small>Με Σαββατοκύριακα και ελληνικές αργίες.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="settings-cycle-input-row budget-cycle-rule-row">
+        <input id="cycleManagerBudgetCycleDay" type="number" inputmode="numeric" min="1" max="31" value="1" aria-label="Ημέρα έναρξης οικονομικού κύκλου" oninput="syncBudgetCycleTypeControls(getSelectedBudgetCycleType())">
+        <span>του μήνα</span>
+        <button type="button" class="settings-primary-action" onclick="saveBudgetCyclePreference('cycleManagerBudgetCycleDay')">Αποθήκευση αλλαγών</button>
+      </div>
+      <small id="cycleManagerRuleHelp">Για την “τελευταία εργάσιμη”, το CAPVO υπολογίζει Σαββατοκύριακα και επίσημες ελληνικές αργίες. Η ημέρα πληρωμής ξεκινά τον επόμενο κύκλο.</small>
+    </section>
+
+    <section class="budget-cycle-panel">
+      <div class="budget-cycle-panel-head">
+        <div>
+          <span>Βασικό budget</span>
+          <strong id="cycleManagerPrimaryIncomeLabel">—</strong>
+        </div>
+        <button type="button" class="settings-secondary-action compact" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'));closeM();">Ορισμός από Έσοδα</button>
+      </div>
+      <p class="budget-cycle-help" id="cycleManagerPrimaryIncomeHelp">Αυτό είναι το ποσό που θα χρησιμοποιηθεί όταν πατήσεις “Πληρώθηκα σήμερα”. Ορίζεται από τα Έσοδα με την επιλογή “Χρήση ως βασικό budget”.</p>
+    </section>
+
+    <section class="budget-cycle-panel budget-cycle-paid-panel">
+      <div class="budget-cycle-panel-head">
+        <div>
+          <span>Πρόωρη πληρωμή</span>
+          <strong>Πληρώθηκα σήμερα</strong>
+        </div>
+      </div>
+      <p class="budget-cycle-help">Αν ο μισθός μπήκε νωρίτερα, ξεκίνα νέο κύκλο από σήμερα χωρίς να αλλάξεις τη μόνιμη ημέρα πληρωμής.</p>
+      <div class="settings-paid-notice" id="cycleManagerPaidTodayNotice" style="display:none"></div>
+      <div class="settings-cycle-actions">
+        <button type="button" class="settings-primary-action" id="cycleManagerPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
+        <button type="button" class="settings-secondary-action" id="cycleManagerUndoPaidTodayBtn" onclick="undoCurrentPaidTodayCycle()" style="display:none">Αναίρεση πρόωρης πληρωμής</button>
+      </div>
+    </section>
+
+    <section class="budget-cycle-panel budget-cycle-history-panel">
+      <div class="budget-cycle-panel-head">
+        <div>
+          <span>Ιστορικό</span>
+          <strong>Τελευταίοι κύκλοι</strong>
+        </div>
+      </div>
+      <div id="cycleManagerHistory" class="budget-cycle-history-list"></div>
+    </section>
+  </div>
+</div>
 
 <div class="mobile-transaction-detail-overlay" id="mobileTransactionDetail" onclick="if(event.target===this)closeMobileTransactionDetail()">
   <div class="mobile-transaction-detail-sheet" role="dialog" aria-modal="true" aria-label="Λεπτομέρειες κίνησης">

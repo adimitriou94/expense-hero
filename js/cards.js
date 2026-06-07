@@ -107,6 +107,45 @@ function setPayPreset(idx,val){
   rCC();
 }
 
+function refreshDashboardAfterCardPaymentChange(){
+  try{
+    if(typeof refreshComputedIncome==='function')refreshComputedIncome();
+
+    const fxS=fixedTotal();
+    const ccS=ccPayTotal();
+    const dlS=dailyTotal();
+    const cashDaily=typeof dailyCashTotal==='function'?dailyCashTotal():dlS;
+    const spent=fxS+ccS+cashDaily;
+    const bal=(Number(D.income)||0)-spent;
+    const pct=D.income>0?Math.min(100,Math.round(spent/D.income*100)):0;
+
+    const dIncome=$('dIncome');if(dIncome)dIncome.textContent=fmt(D.income);
+    const dBalance=$('dBalance');
+    if(dBalance){
+      dBalance.textContent=fmt(bal);
+      dBalance.style.color=bal<0?'#fca5a5':'#ffffff';
+    }
+    const dBar=$('dBar');if(dBar)dBar.style.width=pct+'%';
+    const dPct=$('dPct');if(dPct)dPct.textContent=pct+'%';
+    const dSpent=$('dSpent');if(dSpent)dSpent.textContent=fmt(spent)+' / '+fmt(D.income);
+
+    const sFixed=$('sFixed');if(sFixed)sFixed.textContent=fmt(fxS);
+    const sCC=$('sCC');if(sCC)sCC.textContent=fmt(ccS);
+    const sDaily=$('sDaily');if(sDaily)sDaily.textContent=fmt(dlS);
+
+    if(typeof renderDashboardAllowanceCards==='function')renderDashboardAllowanceCards(bal);
+    if(typeof renderDashboardAdvisorSnapshot==='function')renderDashboardAdvisorSnapshot(pct,bal);
+    if(typeof renderDashboardPreview==='function')renderDashboardPreview();
+    if(typeof renderMobileCategoryInsights==='function')renderMobileCategoryInsights();
+    if(typeof renderPaymentSourcesSummary==='function')renderPaymentSourcesSummary();
+    if(typeof rStats==='function')rStats();
+    if(typeof rArch==='function')rArch();
+    if(typeof rAdv==='function')rAdv();
+  }catch(e){
+    console.warn('Dashboard refresh after card payment change failed:',e);
+  }
+}
+
 function updatePay(idx,val,fromSlider=false){
   D.creditCards[idx].chosenPay=Number(val)||0;save();
   const el=$('payVal'+idx);if(el)el.textContent=fmt(Number(val)||0);
@@ -120,11 +159,7 @@ function updatePay(idx,val,fromSlider=false){
   calcPay(idx);
   rCCSummary();
   rCCPlanAnalysis();
-  $('sCC').textContent=fmt(ccPayTotal());
-  const spent=fixedTotal()+ccPayTotal()+dailyCashTotal();
-  const bal=D.income-spent;
-  const pct=D.income>0?Math.min(100,Math.round(spent/D.income*100)):0;
-  if(typeof renderDashboardAdvisorSnapshot==='function') renderDashboardAdvisorSnapshot(pct,bal);
+  refreshDashboardAfterCardPaymentChange();
 }
 
 function rCCSummary(){

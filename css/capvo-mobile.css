@@ -8622,3 +8622,1163 @@ body > .fixed-category-popover .fixed-category-option.active::after{
   cursor:not-allowed !important;
   filter:saturate(.75) !important;
 }
+
+/* CAPVO v1.1.3 — Budget Cycle Management UI */
+.dashboard-cycle-summary-card{
+  margin:12px 0 14px;
+  padding:14px;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));
+  border:1px solid rgba(226,232,240,.92);
+  box-shadow:0 16px 34px rgba(15,23,42,.07);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.dashboard-cycle-summary-main{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.dashboard-cycle-kicker{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#64748b;
+}
+.dashboard-cycle-summary-main strong{
+  font-size:15px;
+  font-weight:950;
+  color:#0f172a;
+  line-height:1.15;
+}
+.dashboard-cycle-summary-main p{
+  margin:0;
+  font-size:11.5px;
+  line-height:1.25;
+  color:#64748b;
+  font-weight:650;
+}
+.dashboard-cycle-summary-actions{display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.dashboard-cycle-paid-btn,
+.dashboard-cycle-manage-btn{
+  border:0;
+  border-radius:15px;
+  min-height:38px;
+  padding:0 11px;
+  font-weight:900;
+  font-size:11.5px;
+  white-space:nowrap;
+}
+.dashboard-cycle-paid-btn{background:#0f172a;color:#fff;box-shadow:0 10px 20px rgba(15,23,42,.15);}
+.dashboard-cycle-manage-btn{background:#eef2ff;color:#3730a3;}
+.dashboard-cycle-paid-btn:disabled{opacity:.58;filter:saturate(.75);}
+.settings-budget-cycle-shortcut .settings-cycle-open-manager{width:100%;justify-content:center;margin-top:12px;}
+.budget-cycle-overlay.active{display:flex;}
+.budget-cycle-modal{
+  width:min(94vw,470px);
+  max-height:min(88vh,760px);
+  overflow:auto;
+  border-radius:28px;
+  padding:18px;
+  background:#f8fafc;
+  scrollbar-width:none;
+}
+.budget-cycle-modal::-webkit-scrollbar{display:none;}
+.budget-cycle-hero{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:2px 34px 12px 2px;
+}
+.budget-cycle-icon{
+  width:46px;height:46px;border-radius:18px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#0f172a,#334155);
+  color:#fff;font-size:21px;
+  box-shadow:0 14px 26px rgba(15,23,42,.18);
+  flex-shrink:0;
+}
+.budget-cycle-hero h2{margin:1px 0 4px;font-size:22px;color:#0f172a;letter-spacing:-.03em;}
+.budget-cycle-hero p{margin:0;color:#64748b;font-size:12.5px;line-height:1.35;font-weight:650;}
+.budget-cycle-current-card,
+.budget-cycle-panel{
+  border:1px solid rgba(226,232,240,.95);
+  background:#fff;
+  border-radius:22px;
+  padding:14px;
+  margin-top:10px;
+  box-shadow:0 12px 24px rgba(15,23,42,.05);
+}
+.budget-cycle-current-card span,
+.budget-cycle-panel-head span{
+  display:block;
+  font-size:10.5px;
+  font-weight:900;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:#64748b;
+  margin-bottom:4px;
+}
+.budget-cycle-current-card strong,
+.budget-cycle-panel-head strong{font-size:17px;color:#0f172a;font-weight:950;}
+.budget-cycle-current-card p,
+.budget-cycle-help,
+.budget-cycle-panel small{
+  margin:6px 0 0;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:650;
+}
+.budget-cycle-current-badge{
+  display:inline-flex;
+  margin-top:10px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#ecfeff;
+  color:#155e75;
+  font-weight:900;
+  font-size:11px;
+}
+.budget-cycle-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.settings-secondary-action.compact{min-height:34px;padding:0 10px;font-size:11.5px;}
+.budget-cycle-rule-row{margin-top:10px;}
+.budget-cycle-rule-row .settings-primary-action{flex:1;justify-content:center;}
+.budget-cycle-history-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.budget-cycle-history-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-radius:15px;background:#f8fafc;border:1px solid rgba(226,232,240,.9);font-size:12px;color:#475569;font-weight:750;}
+.budget-cycle-history-row strong{color:#0f172a;font-size:12px;}
+.budget-cycle-history-list p{margin:0;color:#94a3b8;font-size:12px;font-weight:650;}
+@media(max-width:430px){
+  .dashboard-cycle-summary-card{align-items:stretch;flex-direction:column;padding:13px;margin-top:10px;}
+  .dashboard-cycle-summary-actions{width:100%;}
+  .dashboard-cycle-paid-btn,.dashboard-cycle-manage-btn{flex:1;}
+  .budget-cycle-modal{width:100vw;max-height:88vh;border-radius:28px 28px 0 0;padding:16px;}
+}
+
+/* CAPVO v1.1.4 — Budget Cycle UI/UX hotfix */
+.dashboard-cycle-summary-card{
+  margin:9px 0 12px !important;
+  padding:12px 14px !important;
+  border-radius:20px !important;
+  gap:10px !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.055) !important;
+}
+.dashboard-cycle-summary-main{gap:2px !important;}
+.dashboard-cycle-kicker{
+  font-size:9.5px !important;
+  letter-spacing:.075em !important;
+}
+.dashboard-cycle-summary-main strong{
+  font-size:14.5px !important;
+  line-height:1.08 !important;
+}
+.dashboard-cycle-summary-main p{
+  font-size:11px !important;
+  line-height:1.22 !important;
+}
+.dashboard-cycle-summary-actions{gap:6px !important;}
+.dashboard-cycle-paid-btn,
+.dashboard-cycle-manage-btn{
+  min-height:34px !important;
+  padding:0 10px !important;
+  border-radius:14px !important;
+  font-size:11px !important;
+}
+.dashboard-cycle-paid-btn.needs-primary{
+  background:#fff7ed !important;
+  color:#9a3412 !important;
+  border:1px solid rgba(249,115,22,.18) !important;
+  box-shadow:none !important;
+}
+.dashboard-cycle-manage-btn{
+  background:#f1f5ff !important;
+  color:#4338ca !important;
+}
+
+.budget-cycle-overlay.active{
+  align-items:flex-end !important;
+}
+.budget-cycle-modal{
+  position:relative !important;
+  width:min(94vw,470px) !important;
+  max-height:min(88vh,760px) !important;
+  overflow:auto !important;
+  border-radius:28px !important;
+  padding:18px !important;
+  background:#f8fafc !important;
+  scrollbar-width:none !important;
+}
+.budget-cycle-modal::before{
+  content:"";
+  display:block;
+  width:38px;
+  height:4px;
+  border-radius:999px;
+  margin:0 auto 14px;
+  background:rgba(148,163,184,.5);
+}
+.budget-cycle-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  border:1px solid rgba(226,232,240,.9);
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:#fff;
+  color:#64748b;
+  font-size:20px;
+  line-height:1;
+  font-weight:800;
+  box-shadow:0 10px 20px rgba(15,23,42,.07);
+  z-index:2;
+}
+.budget-cycle-close:active{transform:scale(.96);}
+.budget-cycle-hero{
+  padding:0 42px 10px 0 !important;
+  gap:11px !important;
+}
+.budget-cycle-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:16px !important;
+  font-size:19px !important;
+}
+.budget-cycle-kicker-label{
+  color:#475569 !important;
+  font-size:11px !important;
+  text-transform:none !important;
+  letter-spacing:0 !important;
+  font-weight:800 !important;
+}
+.budget-cycle-hero h2{
+  margin:0 0 4px !important;
+  font-size:21px !important;
+}
+.budget-cycle-hero p{
+  font-size:12px !important;
+  line-height:1.32 !important;
+}
+.budget-cycle-current-card,
+.budget-cycle-panel{
+  border-radius:20px !important;
+  padding:13px !important;
+  margin-top:9px !important;
+  box-shadow:0 9px 22px rgba(15,23,42,.045) !important;
+}
+.budget-cycle-current-card strong,
+.budget-cycle-panel-head strong{
+  font-size:16px !important;
+}
+.budget-cycle-help,
+.budget-cycle-panel small,
+.budget-cycle-current-card p{
+  font-size:11.5px !important;
+}
+.budget-cycle-panel-head .settings-secondary-action.compact{
+  min-height:34px !important;
+  border-radius:999px !important;
+  padding:0 12px !important;
+  background:#fff !important;
+  color:#4338ca !important;
+  border:1px solid rgba(79,70,229,.12) !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.045) !important;
+}
+.budget-cycle-rule-row{
+  display:grid !important;
+  grid-template-columns:76px auto !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+.budget-cycle-rule-row input{
+  width:76px !important;
+  height:42px !important;
+}
+.budget-cycle-rule-row .settings-primary-action{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  min-height:42px !important;
+  justify-content:center !important;
+  border-radius:15px !important;
+}
+.budget-cycle-modal .settings-primary-action,
+.budget-cycle-modal .settings-secondary-action{
+  border:0;
+  min-height:42px;
+  border-radius:15px;
+  padding:0 14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:900;
+  font-family:inherit;
+}
+.budget-cycle-modal .settings-primary-action{
+  background:linear-gradient(135deg,#171f33,#0f172a) !important;
+  color:#fff !important;
+  box-shadow:0 12px 24px rgba(15,23,42,.14) !important;
+}
+.budget-cycle-modal .settings-secondary-action{
+  background:#fff !important;
+  color:#475569 !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+}
+.budget-cycle-modal .settings-primary-action:disabled{
+  background:#e2e8f0 !important;
+  color:#64748b !important;
+  box-shadow:none !important;
+  opacity:1 !important;
+}
+.settings-paid-notice.warning{
+  background:#fff7ed !important;
+  color:#9a3412 !important;
+  border:1px solid rgba(249,115,22,.18) !important;
+}
+.settings-paid-notice.warning strong{color:#7c2d12 !important;}
+
+@media(max-width:430px){
+  .dashboard-cycle-summary-card{
+    align-items:stretch !important;
+    flex-direction:row !important;
+    padding:11px 12px !important;
+    margin-top:8px !important;
+  }
+  .dashboard-cycle-summary-actions{
+    width:auto !important;
+    flex-shrink:0 !important;
+  }
+  .dashboard-cycle-paid-btn,
+  .dashboard-cycle-manage-btn{
+    flex:0 0 auto !important;
+    min-width:auto !important;
+    padding:0 9px !important;
+  }
+  .budget-cycle-modal{
+    width:100vw !important;
+    max-height:88vh !important;
+    border-radius:28px 28px 0 0 !important;
+    padding:16px !important;
+  }
+}
+
+@media(max-width:380px){
+  .dashboard-cycle-summary-card{flex-direction:column !important;}
+  .dashboard-cycle-summary-actions{width:100% !important;}
+  .dashboard-cycle-paid-btn,
+  .dashboard-cycle-manage-btn{flex:1 !important;}
+}
+
+/* CAPVO v1.1.4 — Budget Cycle visual/date polish */
+.dashboard-cycle-summary-card{
+  margin:8px 0 11px !important;
+  padding:10px 12px !important;
+  min-height:0 !important;
+  border-radius:19px !important;
+  align-items:center !important;
+}
+.dashboard-cycle-summary-main{
+  gap:1px !important;
+}
+.dashboard-cycle-summary-main strong{
+  font-size:14px !important;
+  line-height:1.12 !important;
+  letter-spacing:-.015em !important;
+}
+.dashboard-cycle-summary-main p{
+  font-size:10.8px !important;
+  line-height:1.18 !important;
+}
+.dashboard-cycle-kicker{
+  font-size:9px !important;
+  line-height:1.1 !important;
+}
+.dashboard-cycle-paid-btn.needs-primary{
+  background:#fff !important;
+  color:#9a3412 !important;
+  border:1px solid rgba(249,115,22,.20) !important;
+  box-shadow:0 7px 16px rgba(249,115,22,.07) !important;
+}
+.dashboard-cycle-paid-btn,
+.dashboard-cycle-manage-btn{
+  min-height:32px !important;
+  border-radius:13px !important;
+  padding:0 9px !important;
+}
+.budget-cycle-panel-head strong{
+  letter-spacing:-.015em !important;
+}
+#cycleManagerPrimaryIncomeLabel{
+  max-width:170px !important;
+  line-height:1.12 !important;
+}
+.budget-cycle-panel-head .settings-secondary-action.compact{
+  flex-shrink:0 !important;
+}
+.budget-cycle-current-card,
+.budget-cycle-panel{
+  padding:12px !important;
+  margin-top:8px !important;
+}
+.budget-cycle-hero{
+  padding-bottom:8px !important;
+}
+.budget-cycle-rule-row{
+  grid-template-columns:72px auto !important;
+  gap:7px !important;
+}
+.budget-cycle-rule-row input{
+  width:72px !important;
+  height:40px !important;
+}
+.budget-cycle-rule-row .settings-primary-action{
+  min-height:40px !important;
+}
+.budget-cycle-history-row span{
+  line-height:1.25 !important;
+}
+
+@media(max-width:430px){
+  .dashboard-cycle-summary-card{
+    gap:8px !important;
+  }
+  .dashboard-cycle-summary-actions{
+    gap:5px !important;
+  }
+  .dashboard-cycle-paid-btn,
+  .dashboard-cycle-manage-btn{
+    font-size:10.7px !important;
+    padding:0 8px !important;
+  }
+  .budget-cycle-modal{
+    max-height:89vh !important;
+  }
+}
+
+@media(max-width:380px){
+  #cycleManagerPrimaryIncomeLabel{
+    max-width:none !important;
+  }
+}
+
+/* ============================================================
+   CAPVO v1.1.4 — Dashboard section alignment polish
+   Creates one mobile dashboard grid so every section shares
+   the same horizontal start/end and visual rhythm.
+   ============================================================ */
+@media (max-width:768px){
+  :root{
+    --capvo-dash-x:var(--mobile-pad,16px);
+    --capvo-dash-section-gap:16px;
+  }
+
+  #vDash .modern-dashboard-shell{
+    gap:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  #vDash .modern-dashboard-main,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  /* One shared horizontal grid for all dashboard cards/sections. */
+  #vDash .modern-hero-card,
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:auto !important;
+    max-width:none !important;
+    margin-left:var(--capvo-dash-x) !important;
+    margin-right:var(--capvo-dash-x) !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+
+  #vDash .modern-hero-card{
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    margin-top:var(--capvo-dash-section-gap) !important;
+    margin-bottom:0 !important;
+  }
+
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .mobile-dashboard-insights,
+  #vDash .dashboard-preview-widget,
+  #vDash .modern-payment-widget{
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-dashboard-insights,
+  #vDash .dashboard-preview-widget,
+  #vDash .modern-payment-widget{
+    border-radius:28px !important;
+  }
+
+  /* Snapshot header follows the same outer grid as its cards. */
+  #vDash .modern-side-title{
+    padding:0 2px !important;
+    margin:0 0 12px !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-stats-grid,
+  #vDash .modern-payment-widget{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-payment-widget{
+    margin:var(--capvo-dash-section-gap) 0 0 !important;
+  }
+
+  /* Keep carousel content inside the aligned outer card. */
+  #vDash .modern-payment-widget .payment-sources-grid.payment-sources-carousel{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Prevent late overrides from adding extra inner width/padding to recent list. */
+  #vDash .dashboard-preview-widget{
+    width:100% !important;
+    margin:0 !important;
+  }
+
+  #vDash .dashboard-preview-list{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --capvo-dash-x:14px;
+    --capvo-dash-section-gap:14px;
+  }
+}
+
+/* CAPVO v1.1.4 — Last working day budget-cycle rule */
+.budget-cycle-type-options{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin:12px 0 10px;
+}
+.budget-cycle-type-option{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:18px;
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  box-shadow:0 8px 18px rgba(15,23,42,.04);
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.budget-cycle-type-option:has(input:checked){
+  border-color:rgba(79,70,229,.38);
+  background:linear-gradient(180deg,#f8f7ff,#ffffff);
+  box-shadow:0 12px 26px rgba(79,70,229,.12);
+}
+.budget-cycle-type-option:active{transform:scale(.99);}
+.budget-cycle-type-option input{
+  width:18px;
+  height:18px;
+  margin:2px 0 0;
+  accent-color:#4f46e5;
+  flex:0 0 auto;
+}
+.budget-cycle-type-option span{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.budget-cycle-type-option strong{font-size:13px;font-weight:950;color:#0f172a;letter-spacing:-.01em;}
+.budget-cycle-type-option small{font-size:11px;line-height:1.35;color:#64748b;font-weight:700;}
+.budget-cycle-rule-row.is-last-working-day input,
+.budget-cycle-rule-row.is-last-working-day > span{
+  opacity:.45;
+}
+.budget-cycle-rule-row.is-last-working-day input{
+  pointer-events:none;
+  background:#f1f5f9;
+}
+
+/* ============================================================
+   CAPVO v1.1.4.4 — Dashboard carryover visual alignment
+   ============================================================ */
+.dashboard-carryover-card{
+  width:100% !important;
+  margin:0 0 13px !important;
+  padding:14px !important;
+  border-radius:24px !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.99),rgba(248,250,252,.96)) !important;
+  border:1px solid rgba(226,232,240,.94) !important;
+  box-shadow:0 16px 34px rgba(15,23,42,.07) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  overflow:hidden !important;
+}
+.dashboard-carryover-card.is-applied{
+  background:linear-gradient(135deg,rgba(255,255,255,.99),rgba(236,253,245,.92)) !important;
+  border-color:rgba(187,247,208,.9) !important;
+}
+.dashboard-carryover-main{
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:3px !important;
+}
+.dashboard-carryover-kicker{
+  font-size:10px !important;
+  font-weight:900 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  color:#64748b !important;
+}
+.dashboard-carryover-card.is-applied .dashboard-carryover-kicker{color:#047857 !important;}
+.dashboard-carryover-main strong{
+  font-size:15px !important;
+  line-height:1.12 !important;
+  color:#0f172a !important;
+  letter-spacing:-.018em !important;
+  font-weight:950 !important;
+}
+.dashboard-carryover-main p{
+  margin:0 !important;
+  font-size:11.5px !important;
+  line-height:1.30 !important;
+  color:#64748b !important;
+  font-weight:650 !important;
+}
+.dashboard-carryover-actions{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  flex-shrink:0 !important;
+}
+.dashboard-carryover-primary,
+.dashboard-carryover-secondary{
+  border:0 !important;
+  min-height:36px !important;
+  border-radius:15px !important;
+  padding:0 12px !important;
+  font-size:11.2px !important;
+  font-weight:900 !important;
+  font-family:inherit !important;
+  white-space:nowrap !important;
+}
+.dashboard-carryover-primary{
+  background:linear-gradient(135deg,#5b4bff,#4338ca) !important;
+  color:#fff !important;
+  box-shadow:0 10px 20px rgba(79,70,229,.18) !important;
+}
+.dashboard-carryover-secondary{
+  background:#f8fafc !important;
+  color:#64748b !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+}
+.dashboard-carryover-primary:active,
+.dashboard-carryover-secondary:active{transform:translateY(1px) !important;}
+@media(max-width:430px){
+  .dashboard-carryover-card{
+    align-items:stretch !important;
+    flex-direction:column !important;
+    padding:14px !important;
+    gap:10px !important;
+  }
+  .dashboard-carryover-actions{width:100% !important;}
+  .dashboard-carryover-primary,
+  .dashboard-carryover-secondary{flex:1 !important;}
+}
+
+/* ========================================================
+   CAPVO v1.1.4.5 — Carryover smart notification + decision sheet
+   Turns previous-cycle leftover into an assistant-style task instead of a heavy dashboard card.
+   ======================================================== */
+#vDash .dashboard-carryover-notice{
+  width:100% !important;
+  margin:0 0 12px !important;
+  padding:10px 11px !important;
+  border:1px solid rgba(226,232,240,.72) !important;
+  border-radius:20px !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,250,252,.91)) !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.045) !important;
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) auto !important;
+  align-items:center !important;
+  column-gap:11px !important;
+  row-gap:4px !important;
+  text-align:left !important;
+  font-family:inherit !important;
+  cursor:pointer !important;
+  appearance:none !important;
+  -webkit-appearance:none !important;
+}
+.dashboard-carryover-notice-icon{
+  width:30px !important;
+  height:30px !important;
+  border-radius:13px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:linear-gradient(135deg,#eef2ff,#f8f7ff) !important;
+  box-shadow:inset 0 0 0 1px rgba(99,102,241,.07) !important;
+  font-size:15px !important;
+}
+.dashboard-carryover-notice-copy{
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:1px !important;
+}
+.dashboard-carryover-notice-copy span{
+  color:#64748b !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+}
+.dashboard-carryover-notice-copy strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  line-height:1.12 !important;
+  font-weight:950 !important;
+  letter-spacing:-.012em !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+.dashboard-carryover-notice-copy small{
+  color:#7c8ba3 !important;
+  font-size:11px !important;
+  line-height:1.2 !important;
+  font-weight:700 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+.dashboard-carryover-notice-action{
+  min-height:28px !important;
+  padding:0 10px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  justify-self:end !important;
+  background:rgba(99,102,241,.075) !important;
+  color:#4f46e5 !important;
+  font-size:10.5px !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+  box-shadow:inset 0 0 0 1px rgba(99,102,241,.055) !important;
+}
+.dashboard-carryover-notice:active{transform:translateY(1px) !important;}
+
+.cycle-carryover-sheet-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:9999 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  padding:18px 12px env(safe-area-inset-bottom) !important;
+  background:rgba(15,23,42,.46) !important;
+  backdrop-filter:blur(14px) !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:opacity .18s ease !important;
+}
+.cycle-carryover-sheet-overlay.active{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+.cycle-carryover-sheet{
+  position:relative !important;
+  width:min(100%,430px) !important;
+  max-height:min(82vh,720px) !important;
+  overflow:auto !important;
+  border-radius:30px 30px 24px 24px !important;
+  background:linear-gradient(180deg,#ffffff,#f8fbff) !important;
+  box-shadow:0 -20px 60px rgba(15,23,42,.28) !important;
+  border:1px solid rgba(226,232,240,.9) !important;
+  padding:16px 16px 18px !important;
+  transform:translateY(18px) scale(.985) !important;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1) !important;
+}
+.cycle-carryover-sheet-overlay.active .cycle-carryover-sheet{
+  transform:translateY(0) scale(1) !important;
+}
+.cycle-carryover-handle{
+  width:42px !important;
+  height:4px !important;
+  border-radius:999px !important;
+  background:#cbd5e1 !important;
+  margin:0 auto 12px !important;
+}
+.cycle-carryover-close{
+  position:absolute !important;
+  top:14px !important;
+  right:14px !important;
+  width:34px !important;
+  height:34px !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:#f1f5f9 !important;
+  color:#64748b !important;
+  font-size:20px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  display:grid !important;
+  place-items:center !important;
+}
+.cycle-carryover-hero{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:12px !important;
+  padding:4px 42px 14px 2px !important;
+}
+.cycle-carryover-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:18px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:linear-gradient(135deg,#eef2ff,#f5f3ff) !important;
+  box-shadow:0 12px 26px rgba(79,70,229,.14) !important;
+  font-size:20px !important;
+  flex:0 0 auto !important;
+}
+.cycle-carryover-hero span{
+  display:block !important;
+  color:#64748b !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  margin-bottom:2px !important;
+}
+.cycle-carryover-hero h2{
+  margin:0 !important;
+  color:#0f172a !important;
+  font-size:21px !important;
+  line-height:1.05 !important;
+  font-weight:950 !important;
+  letter-spacing:-.035em !important;
+}
+.cycle-carryover-hero p{
+  margin:6px 0 0 !important;
+  color:#64748b !important;
+  font-size:13px !important;
+  line-height:1.35 !important;
+  font-weight:700 !important;
+}
+.cycle-carryover-hero p strong{color:#0f172a !important;font-weight:950 !important;}
+.cycle-carryover-question{
+  border-radius:22px !important;
+  background:#f8fafc !important;
+  border:1px solid rgba(226,232,240,.9) !important;
+  padding:13px !important;
+  margin-bottom:12px !important;
+}
+.cycle-carryover-question strong{
+  display:block !important;
+  color:#0f172a !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  margin-bottom:4px !important;
+}
+.cycle-carryover-question span{
+  display:block !important;
+  color:#64748b !important;
+  font-size:12.5px !important;
+  line-height:1.35 !important;
+  font-weight:700 !important;
+}
+.cycle-carryover-options{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+}
+.cycle-carryover-option{
+  border:1px solid rgba(226,232,240,.95) !important;
+  border-radius:22px !important;
+  background:#fff !important;
+  padding:13px !important;
+  display:grid !important;
+  grid-template-columns:auto 1fr !important;
+  align-items:center !important;
+  gap:12px !important;
+  text-align:left !important;
+  font-family:inherit !important;
+  box-shadow:0 10px 22px rgba(15,23,42,.045) !important;
+}
+.cycle-carryover-option.primary{
+  border-color:rgba(99,102,241,.22) !important;
+  background:linear-gradient(135deg,#ffffff,#f7f7ff) !important;
+}
+.cycle-carryover-option-icon{
+  width:38px !important;
+  height:38px !important;
+  border-radius:16px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#f1f5f9 !important;
+  font-size:17px !important;
+}
+.cycle-carryover-option.primary .cycle-carryover-option-icon{
+  background:linear-gradient(135deg,#5b4bff,#4338ca) !important;
+  color:#fff !important;
+  box-shadow:0 12px 24px rgba(79,70,229,.18) !important;
+}
+.cycle-carryover-option strong{
+  display:block !important;
+  color:#0f172a !important;
+  font-size:14px !important;
+  line-height:1.15 !important;
+  font-weight:950 !important;
+}
+.cycle-carryover-option small{
+  display:block !important;
+  margin-top:3px !important;
+  color:#64748b !important;
+  font-size:11.5px !important;
+  line-height:1.28 !important;
+  font-weight:700 !important;
+}
+.cycle-carryover-later{
+  min-height:42px !important;
+  border:0 !important;
+  border-radius:18px !important;
+  background:transparent !important;
+  color:#64748b !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  font-family:inherit !important;
+}
+.cycle-carryover-option:active,
+.cycle-carryover-later:active,
+.cycle-carryover-close:active{transform:translateY(1px) !important;}
+@media(max-width:380px){
+  .dashboard-carryover-notice{grid-template-columns:auto 1fr !important;}
+  .dashboard-carryover-notice-action{grid-column:2 !important;justify-self:flex-start !important;margin-top:3px !important;}
+  .cycle-carryover-sheet{border-radius:28px 28px 22px 22px !important;padding:15px 14px 17px !important;}
+  .cycle-carryover-hero h2{font-size:20px !important;}
+}
+
+/* ========================================================
+   CAPVO v1.1.4.6 — Cycle center embedded carryover task
+   Keeps cycle status and carryover decision in one compact dashboard section.
+   ======================================================== */
+#vDash .dashboard-cycle-summary-card.has-cycle-task{
+  align-items:stretch !important;
+  flex-direction:column !important;
+  gap:9px !important;
+  padding:12px !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-main{
+  width:100% !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-actions{
+  width:100% !important;
+  justify-content:flex-end !important;
+  gap:7px !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-paid-btn,
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-manage-btn{
+  min-height:34px !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task.dashboard-carryover-notice{
+  width:100% !important;
+  margin:2px 0 0 !important;
+  padding:9px 10px !important;
+  border-radius:17px !important;
+  border:1px solid rgba(99,102,241,.12) !important;
+  background:linear-gradient(135deg,rgba(99,102,241,.075),rgba(255,255,255,.74)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65) !important;
+  grid-template-columns:auto minmax(0,1fr) auto !important;
+  gap:8px !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-icon{
+  width:30px !important;
+  height:30px !important;
+  border-radius:12px !important;
+  font-size:15px !important;
+  background:rgba(99,102,241,.10) !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy span{
+  font-size:9.2px !important;
+  letter-spacing:.075em !important;
+  color:#64748b !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy strong{
+  font-size:13.2px !important;
+  line-height:1.08 !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy small{
+  font-size:10.5px !important;
+  line-height:1.15 !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-action{
+  min-height:28px !important;
+  padding:0 10px !important;
+  font-size:10.5px !important;
+  background:#ffffff !important;
+  color:#4f46e5 !important;
+  box-shadow:0 8px 16px rgba(99,102,241,.10) !important;
+}
+@media(max-width:390px){
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-actions{
+    justify-content:stretch !important;
+  }
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-paid-btn,
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-manage-btn{
+    flex:1 !important;
+  }
+  #vDash .dashboard-cycle-summary-card .dashboard-cycle-task.dashboard-carryover-notice{
+    grid-template-columns:auto 1fr !important;
+  }
+  #vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-action{
+    grid-column:2 !important;
+    justify-self:flex-start !important;
+    margin-top:2px !important;
+  }
+}
+
+/* ========================================================
+   CAPVO v1.1.4.8 — Cycle center pending pill polish
+   Makes carryover feel like a compact cycle notification instead of a nested card.
+   ======================================================== */
+#vDash .dashboard-cycle-summary-card.has-cycle-task{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  grid-template-areas:
+    "main actions"
+    "task task" !important;
+  align-items:center !important;
+  gap:8px 10px !important;
+  padding:11px 12px !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-main{
+  grid-area:main !important;
+  width:auto !important;
+  min-width:0 !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-actions{
+  grid-area:actions !important;
+  width:auto !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:7px !important;
+  margin:0 !important;
+}
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-paid-btn,
+#vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-manage-btn{
+  min-height:31px !important;
+  padding:0 11px !important;
+  font-size:10.5px !important;
+  white-space:nowrap !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task.dashboard-carryover-notice{
+  grid-area:task !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:8px 9px !important;
+  min-height:38px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(99,102,241,.12) !important;
+  background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(255,255,255,.78)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.74) !important;
+  grid-template-columns:auto minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-icon{
+  width:26px !important;
+  height:26px !important;
+  border-radius:50% !important;
+  font-size:13px !important;
+  background:rgba(255,255,255,.86) !important;
+  box-shadow:0 6px 14px rgba(99,102,241,.10), inset 0 0 0 1px rgba(99,102,241,.08) !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy{
+  min-width:0 !important;
+  display:block !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy span,
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy small{
+  display:none !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-copy strong{
+  display:block !important;
+  color:#1e1b4b !important;
+  font-size:12.2px !important;
+  line-height:1.1 !important;
+  font-weight:950 !important;
+  letter-spacing:-.01em !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+#vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-action{
+  min-height:26px !important;
+  padding:0 10px !important;
+  border-radius:999px !important;
+  background:#ffffff !important;
+  color:#4f46e5 !important;
+  box-shadow:0 7px 15px rgba(99,102,241,.10) !important;
+  font-size:10.2px !important;
+  font-weight:950 !important;
+}
+@media(max-width:390px){
+  #vDash .dashboard-cycle-summary-card.has-cycle-task{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "main"
+      "task"
+      "actions" !important;
+    gap:7px !important;
+  }
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-summary-actions{
+    width:100% !important;
+    justify-content:space-between !important;
+  }
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-paid-btn,
+  #vDash .dashboard-cycle-summary-card.has-cycle-task .dashboard-cycle-manage-btn{
+    flex:1 !important;
+  }
+  #vDash .dashboard-cycle-summary-card .dashboard-cycle-task.dashboard-carryover-notice{
+    grid-template-columns:auto minmax(0,1fr) auto !important;
+  }
+  #vDash .dashboard-cycle-summary-card .dashboard-cycle-task .dashboard-carryover-notice-action{
+    grid-column:auto !important;
+    justify-self:auto !important;
+    margin-top:0 !important;
+  }
+}

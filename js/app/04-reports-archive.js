@@ -344,17 +344,226 @@ window.openReportsAdvancedSheet = openReportsAdvancedSheet;
 window.closeReportsSheet = closeReportsSheet;
 
 
-let archiveExpandedMonth = '';
+let archiveExpandedItem = '';
+let archiveViewMode = localStorage.getItem('capvoArchiveMode') || 'cycles';
+if(!['cycles','months'].includes(archiveViewMode))archiveViewMode='cycles';
 
 function archiveMonthName(k){
   const [y,mo]=String(k).split('-');
   return (MG[(parseInt(mo)||1)-1]||mo)+' '+y;
 }
 
+function archiveMonthLabelShort(k){
+  const [y,mo]=String(k).split('-');
+  return `${String(mo||'').padStart(2,'0')}/${String(y||'').slice(-2)}`;
+}
+
 function archivePrevKey(k){
   const [y,mo]=String(k).split('-').map(Number);
-  const d=new Date(y,(mo||1)-2,1);
+  const d=new Date(y,(mo||1)-2,1,12);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+
+function archiveAsDate(value){
+  if(value instanceof Date && !Number.isNaN(value.getTime())){
+    return new Date(value.getFullYear(),value.getMonth(),value.getDate(),12);
+  }
+  return capvoParseDateKey(value);
+}
+
+function archiveAddDays(date,days){
+  const d=archiveAsDate(date);
+  if(!d)return null;
+  d.setDate(d.getDate()+Number(days||0));
+  return d;
+}
+
+function archiveRangesOverlap(aStart,aEnd,bStart,bEnd){
+  return aStart<=bEnd && bStart<=aEnd;
+}
+
+function archiveRowsInRange(start,end){
+  const s=archiveAsDate(start);
+  const e=archiveAsDate(end);
+  if(!s||!e)return [];
+  return getAllDailyExpenses().filter(row=>{
+    const d=archiveAsDate(row.date);
+    return d && d>=s && d<=e;
+  });
+}
+
+function archiveCycleSourceLabel(cycle){
+  if(cycle?.source==='paid_today')return 'Πρόωρη πληρωμή';
+  if(cycle?.source==='manual')return 'Χειροκίνητος κύκλος';
+  return 'Κανονικός κανόνας';
+}
+
+function archiveCycleStatusLabel(cycle){
+  if(cycle?.isCurrent)return 'Τρέχων κύκλος';
+  if(cycle?.source==='paid_today')return 'Πρόωρη πληρωμή';
+  return 'Ιστορικός κύκλος';
+}
+
+function archiveCycleIncome(cycle){
+  if(typeof getCycleIncomeTotal==='function')return getCycleIncomeTotal(cycle);
+  const cycleId=String(cycle?.id||'');
+  const storedIncomes=cycleId && !String(cycleId).startsWith('standard_') && !String(cycleId).startsWith('normal_')
+    ? getCycleIncomesForCycle(cycleId)
+    : [];
+  const storedTotal=storedIncomes.reduce((s,i)=>s+(Number(i.amount)||0),0);
+  if(storedTotal>0)return storedTotal;
+  if(Number(cycle?.primaryIncomeAmount)>0)return Number(cycle.primaryIncomeAmount)||0;
+  return Number(D.income)||0;
+}
+
+function archiveBuildStoredCycles(){
+  return (D.budgetCycles||[]).map(c=>{
+    const start=archiveAsDate(c.startDate||c.start_date);
+    const end=archiveAsDate(c.endDate||c.end_date);
+    if(!start||!end)return null;
+    return {
+      id:c.id || `stored_${capvoDateKey(start)}_${capvoDateKey(end)}`,
+      key:`cycle_${c.id || `${capvoDateKey(start)}_${capvoDateKey(end)}`}`,
+      start,
+      end,
+      startKey:capvoDateKey(start),
+      endKey:capvoDateKey(end),
+      label:formatBudgetCycleLabel(start,end,{withYear:start.getFullYear()!==end.getFullYear()}),
+      source:c.source||'normal',
+      primaryIncomeAmount:Number(c.primaryIncomeAmount)||0,
+      stored:true
+    };
+  }).filter(Boolean);
+}
+
+function archiveBuildNormalCycles(minDate,maxDate){
+  const min=archiveAsDate(minDate);
+  const max=archiveAsDate(maxDate);
+  if(!min||!max)return [];
+
+  const first=getStandardBudgetCycle(min).start;
+  const cycles=[];
+  let cursor=archiveAddDays(first,-35)||first;
+
+  let guard=0;
+  while(cursor<=max && guard<80){
+    const c=getStandardBudgetCycle(cursor);
+    const start=archiveAsDate(c.start);
+    const end=archiveAsDate(c.end);
+    const nextStart=archiveAsDate(c.nextStart)||archiveAddDays(end,1);
+    if(end>=min && start<=max){
+      cycles.push({
+        id:`normal_${capvoDateKey(start)}_${capvoDateKey(end)}`,
+        key:`normal_${capvoDateKey(start)}_${capvoDateKey(end)}`,
+        start,
+        end,
+        startKey:capvoDateKey(start),
+        endKey:capvoDateKey(end),
+        label:formatBudgetCycleLabel(start,end,{withYear:start.getFullYear()!==end.getFullYear()}),
+        source:'normal',
+        stored:false
+      });
+    }
+    cursor=nextStart||archiveAddDays(end,1);
+    guard++;
+  }
+  return cycles;
+}
+
+function archiveSubtractStoredRanges(normalCycle,storedCycles){
+  let segments=[{start:normalCycle.start,end:normalCycle.end}];
+  storedCycles
+    .filter(sc=>archiveRangesOverlap(normalCycle.start,normalCycle.end,sc.start,sc.end))
+    .sort((a,b)=>a.start-b.start)
+    .forEach(sc=>{
+      const next=[];
+      segments.forEach(seg=>{
+        if(!archiveRangesOverlap(seg.start,seg.end,sc.start,sc.end)){
+          next.push(seg);
+          return;
+        }
+        const beforeEnd=archiveAddDays(sc.start,-1);
+        const afterStart=archiveAddDays(sc.end,1);
+        if(beforeEnd && seg.start<=beforeEnd){
+          next.push({start:seg.start,end:new Date(Math.min(seg.end.getTime(),beforeEnd.getTime()))});
+        }
+        if(afterStart && afterStart<=seg.end){
+          next.push({start:new Date(Math.max(seg.start.getTime(),afterStart.getTime())),end:seg.end});
+        }
+      });
+      segments=next;
+    });
+
+  return segments.map(seg=>({
+    ...normalCycle,
+    id:`normal_${capvoDateKey(seg.start)}_${capvoDateKey(seg.end)}`,
+    key:`normal_${capvoDateKey(seg.start)}_${capvoDateKey(seg.end)}`,
+    start:seg.start,
+    end:seg.end,
+    startKey:capvoDateKey(seg.start),
+    endKey:capvoDateKey(seg.end),
+    label:formatBudgetCycleLabel(seg.start,seg.end,{withYear:seg.start.getFullYear()!==seg.end.getFullYear()}),
+    isTrimmed:true
+  }));
+}
+
+function archiveBuildCycles(){
+  const today=new Date();
+  const current=getCurrentBudgetCycle(today);
+  const stored=archiveBuildStoredCycles();
+  const dailyDates=getAllDailyExpenses().map(e=>archiveAsDate(e.date)).filter(Boolean);
+  const datePool=[current.start,current.end,...stored.flatMap(c=>[c.start,c.end]),...dailyDates].filter(Boolean);
+
+  if(datePool.length===0)return [];
+
+  const minDate=new Date(Math.min(...datePool.map(d=>d.getTime())));
+  const maxDate=new Date(Math.max(...datePool.map(d=>d.getTime())));
+
+  const normal=archiveBuildNormalCycles(minDate,maxDate)
+    .flatMap(c=>archiveSubtractStoredRanges(c,stored));
+
+  const all=[...normal,...stored].map(c=>{
+    const isCurrent=today>=c.start && today<=c.end;
+    const rows=archiveRowsInRange(c.start,c.end);
+    return {...c,isCurrent,rowsCount:rows.length};
+  });
+
+  const dedup=new Map();
+  all.forEach(c=>{
+    const key=`${c.startKey}_${c.endKey}_${c.source}_${c.id}`;
+    if(!dedup.has(key))dedup.set(key,c);
+  });
+
+  return [...dedup.values()]
+    .filter(c=>c.rowsCount>0 || c.isCurrent || c.stored)
+    .sort((a,b)=>b.start-a.start);
+}
+
+function archiveCycleSnapshot(cycle){
+  const dailyRows=archiveRowsInRange(cycle.start,cycle.end);
+  const daily=dailyRows.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const fixed=fixedTotal();
+  const cards=ccPayTotal();
+  const total=fixed+cards+daily;
+  const income=archiveCycleIncome(cycle);
+  const balance=income-total;
+  return {
+    key:cycle.key,
+    id:cycle.id,
+    type:'cycle',
+    label:cycle.label,
+    shortLabel:`${cycle.start.getDate()}/${cycle.start.getMonth()+1}`,
+    start:cycle.start,
+    end:cycle.end,
+    startKey:cycle.startKey,
+    endKey:cycle.endKey,
+    source:cycle.source,
+    sourceLabel:archiveCycleSourceLabel(cycle),
+    statusLabel:archiveCycleStatusLabel(cycle),
+    isCurrent:cycle.isCurrent,
+    isStored:cycle.stored,
+    dailyRows,daily,fixed,cards,total,income,balance
+  };
 }
 
 function archiveMonthSnapshot(k){
@@ -366,11 +575,19 @@ function archiveMonthSnapshot(k){
   const total=fixed+cards+daily;
   const income=Number(D.income)||0;
   const balance=income-total;
-  return {key:k,dailyRows,daily,fixed,cards,total,income,balance};
+  return {
+    key:k,
+    type:'month',
+    label:archiveMonthName(k),
+    shortLabel:archiveMonthLabelShort(k),
+    statusLabel:k===curM?'Τρέχων μήνας':'Ιστορικός μήνας',
+    isCurrent:k===curM,
+    dailyRows,daily,fixed,cards,total,income,balance
+  };
 }
 
-function archiveBestWorst(keys){
-  const rows=keys.map(k=>archiveMonthSnapshot(k));
+function archiveBestWorst(snaps){
+  const rows=snaps||[];
   const best=[...rows].sort((a,b)=>b.balance-a.balance)[0];
   const worst=[...rows].sort((a,b)=>a.balance-b.balance)[0];
   const avg=rows.length?rows.reduce((s,x)=>s+x.balance,0)/rows.length:0;
@@ -402,14 +619,21 @@ function archiveDiffLine(label,current,prev,invert=false){
     </div>`;
 }
 
-function archiveExpandedHtml(snap){
+function archiveExpandedHtml(snap,prev=null){
   const cats=archiveTopCategories(snap.dailyRows,6);
-  const prevKey=archivePrevKey(snap.key);
-  const prev=D.months[prevKey]?archiveMonthSnapshot(prevKey):null;
+  const kind=snap.type==='cycle'?'κύκλου':'μήνα';
+  const comparisonLabel=prev?.label||'';
 
   return `
     <div class="archive-expanded">
-      <div class="archive-expanded-title">Ανάλυση μήνα</div>
+      <div class="archive-expanded-title">Ανάλυση ${kind}</div>
+
+      ${snap.type==='cycle'?`
+        <div class="archive-cycle-meta-card">
+          <span>${esc(snap.sourceLabel||'Κανονικός κανόνας')}</span>
+          <strong>${esc(snap.label)}</strong>
+          ${snap.source==='paid_today'?'<small>Ξεκίνησε από την επιλογή “Πληρώθηκα σήμερα”.</small>':''}
+        </div>`:''}
 
       <div class="archive-breakdown-grid">
         ${cats.length?cats.map(c=>`
@@ -428,68 +652,83 @@ function archiveExpandedHtml(snap){
 
       ${prev?`
         <div class="archive-compare-box">
-          <div class="archive-expanded-title">Σύγκριση με ${archiveMonthName(prevKey)}</div>
+          <div class="archive-expanded-title">Σύγκριση με ${esc(comparisonLabel)}</div>
           <div class="archive-compare-grid">
             ${archiveDiffLine('Έξοδα',snap.total,prev.total,true)}
             ${archiveDiffLine('Υπόλοιπο',snap.balance,prev.balance,false)}
             ${archiveDiffLine('Ημερήσια',snap.daily,prev.daily,true)}
           </div>
         </div>
-      `:'<div class="archive-empty-mini">Δεν υπάρχει προηγούμενος μήνας για σύγκριση.</div>'}
+      `:`<div class="archive-empty-mini">Δεν υπάρχει προηγούμενος ${kind} για σύγκριση.</div>`}
     </div>`;
 }
 
-function toggleArchiveMonth(k){
-  archiveExpandedMonth = archiveExpandedMonth===k ? '' : k;
+function toggleArchiveItem(k){
+  archiveExpandedItem = archiveExpandedItem===k ? '' : k;
   rArch();
 
-  if(archiveExpandedMonth){
+  if(archiveExpandedItem){
     requestAnimationFrame(()=>{
-      const el=document.querySelector(`[data-archive-month="${archiveExpandedMonth}"]`);
-      if(el){
-        el.scrollIntoView({behavior:'smooth',block:'nearest'});
-      }
+      const el=document.querySelector(`[data-archive-item="${CSS.escape(archiveExpandedItem)}"]`);
+      if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
     });
   }
 }
 
-function rArch(){
-  const keys=Object.keys(D.months||{}).sort().reverse();
-  const list=$('archList');
-  if(!list)return;
+function setArchiveMode(mode){
+  archiveViewMode=['cycles','months'].includes(mode)?mode:'cycles';
+  localStorage.setItem('capvoArchiveMode',archiveViewMode);
+  archiveExpandedItem='';
+  rArch();
+}
 
-  if(keys.length===0){
-    list.innerHTML=`
-      <section class="archive-empty-card">
-        <div class="archive-empty-icon">🗓️</div>
-        <h3>Δεν υπάρχει ιστορικό ακόμα</h3>
-        <p>Μόλις καταχωρήσεις κινήσεις, οι μήνες θα εμφανιστούν εδώ.</p>
-      </section>`;
-    return;
-  }
+function archiveModeSwitchHtml(){
+  return `
+    <div class="archive-mode-switch" role="tablist" aria-label="Προβολή αρχείου">
+      <button type="button" class="${archiveViewMode==='cycles'?'active':''}" onclick="setArchiveMode('cycles')">Οικονομικοί κύκλοι</button>
+      <button type="button" class="${archiveViewMode==='months'?'active':''}" onclick="setArchiveMode('months')">Ημερολογιακοί μήνες</button>
+    </div>`;
+}
 
-  const meta=archiveBestWorst(keys);
-  const recent=keys.slice(0,6).reverse().map(k=>archiveMonthSnapshot(k));
+function archiveEmptyHtml(isCycleMode){
+  return `
+    <section class="archive-empty-card">
+      <div class="archive-empty-icon">🗓️</div>
+      <h3>Δεν υπάρχει ιστορικό ακόμα</h3>
+      <p>${isCycleMode?'Μόλις καταχωρήσεις κινήσεις, οι οικονομικοί κύκλοι θα εμφανιστούν εδώ.':'Μόλις καταχωρήσεις κινήσεις, οι μήνες θα εμφανιστούν εδώ.'}</p>
+    </section>`;
+}
+
+function renderArchiveTimeline(snaps,{mode}){
+  const isCycleMode=mode==='cycles';
+  const meta=archiveBestWorst(snaps);
+  const recent=snaps.slice(0,6).reverse();
   const maxAbs=Math.max(1,...recent.map(x=>Math.abs(x.balance)));
+  const countLabel=isCycleMode?'Κύκλοι ιστορικού':'Μήνες ιστορικού';
+  const bestLabel=isCycleMode?'Καλύτερος κύκλος':'Καλύτερος μήνας';
+  const worstLabel=isCycleMode?'Χειρότερος κύκλος':'Χειρότερος μήνας';
+  const timelineTitle=isCycleMode?`Τελευταίοι ${recent.length} κύκλοι`:`Τελευταίοι ${recent.length} μήνες`;
+  const listTitle=isCycleMode?'Αρχείο οικονομικών κύκλων':'Μηνιαίο αρχείο';
+  const listKicker=isCycleMode?'BUDGET CYCLES':'HISTORY';
 
   const summaryHtml=`
     <section class="archive-summary-grid">
       <article class="archive-summary-card">
         <div class="archive-summary-icon">🗓️</div>
-        <span>Μήνες ιστορικού</span>
-        <strong>${keys.length}</strong>
+        <span>${countLabel}</span>
+        <strong>${snaps.length}</strong>
       </article>
       <article class="archive-summary-card is-green">
         <div class="archive-summary-icon">🏆</div>
-        <span>Καλύτερος μήνας</span>
-        <strong>${archiveMonthName(meta.best.key)}</strong>
-        <small>${fmt(meta.best.balance)}</small>
+        <span>${bestLabel}</span>
+        <strong>${esc(meta.best?.label||'—')}</strong>
+        <small>${fmt(meta.best?.balance||0)}</small>
       </article>
       <article class="archive-summary-card is-red">
         <div class="archive-summary-icon">📉</div>
-        <span>Χειρότερος μήνας</span>
-        <strong>${archiveMonthName(meta.worst.key)}</strong>
-        <small>${fmt(meta.worst.balance)}</small>
+        <span>${worstLabel}</span>
+        <strong>${esc(meta.worst?.label||'—')}</strong>
+        <small>${fmt(meta.worst?.balance||0)}</small>
       </article>
       <article class="archive-summary-card is-blue">
         <div class="archive-summary-icon">📊</div>
@@ -502,29 +741,29 @@ function rArch(){
       <div class="archive-section-head">
         <div>
           <span>Timeline</span>
-          <h3>Τελευταίοι ${recent.length} μήνες</h3>
+          <h3>${timelineTitle}</h3>
         </div>
       </div>
       <div class="archive-mini-bars">
         ${recent.map(x=>{
           const h=Math.max(12,Math.round(Math.abs(x.balance)/maxAbs*58));
           const positive=x.balance>=0;
-          const label=archiveMonthName(x.key).split(' ')[0].slice(0,3);
-          return `<div class="archive-mini-bar ${positive?'good':'bad'}"><i style="height:${h}px"></i><span>${label}</span></div>`;
+          return `<div class="archive-mini-bar ${positive?'good':'bad'}"><i style="height:${h}px"></i><span>${esc(x.shortLabel||'')}</span></div>`;
         }).join('')}
       </div>
     </section>`;
 
-  const cards=keys.map(k=>{
-    const snap=archiveMonthSnapshot(k);
-    const active=k===curM;
-    const open=archiveExpandedMonth===k;
+  const cards=snaps.map((snap,idx)=>{
+    const prev=snaps[idx+1]||null;
+    const open=archiveExpandedItem===snap.key;
+    const sourceBadge=snap.type==='cycle'?`<em class="archive-source-badge ${snap.source==='paid_today'?'is-paid':''}">${esc(snap.sourceLabel)}</em>`:'';
     return `
-      <article class="archive-month-card ${active?'is-current':''} ${open?'is-open':''}" data-archive-month="${k}">
-        <button type="button" class="archive-month-main" onclick="toggleArchiveMonth('${k}')">
+      <article class="archive-month-card ${snap.isCurrent?'is-current':''} ${open?'is-open':''}" data-archive-item="${esc(snap.key)}">
+        <button type="button" class="archive-month-main" onclick="toggleArchiveItem('${esc(snap.key)}')">
           <div class="archive-month-left">
-            <strong>${archiveMonthName(k)}</strong>
-            <span>${active?'Τρέχων μήνας':'Ιστορικός μήνας'}</span>
+            <strong>${esc(snap.label)}</strong>
+            <span>${esc(snap.statusLabel)}</span>
+            ${sourceBadge}
           </div>
           <div class="archive-month-right">
             <strong class="${snap.balance>=0?'is-positive':'is-negative'}">${fmt(snap.balance)}</strong>
@@ -539,21 +778,56 @@ function rArch(){
           <div><span>Σύνολο</span><strong>${fmt(snap.total)}</strong></div>
         </div>
 
-        ${open?archiveExpandedHtml(snap):''}
+        ${open?archiveExpandedHtml(snap,prev):''}
       </article>`;
   }).join('');
 
-  list.innerHTML=`
+  return `
     <div class="archive-page-content">
+      ${archiveModeSwitchHtml()}
+      ${isCycleMode?`
+        <section class="archive-cycle-info-card">
+          <strong>Το αρχείο ακολουθεί τον οικονομικό κύκλο σου</strong>
+          <span>Τα έξοδα ομαδοποιούνται με βάση την ημέρα πληρωμής και τις πρόωρες πληρωμές, όχι μόνο με βάση τον ημερολογιακό μήνα.</span>
+        </section>`:''}
       ${summaryHtml}
       <section class="archive-timeline-list">
         <div class="archive-section-head">
           <div>
-            <span>History</span>
-            <h3>Μηνιαίο αρχείο</h3>
+            <span>${listKicker}</span>
+            <h3>${listTitle}</h3>
           </div>
         </div>
         ${cards}
       </section>
     </div>`;
 }
+
+function rArch(){
+  const list=$('archList');
+  if(!list)return;
+
+  if(archiveViewMode==='months'){
+    const keys=Object.keys(D.months||{}).sort().reverse();
+    if(keys.length===0){
+      list.innerHTML=`${archiveModeSwitchHtml()}${archiveEmptyHtml(false)}`;
+      return;
+    }
+    const snaps=keys.map(k=>archiveMonthSnapshot(k));
+    list.innerHTML=renderArchiveTimeline(snaps,{mode:'months'});
+    return;
+  }
+
+  const cycles=archiveBuildCycles();
+  if(cycles.length===0){
+    list.innerHTML=`${archiveModeSwitchHtml()}${archiveEmptyHtml(true)}`;
+    return;
+  }
+  const snaps=cycles.map(c=>archiveCycleSnapshot(c));
+  list.innerHTML=renderArchiveTimeline(snaps,{mode:'cycles'});
+}
+
+// Archive: expose handlers for inline HTML events.
+window.toggleArchiveItem = toggleArchiveItem;
+window.toggleArchiveMonth = toggleArchiveItem;
+window.setArchiveMode = setArchiveMode;
