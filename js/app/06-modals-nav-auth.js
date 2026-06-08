@@ -1026,7 +1026,7 @@ function go(v,b){
   const target=$(v);
   if(target)target.classList.add('active');
 
-  const mobileMoreViews=new Set(['vCards','vAdvisor','vStats','vArchive','vSettings']);
+  const mobileMoreViews=new Set(['vCards','vSavings','vAdvisor','vStats','vArchive','vSettings']);
   const activeNavView=mobileMoreViews.has(v) ? 'vMore' : v;
 
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));

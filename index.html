@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.4.8">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.6.2">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.4.8">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.4.8">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.4.8">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.4.8">
-  <link rel="manifest" href="manifest.webmanifest?v=1.1.4.8">
-  <!-- <link rel="stylesheet" href="style.css?v=1.1.4.8"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.6.2">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.6.2">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.6.2">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.6.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.1.6.2">
+  <!-- <link rel="stylesheet" href="style.css?v=1.1.6.2"> -->
 </head>
 
 <body class="auth-pending">
@@ -583,6 +583,17 @@
       </div>
     </div>
 
+    <section class="income-savings-shortcut bento-card" onclick="go('vSavings',document.querySelector('[data-v=vMore]'))">
+      <div>
+        <span class="income-savings-shortcut-icon">🏦</span>
+      </div>
+      <div>
+        <strong>Κουμπαράδες & αποταμίευση</strong>
+        <small>Οι στόχοι αποταμίευσης έχουν πλέον δική τους σελίδα και δεν μπερδεύονται με το διαθέσιμο budget.</small>
+      </div>
+      <em>Άνοιγμα ›</em>
+    </section>
+
     <div class="bento-card list-widget">
       <div class="section-header">
         <div class="section-title-wrap">
@@ -953,6 +964,24 @@
   </main>
 
 
+
+  <!-- SAVINGS / GOALS -->
+  <main class="view" id="vSavings">
+    <section class="page-grid savings-page">
+      <div class="page-hero bento-card capvo-branded-hero capvo-hero-savings">
+        <div>
+          <div class="eyebrow">SAVINGS</div>
+          <h2>Κουμπαράδες</h2>
+          <p>Οργάνωσε όσα κρατάς στην άκρη για στόχους, αγορές, διακοπές ή καθαρή αποταμίευση.</p>
+        </div>
+        <div class="savings-hero-actions"><button class="section-add primary-add" onclick="openGeneralSavingsFlow()">+ Αποταμίευση</button><button class="section-add primary-add" onclick="openSavingsGoalSheet('', 'target')">+ Στόχος</button></div>
+      </div>
+
+      <section class="savings-summary-grid" id="savingsSummaryGrid"></section>
+      <section class="savings-goal-list" id="savingsGoalList"></section>
+    </section>
+  </main>
+
   <!-- MORE / MOBILE HUB -->
   <main class="view" id="vMore">
     <section class="page-grid more-page">
@@ -974,6 +1003,12 @@
         <button class="more-menu-item" onclick="go('vCards',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">💳</span>
           <span><strong>Κάρτες & Πηγές</strong><small>Πιστωτικές, πηγές πληρωμής και δόσεις</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="go('vSavings',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">🏦</span>
+          <span><strong>Κουμπαράδες</strong><small>Στόχοι αποταμίευσης, υπόλοιπα κύκλων και πλάνο αγορών</small></span>
           <em>›</em>
         </button>
 
@@ -1480,6 +1515,7 @@
               <option value="Μερίσματα">Μερίσματα</option>
               <option value="Freelance">Freelance</option>
               <option value="Δώρο">Δώρο</option>
+              <option value="Αποταμίευση">Αποταμίευση</option>
               <option value="Άλλο">Άλλο</option>
             </select>
           </div>
@@ -1524,8 +1560,8 @@
           <input type="checkbox" id="fISSavings">
           <span class="income-option-icon">🔒</span>
           <span class="income-option-copy">
-            <strong>Locked / αποταμίευση</strong>
-            <small>Δεν υπολογίζεται ως ελεύθερο ποσό για έξοδα.</small>
+            <strong>Αποταμίευση / locked</strong>
+            <small>Κρατιέται εκτός διαθέσιμου budget και δεν εμφανίζεται ως πηγή πληρωμής.</small>
           </span>
         </label>
 
@@ -1589,25 +1625,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.1.4.8"></script>
+<script src="js/app-version.js?v=1.1.6.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.1.4.8"></script>
+<script src="js/config.js?v=1.1.6.2"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.1.4.8"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.1.4.8"></script>
-<script src="js/app/02-supabase-data.js?v=1.1.4.8"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.4.8"></script>
-<script src="js/app/04-reports-archive.js?v=1.1.4.8"></script>
-<script src="js/app/05-income-pickers.js?v=1.1.4.8"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.1.4.8"></script>
-<script src="js/app/07-add-center.js?v=1.1.4.8"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.1.4.8"></script>
+<script src="js/app/00-core-state.js?v=1.1.6.2"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.1.6.2"></script>
+<script src="js/app/02-supabase-data.js?v=1.1.6.2"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.6.2"></script>
+<script src="js/app/04-reports-archive.js?v=1.1.6.2"></script>
+<script src="js/app/05-income-pickers.js?v=1.1.6.2"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.1.6.2"></script>
+<script src="js/app/07-add-center.js?v=1.1.6.2"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.1.6.2"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.1.4.8"></script>
-<script src="js/sync.js?v=1.1.4.8"></script>
-<script src="js/advisor.js?v=1.1.4.8"></script>
+<script src="js/cards.js?v=1.1.6.2"></script>
+<script src="js/sync.js?v=1.1.6.2"></script>
+<script src="js/advisor.js?v=1.1.6.2"></script>
 
 
 

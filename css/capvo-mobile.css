@@ -9782,3 +9782,19 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     margin-top:0 !important;
   }
 }
+
+/* CAPVO v1.1.5.2 - Savings page mobile scroll parity */
+@media (max-width: 768px){
+  #vSavings,
+  #vSavings.active{
+    padding-bottom:0 !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+  #vSavings .page-grid{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+  #vSavings .page-grid > *:last-child{
+    margin-bottom:0 !important;
+  }
+}

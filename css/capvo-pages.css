@@ -9623,3 +9623,749 @@ body.capvo-suppress-autofocus select{
     padding:13px 14px;
   }
 }
+
+/* ============================================================
+   CAPVO v1.1.5 — Income grouping for Budget / Restricted / Savings
+   ============================================================ */
+#vIncome .income-source-group{
+  display:grid !important;
+  gap:10px !important;
+}
+
+#vIncome .income-source-group-head{
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  padding:0 4px 2px !important;
+}
+
+#vIncome .income-source-group-head strong{
+  display:block !important;
+  color:#182039 !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+  letter-spacing:-.02em !important;
+}
+
+#vIncome .income-source-group-head span{
+  display:block !important;
+  margin-top:2px !important;
+  color:#8490aa !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
+}
+
+#vIncome .income-source-group-head em{
+  min-width:28px !important;
+  height:24px !important;
+  padding:0 9px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(101,71,246,.1) !important;
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  font-style:normal !important;
+}
+
+#vIncome .income-source-group-list{
+  display:grid !important;
+  gap:10px !important;
+}
+
+#vIncome .income-source-item.is-savings-source .income-source-icon{
+  background:linear-gradient(135deg,#dcfce7,#ecfdf5) !important;
+}
+
+#vIncome .income-source-item.is-restricted-source .income-source-icon{
+  background:linear-gradient(135deg,#fff7ed,#fffbeb) !important;
+}
+
+#vIncome .income-source-group-savings .income-source-group-head em{
+  background:rgba(16,185,129,.12) !important;
+  color:#059669 !important;
+}
+
+#vIncome .income-source-group-restricted .income-source-group-head em{
+  background:rgba(245,158,11,.14) !important;
+  color:#b45309 !important;
+}
+
+/* CAPVO v1.1.5.1 - Savings Center / Koumparades */
+.capvo-hero-savings{
+  background:linear-gradient(135deg,rgba(16,185,129,.16),rgba(99,102,241,.14)),rgba(255,255,255,.86);
+}
+.savings-page{gap:16px;}
+.savings-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.savings-summary-card{padding:16px;display:flex;flex-direction:column;gap:6px;}
+.savings-summary-card span{font-size:12px;color:#64748b;font-weight:800;letter-spacing:.02em;}
+.savings-summary-card strong{font-size:24px;color:#0f172a;line-height:1;}
+.savings-summary-card small{font-size:12px;color:#94a3b8;font-weight:700;}
+.savings-summary-card.primary{background:linear-gradient(135deg,#ecfdf5,#eef2ff);border-color:rgba(16,185,129,.22);}
+.savings-goal-list{display:grid;gap:12px;}
+.savings-empty{text-align:center;padding:28px 20px;display:flex;align-items:center;flex-direction:column;gap:10px;}
+.savings-empty-icon{width:54px;height:54px;border-radius:20px;display:grid;place-items:center;background:#ecfdf5;font-size:28px;}
+.savings-empty h3{margin:0;color:#0f172a;}
+.savings-empty p{margin:0;max-width:440px;color:#64748b;line-height:1.45;}
+.savings-goal-card{padding:16px;display:grid;gap:13px;}
+.savings-goal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.savings-goal-title{display:flex;align-items:center;gap:12px;min-width:0;}
+.savings-goal-icon{width:42px;height:42px;border-radius:16px;display:grid;place-items:center;background:#f8fafc;font-size:24px;flex:0 0 auto;}
+.savings-goal-title strong{display:block;color:#0f172a;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;}
+.savings-goal-title small{display:block;color:#94a3b8;font-weight:700;font-size:12px;margin-top:2px;}
+.savings-goal-menu{border:0;background:#f1f5f9;color:#475569;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:900;}
+.savings-goal-amounts{display:flex;align-items:baseline;gap:6px;}
+.savings-goal-amounts strong{font-size:24px;color:#111827;line-height:1;}
+.savings-goal-amounts span{font-size:13px;color:#64748b;font-weight:800;}
+.savings-progress-track{height:9px;border-radius:999px;background:#eef2f7;overflow:hidden;}
+.savings-progress-track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#10b981,#6366f1);}
+.savings-goal-meta{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#64748b;font-weight:800;}
+.savings-goal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.savings-goal-actions button,.savings-primary-btn,.savings-secondary-btn{border:0;border-radius:16px;padding:12px 14px;font-weight:900;cursor:pointer;}
+.savings-goal-actions button:first-child,.savings-primary-btn{background:#111827;color:#fff;box-shadow:0 12px 26px rgba(17,24,39,.16);}
+.savings-goal-actions button:last-child,.savings-secondary-btn{background:#f8fafc;color:#475569;border:1px solid #e2e8f0;}
+.savings-sheet-overlay{position:fixed;inset:0;background:rgba(15,23,42,.38);z-index:90;display:none;align-items:flex-end;justify-content:center;padding:14px;}
+.savings-sheet-overlay.active{display:flex;}
+.savings-sheet{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:#fff;border-radius:28px 28px 22px 22px;padding:18px;box-shadow:0 -20px 60px rgba(15,23,42,.22);position:relative;display:grid;gap:14px;}
+.savings-sheet-hero{display:flex;align-items:center;gap:12px;padding-right:36px;}
+.savings-sheet-hero>span{width:48px;height:48px;border-radius:18px;background:#ecfdf5;display:grid;place-items:center;font-size:26px;}
+.savings-sheet-hero small{display:block;color:#10b981;font-weight:900;text-transform:uppercase;font-size:11px;letter-spacing:.06em;}
+.savings-sheet-hero h2{margin:2px 0 2px;color:#0f172a;font-size:20px;}
+.savings-sheet-hero p{margin:0;color:#64748b;font-size:13px;line-height:1.35;}
+.savings-form-grid{display:grid;grid-template-columns:1fr 84px;gap:10px;}
+.savings-form-grid label{display:grid;gap:6px;color:#475569;font-size:12px;font-weight:900;}
+.savings-form-grid label.full{grid-column:1/-1;}
+.savings-form-grid input{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#f8fafc;font-weight:800;color:#0f172a;}
+.savings-carryover-goals{display:grid;gap:10px;}
+.savings-carryover-goals button{border:1px solid #e2e8f0;background:#fff;border-radius:18px;padding:12px;display:grid;grid-template-columns:38px 1fr;gap:4px 10px;text-align:left;align-items:center;}
+.savings-carryover-goals button span{grid-row:1/3;width:38px;height:38px;border-radius:14px;background:#f8fafc;display:grid;place-items:center;font-size:22px;}
+.savings-carryover-goals button strong{color:#0f172a;}
+.savings-carryover-goals button small{color:#94a3b8;font-weight:800;}
+.savings-mini-empty{padding:14px;border-radius:18px;background:#f8fafc;color:#64748b;font-weight:800;text-align:center;}
+.income-savings-shortcut{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:15px;cursor:pointer;border:1px solid rgba(16,185,129,.16);background:linear-gradient(135deg,rgba(236,253,245,.86),rgba(248,250,252,.94));}
+.income-savings-shortcut-icon{width:42px;height:42px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:24px;box-shadow:0 8px 18px rgba(15,23,42,.06);}
+.income-savings-shortcut strong{display:block;color:#0f172a;}
+.income-savings-shortcut small{display:block;color:#64748b;font-size:12px;font-weight:700;line-height:1.35;margin-top:2px;}
+.income-savings-shortcut em{font-style:normal;color:#10b981;font-weight:950;font-size:12px;}
+
+@media (max-width: 720px){
+  .savings-summary-grid{grid-template-columns:1fr;}
+  .savings-goal-title strong{max-width:180px;}
+  .savings-goal-actions{grid-template-columns:1fr;}
+  .savings-form-grid{grid-template-columns:1fr 72px;}
+  .income-savings-shortcut{grid-template-columns:auto 1fr;}
+  .income-savings-shortcut em{grid-column:2;}
+}
+
+/* CAPVO v1.1.5.2 - Savings UX polish */
+#vSavings{
+  background:
+    radial-gradient(circle at 14% 0%,rgba(101,71,246,.10),transparent 34%),
+    linear-gradient(180deg,#fbfcff 0%,#f3f6ff 44%,#edf2ff 100%);
+  overflow-x:hidden;
+}
+#vSavings .page-grid{
+  display:grid !important;
+  gap:16px !important;
+  width:100% !important;
+  max-width:1180px !important;
+  margin:0 auto !important;
+  padding:16px 14px calc(124px + env(safe-area-inset-bottom)) !important;
+}
+#vSavings .page-hero{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  border-radius:32px;
+  border:1px solid rgba(147,132,255,.18);
+  box-shadow:var(--archive-shadow);
+}
+#vSavings .page-hero .primary-add{
+  min-width:154px;
+}
+.savings-summary-grid{
+  align-items:stretch;
+}
+.savings-summary-card{
+  min-height:124px;
+  justify-content:center;
+}
+.savings-empty{
+  min-height:220px;
+  justify-content:center;
+}
+.savings-sheet-overlay{
+  z-index:12040;
+  padding:10px;
+}
+.savings-sheet{
+  width:min(100%, 430px);
+  max-width:430px;
+  max-height:min(88vh,760px);
+  padding:14px 14px calc(16px + env(safe-area-inset-bottom));
+  border-radius:28px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.savings-sheet-hero{
+  align-items:flex-start;
+  gap:10px;
+  padding-right:34px;
+}
+.savings-sheet-hero > span{
+  width:44px;
+  height:44px;
+  border-radius:16px;
+  font-size:24px;
+}
+.savings-sheet-hero h2{
+  font-size:17px;
+  line-height:1.15;
+}
+.savings-sheet-hero p{
+  font-size:12px;
+  line-height:1.4;
+}
+.savings-form-stack{
+  display:grid;
+  gap:10px;
+}
+.savings-form-stack label,
+.savings-inline-grid label{
+  display:grid;
+  gap:6px;
+  color:#475569;
+  font-size:12px;
+  font-weight:900;
+}
+.savings-inline-grid{
+  display:grid;
+  grid-template-columns:84px minmax(0,1fr);
+  gap:10px;
+}
+.savings-icon-field input{
+  text-align:center;
+  font-size:20px;
+}
+.savings-form-stack input,
+.savings-form-stack textarea,
+.savings-inline-grid input{
+  width:100%;
+  min-width:0;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:12px;
+  background:#f8fafc;
+  font-weight:800;
+  color:#0f172a;
+}
+.savings-form-stack textarea{
+  resize:vertical;
+  min-height:84px;
+}
+.savings-carryover-goals button{
+  min-width:0;
+}
+.savings-carryover-goals button strong,
+.savings-carryover-goals button small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media (max-width:720px){
+  #vSavings .page-grid{
+    padding:16px 12px calc(124px + env(safe-area-inset-bottom)) !important;
+  }
+  #vSavings .page-hero{
+    padding:20px;
+    min-height:auto;
+  }
+  .savings-summary-card{
+    min-height:104px;
+  }
+  .savings-sheet{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom));
+    border-radius:28px 28px 20px 20px;
+  }
+  .savings-inline-grid{
+    grid-template-columns:1fr;
+  }
+  .savings-goal-top,
+  .savings-goal-meta{
+    grid-template-columns:1fr;
+    display:grid;
+  }
+  .savings-goal-top{
+    gap:10px;
+  }
+  .savings-goal-menu{
+    justify-self:start;
+  }
+}
+
+/* CAPVO v1.1.5.3 - Savings production model */
+.savings-hero-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  width:100%;
+  margin-top:12px;
+}
+.savings-hero-actions .primary-add{
+  width:100%;
+  min-width:0 !important;
+  justify-content:center;
+}
+.savings-production-section{
+  padding:16px;
+  display:grid;
+  gap:14px;
+}
+.savings-section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.savings-section-head small,
+.savings-carryover-block>small{
+  display:block;
+  color:#6d5dfc;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.savings-section-head h3{
+  margin:0;
+  color:#0f172a;
+  font-size:18px;
+  line-height:1.15;
+}
+.savings-section-head p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:13px;
+  line-height:1.35;
+}
+.savings-card-stack{
+  display:grid;
+  gap:12px;
+}
+.savings-goal-card-v2{
+  background:rgba(255,255,255,.86);
+  border:1px solid rgba(226,232,240,.9);
+  box-shadow:0 12px 30px rgba(15,23,42,.06);
+}
+.savings-goal-card-v2.is-completed{
+  border-color:rgba(16,185,129,.28);
+  background:linear-gradient(135deg,rgba(236,253,245,.92),rgba(255,255,255,.94));
+}
+.savings-complete-badge{
+  font-style:normal;
+  color:#047857;
+  background:#d1fae5;
+  border-radius:999px;
+  padding:8px 10px;
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.savings-goal-actions{
+  grid-template-columns:1fr 1fr;
+}
+.savings-goal-actions .savings-complete-action,
+.savings-goal-actions .savings-archive-action{
+  grid-column:1/-1;
+}
+.savings-goal-actions .savings-complete-action{
+  background:linear-gradient(135deg,#10b981,#6366f1) !important;
+  color:#fff !important;
+  box-shadow:0 14px 28px rgba(16,185,129,.18) !important;
+}
+.savings-goal-actions .savings-archive-action{
+  background:#fff7ed !important;
+  color:#c2410c !important;
+  border:1px solid #fed7aa !important;
+}
+.savings-summary-card.warning{
+  border-color:rgba(245,158,11,.22);
+  background:linear-gradient(135deg,#fff7ed,#fff);
+}
+.savings-form-stack input:disabled{
+  opacity:.55;
+  background:#f1f5f9;
+}
+.savings-carryover-block{
+  display:grid;
+  gap:8px;
+}
+.savings-mini-empty{
+  font-size:12px;
+}
+@media (max-width:720px){
+  .savings-section-head.with-action{
+    display:grid;
+  }
+  .savings-section-head.with-action .savings-secondary-btn{
+    justify-self:start;
+  }
+  .savings-hero-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+/* CAPVO v1.1.5.4 - Savings production UX polish */
+#vSavings .page-hero.capvo-hero-savings{
+  min-height:188px;
+  padding:24px 128px 24px 24px;
+  background:
+    radial-gradient(circle at 88% 28%,rgba(122,92,255,.18),transparent 30%),
+    radial-gradient(circle at 0% 100%,rgba(34,201,133,.12),transparent 36%),
+    linear-gradient(135deg,rgba(255,255,255,.95),rgba(246,243,255,.92)) !important;
+}
+#vSavings .page-hero.capvo-hero-savings::after{
+  content:'💰';
+  position:absolute;
+  right:26px;
+  top:50%;
+  transform:translateY(-50%) rotate(4deg);
+  width:92px;
+  height:92px;
+  border-radius:28px;
+  display:grid;
+  place-items:center;
+  font-size:44px;
+  color:#fff;
+  background:linear-gradient(135deg,#7c5cff,#4338ca);
+  box-shadow:0 24px 46px rgba(101,71,246,.28);
+}
+#vSavings .page-hero.capvo-hero-savings .savings-hero-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
+#vSavings .page-hero.capvo-hero-savings .primary-add{
+  width:auto;
+  min-width:132px;
+  padding:11px 16px;
+}
+#vSavings .savings-summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+#vSavings .savings-summary-card{
+  min-height:100px;
+  padding:16px;
+}
+#vSavings .savings-summary-hero-card{
+  background:linear-gradient(135deg,#ecfdf5,#eef2ff) !important;
+}
+#vSavings .savings-production-section{
+  padding:16px;
+  border-radius:26px;
+}
+#vSavings .savings-section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+#vSavings .savings-section-head small{
+  display:block;
+  color:#6547f6;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:11px;
+  margin-bottom:4px;
+}
+#vSavings .savings-section-head h3{
+  margin:0;
+  color:#0f172a;
+  font-size:19px;
+  line-height:1.15;
+}
+#vSavings .savings-section-head p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:12.5px;
+  line-height:1.35;
+}
+.savings-wallet-card{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:10px;
+  border:1px solid #eef2f7;
+  background:linear-gradient(135deg,#fff,#fbfcff);
+  border-radius:22px;
+  padding:12px;
+}
+.savings-wallet-icon{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:#ecfdf5;
+  font-size:24px;
+}
+.savings-wallet-main{min-width:0;}
+.savings-wallet-main strong,
+.savings-wallet-main small,
+.savings-wallet-main em{display:block;}
+.savings-wallet-main strong{color:#0f172a;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-wallet-main small{color:#64748b;font-weight:750;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-wallet-main em{font-style:normal;color:#0f172a;font-weight:950;font-size:22px;margin-top:4px;}
+.savings-wallet-card button{
+  border:0;
+  border-radius:14px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:950;
+  background:#111827;
+  color:#fff;
+}
+.savings-wallet-card button:last-child{background:#f8fafc;color:#475569;border:1px solid #e2e8f0;}
+.savings-compact-list{display:grid;gap:10px;}
+.savings-target-row{
+  width:100%;
+  border:1px solid #eef2f7;
+  border-radius:22px;
+  padding:12px;
+  background:#fff;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  text-align:left;
+  cursor:pointer;
+}
+.savings-target-row.is-completed{background:linear-gradient(135deg,#ecfdf5,#fff);border-color:rgba(16,185,129,.2);}
+.savings-target-copy{min-width:0;display:grid;gap:4px;}
+.savings-target-copy strong{color:#0f172a;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-target-copy small{color:#94a3b8;font-size:12px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-target-copy i{display:block;height:8px;border-radius:999px;background:#eef2f7;overflow:hidden;margin:3px 0;}
+.savings-target-copy i b{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#10b981,#6366f1);}
+.savings-target-copy em{font-style:normal;color:#64748b;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-target-arrow{font-size:22px;color:#94a3b8;font-weight:900;}
+.savings-archived-section details{display:grid;gap:10px;}
+.savings-archived-section summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  font-weight:950;
+  color:#0f172a;
+}
+.savings-archived-section summary::-webkit-details-marker{display:none;}
+.savings-archived-section summary em{
+  font-style:normal;
+  min-width:28px;
+  height:28px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:#f1f5f9;
+  color:#64748b;
+  font-size:12px;
+}
+.savings-archived-list{display:grid;gap:8px;margin-top:12px;}
+.savings-archived-list article{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+  padding:10px;
+  border-radius:16px;
+  background:#f8fafc;
+}
+.savings-archived-list strong{font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.savings-archived-list small{font-size:12px;color:#64748b;font-weight:850;}
+.savings-archived-list button{border:0;border-radius:999px;background:#fff;color:#6547f6;font-weight:950;font-size:12px;padding:8px 10px;}
+.savings-sheet-actions{display:grid;gap:9px;}
+.savings-details-amount{display:flex;align-items:baseline;gap:6px;}
+.savings-details-amount strong{font-size:28px;color:#0f172a;line-height:1;}
+.savings-details-amount span{font-weight:900;color:#64748b;}
+.savings-form-stack .is-general-only{grid-template-columns:84px;}
+.savings-form-stack .is-general-only .savings-icon-field{max-width:84px;}
+@media (max-width:720px){
+  #vSavings .page-hero.capvo-hero-savings{
+    padding:20px 108px 20px 20px;
+  }
+  #vSavings .page-hero.capvo-hero-savings::after{
+    width:78px;
+    height:78px;
+    right:18px;
+    font-size:38px;
+    border-radius:24px;
+  }
+  #vSavings .page-hero.capvo-hero-savings h2{font-size:29px;}
+  #vSavings .savings-summary-grid{grid-template-columns:1fr;}
+  .savings-wallet-card{grid-template-columns:auto minmax(0,1fr);}
+  .savings-wallet-card button{grid-column:1/-1;width:100%;}
+  .savings-target-row{grid-template-columns:auto minmax(0,1fr) auto;}
+  .savings-archived-list article{grid-template-columns:auto minmax(0,1fr);}
+  .savings-archived-list small,.savings-archived-list button{grid-column:2;justify-self:start;}
+}
+
+/* CAPVO v1.1.6 - Money allocation / savings foundation */
+.income-option-card:has(#fISSavings){display:none !important;}
+.savings-wallet-card.is-default-wallet{
+  border:1px solid rgba(16,185,129,.18);
+  background:linear-gradient(135deg,rgba(236,253,245,.92),rgba(255,255,255,.94));
+}
+.savings-source-select select,
+.income-allocation-select select,
+.income-allocation-split select{
+  width:100%;
+  min-width:0;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:12px;
+  background:#f8fafc;
+  font-weight:800;
+  color:#0f172a;
+}
+.income-allocation-actions{display:grid;gap:10px;}
+.income-allocation-actions>button,
+.income-allocation-select{
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#fff;
+  padding:13px;
+  text-align:left;
+  display:grid;
+  gap:4px;
+}
+.income-allocation-actions button strong{display:block;color:#0f172a;font-size:14px;}
+.income-allocation-actions button small{display:block;color:#64748b;font-weight:750;line-height:1.35;}
+.income-allocation-select{gap:9px;}
+.income-allocation-select span,
+.income-allocation-split strong{font-weight:950;color:#0f172a;}
+.income-allocation-select button{border:0;border-radius:14px;background:#111827;color:#fff;padding:11px 12px;font-weight:900;}
+.income-allocation-split{
+  border:1px solid rgba(99,102,241,.18);
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(238,242,255,.86),rgba(255,255,255,.96));
+  padding:13px;
+  display:grid;
+  gap:9px;
+}
+.income-allocation-split label{display:grid;gap:6px;color:#475569;font-size:12px;font-weight:900;}
+.income-allocation-split input{
+  width:100%;
+  min-width:0;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+  font-weight:800;
+  color:#0f172a;
+}
+.savings-form-stack select{
+  width:100%;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:12px;
+  background:#f8fafc;
+  font-weight:800;
+  color:#0f172a;
+}
+
+/* CAPVO v1.1.6.1 - Savings details/action polish */
+.savings-sheet-actions{
+  display:grid;
+  gap:10px;
+}
+.savings-sheet-actions .savings-primary-btn,
+.savings-sheet-actions .savings-secondary-btn,
+.savings-sheet-actions .savings-complete-action,
+.savings-sheet-actions .savings-archive-action,
+.savings-sheet-actions .savings-delete-action{
+  width:100%;
+  min-height:44px;
+  border-radius:16px;
+  padding:12px 14px;
+  font-weight:950;
+  font-family:inherit;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.savings-sheet-actions .savings-complete-action{
+  border:0;
+  background:linear-gradient(135deg,#10b981,#6366f1);
+  color:#fff;
+  box-shadow:0 14px 28px rgba(16,185,129,.18);
+}
+.savings-sheet-actions .savings-archive-action{
+  border:1px solid #fed7aa;
+  background:#fff7ed;
+  color:#c2410c;
+}
+.savings-sheet-actions .savings-delete-action{
+  border:1px solid #fecaca;
+  background:#fff1f2;
+  color:#dc2626;
+}
+.savings-source-select{
+  display:grid;
+  gap:8px;
+}
+.savings-source-select > span{
+  color:#475569;
+  font-size:12px;
+  font-weight:950;
+}
+.savings-choice-group{
+  display:grid;
+  gap:8px;
+}
+.savings-choice-group button{
+  width:100%;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  background:#fff;
+  color:#0f172a;
+  padding:12px;
+  text-align:left;
+  font-family:inherit;
+  cursor:pointer;
+}
+.savings-choice-group button strong{
+  display:block;
+  font-size:14px;
+  font-weight:950;
+}
+.savings-choice-group button small{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-weight:750;
+  line-height:1.25;
+}
+.savings-choice-group button.active{
+  border-color:rgba(99,102,241,.38);
+  background:linear-gradient(135deg,rgba(238,242,255,.95),rgba(255,255,255,.95));
+  box-shadow:0 10px 24px rgba(99,102,241,.10);
+}
+.savings-choice-group button:disabled{
+  opacity:.48;
+  cursor:not-allowed;
+  background:#f8fafc;
+}

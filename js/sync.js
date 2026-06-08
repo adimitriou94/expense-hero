@@ -116,7 +116,7 @@ function detectPaymentSourceFromText(text){
   const t=(text||'').toLowerCase();
 
   const sources=(D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none');
+    .filter(i=>typeof isRestrictedPaymentSource==='function'?isRestrictedPaymentSource(i):(i.restriction && i.restriction!=='none'));
 
   if(sources.length===0)return null;
 

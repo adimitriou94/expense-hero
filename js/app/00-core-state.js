@@ -161,6 +161,8 @@ let D = {
   budgetCycles:[],
   budgetCycleIncomes:[],
   budgetCycleCarryovers:[],
+  savingsGoals:[],
+  savingsTransactions:[],
   holidaysByYear:{},
   holidaysLoadedYears:{},
   holidayFetchStatus:'idle'
@@ -653,15 +655,26 @@ function budgetIncomeTotal(){
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
+function isSavingsSource(source){
+  if(!source)return false;
+  return !!source.isSavings || source.restriction==='locked' || source.restriction==='investment' || source.category==='Αποταμίευση';
+}
+
+function isRestrictedPaymentSource(source){
+  if(!source)return false;
+  if(isSavingsSource(source))return false;
+  return !!(source.restriction && source.restriction!=='none');
+}
+
 function savingsIncomeTotal(){
   return (D.incomeSources||[])
-    .filter(i=>i.isSavings || !i.includeInBudget)
+    .filter(i=>isSavingsSource(i))
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
 function restrictedIncomeTotal(){
   return (D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none')
+    .filter(i=>isRestrictedPaymentSource(i))
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
@@ -731,7 +744,7 @@ function dailyCashTotal(){
 
 function totalRestrictedCoverage(){
   return (D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none')
+    .filter(i=>isRestrictedPaymentSource(i))
     .reduce((sum,i)=>sum+restrictedCoverageFor(i),0);
 }
 

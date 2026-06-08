@@ -131,6 +131,60 @@ async function fetchAllData(userId){
       console.warn('[CAPVO] budget_cycle_carryovers unavailable. Run v1.1.4.3 SQL migration.',errCarryovers?.message||errCarryovers);
     }
 
+
+
+    try{
+      const {data:goals,error:errGoals}=await supabaseClient
+        .from('savings_goals')
+        .select('*')
+        .eq('user_id',ownerUserId)
+        .order('created_at',{ascending:false});
+
+      if(errGoals)throw errGoals;
+
+      D.savingsGoals=(goals||[]).map(g=>({
+        id:g.id,
+        userId:g.user_id,
+        name:g.name||'Κουμπαράς',
+        icon:g.icon||'🏦',
+        targetAmount:Number(g.target_amount)||0,
+        currentAmount:Number(g.current_amount)||0,
+        targetDate:g.target_date||'',
+        goalType:g.goal_type||'general',
+        isDefault:!!g.is_default,
+        isArchived:!!g.is_archived,
+        notes:g.notes||'',
+        status:g.status||'',
+        completedAt:g.completed_at||'',
+        createdAt:g.created_at||'',
+        updatedAt:g.updated_at||''
+      }));
+
+      const {data:txs,error:errTxs}=await supabaseClient
+        .from('savings_transactions')
+        .select('*')
+        .eq('user_id',ownerUserId)
+        .order('created_at',{ascending:false});
+
+      if(errTxs)throw errTxs;
+
+      D.savingsTransactions=(txs||[]).map(t=>({
+        id:t.id,
+        userId:t.user_id,
+        goalId:t.goal_id,
+        amount:Number(t.amount)||0,
+        type:t.type||'deposit',
+        source:t.source||'manual',
+        note:t.note||'',
+        relatedCycleKey:t.related_cycle_key||'',
+        createdAt:t.created_at||''
+      }));
+    }catch(errSavings){
+      D.savingsGoals=[];
+      D.savingsTransactions=[];
+      console.warn('[CAPVO] savings tables unavailable. Run v1.1.5.1 SQL migration.',errSavings?.message||errSavings);
+    }
+
     refreshComputedIncome();
 
     const {data:fixed,error:errFixed}=await supabaseClient
@@ -392,7 +446,7 @@ function renderPaymentSourcesSummary(){
   const widget=el.closest('.payment-sources-widget');
   const titleEl=widget?.querySelector('.section-title');
   const restricted=(D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none')
+    .filter(i=>typeof isRestrictedPaymentSource==='function'?isRestrictedPaymentSource(i):(i.restriction && i.restriction!=='none'))
     .map(i=>({
       ...i,
       _remaining:paymentSourceRemaining(i),
@@ -651,6 +705,31 @@ async function undoCurrentPaidTodayCycle(){
 }
 
 
+function buildCarryoverPayload(ownerUserId,pending,action,note){
+  const {previous,current,amount}=pending;
+  return {
+    user_id:ownerUserId,
+    from_cycle_key:previous.startKey,
+    from_cycle_start:previous.startKey,
+    from_cycle_end:previous.endKey,
+    to_cycle_key:current.startKey,
+    to_cycle_start:current.startKey,
+    to_cycle_end:current.endKey,
+    amount:Number(amount)||0,
+    action,
+    note,
+    updated_at:new Date().toISOString()
+  };
+}
+
+async function upsertCycleCarryoverDecision(ownerUserId,pending,action,note){
+  const payload=buildCarryoverPayload(ownerUserId,pending,action,note);
+  const {error}=await supabaseClient
+    .from('budget_cycle_carryovers')
+    .upsert(payload,{onConflict:'user_id,from_cycle_key,to_cycle_key'});
+  if(error)throw error;
+}
+
 async function saveCycleCarryoverDecision(action,options={}){
   const ownerUserId=getFinanceUserId();
   if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
@@ -663,34 +742,23 @@ async function saveCycleCarryoverDecision(action,options={}){
 
   if(!options?.skipConfirm){
     const ok=await showConfirmModal({
-      title:normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου':'Εκτός budget',
+      title:normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου':'Μην τα προσθέσεις στο budget',
       message:normalizedAction==='carry_to_next'
         ? `Θα μεταφερθούν ${fmt(amount)} από τον προηγούμενο κύκλο (${previous.label}) στον τρέχοντα κύκλο (${current.label}).`
-        : `Το υπόλοιπο ${fmt(amount)} από τον προηγούμενο κύκλο δεν θα προστεθεί στον τρέχοντα κύκλο. Θα κρατηθεί εκτός budget και δεν θα εμφανιστεί ξανά για αυτόν τον κύκλο.`,
+        : `Το υπόλοιπο ${fmt(amount)} από τον προηγούμενο κύκλο δεν θα προστεθεί στο διαθέσιμο budget και δεν θα εμφανιστεί ξανά για αυτόν τον κύκλο.`,
       confirmText:normalizedAction==='carry_to_next'?'Μεταφορά':'Εκτός budget'
     });
     if(!ok)return;
   }
 
-  const payload={
-    user_id:ownerUserId,
-    from_cycle_key:previous.startKey,
-    from_cycle_start:previous.startKey,
-    from_cycle_end:previous.endKey,
-    to_cycle_key:current.startKey,
-    to_cycle_start:current.startKey,
-    to_cycle_end:current.endKey,
-    amount:Number(amount)||0,
-    action:normalizedAction,
-    note:normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου προηγούμενου κύκλου':'Κρατήθηκε εκτός budget',
-    updated_at:new Date().toISOString()
-  };
-
-  const {error}=await supabaseClient
-    .from('budget_cycle_carryovers')
-    .upsert(payload,{onConflict:'user_id,from_cycle_key,to_cycle_key'});
-
-  if(error){
+  try{
+    await upsertCycleCarryoverDecision(
+      ownerUserId,
+      pending,
+      normalizedAction,
+      normalizedAction==='carry_to_next'?'Μεταφορά υπολοίπου προηγούμενου κύκλου':'Δεν προστέθηκε στο διαθέσιμο budget'
+    );
+  }catch(error){
     console.error('saveCycleCarryoverDecision failed:',error);
     showMiniToast('Δεν αποθηκεύτηκε η επιλογή υπολοίπου. Έλεγξε αν έχει τρέξει το SQL migration.','error');
     return;
@@ -700,7 +768,87 @@ async function saveCycleCarryoverDecision(action,options={}){
   await fetchAllData(ownerUserId);
   render();
   renderBudgetCycleManager?.();
-  showMiniToast(normalizedAction==='carry_to_next'?'✅ Το υπόλοιπο μεταφέρθηκε στον κύκλο':'Το υπόλοιπο κρατήθηκε εκτός budget');
+  showMiniToast(normalizedAction==='carry_to_next'?'✅ Το υπόλοιπο μεταφέρθηκε στον κύκλο':'Το υπόλοιπο δεν προστέθηκε στο budget');
+}
+
+async function movePreviousCycleCarryoverToSavings(options={}){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+
+  const pending=getPendingCycleCarryover();
+  if(!pending){showMiniToast('Δεν υπάρχει υπόλοιπο προηγούμενου κύκλου για διαχείριση.','info');return;}
+
+  const {previous,current,amount}=pending;
+  const safeAmount=Number(amount)||0;
+  if(safeAmount<=0){showMiniToast('Δεν υπάρχει θετικό υπόλοιπο για αποταμίευση.','info');return;}
+
+  if(!options?.skipConfirm){
+    const ok=await showConfirmModal({
+      title:'Μεταφορά σε αποταμίευση',
+      message:`Θα δημιουργηθεί locked ποσό αποταμίευσης ${fmt(safeAmount)} από τον κύκλο ${previous.label}. Δεν θα προστεθεί στο διαθέσιμο budget του κύκλου ${current.label}.`,
+      confirmText:'Αποταμίευση'
+    });
+    if(!ok)return;
+  }
+
+  const savingsId=`carry_savings_${ownerUserId}_${previous.startKey}_${current.startKey}`.replace(/[^a-zA-Z0-9_-]/g,'_');
+  const savingsSource={
+    id:savingsId,
+    name:`Υπόλοιπο κύκλου ${previous.label}`,
+    amount:safeAmount,
+    category:'Αποταμίευση',
+    incomeType:'bank',
+    includeInBudget:false,
+    isSavings:true,
+    isRecurring:false,
+    restriction:'locked',
+    restrictedCategory:'',
+    notes:`Από υπόλοιπο προηγούμενου κύκλου ${previous.label}`,
+    isPrimaryIncome:false
+  };
+
+  try{
+    if(typeof saveIncomeSourceRow==='function'){
+      await saveIncomeSourceRow(ownerUserId,savingsSource);
+    }else{
+      const legacyOwner=String((typeof getLegacyOwnerId==='function' ? getLegacyOwnerId() : '') || ownerUserId).trim();
+      const {error:sourceError}=await supabaseClient.from('income_sources').upsert({
+        id:savingsSource.id,
+        user_id:ownerUserId,
+        user_chat_id:legacyOwner,
+        name:savingsSource.name,
+        amount:savingsSource.amount,
+        category:savingsSource.category,
+        income_type:savingsSource.incomeType,
+        include_in_budget:false,
+        is_savings:true,
+        is_recurring:false,
+        restriction:'locked',
+        restricted_category:null,
+        notes:savingsSource.notes,
+        is_primary_income:false,
+        updated_at:new Date().toISOString()
+      },{onConflict:'id'});
+      if(sourceError)throw sourceError;
+    }
+
+    await upsertCycleCarryoverDecision(
+      ownerUserId,
+      pending,
+      'move_to_savings',
+      'Μεταφορά υπολοίπου προηγούμενου κύκλου σε αποταμίευση'
+    );
+  }catch(error){
+    console.error('movePreviousCycleCarryoverToSavings failed:',error);
+    showMiniToast('Δεν αποθηκεύτηκε η αποταμίευση. Έλεγξε τα πεδία income_sources και το carryover SQL.','error');
+    return;
+  }
+
+  if(typeof closeCycleCarryoverSheet==='function')closeCycleCarryoverSheet();
+  await fetchAllData(ownerUserId);
+  render();
+  renderBudgetCycleManager?.();
+  showMiniToast('✅ Το υπόλοιπο μεταφέρθηκε σε αποταμίευση');
 }
 function carryOverPreviousCycle(options={}){return saveCycleCarryoverDecision('carry_to_next',options);}
 function skipPreviousCycleCarryover(options={}){return saveCycleCarryoverDecision('skip',options);}

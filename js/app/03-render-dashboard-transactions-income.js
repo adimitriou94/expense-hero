@@ -1,7 +1,7 @@
 // CAPVO app split: 03-render-dashboard-transactions-income.js
 // Source: js/legacy/app.monolith.backup.js
 // Keep classic <script> loading order from index.html.
-// CAPVO v1.1.4.8: carryover is shown as a compact pending pill inside the cycle card.
+// CAPVO v1.1.5: savings / locked wallets and carryover wording polish.
 
 
 function capvoDashboardFirstName(){
@@ -38,8 +38,9 @@ function render(){
   const ccS=ccPayTotal();
   const dlS=dailyTotal();
   const cashDaily=dailyCashTotal();
+  const savingsImpact=typeof savingsBudgetImpactTotal==='function'?savingsBudgetImpactTotal():0;
   
-  const tot=fxS+ccS+cashDaily;
+  const tot=fxS+ccS+cashDaily+savingsImpact;
   const bal=D.income-tot;
 
   const pct=D.income>0?Math.min(100,Math.round(tot/D.income*100)):0;
@@ -81,6 +82,7 @@ function render(){
 
   renderPaymentSourcesSummary();
   renderSettingsPage();
+  if(typeof renderSavingsPage==='function') renderSavingsPage();
 }
 
 
@@ -172,7 +174,7 @@ function renderCycleCarryoverSheet(pending){
 
       <div class="cycle-carryover-question">
         <strong>Τι θέλεις να γίνει;</strong>
-        <span>Διάλεξε αν το ποσό θα μπει στο διαθέσιμο budget του τρέχοντος κύκλου ή αν θα το κρατήσεις εκτός budget για αποταμίευση/άλλη χρήση.</span>
+        <span>Διάλεξε αν το ποσό θα μπει στο διαθέσιμο budget, θα πάει σε αποταμίευση ή θα μείνει εκτός budget για αυτόν τον κύκλο.</span>
       </div>
 
       <div class="cycle-carryover-options">
@@ -184,11 +186,19 @@ function renderCycleCarryoverSheet(pending){
           </span>
         </button>
 
-        <button type="button" class="cycle-carryover-option" onclick="skipPreviousCycleCarryover({skipConfirm:true})">
-          <span class="cycle-carryover-option-icon">🔒</span>
+        <button type="button" class="cycle-carryover-option" onclick="movePreviousCycleCarryoverToSavings({skipConfirm:true})">
+          <span class="cycle-carryover-option-icon">🏦</span>
           <span>
-            <strong>Κράτησέ τα εκτός budget</strong>
-            <small>Δεν θα προστεθούν στον κύκλο. Δεν θα σε ξαναρωτήσω για αυτό το υπόλοιπο.</small>
+            <strong>Μεταφορά σε κουμπαρά</strong>
+            <small>Διάλεξε στόχο αποταμίευσης. Δεν θα αυξήσει το διαθέσιμο budget.</small>
+          </span>
+        </button>
+
+        <button type="button" class="cycle-carryover-option" onclick="skipPreviousCycleCarryover({skipConfirm:true})">
+          <span class="cycle-carryover-option-icon">🚫</span>
+          <span>
+            <strong>Μην τα προσθέσεις στο budget</strong>
+            <small>Θα μείνουν εκτός διαθέσιμου ποσού και δεν θα σε ξαναρωτήσω για αυτόν τον κύκλο.</small>
           </span>
         </button>
 
@@ -930,7 +940,8 @@ function renderDashboardAllowanceCards(balanceOverride=null){
   const fxS=fixedTotal();
   const ccS=ccPayTotal();
   const cashDaily=dailyCashTotal();
-  const spent=fxS+ccS+cashDaily;
+  const savingsImpact=typeof savingsBudgetImpactTotal==='function'?savingsBudgetImpactTotal():0;
+  const spent=fxS+ccS+cashDaily+savingsImpact;
   const income=Number(D.income)||0;
   const balance=balanceOverride!==null && balanceOverride!==undefined
     ? Number(balanceOverride)||0
@@ -1014,6 +1025,7 @@ const INCOME_COLORS={
   'Μερίσματα':'#14b8a6',
   'Freelance':'#6366f1',
   'Δώρο':'#ec4899',
+  'Αποταμίευση':'#10b981',
   'Άλλο':'#64748b'
 };
 
@@ -1026,6 +1038,7 @@ const INCOME_ICONS={
   'Μερίσματα':'📈',
   'Freelance':'🧑‍💻',
   'Δώρο':'🎉',
+  'Αποταμίευση':'🔒',
   'Άλλο':'💰'
 };
 
@@ -1100,6 +1113,55 @@ function renderIncomeDonut(){
   }).join('');
 }
 
+function incomeSourceBucket(source){
+  if(typeof isSavingsSource==='function' && isSavingsSource(source))return 'savings';
+  if(typeof isRestrictedPaymentSource==='function' && isRestrictedPaymentSource(source))return 'restricted';
+  if(source?.includeInBudget)return 'budget';
+  return 'other';
+}
+
+function incomeSourceTypeLabel(source){
+  if(typeof isSavingsSource==='function' && isSavingsSource(source))return 'Αποταμίευση / locked';
+  if(typeof isRestrictedPaymentSource==='function' && isRestrictedPaymentSource(source))return 'Restricted πηγή';
+  if(source?.includeInBudget)return 'Budget';
+  return 'Εκτός budget';
+}
+
+function renderIncomeSourceItem(i){
+  const icon=INCOME_ICONS[i.category]||'💰';
+  const savings=typeof isSavingsSource==='function' && isSavingsSource(i);
+  const restricted=typeof isRestrictedPaymentSource==='function' && isRestrictedPaymentSource(i);
+
+  return`
+    <div class="income-source-item ${savings?'is-savings-source':''} ${restricted?'is-restricted-source':''}">
+      <div class="income-source-icon">${icon}</div>
+
+      <div class="income-source-info">
+        <div class="income-source-name">${esc(i.name)}</div>
+        <div class="income-source-meta">${esc(i.category)} · ${esc(incomeSourceTypeLabel(i))} · ${i.isRecurring?'Μηνιαίο':'One-time'}</div>
+
+        <div class="income-badges">
+          ${i.isPrimaryIncome?'<span class="income-badge budget">Βασικό budget</span>':''}
+          ${i.includeInBudget?'<span class="income-badge budget">Στο budget</span>':'<span class="income-badge savings">Εκτός budget</span>'}
+          ${savings?'<span class="income-badge savings">Αποταμίευση</span>':''}
+          ${restricted
+            ?`<span class="income-badge restricted">
+                Διαθέσιμο ${fmt(paymentSourceRemaining(i))} / ${fmt(i.amount)}
+              </span>`
+            :''
+          }
+        </div>
+      </div>
+
+      <div class="income-source-amount">${fmt(i.amount)}</div>
+
+      <div class="expense-actions" onclick="event.stopPropagation()">
+        <button class="edit-btn" onclick="editIncomeSource('${i.id}')">✎</button>
+        <button class="del-btn" onclick="deleteIncomeSource('${i.id}')">×</button>
+      </div>
+    </div>`;
+}
+
 function renderIncomeList(){
   const sources=D.incomeSources||[];
 
@@ -1111,40 +1173,48 @@ function renderIncomeList(){
     return;
   }
 
-  $('incomeList').innerHTML=sources.map(i=>{
-    const icon=INCOME_ICONS[i.category]||'💰';
+  const groups=[
+    {
+      key:'budget',
+      title:'Budget',
+      subtitle:'Πηγές που αυξάνουν το διαθέσιμο budget του κύκλου.',
+      items:sources.filter(i=>incomeSourceBucket(i)==='budget')
+    },
+    {
+      key:'restricted',
+      title:'Restricted / Ticket',
+      subtitle:'Πηγές που χρησιμοποιούνται μόνο για συγκεκριμένα έξοδα.',
+      items:sources.filter(i=>incomeSourceBucket(i)==='restricted')
+    },
+    {
+      key:'savings',
+      title:'Αποταμίευση',
+      subtitle:'Locked ποσά που μένουν εκτός διαθέσιμου budget.',
+      items:sources.filter(i=>incomeSourceBucket(i)==='savings')
+    },
+    {
+      key:'other',
+      title:'Λοιπά εκτός budget',
+      subtitle:'Πηγές που δεν επηρεάζουν το διαθέσιμο budget.',
+      items:sources.filter(i=>incomeSourceBucket(i)==='other')
+    }
+  ].filter(g=>g.items.length>0);
 
-    return`
-      <div class="income-source-item">
-        <div class="income-source-icon">${icon}</div>
-
-        <div class="income-source-info">
-          <div class="income-source-name">${esc(i.name)}</div>
-          <div class="income-source-meta">${esc(i.category)} · ${esc(i.incomeType)} · ${i.isRecurring?'Μηνιαίο':'One-time'}</div>
-
-          <div class="income-badges">
-            ${i.isPrimaryIncome?'<span class="income-badge budget">Βασικό budget</span>':''}
-            ${i.includeInBudget?'<span class="income-badge budget">Στο budget</span>':'<span class="income-badge savings">Εκτός budget</span>'}
-            ${i.isSavings?'<span class="income-badge savings">Αποταμίευση</span>':''}
-            ${i.restriction&&i.restriction!=='none'
-              ?`<span class="income-badge restricted">
-                  Διαθέσιμο ${fmt(paymentSourceRemaining(i))} / ${fmt(i.amount)}
-                </span>`
-              :''
-            }
-          </div>
+  $('incomeList').innerHTML=groups.map(group=>`
+    <section class="income-source-group income-source-group-${group.key}">
+      <div class="income-source-group-head">
+        <div>
+          <strong>${esc(group.title)}</strong>
+          <span>${esc(group.subtitle)}</span>
         </div>
-
-        <div class="income-source-amount">${fmt(i.amount)}</div>
-
-        <div class="expense-actions" onclick="event.stopPropagation()">
-          <button class="edit-btn" onclick="editIncomeSource('${i.id}')">✎</button>
-          <button class="del-btn" onclick="deleteIncomeSource('${i.id}')">×</button>
-        </div>
-      </div>`;
-  }).join('');
+        <em>${group.items.length}</em>
+      </div>
+      <div class="income-source-group-list">
+        ${group.items.map(renderIncomeSourceItem).join('')}
+      </div>
+    </section>
+  `).join('');
 }
-
 function editIncomeSource(id){
   const i=(D.incomeSources||[]).find(x=>x.id===id);
   if(!i)return;
@@ -1181,7 +1251,7 @@ function editIncomeSource(id){
 
 function availablePaymentSources(){
   return (D.incomeSources||[])
-    .filter(i=>i.restriction && i.restriction!=='none')
+    .filter(i=>typeof isRestrictedPaymentSource==='function'?isRestrictedPaymentSource(i):(i.restriction && i.restriction!=='none'))
     .map(i=>({
       id:i.id,
       name:i.name,
@@ -1361,6 +1431,23 @@ function getIncomePresetConfig(type){
       showRestricted:true,
       advancedHint:'Ρυθμίσεις Voucher'
     },
+    savings:{
+      icon:'🔒',
+      kicker:'Savings wallet',
+      title:'Προσθήκη αποταμίευσης',
+      intro:'Κράτησε χρήματα στην άκρη χωρίς να αυξάνουν το διαθέσιμο budget.',
+      summaryTitle:'Αποταμίευση',
+      summaryText:'Locked ποσό που εμφανίζεται ξεχωριστά και δεν χρησιμοποιείται για καθημερινά έξοδα.',
+      amountLabel:'Πόσο θέλεις να κρατήσεις στην άκρη;',
+      amountHint:'Δεν θα προστεθεί στο διαθέσιμο budget και δεν θα εμφανίζεται ως πηγή πληρωμής.',
+      nameLabel:'Πώς να το ονομάσουμε;',
+      restrictedLabel:'Πού χρησιμοποιείται;',
+      restrictedHint:'Η αποταμίευση μένει locked, οπότε συνήθως δεν χρειάζεται κατηγορία.',
+      saveText:'Αποθήκευση αποταμίευσης',
+      successText:'✅ Η αποταμίευση προστέθηκε',
+      showRestricted:false,
+      advancedHint:'Locked wallet'
+    },
     extra:{
       icon:'✨',
       kicker:'Έκτακτο ποσό',
@@ -1413,6 +1500,7 @@ function setIncomeWizardMode(type,opts={}){
 
 function inferIncomePresetFromSource(i){
   if(!i)return 'budget';
+  if(typeof isSavingsSource==='function' && isSavingsSource(i))return 'savings';
   if(i.restriction==='food_only' || i.category==='Ticket Restaurant')return 'ticket';
   if(i.restriction==='card_only' || i.category==='Άυλη κάρτα')return 'voucher';
   if(i.isRecurring===false)return 'extra';
@@ -1485,6 +1573,18 @@ function applyIncomePreset(type){
       isSavings:false,
       isRecurring:true,
       notes:'Περιορισμένη πηγή πληρωμής',
+      isPrimaryIncome:false
+    },
+    savings:{
+      name:'Αποταμίευση',
+      category:'Αποταμίευση',
+      incomeType:'bank',
+      restriction:'locked',
+      restrictedCategory:'',
+      includeInBudget:false,
+      isSavings:true,
+      isRecurring:false,
+      notes:'Locked ποσό εκτός budget',
       isPrimaryIncome:false
     },
     extra:{
@@ -1566,6 +1666,20 @@ function validateIncomeSourceForm(){
     setIncomeModalFeedback('Αν η πηγή είναι locked/επένδυση, βάλε την εκτός ελεύθερου budget ή ως αποταμίευση.','error');
     showMiniToast('Έλεγξε τον περιορισμό της πηγής','error');
     markIncomeFieldError('fISRestriction');
+    return null;
+  }
+
+  if(isSavings && includeInBudget){
+    setIncomeModalFeedback('Η αποταμίευση πρέπει να μένει εκτός διαθέσιμου budget. Απενεργοποίησε το “Στο budget”.','error');
+    showMiniToast('Η αποταμίευση μένει εκτός budget','error');
+    markIncomeFieldError('fISIncludeBudget');
+    return null;
+  }
+
+  if(isSavings && $('fISPrimary')?.checked){
+    setIncomeModalFeedback('Η αποταμίευση δεν μπορεί να οριστεί ως βασικό budget.','error');
+    showMiniToast('Η αποταμίευση δεν μπορεί να είναι βασικό budget','error');
+    markIncomeFieldError('fISPrimary');
     return null;
   }
 
@@ -1699,3 +1813,1525 @@ async function deleteIncomeSource(id){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});
   else bind();
 })();
+
+// ===== SAVINGS CENTER / KOUMPARADES (v1.1.5.1) =====
+function activeSavingsGoals(){
+  return (D.savingsGoals||[]).filter(g=>!g.isArchived);
+}
+
+function savingsGoalsTotal(){
+  return activeSavingsGoals().reduce((s,g)=>s+(Number(g.currentAmount)||0),0);
+}
+
+function savingsCycleSavedTotal(){
+  const cycle=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
+  const startKey=cycle?.startKey||'';
+  const endKey=cycle?.endKey||'';
+  return (D.savingsTransactions||[]).filter(t=>{
+    const day=(t.createdAt||'').slice(0,10);
+    return day && (!startKey || day>=startKey) && (!endKey || day<=endKey) && Number(t.amount)>0;
+  }).reduce((s,t)=>s+(Number(t.amount)||0),0);
+}
+
+function renderSavingsPage(){
+  const summary=$('savingsSummaryGrid');
+  const list=$('savingsGoalList');
+  if(!summary||!list)return;
+
+  const goals=activeSavingsGoals();
+  const total=savingsGoalsTotal();
+  const cycleSaved=savingsCycleSavedTotal();
+  const targetTotal=goals.reduce((s,g)=>s+(Number(g.targetAmount)||0),0);
+  const pct=targetTotal>0?Math.min(100,Math.round(total/targetTotal*100)):0;
+
+  summary.innerHTML=`
+    <article class="savings-summary-card bento-card primary">
+      <span>Στην άκρη</span>
+      <strong>${fmt(total)}</strong>
+      <small>${goals.length} ενεργοί κουμπαράδες</small>
+    </article>
+    <article class="savings-summary-card bento-card">
+      <span>Αυτόν τον κύκλο</span>
+      <strong>${fmt(cycleSaved)}</strong>
+      <small>Προσθήκες αποταμίευσης</small>
+    </article>
+    <article class="savings-summary-card bento-card">
+      <span>Πρόοδος στόχων</span>
+      <strong>${targetTotal>0?pct+'%':'—'}</strong>
+      <small>${targetTotal>0?fmt(total)+' / '+fmt(targetTotal):'Βάλε στόχο για πλάνο'}</small>
+    </article>
+  `;
+
+  if(goals.length===0){
+    list.innerHTML=`
+      <section class="savings-empty bento-card">
+        <div class="savings-empty-icon">🏦</div>
+        <h3>Φτιάξε τον πρώτο σου κουμπαρά</h3>
+        <p>Κράτα χρήματα για αγορά, διακοπές, emergency fund ή καθαρή αποταμίευση χωρίς να μπερδεύονται με το διαθέσιμο budget.</p>
+        <button type="button" class="section-add primary-add" onclick="openSavingsGoalSheet()">+ Νέος κουμπαράς</button>
+      </section>`;
+    return;
+  }
+
+  list.innerHTML=goals.map(g=>{
+    const current=Number(g.currentAmount)||0;
+    const target=Number(g.targetAmount)||0;
+    const progress=target>0?Math.min(100,Math.round(current/target*100)):0;
+    const remaining=Math.max(0,target-current);
+    const targetMeta=g.targetDate?`Στόχος: ${formatGreekFullDate(g.targetDate)}`:'Χωρίς ημερομηνία στόχου';
+    return `
+      <article class="savings-goal-card bento-card">
+        <div class="savings-goal-top">
+          <div class="savings-goal-title">
+            <span class="savings-goal-icon">${esc(g.icon||'🏦')}</span>
+            <div>
+              <strong>${esc(g.name)}</strong>
+              <small>${esc(targetMeta)}</small>
+            </div>
+          </div>
+          <button type="button" class="savings-goal-menu" onclick="openSavingsGoalSheet('${esc(g.id)}')">Επεξεργασία</button>
+        </div>
+        <div class="savings-goal-amounts">
+          <strong>${fmt(current)}</strong>
+          <span>${target>0?'/ '+fmt(target):'αποταμιευμένα'}</span>
+        </div>
+        <div class="savings-progress-track"><i style="width:${progress}%"></i></div>
+        <div class="savings-goal-meta">
+          <span>${target>0?progress+'% ολοκληρώθηκε':'Χωρίς ποσό στόχο'}</span>
+          <span>${target>0?'Μένουν '+fmt(remaining):'Πρόσθεσε στόχο όποτε θέλεις'}</span>
+        </div>
+        <div class="savings-goal-actions">
+          <button type="button" onclick="openSavingsDepositSheet('${esc(g.id)}','deposit')">+ Προσθήκη ποσού</button>
+          <button type="button" onclick="openSavingsDepositSheet('${esc(g.id)}','withdrawal')">Ανάληψη</button>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function ensureSavingsSheet(){
+  let overlay=$('savingsSheetOverlay');
+  if(overlay)return overlay;
+  overlay=document.createElement('div');
+  overlay.id='savingsSheetOverlay';
+  overlay.className='savings-sheet-overlay';
+  overlay.onclick=e=>{if(e.target===overlay)closeSavingsSheet();};
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function closeSavingsSheet(){
+  const overlay=$('savingsSheetOverlay');
+  if(overlay)overlay.classList.remove('active');
+  document.body.classList.remove('modal-open');
+}
+
+function openSavingsGoalSheet(goalId){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId)||{};
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>🏦</span>
+        <div>
+          <small>Κουμπαράς</small>
+          <h2>${goal.id?'Επεξεργασία κουμπαρά':'Νέος κουμπαράς'}</h2>
+          <p>Δώσε όνομα, στόχο και προαιρετικά ημερομηνία για να οργανώσεις καλύτερα την αποταμίευση.</p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsGoalId" value="${esc(goal.id||'')}">
+      <div class="savings-form-stack">
+        <label class="full">Όνομα<input id="savingsGoalName" type="text" value="${esc(goal.name||'')}" placeholder="π.χ. Νέο κινητό"></label>
+        <div class="savings-inline-grid">
+          <label class="savings-icon-field">Εικονίδιο<input id="savingsGoalIcon" type="text" value="${esc(goal.icon||'🏦')}" maxlength="4" inputmode="text"></label>
+          <label>Ποσό στόχος<input id="savingsGoalTarget" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(goal.targetAmount)||''}" placeholder="0,00"></label>
+        </div>
+        <label class="full">Ημερομηνία στόχου<input id="savingsGoalDate" type="date" value="${esc(goal.targetDate||'')}"></label>
+        <label class="full">Σημείωση<textarea id="savingsGoalNotes" rows="2" placeholder="προαιρετικά">${esc(goal.notes||'')}</textarea></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsGoalFromSheet()">Αποθήκευση κουμπαρά</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function saveSavingsGoalFromSheet(){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+  const id=$('savingsGoalId')?.value || crypto.randomUUID();
+  const name=($('savingsGoalName')?.value||'').trim();
+  if(!name){showMiniToast('Βάλε όνομα κουμπαρά.','error');return;}
+  const payload={
+    id,
+    user_id:ownerUserId,
+    name,
+    icon:($('savingsGoalIcon')?.value||'🏦').trim()||'🏦',
+    target_amount:Number($('savingsGoalTarget')?.value)||0,
+    target_date:($('savingsGoalDate')?.value||null),
+    notes:($('savingsGoalNotes')?.value||'').trim(),
+    goal_type:'general',
+    is_archived:false,
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await supabaseClient.from('savings_goals').upsert(payload,{onConflict:'id'});
+  if(error){console.error('saveSavingsGoal failed',error);showMiniToast('Δεν αποθηκεύτηκε ο κουμπαράς. Έλεγξε το SQL.','error');return;}
+  closeSavingsSheet();
+  await fetchAllData(ownerUserId); render();
+  showMiniToast('✅ Ο κουμπαράς αποθηκεύτηκε');
+}
+
+function openSavingsDepositSheet(goalId,mode='deposit'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!goal)return;
+  const isWithdrawal=mode==='withdrawal';
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${esc(goal.icon||'🏦')}</span>
+        <div>
+          <small>${isWithdrawal?'Ανάληψη από κουμπαρά':'Προσθήκη σε κουμπαρά'}</small>
+          <h2>${esc(goal.name)}</h2>
+          <p>Τρέχον ποσό: <strong>${fmt(goal.currentAmount||0)}</strong></p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsTxGoalId" value="${esc(goal.id)}">
+      <input type="hidden" id="savingsTxMode" value="${isWithdrawal?'withdrawal':'deposit'}">
+      <div class="savings-form-stack compact">
+        <label class="full">Ποσό<input id="savingsTxAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+        <label class="full">Σημείωση<input id="savingsTxNote" type="text" placeholder="προαιρετικά"></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsTransactionFromSheet()">${isWithdrawal?'Αποθήκευση ανάληψης':'Προσθήκη ποσού'}</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function addSavingsTransaction(goalId,amount,type='deposit',source='manual',note='',relatedCycleKey=''){
+  const ownerUserId=getFinanceUserId();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)throw new Error('Missing savings goal');
+  const safeAmount=Number(amount)||0;
+  if(safeAmount<=0)throw new Error('Invalid savings amount');
+  const signed=type==='withdrawal'?-safeAmount:safeAmount;
+  const nextAmount=Math.max(0,(Number(goal.currentAmount)||0)+signed);
+  const txPayload={user_id:ownerUserId,goal_id:goalId,amount:signed,type,source,note,related_cycle_key:relatedCycleKey||null};
+  const {error:txError}=await supabaseClient.from('savings_transactions').insert(txPayload);
+  if(txError)throw txError;
+  const {error:gError}=await supabaseClient.from('savings_goals').update({current_amount:nextAmount,updated_at:new Date().toISOString()}).eq('user_id',ownerUserId).eq('id',goalId);
+  if(gError)throw gError;
+}
+
+async function saveSavingsTransactionFromSheet(){
+  const goalId=$('savingsTxGoalId')?.value;
+  const mode=$('savingsTxMode')?.value||'deposit';
+  const amount=Number($('savingsTxAmount')?.value)||0;
+  const note=($('savingsTxNote')?.value||'').trim();
+  if(amount<=0){showMiniToast('Βάλε ποσό.','error');return;}
+  try{
+    await addSavingsTransaction(goalId,amount,mode,mode==='withdrawal'?'manual_withdrawal':'manual',note,'');
+    closeSavingsSheet();
+    await fetchAllData(getFinanceUserId()); render();
+    showMiniToast(mode==='withdrawal'?'✅ Η ανάληψη αποθηκεύτηκε':'✅ Το ποσό προστέθηκε στον κουμπαρά');
+  }catch(error){console.error('saveSavingsTransaction failed',error);showMiniToast('Δεν αποθηκεύτηκε η κίνηση.','error');}
+}
+
+function openCarryoverSavingsGoalSheet(){
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  if(!pending){showMiniToast('Δεν υπάρχει εκκρεμές υπόλοιπο.','info');return;}
+  const goals=activeSavingsGoals();
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>🔒</span>
+        <div>
+          <small>Μεταφορά υπολοίπου</small>
+          <h2>Σε ποιον κουμπαρά;</h2>
+          <p>Θα μεταφερθούν <strong>${fmt(pending.amount)}</strong> από τον κύκλο ${esc(pending.previous.label)}.</p>
+        </div>
+      </div>
+      <div class="savings-carryover-goals">
+        ${goals.length?goals.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'🏦')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} αποταμιευμένα</small></button>`).join(''):`<div class="savings-mini-empty">Δεν έχεις ακόμα κουμπαρά. Δημιουργείται αυτόματα ένας γενικός κουμπαράς.</div>`}
+      </div>
+      ${goals.length?'<button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet()">+ Νέος κουμπαράς</button>':'<button type="button" class="savings-primary-btn" onclick="createDefaultGoalAndApplyCarryover()">Δημιουργία γενικού κουμπαρά</button>'}
+    </section>`;
+  closeCycleCarryoverSheet?.();
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function createDefaultGoalAndApplyCarryover(){
+  const ownerUserId=getFinanceUserId();
+  const id=crypto.randomUUID();
+  const payload={id,user_id:ownerUserId,name:'Γενικός κουμπαράς',icon:'🏦',target_amount:0,current_amount:0,goal_type:'general',is_archived:false,updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from('savings_goals').insert(payload);
+  if(error){console.error(error);showMiniToast('Δεν δημιουργήθηκε κουμπαράς.','error');return;}
+  await fetchAllData(ownerUserId);
+  await applyCarryoverToSavingsGoal(id);
+}
+
+async function applyCarryoverToSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId();
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!pending||!goal){showMiniToast('Δεν βρέθηκε κουμπαράς ή υπόλοιπο.','error');return;}
+  try{
+    await addSavingsTransaction(goalId,pending.amount,'carryover','cycle_carryover',`Υπόλοιπο κύκλου ${pending.previous.label}`,pending.previous.startKey);
+    await upsertCycleCarryoverDecision(ownerUserId,pending,'move_to_savings',`Μεταφορά σε κουμπαρά: ${goal.name}`);
+    closeSavingsSheet();
+    await fetchAllData(ownerUserId); render(); renderBudgetCycleManager?.();
+    showMiniToast('✅ Το υπόλοιπο μεταφέρθηκε σε κουμπαρά');
+  }catch(error){console.error('applyCarryoverToSavingsGoal failed',error);showMiniToast('Δεν έγινε η μεταφορά σε κουμπαρά.','error');}
+}
+
+// Override v1.1.5 direct savings-source behavior: savings now live in dedicated goals.
+function movePreviousCycleCarryoverToSavings(options={}){
+  openCarryoverSavingsGoalSheet();
+}
+
+/* ============================================================
+   CAPVO v1.1.5.3 - Savings production UX override
+   General savings + target goals + validations + archive/complete flows
+   ============================================================ */
+function savingsGoalKind(goal){
+  if(!goal)return 'target';
+  const type=(goal.goalType||'').toLowerCase();
+  if(type==='general' && !(Number(goal.targetAmount)>0))return 'general';
+  return 'target';
+}
+function generalSavingsGoals(){
+  return activeSavingsGoals().filter(g=>savingsGoalKind(g)==='general');
+}
+function targetSavingsGoals(){
+  return activeSavingsGoals().filter(g=>savingsGoalKind(g)==='target');
+}
+function savingsCycleStats(){
+  const current=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
+  const startKey=current?.startKey||'';
+  const endKey=current?.endKey||'';
+  let deposits=0, withdrawals=0;
+  (D.savingsTransactions||[]).forEach(t=>{
+    const day=(t.createdAt||'').slice(0,10);
+    if(!day || (startKey && day<startKey) || (endKey && day>endKey))return;
+    const amount=Number(t.amount)||0;
+    if(amount>0)deposits+=amount;
+    if(amount<0)withdrawals+=Math.abs(amount);
+  });
+  return {deposits,withdrawals,net:deposits-withdrawals};
+}
+function savingsGoalStatus(goal){
+  const target=Number(goal?.targetAmount)||0;
+  const current=Number(goal?.currentAmount)||0;
+  if(goal?.isArchived)return 'archived';
+  if(savingsGoalKind(goal)==='target' && target>0 && current>=target)return 'completed';
+  return 'active';
+}
+function renderSavingsSummaryCards(goals,total,stats,targetTotal,pct){
+  const sign=stats.net<0?'-':'';
+  return `
+    <article class="savings-summary-card bento-card primary">
+      <span>Στην άκρη</span>
+      <strong>${fmt(total)}</strong>
+      <small>${goals.length} ενεργοί κουμπαράδες</small>
+    </article>
+    <article class="savings-summary-card bento-card ${stats.net<0?'warning':''}">
+      <span>Καθαρή αποταμίευση</span>
+      <strong>${sign}${fmt(Math.abs(stats.net))}</strong>
+      <small>+${fmt(stats.deposits)} μέσα · -${fmt(stats.withdrawals)} έξω</small>
+    </article>
+    <article class="savings-summary-card bento-card">
+      <span>Πρόοδος στόχων</span>
+      <strong>${targetTotal>0?pct+'%':'—'}</strong>
+      <small>${targetTotal>0?fmt(total)+' / '+fmt(targetTotal):'Βάλε στόχο για πλάνο'}</small>
+    </article>`;
+}
+function renderGeneralSavingsSection(goals){
+  if(goals.length===0){
+    return `<section class="savings-production-section bento-card savings-general-empty">
+      <div class="savings-section-head">
+        <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Χρήματα που κρατάς εκτός budget χωρίς συγκεκριμένο στόχο.</p></div>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="createGeneralSavingsGoal()">+ Δημιουργία γενικής αποταμίευσης</button>
+    </section>`;
+  }
+  return `<section class="savings-production-section bento-card">
+    <div class="savings-section-head">
+      <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Λεφτά στην άκρη που δεν μετράνε στο διαθέσιμο budget.</p></div>
+    </div>
+    <div class="savings-card-stack">
+      ${goals.map(g=>renderSavingsGoalCard(g)).join('')}
+    </div>
+  </section>`;
+}
+function renderTargetSavingsSection(goals){
+  if(goals.length===0){
+    return `<section class="savings-production-section bento-card savings-empty compact">
+      <div class="savings-empty-icon">🎯</div>
+      <h3>Βάλε τον πρώτο σου στόχο</h3>
+      <p>Φτιάξε στόχο για αγορά, ταξίδι ή κάτι συγκεκριμένο και παρακολούθησε την πρόοδό του.</p>
+      <button type="button" class="section-add primary-add" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button>
+    </section>`;
+  }
+  return `<section class="savings-production-section bento-card">
+    <div class="savings-section-head with-action">
+      <div><small>Στόχοι</small><h3>Στόχοι αποταμίευσης</h3><p>Αγορές, ταξίδια και ποσά που θέλεις να πετύχεις.</p></div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'target')">+ Στόχος</button>
+    </div>
+    <div class="savings-card-stack">
+      ${goals.map(g=>renderSavingsGoalCard(g)).join('')}
+    </div>
+  </section>`;
+}
+function renderSavingsGoalCard(g){
+  const current=Number(g.currentAmount)||0;
+  const target=Number(g.targetAmount)||0;
+  const kind=savingsGoalKind(g);
+  const completed=savingsGoalStatus(g)==='completed';
+  const progress=target>0?Math.min(100,Math.round(current/target*100)):0;
+  const remaining=Math.max(0,target-current);
+  const targetMeta=kind==='general'
+    ? 'Χωρίς συγκεκριμένο στόχο'
+    : (g.targetDate?`Στόχος: ${formatGreekFullDate(g.targetDate)}`:'Χωρίς ημερομηνία στόχου');
+  return `<article class="savings-goal-card savings-goal-card-v2 ${completed?'is-completed':''}">
+    <div class="savings-goal-top">
+      <div class="savings-goal-title">
+        <span class="savings-goal-icon">${esc(g.icon||'🏦')}</span>
+        <div>
+          <strong>${esc(g.name)}</strong>
+          <small>${esc(targetMeta)}</small>
+        </div>
+      </div>
+      ${completed?'<em class="savings-complete-badge">Ολοκληρώθηκε</em>':`<button type="button" class="savings-goal-menu" onclick="openSavingsGoalSheet('${esc(g.id)}')">Επεξεργασία</button>`}
+    </div>
+    <div class="savings-goal-amounts">
+      <strong>${fmt(current)}</strong>
+      <span>${kind==='target' && target>0?'/ '+fmt(target):'στην άκρη'}</span>
+    </div>
+    ${kind==='target'?`<div class="savings-progress-track"><i style="width:${progress}%"></i></div>
+    <div class="savings-goal-meta"><span>${progress}% ολοκληρώθηκε</span><span>${completed?'Έφτασες τον στόχο':('Μένουν '+fmt(remaining))}</span></div>`:''}
+    <div class="savings-goal-actions">
+      <button type="button" onclick="openSavingsDepositSheet('${esc(g.id)}','deposit')">+ Προσθήκη ποσού</button>
+      <button type="button" onclick="openSavingsDepositSheet('${esc(g.id)}','withdrawal')">Αφαίρεση ποσού</button>
+      ${completed?`<button type="button" class="savings-complete-action" onclick="completeSavingsGoal('${esc(g.id)}')">Ολοκλήρωση / Αγορά</button>`:''}
+      <button type="button" class="savings-archive-action" onclick="archiveSavingsGoal('${esc(g.id)}')">Αρχειοθέτηση</button>
+    </div>
+  </article>`;
+}
+function renderSavingsPage(){
+  const summary=$('savingsSummaryGrid');
+  const list=$('savingsGoalList');
+  if(!summary||!list)return;
+  const goals=activeSavingsGoals();
+  const general=generalSavingsGoals();
+  const targets=targetSavingsGoals();
+  const total=savingsGoalsTotal();
+  const stats=savingsCycleStats();
+  const targetTotal=targets.reduce((s,g)=>s+(Number(g.targetAmount)||0),0);
+  const targetCurrent=targets.reduce((s,g)=>s+(Number(g.currentAmount)||0),0);
+  const pct=targetTotal>0?Math.min(100,Math.round(targetCurrent/targetTotal*100)):0;
+  summary.innerHTML=renderSavingsSummaryCards(goals,total,stats,targetTotal,pct);
+  list.innerHTML=`
+    ${renderGeneralSavingsSection(general)}
+    ${renderTargetSavingsSection(targets)}
+  `;
+}
+function openSavingsGoalSheet(goalId,kind='target'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId)||{};
+  const goalKind=goal.id?savingsGoalKind(goal):kind;
+  const isGeneral=goalKind==='general';
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${isGeneral?'💰':'🎯'}</span>
+        <div>
+          <small>${isGeneral?'Αποταμίευση':'Στόχος'}</small>
+          <h2>${goal.id?'Επεξεργασία':'Νέος '+(isGeneral?'κουμπαράς':'στόχος')}</h2>
+          <p>${isGeneral?'Χρήματα στην άκρη χωρίς συγκεκριμένο ποσό στόχο.':'Δώσε ποσό στόχο και προαιρετικά ημερομηνία για να βλέπεις πρόοδο.'}</p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsGoalId" value="${esc(goal.id||'')}">
+      <input type="hidden" id="savingsGoalKind" value="${esc(goalKind)}">
+      <div class="savings-form-stack">
+        <label class="full">Όνομα<input id="savingsGoalName" type="text" value="${esc(goal.name||'')}" placeholder="${isGeneral?'π.χ. Γενική αποταμίευση':'π.χ. Ταξίδι Ιαπωνία'}"></label>
+        <div class="savings-inline-grid">
+          <label class="savings-icon-field">Εικονίδιο<input id="savingsGoalIcon" type="text" value="${esc(goal.icon||(isGeneral?'💰':'🎯'))}" maxlength="4" inputmode="text"></label>
+          <label>${isGeneral?'Προαιρετικό όριο':'Ποσό στόχος'}<input id="savingsGoalTarget" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(goal.targetAmount)||''}" placeholder="0,00"></label>
+        </div>
+        <label class="full">Ημερομηνία στόχου<input id="savingsGoalDate" type="date" value="${esc(goal.targetDate||'')}" ${isGeneral?'disabled':''}></label>
+        <label class="full">Σημείωση<textarea id="savingsGoalNotes" rows="2" placeholder="προαιρετικά">${esc(goal.notes||'')}</textarea></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsGoalFromSheet()">Αποθήκευση</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+async function createGeneralSavingsGoal(){
+  openSavingsGoalSheet('', 'general');
+}
+async function saveSavingsGoalFromSheet(){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+  const id=$('savingsGoalId')?.value || crypto.randomUUID();
+  const kind=$('savingsGoalKind')?.value||'target';
+  const isGeneral=kind==='general';
+  const name=($('savingsGoalName')?.value||'').trim();
+  const target=Number($('savingsGoalTarget')?.value)||0;
+  const targetDate=($('savingsGoalDate')?.value||null);
+  if(!name){showMiniToast('Βάλε όνομα.','error');return;}
+  if(!isGeneral && target<=0){showMiniToast('Για στόχο χρειάζεται ποσό στόχος.','error');return;}
+  if(target<0){showMiniToast('Το ποσό στόχος δεν μπορεί να είναι αρνητικό.','error');return;}
+  const payload={
+    id,
+    user_id:ownerUserId,
+    name,
+    icon:($('savingsGoalIcon')?.value||(isGeneral?'💰':'🎯')).trim()||(isGeneral?'💰':'🎯'),
+    target_amount:target,
+    target_date:isGeneral?null:targetDate,
+    notes:($('savingsGoalNotes')?.value||'').trim(),
+    goal_type:isGeneral?'general':'target',
+    is_archived:false,
+    status:'active',
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await supabaseClient.from('savings_goals').upsert(payload,{onConflict:'id'});
+  if(error){console.error('saveSavingsGoal failed',error);showMiniToast('Δεν αποθηκεύτηκε. Τρέξε το SQL του v1.1.5.3.','error');return;}
+  closeSavingsSheet();
+  await fetchAllData(ownerUserId); render();
+  showMiniToast('✅ Αποθηκεύτηκε');
+}
+function openSavingsDepositSheet(goalId,mode='deposit'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!goal)return;
+  const isWithdrawal=mode==='withdrawal';
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${esc(goal.icon||'🏦')}</span>
+        <div>
+          <small>${isWithdrawal?'Αφαίρεση ποσού':'Προσθήκη ποσού'}</small>
+          <h2>${esc(goal.name)}</h2>
+          <p>Τρέχον ποσό: <strong>${fmt(goal.currentAmount||0)}</strong>${isWithdrawal?' · Δεν μπορείς να αφαιρέσεις περισσότερα.':''}</p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsTxGoalId" value="${esc(goal.id)}">
+      <input type="hidden" id="savingsTxMode" value="${isWithdrawal?'withdrawal':'deposit'}">
+      <div class="savings-form-stack compact">
+        <label class="full">Ποσό<input id="savingsTxAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+        <label class="full">Σημείωση<input id="savingsTxNote" type="text" placeholder="προαιρετικά"></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsTransactionFromSheet()">${isWithdrawal?'Αφαίρεση ποσού':'Προσθήκη ποσού'}</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+async function addSavingsTransaction(goalId,amount,type='deposit',source='manual',note='',relatedCycleKey=''){
+  const ownerUserId=getFinanceUserId();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)throw new Error('Missing savings goal');
+  const safeAmount=Number(amount)||0;
+  if(safeAmount<=0)throw new Error('Invalid savings amount');
+  const current=Number(goal.currentAmount)||0;
+  if(type==='withdrawal' && safeAmount>current){
+    const err=new Error('Withdrawal exceeds current amount');
+    err.code='CAPVO_WITHDRAWAL_EXCEEDS_BALANCE';
+    throw err;
+  }
+  const signed=type==='withdrawal'?-safeAmount:safeAmount;
+  const nextAmount=Math.max(0,current+signed);
+  const txPayload={user_id:ownerUserId,goal_id:goalId,amount:signed,type,source,note,related_cycle_key:relatedCycleKey||null};
+  const {error:txError}=await supabaseClient.from('savings_transactions').insert(txPayload);
+  if(txError)throw txError;
+  const status=savingsGoalKind(goal)==='target' && Number(goal.targetAmount)>0 && nextAmount>=Number(goal.targetAmount)?'completed':'active';
+  const goalUpdate={current_amount:nextAmount,status,updated_at:new Date().toISOString()};
+  if(status==='completed')goalUpdate.completed_at=new Date().toISOString();
+  if(status==='active')goalUpdate.completed_at=null;
+  const {error:gError}=await supabaseClient.from('savings_goals').update(goalUpdate).eq('user_id',ownerUserId).eq('id',goalId);
+  if(gError)throw gError;
+}
+async function saveSavingsTransactionFromSheet(){
+  const goalId=$('savingsTxGoalId')?.value;
+  const mode=$('savingsTxMode')?.value||'deposit';
+  const amount=Number($('savingsTxAmount')?.value)||0;
+  const note=($('savingsTxNote')?.value||'').trim();
+  if(amount<=0){showMiniToast('Βάλε ποσό.','error');return;}
+  const btn=document.querySelector('#savingsSheetOverlay .savings-primary-btn');
+  if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+  try{
+    await addSavingsTransaction(goalId,amount,mode,mode==='withdrawal'?'manual_withdrawal':'manual',note,'');
+    closeSavingsSheet();
+    await fetchAllData(getFinanceUserId()); render();
+    showMiniToast(mode==='withdrawal'?'✅ Το ποσό αφαιρέθηκε':'✅ Το ποσό προστέθηκε');
+  }catch(error){
+    console.error('saveSavingsTransaction failed',error);
+    showMiniToast(error?.code==='CAPVO_WITHDRAWAL_EXCEEDS_BALANCE'?'Δεν μπορείς να αφαιρέσεις περισσότερα από όσα έχει ο κουμπαράς.':'Δεν αποθηκεύτηκε η κίνηση.','error');
+    if(btn){btn.disabled=false;btn.textContent=mode==='withdrawal'?'Αφαίρεση ποσού':'Προσθήκη ποσού';}
+  }
+}
+async function archiveSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)return;
+  if(Number(goal.currentAmount)>0){
+    showMiniToast('Πρώτα αφαίρεσε το ποσό ή χρησιμοποίησε Ολοκλήρωση / Αγορά.','error');
+    return;
+  }
+  try{
+    const {error}=await supabaseClient.from('savings_goals').update({is_archived:true,status:savingsGoalStatus(goal)==='completed'?'completed':'archived',updated_at:new Date().toISOString()}).eq('user_id',ownerUserId).eq('id',goalId);
+    if(error)throw error;
+    await fetchAllData(ownerUserId); render();
+    showMiniToast('Ο κουμπαράς αρχειοθετήθηκε.');
+  }catch(error){console.error('archiveSavingsGoal failed',error);showMiniToast('Δεν έγινε αρχειοθέτηση.','error');}
+}
+async function completeSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)return;
+  const amount=Number(goal.currentAmount)||0;
+  if(amount<=0){await archiveSavingsGoal(goalId);return;}
+  try{
+    await addSavingsTransaction(goalId,amount,'withdrawal','goal_completed','Ολοκλήρωση στόχου / αγορά','');
+    const {error}=await supabaseClient.from('savings_goals').update({is_archived:true,status:'completed',completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('user_id',ownerUserId).eq('id',goalId);
+    if(error)throw error;
+    await fetchAllData(ownerUserId); render();
+    showMiniToast('🎉 Ο στόχος ολοκληρώθηκε και αρχειοθετήθηκε');
+  }catch(error){console.error('completeSavingsGoal failed',error);showMiniToast('Δεν ολοκληρώθηκε ο στόχος.','error');}
+}
+function openCarryoverSavingsGoalSheet(){
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  if(!pending){showMiniToast('Δεν υπάρχει εκκρεμές υπόλοιπο.','info');return;}
+  const goals=activeSavingsGoals();
+  const general=generalSavingsGoals();
+  const targets=targetSavingsGoals();
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>🔒</span>
+        <div>
+          <small>Μεταφορά υπολοίπου</small>
+          <h2>Πού θέλεις να μπει;</h2>
+          <p>Θα μεταφερθούν <strong>${fmt(pending.amount)}</strong> από τον κύκλο ${esc(pending.previous.label)}.</p>
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Αποταμίευση</small>
+        <div class="savings-carryover-goals">
+          ${general.length?general.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'💰')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} στην άκρη</small></button>`).join(''):`<button type="button" onclick="createDefaultGoalAndApplyCarryover()"><span>💰</span><strong>Γενική αποταμίευση</strong><small>Δημιουργία και μεταφορά</small></button>`}
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Στόχοι</small>
+        <div class="savings-carryover-goals">
+          ${targets.length?targets.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'🎯')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} / ${fmt(g.targetAmount||0)}</small></button>`).join(''):`<div class="savings-mini-empty">Δεν έχεις ακόμα στόχο.</div>`}
+        </div>
+      </div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button>
+    </section>`;
+  closeCycleCarryoverSheet?.();
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+async function createDefaultGoalAndApplyCarryover(){
+  const ownerUserId=getFinanceUserId();
+  const id=crypto.randomUUID();
+  const payload={id,user_id:ownerUserId,name:'Γενική αποταμίευση',icon:'💰',target_amount:0,current_amount:0,goal_type:'general',status:'active',is_archived:false,updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from('savings_goals').insert(payload);
+  if(error){console.error(error);showMiniToast('Δεν δημιουργήθηκε αποταμίευση. Τρέξε το SQL.','error');return;}
+  await fetchAllData(ownerUserId);
+  await applyCarryoverToSavingsGoal(id);
+}
+
+/* ============================================================
+   CAPVO v1.1.5.4 - Savings UX Production Polish
+   One general savings wallet, compact targets, archived restore,
+   and budget impact for manual savings movements.
+   ============================================================ */
+function archivedSavingsGoals(){
+  return (D.savingsGoals||[]).filter(g=>g.isArchived || (g.status||'').toLowerCase()==='archived');
+}
+function savingsGoalTransactions(goalId){
+  return (D.savingsTransactions||[]).filter(t=>t.goalId===goalId || t.goal_id===goalId);
+}
+function canDeleteSavingsGoal(goal){
+  if(!goal || savingsGoalKind(goal)==='general')return false;
+  const current=Number(goal.currentAmount)||0;
+  return current<=0 && savingsGoalTransactions(goal.id).length===0;
+}
+function setSavingsTxSource(value,btn){
+  const input=$('savingsTxSource');
+  if(input)input.value=value;
+  const group=btn?.closest?.('.savings-choice-group');
+  if(group){
+    group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+function savingsBudgetImpactTotal(){
+  const current=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
+  const startKey=current?.startKey||'';
+  const endKey=current?.endKey||'';
+  let impact=0;
+  (D.savingsTransactions||[]).forEach(t=>{
+    const day=(t.createdAt||'').slice(0,10);
+    if(!day || (startKey && day<startKey) || (endKey && day>endKey))return;
+    const amount=Number(t.amount)||0;
+    const source=(t.source||'manual').toLowerCase();
+    const type=(t.type||'deposit').toLowerCase();
+    if(amount>0){
+      // Carryover money was never added to the current budget, so putting it into savings should not reduce current budget.
+      if(type==='carryover' || source==='cycle_carryover')return;
+      impact+=amount;
+      return;
+    }
+    if(amount<0){
+      // Goal completion/purchase is consumption from savings, not money returned to spendable budget.
+      if(source==='goal_completed')return;
+      impact+=amount;
+    }
+  });
+  return impact;
+}
+function generalSavingsGoals(){
+  return activeSavingsGoals().filter(g=>savingsGoalKind(g)==='general');
+}
+function targetSavingsGoals(){
+  return activeSavingsGoals().filter(g=>savingsGoalKind(g)==='target');
+}
+function openGeneralSavingsFlow(){
+  const general=generalSavingsGoals()[0];
+  if(general){
+    openSavingsDepositSheet(general.id,'deposit');
+    return;
+  }
+  openSavingsGoalSheet('', 'general');
+}
+function renderSavingsSummaryCards(goals,total,stats,targetTotal,pct){
+  const sign=stats.net<0?'-':'';
+  return `
+    <article class="savings-summary-card savings-summary-hero-card bento-card primary">
+      <span>Στην άκρη</span>
+      <strong>${fmt(total)}</strong>
+      <small>${goals.length} ενεργοί κουμπαράδες</small>
+    </article>
+    <article class="savings-summary-card bento-card ${stats.net<0?'warning':''}">
+      <span>Καθαρή αποταμίευση</span>
+      <strong>${sign}${fmt(Math.abs(stats.net))}</strong>
+      <small>+${fmt(stats.deposits)} μέσα · -${fmt(stats.withdrawals)} έξω</small>
+    </article>`;
+}
+function renderGeneralSavingsSection(goals){
+  const general=goals[0];
+  if(!general){
+    return `<section class="savings-production-section bento-card savings-general-empty savings-wallet-section">
+      <div class="savings-section-head with-action">
+        <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Χρήματα που κρατάς εκτός budget χωρίς συγκεκριμένο στόχο.</p></div>
+        <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'general')">Δημιουργία</button>
+      </div>
+    </section>`;
+  }
+  return `<section class="savings-production-section bento-card savings-wallet-section">
+    <div class="savings-section-head">
+      <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Δεν έχει ποσό στόχο. Είναι λεφτά που βγαίνουν από το διαθέσιμο budget.</p></div>
+    </div>
+    <article class="savings-wallet-card">
+      <div class="savings-wallet-icon">${esc(general.icon||'💰')}</div>
+      <div class="savings-wallet-main">
+        <strong>${esc(general.name||'Γενική αποταμίευση')}</strong>
+        <small>${esc(general.notes||'Χωρίς συγκεκριμένο στόχο')}</small>
+        <em>${fmt(general.currentAmount||0)}</em>
+      </div>
+      <button type="button" onclick="openSavingsDepositSheet('${esc(general.id)}','deposit')">+ Ποσό</button>
+      <button type="button" onclick="openSavingsDepositSheet('${esc(general.id)}','withdrawal')">Αφαίρεση</button>
+    </article>
+  </section>`;
+}
+function renderTargetSavingsSection(goals){
+  if(goals.length===0){
+    return `<section class="savings-production-section bento-card savings-empty compact savings-targets-section">
+      <div class="savings-empty-icon">🎯</div>
+      <h3>Βάλε τον πρώτο σου στόχο</h3>
+      <p>Φτιάξε στόχο για αγορά, ταξίδι ή κάτι συγκεκριμένο και παρακολούθησε την πρόοδό του.</p>
+      <button type="button" class="section-add primary-add" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button>
+    </section>`;
+  }
+  return `<section class="savings-production-section bento-card savings-targets-section">
+    <div class="savings-section-head with-action">
+      <div><small>Στόχοι</small><h3>Στόχοι αποταμίευσης</h3><p>Αγορές, ταξίδια και ποσά που θέλεις να πετύχεις.</p></div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'target')">+ Στόχος</button>
+    </div>
+    <div class="savings-compact-list">
+      ${goals.map(g=>renderSavingsGoalCompactCard(g)).join('')}
+    </div>
+  </section>`;
+}
+function renderSavingsGoalCompactCard(g){
+  const current=Number(g.currentAmount)||0;
+  const target=Number(g.targetAmount)||0;
+  const completed=savingsGoalStatus(g)==='completed';
+  const progress=target>0?Math.min(100,Math.round(current/target*100)):0;
+  const remaining=Math.max(0,target-current);
+  const targetMeta=g.targetDate?`Στόχος: ${formatGreekFullDate(g.targetDate)}`:'Χωρίς ημερομηνία στόχου';
+  return `<button type="button" class="savings-target-row ${completed?'is-completed':''}" onclick="openSavingsGoalDetailsSheet('${esc(g.id)}')">
+    <span class="savings-goal-icon">${esc(g.icon||'🎯')}</span>
+    <span class="savings-target-copy">
+      <strong>${esc(g.name)}</strong>
+      <small>${completed?'Ολοκληρώθηκε':esc(targetMeta)}</small>
+      <i><b style="width:${progress}%"></b></i>
+      <em>${fmt(current)} / ${fmt(target)} · ${completed?'έφτασες τον στόχο':'μένουν '+fmt(remaining)}</em>
+    </span>
+    <span class="savings-target-arrow">›</span>
+  </button>`;
+}
+function renderArchivedSavingsSection(goals){
+  if(!goals.length)return '';
+  return `<section class="savings-production-section bento-card savings-archived-section">
+    <details>
+      <summary><span>Αρχειοθετημένα</span><em>${goals.length}</em></summary>
+      <div class="savings-archived-list">
+        ${goals.map(g=>`<article><span>${esc(g.icon||'🏦')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)}</small><button type="button" onclick="restoreSavingsGoal('${esc(g.id)}')">Επαναφορά</button></article>`).join('')}
+      </div>
+    </details>
+  </section>`;
+}
+function renderSavingsPage(){
+  const summary=$('savingsSummaryGrid');
+  const list=$('savingsGoalList');
+  if(!summary||!list)return;
+  const goals=activeSavingsGoals();
+  const general=generalSavingsGoals();
+  const targets=targetSavingsGoals();
+  const archived=archivedSavingsGoals();
+  const total=savingsGoalsTotal();
+  const stats=savingsCycleStats();
+  const targetTotal=targets.reduce((s,g)=>s+(Number(g.targetAmount)||0),0);
+  const targetCurrent=targets.reduce((s,g)=>s+(Number(g.currentAmount)||0),0);
+  const pct=targetTotal>0?Math.min(100,Math.round(targetCurrent/targetTotal*100)):0;
+  summary.innerHTML=renderSavingsSummaryCards(goals,total,stats,targetTotal,pct);
+  list.innerHTML=`
+    ${renderGeneralSavingsSection(general)}
+    ${renderTargetSavingsSection(targets)}
+    ${renderArchivedSavingsSection(archived)}
+  `;
+}
+function openSavingsGoalDetailsSheet(goalId){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!goal)return;
+  const current=Number(goal.currentAmount)||0;
+  const target=Number(goal.targetAmount)||0;
+  const completed=savingsGoalStatus(goal)==='completed';
+  const progress=target>0?Math.min(100,Math.round(current/target*100)):0;
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet savings-details-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${esc(goal.icon||'🎯')}</span>
+        <div>
+          <small>${completed?'Ολοκληρωμένος στόχος':'Στόχος αποταμίευσης'}</small>
+          <h2>${esc(goal.name)}</h2>
+          <p>${goal.targetDate?'Στόχος: '+formatGreekFullDate(goal.targetDate):'Χωρίς ημερομηνία στόχου'}</p>
+        </div>
+      </div>
+      <div class="savings-details-amount">
+        <strong>${fmt(current)}</strong><span>/ ${fmt(target)}</span>
+      </div>
+      <div class="savings-progress-track"><i style="width:${progress}%"></i></div>
+      <div class="savings-goal-meta"><span>${progress}% ολοκληρώθηκε</span><span>${completed?'Έφτασες τον στόχο':'Μένουν '+fmt(Math.max(0,target-current))}</span></div>
+      <div class="savings-sheet-actions">
+        <button type="button" class="savings-primary-btn" onclick="openSavingsDepositSheet('${esc(goal.id)}','deposit')">+ Προσθήκη ποσού</button>
+        <button type="button" class="savings-secondary-btn" onclick="openSavingsDepositSheet('${esc(goal.id)}','withdrawal')">Αφαίρεση ποσού</button>
+        <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('${esc(goal.id)}','target')">Επεξεργασία</button>
+        ${completed?`<button type="button" class="savings-complete-action" onclick="completeSavingsGoal('${esc(goal.id)}')">Ολοκλήρωση / Αγορά</button>`:''}
+        ${canDeleteSavingsGoal(goal)
+          ? `<button type="button" class="savings-delete-action" onclick="deleteSavingsGoal('${esc(goal.id)}')">Διαγραφή στόχου</button>`
+          : `<button type="button" class="savings-archive-action" onclick="archiveSavingsGoal('${esc(goal.id)}')">Αρχειοθέτηση</button>`}
+      </div>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+function openSavingsGoalSheet(goalId,kind='target'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId)||{};
+  const goalKind=goal.id?savingsGoalKind(goal):kind;
+  const isGeneral=goalKind==='general';
+  const existingGeneral=generalSavingsGoals()[0];
+  if(isGeneral && !goal.id && existingGeneral){
+    showMiniToast('Υπάρχει ήδη γενική αποταμίευση. Πρόσθεσε ποσό εκεί.','info');
+    openSavingsDepositSheet(existingGeneral.id,'deposit');
+    return;
+  }
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${isGeneral?'💰':'🎯'}</span>
+        <div>
+          <small>${isGeneral?'Αποταμίευση':'Στόχος'}</small>
+          <h2>${goal.id?'Επεξεργασία':'Νέος '+(isGeneral?'κουμπαράς':'στόχος')}</h2>
+          <p>${isGeneral?'Μία γενική αποταμίευση, χωρίς ποσό στόχο.':'Δώσε ποσό στόχο και προαιρετικά ημερομηνία για να βλέπεις πρόοδο.'}</p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsGoalId" value="${esc(goal.id||'')}">
+      <input type="hidden" id="savingsGoalKind" value="${esc(goalKind)}">
+      <div class="savings-form-stack">
+        <label class="full">Όνομα<input id="savingsGoalName" type="text" value="${esc(goal.name||'')}" placeholder="${isGeneral?'π.χ. Γενική αποταμίευση':'π.χ. Ταξίδι Ιαπωνία'}"></label>
+        <div class="savings-inline-grid ${isGeneral?'is-general-only':''}">
+          <label class="savings-icon-field">Εικονίδιο<input id="savingsGoalIcon" type="text" value="${esc(goal.icon||(isGeneral?'💰':'🎯'))}" maxlength="4" inputmode="text"></label>
+          ${isGeneral?'':`<label>Ποσό στόχος<input id="savingsGoalTarget" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(goal.targetAmount)||''}" placeholder="0,00"></label>`}
+        </div>
+        ${isGeneral?'':`<label class="full">Ημερομηνία στόχου<input id="savingsGoalDate" type="date" value="${esc(goal.targetDate||'')}"></label>`}
+        <label class="full">Σημείωση<textarea id="savingsGoalNotes" rows="2" placeholder="προαιρετικά">${esc(goal.notes||'')}</textarea></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsGoalFromSheet()">Αποθήκευση</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+async function saveSavingsGoalFromSheet(){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+  const id=$('savingsGoalId')?.value || crypto.randomUUID();
+  const kind=$('savingsGoalKind')?.value||'target';
+  const isGeneral=kind==='general';
+  const existingGeneral=generalSavingsGoals()[0];
+  if(isGeneral && !($('savingsGoalId')?.value) && existingGeneral){
+    showMiniToast('Υπάρχει ήδη γενική αποταμίευση.','error');
+    return;
+  }
+  const name=($('savingsGoalName')?.value||'').trim();
+  const target=isGeneral?0:(Number($('savingsGoalTarget')?.value)||0);
+  const targetDate=isGeneral?null:($('savingsGoalDate')?.value||null);
+  if(!name){showMiniToast('Βάλε όνομα.','error');return;}
+  if(!isGeneral && target<=0){showMiniToast('Για στόχο χρειάζεται ποσό στόχος.','error');return;}
+  const payload={
+    id,
+    user_id:ownerUserId,
+    name,
+    icon:($('savingsGoalIcon')?.value||(isGeneral?'💰':'🎯')).trim()||(isGeneral?'💰':'🎯'),
+    target_amount:target,
+    target_date:targetDate,
+    notes:($('savingsGoalNotes')?.value||'').trim(),
+    goal_type:isGeneral?'general':'target',
+    is_archived:false,
+    status:'active',
+    updated_at:new Date().toISOString()
+  };
+  const btn=document.querySelector('#savingsSheetOverlay .savings-primary-btn');
+  if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+  const {error}=await supabaseClient.from('savings_goals').upsert(payload,{onConflict:'id'});
+  if(error){console.error('saveSavingsGoal failed',error);showMiniToast('Δεν αποθηκεύτηκε.','error');if(btn){btn.disabled=false;btn.textContent='Αποθήκευση';}return;}
+  closeSavingsSheet();
+  await fetchAllData(ownerUserId); render();
+  showMiniToast('✅ Αποθηκεύτηκε');
+}
+async function archiveSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)return;
+  if(Number(goal.currentAmount)>0){
+    showMiniToast('Πρώτα αφαίρεσε το ποσό ή χρησιμοποίησε Ολοκλήρωση / Αγορά.','error');
+    return;
+  }
+  try{
+    const {error}=await supabaseClient.from('savings_goals').update({is_archived:true,status:'archived',updated_at:new Date().toISOString()}).eq('user_id',ownerUserId).eq('id',goalId);
+    if(error)throw error;
+    closeSavingsSheet();
+    await fetchAllData(ownerUserId); render();
+    showMiniToast('Ο κουμπαράς αρχειοθετήθηκε.');
+  }catch(error){console.error('archiveSavingsGoal failed',error);showMiniToast('Δεν έγινε αρχειοθέτηση.','error');}
+}
+async function deleteSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId?.() || getDataOwnerId?.();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)return;
+  if(!canDeleteSavingsGoal(goal)){
+    showMiniToast('Ο στόχος έχει ιστορικό. Μπορείς να τον αρχειοθετήσεις, όχι να τον διαγράψεις.','error');
+    return;
+  }
+  const confirmed=await showConfirmModal({
+    title:'Διαγραφή στόχου',
+    message:'Ο στόχος δεν έχει ποσό ή κινήσεις και μπορεί να διαγραφεί οριστικά. Θέλεις να συνεχίσεις;',
+    confirmText:'Διαγραφή'
+  });
+  if(!confirmed)return;
+  try{
+    const {error}=await supabaseClient.from('savings_goals').delete().eq('user_id',ownerUserId).eq('id',goalId);
+    if(error)throw error;
+    closeSavingsSheet();
+    await fetchAllData(ownerUserId); render();
+    showMiniToast('✅ Ο στόχος διαγράφηκε');
+  }catch(error){
+    console.error('deleteSavingsGoal failed',error);
+    showMiniToast('Δεν έγινε διαγραφή.','error');
+  }
+}
+
+async function restoreSavingsGoal(goalId){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId)return;
+  try{
+    const {error}=await supabaseClient.from('savings_goals').update({is_archived:false,status:'active',updated_at:new Date().toISOString()}).eq('user_id',ownerUserId).eq('id',goalId);
+    if(error)throw error;
+    await fetchAllData(ownerUserId); render();
+    showMiniToast('Ο κουμπαράς επανήλθε στους ενεργούς.');
+  }catch(error){console.error('restoreSavingsGoal failed',error);showMiniToast('Δεν έγινε επαναφορά.','error');}
+}
+function openCarryoverSavingsGoalSheet(){
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  if(!pending){showMiniToast('Δεν υπάρχει εκκρεμές υπόλοιπο.','info');return;}
+  const general=generalSavingsGoals();
+  const targets=targetSavingsGoals();
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>🔒</span>
+        <div>
+          <small>Μεταφορά υπολοίπου</small>
+          <h2>Πού θέλεις να μπει;</h2>
+          <p>Θα μεταφερθούν <strong>${fmt(pending.amount)}</strong> από τον κύκλο ${esc(pending.previous.label)}.</p>
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Αποταμίευση</small>
+        <div class="savings-carryover-goals">
+          ${general.length?general.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'💰')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} στην άκρη</small></button>`).join(''):`<button type="button" onclick="createDefaultGoalAndApplyCarryover()"><span>💰</span><strong>Γενική αποταμίευση</strong><small>Δημιουργία και μεταφορά</small></button>`}
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Στόχοι</small>
+        <div class="savings-carryover-goals">
+          ${targets.length?targets.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'🎯')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} / ${fmt(g.targetAmount||0)}</small></button>`).join(''):`<div class="savings-mini-empty">Δεν έχεις ακόμα στόχο.</div>`}
+        </div>
+      </div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button>
+    </section>`;
+  closeCycleCarryoverSheet?.();
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+/* ============================================================
+   CAPVO v1.1.6 - Money Allocation Foundation
+   Default general savings + source-aware goal transfers + bonus allocation.
+   ============================================================ */
+let capvoEnsuringDefaultGeneralSavings=false;
+
+function getDefaultGeneralSavingsGoal(){
+  return (D.savingsGoals||[]).find(g=>!g.isArchived && savingsGoalKind(g)==='general' && (g.isDefault || (g.name||'').toLowerCase().includes('γενική'))) || generalSavingsGoals()[0] || null;
+}
+
+async function ensureDefaultGeneralSavingsGoal(){
+  const ownerUserId=getFinanceUserId?.() || getDataOwnerId?.();
+  if(!ownerUserId || capvoEnsuringDefaultGeneralSavings)return null;
+  const existing=getDefaultGeneralSavingsGoal();
+  if(existing)return existing;
+  capvoEnsuringDefaultGeneralSavings=true;
+  try{
+    const id=crypto.randomUUID();
+    const payload={
+      id,
+      user_id:ownerUserId,
+      name:'Γενική αποταμίευση',
+      icon:'💰',
+      target_amount:0,
+      current_amount:0,
+      target_date:null,
+      notes:'Χρήματα στην άκρη, εκτός διαθέσιμου budget.',
+      goal_type:'general',
+      is_default:true,
+      is_archived:false,
+      status:'active',
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await supabaseClient.from('savings_goals').insert(payload);
+    if(error)throw error;
+    await fetchAllData(ownerUserId);
+    render();
+    return (D.savingsGoals||[]).find(g=>g.id===id)||null;
+  }catch(error){
+    console.warn('[CAPVO] ensureDefaultGeneralSavingsGoal failed',error);
+    return null;
+  }finally{
+    capvoEnsuringDefaultGeneralSavings=false;
+  }
+}
+
+// Override: one and only one default general savings wallet.
+function renderGeneralSavingsSection(goals){
+  const general=getDefaultGeneralSavingsGoal() || goals[0];
+  if(!general){
+    ensureDefaultGeneralSavingsGoal();
+    return `<section class="savings-production-section bento-card savings-general-empty savings-wallet-section">
+      <div class="savings-section-head with-action">
+        <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Ετοιμάζουμε τον βασικό κουμπαρά σου.</p></div>
+      </div>
+    </section>`;
+  }
+  return `<section class="savings-production-section bento-card savings-wallet-section">
+    <div class="savings-section-head with-action">
+      <div><small>Αποταμίευση</small><h3>Γενική αποταμίευση</h3><p>Ένας βασικός κουμπαράς χωρίς όριο. Μπορείς να αλλάξεις όνομα και εικονίδιο.</p></div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('${esc(general.id)}','general')">Επεξεργασία</button>
+    </div>
+    <article class="savings-wallet-card is-default-wallet">
+      <div class="savings-wallet-icon">${esc(general.icon||'💰')}</div>
+      <div class="savings-wallet-main">
+        <strong>${esc(general.name||'Γενική αποταμίευση')}</strong>
+        <small>${esc(general.notes||'Χωρίς συγκεκριμένο στόχο')}</small>
+        <em>${fmt(general.currentAmount||0)}</em>
+      </div>
+      <button type="button" onclick="openSavingsDepositSheet('${esc(general.id)}','deposit')">+ Ποσό</button>
+      <button type="button" onclick="openSavingsDepositSheet('${esc(general.id)}','withdrawal')">Αφαίρεση</button>
+    </article>
+  </section>`;
+}
+
+function openSavingsGoalSheet(goalId,kind='target'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId)||{};
+  const goalKind=goal.id?savingsGoalKind(goal):kind;
+  const isGeneral=goalKind==='general';
+  const existingGeneral=getDefaultGeneralSavingsGoal();
+  if(isGeneral && !goal.id && existingGeneral){
+    openSavingsGoalSheet(existingGeneral.id,'general');
+    return;
+  }
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${isGeneral?'💰':'🎯'}</span>
+        <div>
+          <small>${isGeneral?'Γενική αποταμίευση':'Στόχος'}</small>
+          <h2>${isGeneral?'Επεξεργασία αποταμίευσης':goal.id?'Επεξεργασία στόχου':'Νέος στόχος'}</h2>
+          <p>${isGeneral?'Ο βασικός κουμπαράς δεν έχει ποσό στόχο και δεν μπορεί να διαγραφεί.':'Οι στόχοι χρειάζονται ποσό στόχο και εμφανίζονται χωριστά από τη γενική αποταμίευση.'}</p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsGoalId" value="${esc(goal.id||'')}">
+      <input type="hidden" id="savingsGoalKind" value="${esc(goalKind)}">
+      <div class="savings-form-stack">
+        <label class="full">Όνομα<input id="savingsGoalName" type="text" value="${esc(goal.name||(isGeneral?'Γενική αποταμίευση':''))}" placeholder="${isGeneral?'π.χ. Emergency fund':'π.χ. Ταξίδι Ιαπωνία'}"></label>
+        <div class="savings-inline-grid ${isGeneral?'is-general-only':''}">
+          <label class="savings-icon-field">Εικονίδιο<input id="savingsGoalIcon" type="text" value="${esc(goal.icon||(isGeneral?'💰':'🎯'))}" maxlength="4" inputmode="text"></label>
+          ${isGeneral?'':`<label>Ποσό στόχος<input id="savingsGoalTarget" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(goal.targetAmount)||''}" placeholder="0,00"></label>`}
+        </div>
+        ${isGeneral?'':`<label class="full">Ημερομηνία στόχου<input id="savingsGoalDate" type="date" value="${esc(goal.targetDate||'')}"></label>`}
+        <label class="full">Σημείωση<textarea id="savingsGoalNotes" rows="2" placeholder="προαιρετικά">${esc(goal.notes||'')}</textarea></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsGoalFromSheet()">Αποθήκευση</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function saveSavingsGoalFromSheet(){
+  const ownerUserId=getFinanceUserId?.() || getDataOwnerId?.();
+  if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
+  const id=$('savingsGoalId')?.value || crypto.randomUUID();
+  const kind=$('savingsGoalKind')?.value||'target';
+  const isGeneral=kind==='general';
+  const existingGeneral=getDefaultGeneralSavingsGoal();
+  if(isGeneral && !($('savingsGoalId')?.value) && existingGeneral){
+    showMiniToast('Υπάρχει ήδη γενική αποταμίευση.','error');
+    return;
+  }
+  const name=($('savingsGoalName')?.value||'').trim();
+  const target=isGeneral?0:(Number($('savingsGoalTarget')?.value)||0);
+  const targetDate=isGeneral?null:($('savingsGoalDate')?.value||null);
+  if(!name){showMiniToast('Βάλε όνομα.','error');return;}
+  if(!isGeneral && target<=0){showMiniToast('Για στόχο χρειάζεται ποσό στόχος.','error');return;}
+  const payload={
+    id,
+    user_id:ownerUserId,
+    name,
+    icon:($('savingsGoalIcon')?.value||(isGeneral?'💰':'🎯')).trim()||(isGeneral?'💰':'🎯'),
+    target_amount:target,
+    target_date:targetDate,
+    notes:($('savingsGoalNotes')?.value||'').trim(),
+    goal_type:isGeneral?'general':'target',
+    is_default:!!isGeneral,
+    is_archived:false,
+    status:'active',
+    updated_at:new Date().toISOString()
+  };
+  const btn=document.querySelector('#savingsSheetOverlay .savings-primary-btn');
+  if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+  const {error}=await supabaseClient.from('savings_goals').upsert(payload,{onConflict:'id'});
+  if(error){console.error('saveSavingsGoal failed',error);showMiniToast('Δεν αποθηκεύτηκε. Τρέξε το SQL του v1.1.6.','error');if(btn){btn.disabled=false;btn.textContent='Αποθήκευση';}return;}
+  closeSavingsSheet();
+  await fetchAllData(ownerUserId); render();
+  showMiniToast('✅ Αποθηκεύτηκε');
+}
+
+function openSavingsDepositSheet(goalId,mode='deposit'){
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!goal)return;
+  const isWithdrawal=mode==='withdrawal';
+  const isGeneral=savingsGoalKind(goal)==='general';
+  const general=getDefaultGeneralSavingsGoal();
+  const generalBalance=Number(general?.currentAmount)||0;
+  const overlay=ensureSavingsSheet();
+  const sourceOptions=!isGeneral && !isWithdrawal?`
+    <div class="full savings-source-select">
+      <span>Από πού θα τα πάρεις;</span>
+      <input type="hidden" id="savingsTxSource" value="manual_from_budget">
+      <div class="savings-choice-group">
+        <button type="button" class="active" onclick="setSavingsTxSource('manual_from_budget',this)"><strong>Τρέχον budget</strong><small>Μειώνει το διαθέσιμο ποσό.</small></button>
+        <button type="button" ${generalBalance<=0?'disabled':''} onclick="setSavingsTxSource('manual_from_general',this)"><strong>Γενική αποταμίευση</strong><small>${general?fmt(generalBalance):fmt(0)} διαθέσιμα</small></button>
+      </div>
+    </div>`:!isGeneral && isWithdrawal?`
+    <div class="full savings-source-select">
+      <span>Πού να επιστρέψει;</span>
+      <input type="hidden" id="savingsTxSource" value="manual_to_budget">
+      <div class="savings-choice-group">
+        <button type="button" class="active" onclick="setSavingsTxSource('manual_to_budget',this)"><strong>Τρέχον budget</strong><small>Αυξάνει το διαθέσιμο ποσό.</small></button>
+        <button type="button" onclick="setSavingsTxSource('manual_to_general',this)"><strong>Γενική αποταμίευση</strong><small>Μένει εκτός budget.</small></button>
+      </div>
+    </div>`:`<input type="hidden" id="savingsTxSource" value="${isWithdrawal?'manual_to_budget':'manual_from_budget'}">`;
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>${esc(goal.icon||'🏦')}</span>
+        <div>
+          <small>${isWithdrawal?'Αφαίρεση ποσού':'Προσθήκη ποσού'}</small>
+          <h2>${esc(goal.name)}</h2>
+          <p>${isGeneral?'Η γενική αποταμίευση συνδέεται με το budget.':'Για στόχο διάλεξε αν τα χρήματα έρχονται από budget ή από γενική αποταμίευση.'} Τρέχον ποσό: <strong>${fmt(goal.currentAmount||0)}</strong></p>
+        </div>
+      </div>
+      <input type="hidden" id="savingsTxGoalId" value="${esc(goal.id)}">
+      <input type="hidden" id="savingsTxMode" value="${isWithdrawal?'withdrawal':'deposit'}">
+      <div class="savings-form-stack compact">
+        ${sourceOptions}
+        <label class="full">Ποσό<input id="savingsTxAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+        <label class="full">Σημείωση<input id="savingsTxNote" type="text" placeholder="προαιρετικά"></label>
+      </div>
+      <button type="button" class="savings-primary-btn" onclick="saveSavingsTransactionFromSheet()">${isWithdrawal?'Αφαίρεση ποσού':'Προσθήκη ποσού'}</button>
+    </section>`;
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function insertSavingsTx(ownerUserId,goalId,amount,type,source,note='',relatedCycleKey=''){
+  const {error}=await supabaseClient.from('savings_transactions').insert({
+    user_id:ownerUserId,goal_id:goalId,amount,type,source,note,related_cycle_key:relatedCycleKey||null
+  });
+  if(error)throw error;
+}
+async function updateSavingsGoalAmount(ownerUserId,goal,nextAmount){
+  const status=savingsGoalKind(goal)==='target' && Number(goal.targetAmount)>0 && nextAmount>=Number(goal.targetAmount)?'completed':'active';
+  const update={current_amount:Math.max(0,nextAmount),status,updated_at:new Date().toISOString()};
+  update.completed_at=status==='completed'?new Date().toISOString():null;
+  const {error}=await supabaseClient.from('savings_goals').update(update).eq('user_id',ownerUserId).eq('id',goal.id);
+  if(error)throw error;
+}
+
+async function addSavingsTransaction(goalId,amount,type='deposit',source='manual_from_budget',note='',relatedCycleKey=''){
+  const ownerUserId=getFinanceUserId?.() || getDataOwnerId?.();
+  const goal=(D.savingsGoals||[]).find(g=>g.id===goalId);
+  if(!ownerUserId||!goal)throw new Error('Missing savings goal');
+  const safeAmount=Number(amount)||0;
+  if(safeAmount<=0)throw new Error('Invalid savings amount');
+  const current=Number(goal.currentAmount)||0;
+  const general=getDefaultGeneralSavingsGoal();
+  const isGoalGeneral=savingsGoalKind(goal)==='general';
+
+  if(type==='withdrawal' && safeAmount>current){
+    const err=new Error('Withdrawal exceeds current amount');
+    err.code='CAPVO_WITHDRAWAL_EXCEEDS_BALANCE';
+    throw err;
+  }
+
+  if(!isGoalGeneral && type==='deposit' && source==='manual_from_general'){
+    if(!general || general.id===goal.id){throw new Error('Missing general savings');}
+    const generalCurrent=Number(general.currentAmount)||0;
+    if(safeAmount>generalCurrent){const err=new Error('General savings insufficient');err.code='CAPVO_GENERAL_SAVINGS_INSUFFICIENT';throw err;}
+    await insertSavingsTx(ownerUserId,general.id,-safeAmount,'transfer_out','general_to_goal',`Μεταφορά σε στόχο: ${goal.name}`,'');
+    await insertSavingsTx(ownerUserId,goal.id,safeAmount,'transfer_in','general_to_goal',note||`Από γενική αποταμίευση`,'');
+    await updateSavingsGoalAmount(ownerUserId,general,generalCurrent-safeAmount);
+    await updateSavingsGoalAmount(ownerUserId,goal,current+safeAmount);
+    return;
+  }
+
+  if(!isGoalGeneral && type==='withdrawal' && source==='manual_to_general'){
+    if(!general || general.id===goal.id){throw new Error('Missing general savings');}
+    const generalCurrent=Number(general.currentAmount)||0;
+    await insertSavingsTx(ownerUserId,goal.id,-safeAmount,'transfer_out','goal_to_general',note||`Μεταφορά στη γενική αποταμίευση`,'');
+    await insertSavingsTx(ownerUserId,general.id,safeAmount,'transfer_in','goal_to_general',`Από στόχο: ${goal.name}`,'');
+    await updateSavingsGoalAmount(ownerUserId,goal,current-safeAmount);
+    await updateSavingsGoalAmount(ownerUserId,general,generalCurrent+safeAmount);
+    return;
+  }
+
+  const signed=type==='withdrawal'?-safeAmount:safeAmount;
+  await insertSavingsTx(ownerUserId,goal.id,signed,type,source,note,relatedCycleKey);
+  await updateSavingsGoalAmount(ownerUserId,goal,current+signed);
+}
+
+async function saveSavingsTransactionFromSheet(){
+  const goalId=$('savingsTxGoalId')?.value;
+  const mode=$('savingsTxMode')?.value||'deposit';
+  const amount=Number($('savingsTxAmount')?.value)||0;
+  const note=($('savingsTxNote')?.value||'').trim();
+  const source=$('savingsTxSource')?.value || (mode==='withdrawal'?'manual_to_budget':'manual_from_budget');
+  if(amount<=0){showMiniToast('Βάλε ποσό.','error');return;}
+  const btn=document.querySelector('#savingsSheetOverlay .savings-primary-btn');
+  if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+  try{
+    await addSavingsTransaction(goalId,amount,mode,source,note,'');
+    closeSavingsSheet();
+    await fetchAllData(getFinanceUserId?.() || getDataOwnerId?.()); render();
+    showMiniToast(mode==='withdrawal'?'✅ Το ποσό αφαιρέθηκε':'✅ Το ποσό προστέθηκε');
+  }catch(error){
+    console.error('saveSavingsTransaction failed',error);
+    const msg=error?.code==='CAPVO_WITHDRAWAL_EXCEEDS_BALANCE'
+      ?'Δεν μπορείς να αφαιρέσεις περισσότερα από όσα έχει ο κουμπαράς.'
+      :error?.code==='CAPVO_GENERAL_SAVINGS_INSUFFICIENT'
+        ?'Δεν υπάρχει αρκετό ποσό στη Γενική αποταμίευση.'
+        :'Δεν αποθηκεύτηκε η κίνηση.';
+    showMiniToast(msg,'error');
+    if(btn){btn.disabled=false;btn.textContent=mode==='withdrawal'?'Αφαίρεση ποσού':'Προσθήκη ποσού';}
+  }
+}
+
+function savingsBudgetImpactTotal(){
+  const current=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
+  const startKey=current?.startKey||'';
+  const endKey=current?.endKey||'';
+  let impact=0;
+  (D.savingsTransactions||[]).forEach(t=>{
+    const day=(t.createdAt||'').slice(0,10);
+    if(!day || (startKey && day<startKey) || (endKey && day>endKey))return;
+    const amount=Number(t.amount)||0;
+    const source=(t.source||'').toLowerCase();
+    if(source==='manual_from_budget')impact+=Math.abs(amount);
+    if(source==='manual_to_budget')impact-=Math.abs(amount);
+  });
+  return impact;
+}
+
+function renderSavingsPage(){
+  const summary=$('savingsSummaryGrid');
+  const list=$('savingsGoalList');
+  if(!summary||!list)return;
+  const goals=activeSavingsGoals();
+  const general=generalSavingsGoals();
+  if(!getDefaultGeneralSavingsGoal())ensureDefaultGeneralSavingsGoal();
+  const targets=targetSavingsGoals();
+  const archived=archivedSavingsGoals();
+  const total=savingsGoalsTotal();
+  const stats=savingsCycleStats();
+  const targetTotal=targets.reduce((s,g)=>s+(Number(g.targetAmount)||0),0);
+  const targetCurrent=targets.reduce((s,g)=>s+(Number(g.currentAmount)||0),0);
+  const pct=targetTotal>0?Math.min(100,Math.round(targetCurrent/targetTotal*100)):0;
+  summary.innerHTML=renderSavingsSummaryCards(goals,total,stats,targetTotal,pct);
+  list.innerHTML=`
+    ${renderGeneralSavingsSection(general)}
+    ${renderTargetSavingsSection(targets)}
+    ${renderArchivedSavingsSection(archived)}
+  `;
+}
+
+function openCarryoverSavingsGoalSheet(){
+  const pending=typeof getPendingCycleCarryover==='function'?getPendingCycleCarryover():null;
+  if(!pending){showMiniToast('Δεν υπάρχει εκκρεμές υπόλοιπο.','info');return;}
+  const general=getDefaultGeneralSavingsGoal();
+  const targets=targetSavingsGoals();
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>🔒</span>
+        <div>
+          <small>Μεταφορά υπολοίπου</small>
+          <h2>Πού θέλεις να μπει;</h2>
+          <p>Θα μεταφερθούν <strong>${fmt(pending.amount)}</strong> από τον κύκλο ${esc(pending.previous.label)}.</p>
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Αποταμίευση</small>
+        <div class="savings-carryover-goals">
+          ${general?`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(general.id)}')"><span>${esc(general.icon||'💰')}</span><strong>${esc(general.name)}</strong><small>${fmt(general.currentAmount||0)} στην άκρη</small></button>`:`<button type="button" onclick="createDefaultGoalAndApplyCarryover()"><span>💰</span><strong>Γενική αποταμίευση</strong><small>Δημιουργία και μεταφορά</small></button>`}
+        </div>
+      </div>
+      <div class="savings-carryover-block">
+        <small>Στόχοι</small>
+        <div class="savings-carryover-goals">
+          ${targets.length?targets.map(g=>`<button type="button" onclick="applyCarryoverToSavingsGoal('${esc(g.id)}')"><span>${esc(g.icon||'🎯')}</span><strong>${esc(g.name)}</strong><small>${fmt(g.currentAmount||0)} / ${fmt(g.targetAmount||0)}</small></button>`).join(''):`<div class="savings-mini-empty">Δεν έχεις ακόμα στόχο.</div>`}
+        </div>
+      </div>
+      <button type="button" class="savings-secondary-btn" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button>
+    </section>`;
+  closeCycleCarryoverSheet?.();
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function createDefaultGoalAndApplyCarryover(){
+  await ensureDefaultGeneralSavingsGoal();
+  const general=getDefaultGeneralSavingsGoal();
+  if(general)await applyCarryoverToSavingsGoal(general.id);
+}
+
+async function recordIncomeAllocation(incomeSourceId,sourceName,totalAmount,destinationType,destinationId,amount,note=''){
+  try{
+    const ownerUserId=getFinanceUserId?.() || getDataOwnerId?.();
+    if(!ownerUserId)return;
+    await supabaseClient.from('income_allocations').insert({
+      user_id:ownerUserId,
+      income_source_id:incomeSourceId||null,
+      source_name:sourceName||'Έκτακτο εισόδημα',
+      total_amount:Number(totalAmount)||Number(amount)||0,
+      destination_type:destinationType,
+      destination_id:destinationId||null,
+      amount:Number(amount)||0,
+      note:note||null
+    });
+  }catch(error){
+    console.warn('[CAPVO] income allocation history unavailable. Run v1.1.6 SQL migration.',error?.message||error);
+  }
+}
+
+const capvoV116BaseSaveIncomeSource = window.saveIncomeSource || saveIncomeSource;
+async function saveExtraIncomeToBudget(obj,userId){
+  await saveIncomeSourceRow(userId,obj);
+  if(!D.incomeSources)D.incomeSources=[];
+  D.incomeSources.push(obj);
+  refreshComputedIncome();
+  await recordIncomeAllocation(obj.id,obj.name,obj.amount,'budget',null,obj.amount,'Όλο στο budget');
+}
+
+function openExtraIncomeAllocationSheet(obj,userId){
+  const general=getDefaultGeneralSavingsGoal();
+  const targets=targetSavingsGoals();
+  const overlay=ensureSavingsSheet();
+  overlay.innerHTML=`
+    <section class="savings-sheet income-allocation-sheet" onclick="event.stopPropagation()">
+      <div class="cycle-carryover-handle" aria-hidden="true"></div>
+      <button type="button" class="cycle-carryover-close" onclick="closeSavingsSheet()" aria-label="Κλείσιμο">×</button>
+      <div class="savings-sheet-hero">
+        <span>✨</span>
+        <div>
+          <small>Έκτακτο εισόδημα</small>
+          <h2>Πού θέλεις να πάνε τα ${fmt(obj.amount)};</h2>
+          <p>${esc(obj.name)} · διάλεξε αν θα μπουν στο budget, στην αποταμίευση ή σε στόχο.</p>
+        </div>
+      </div>
+      <div class="income-allocation-actions">
+        <button type="button" onclick="applyExtraIncomeAllocation('budget')"><strong>Όλο στο budget</strong><small>Αυξάνει το διαθέσιμο ποσό του κύκλου.</small></button>
+        <button type="button" onclick="applyExtraIncomeAllocation('general')"><strong>Όλο στη γενική αποταμίευση</strong><small>Δεν αυξάνει το διαθέσιμο budget.</small></button>
+        ${targets.length?`<label class="income-allocation-select"><span>Σε στόχο</span><select id="extraIncomeTargetId">${targets.map(g=>`<option value="${esc(g.id)}">${esc(g.name)} · ${fmt(g.currentAmount||0)} / ${fmt(g.targetAmount||0)}</option>`).join('')}</select><button type="button" onclick="applyExtraIncomeAllocation('target')">Μεταφορά σε στόχο</button></label>`:`<button type="button" onclick="openSavingsGoalSheet('', 'target')"><strong>+ Δημιουργία στόχου</strong><small>Φτιάξε στόχο και μετά κάνε την κατανομή.</small></button>`}
+        <div class="income-allocation-split">
+          <strong>Μοίρασμα</strong>
+          <label>Budget<input id="allocBudgetAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+          <label>Γενική αποταμίευση<input id="allocGeneralAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>
+          ${targets.length?`<label>Στόχος<select id="allocTargetId"><option value="">Κανένας</option>${targets.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('')}</select></label><label>Ποσό στόχου<input id="allocTargetAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></label>`:''}
+          <button type="button" class="savings-primary-btn" onclick="applyExtraIncomeAllocation('split')">Αποθήκευση μοιράσματος</button>
+        </div>
+      </div>
+    </section>`;
+  window.__capvoPendingExtraIncome={obj,userId};
+  overlay.classList.add('active');
+  document.body.classList.add('modal-open');
+}
+
+async function applyExtraIncomeAllocation(mode){
+  const pending=window.__capvoPendingExtraIncome;
+  if(!pending)return;
+  const {obj,userId}=pending;
+  const btn=document.querySelector('#savingsSheetOverlay button');
+  try{
+    if(mode==='budget'){
+      await saveExtraIncomeToBudget({...obj,includeInBudget:true,isSavings:false,restriction:'none'},userId);
+    }else if(mode==='general'){
+      let general=getDefaultGeneralSavingsGoal() || await ensureDefaultGeneralSavingsGoal();
+      await addSavingsTransaction(general.id,obj.amount,'deposit','bonus_allocation',`Bonus: ${obj.name}`,'');
+      await recordIncomeAllocation(null,obj.name,obj.amount,'general_savings',general.id,obj.amount,'Όλο στη γενική αποταμίευση');
+    }else if(mode==='target'){
+      const targetId=$('extraIncomeTargetId')?.value;
+      if(!targetId){showMiniToast('Διάλεξε στόχο.','error');return;}
+      await addSavingsTransaction(targetId,obj.amount,'deposit','bonus_allocation',`Bonus: ${obj.name}`,'');
+      await recordIncomeAllocation(null,obj.name,obj.amount,'savings_goal',targetId,obj.amount,'Όλο σε στόχο');
+    }else if(mode==='split'){
+      const budgetAmt=Number($('allocBudgetAmount')?.value)||0;
+      const generalAmt=Number($('allocGeneralAmount')?.value)||0;
+      const targetId=$('allocTargetId')?.value||'';
+      const targetAmt=Number($('allocTargetAmount')?.value)||0;
+      const total=budgetAmt+generalAmt+targetAmt;
+      if(total<=0){showMiniToast('Βάλε ποσό για κατανομή.','error');return;}
+      if(Math.round(total*100)>Math.round(Number(obj.amount)*100)){showMiniToast('Δεν μπορείς να κατανείμεις περισσότερα από το bonus.','error');return;}
+      if(Math.round(total*100)<Math.round(Number(obj.amount)*100)){showMiniToast('Δεν έχει κατανεμηθεί όλο το ποσό.','error');return;}
+      if(budgetAmt>0){
+        await saveExtraIncomeToBudget({...obj,id:gid(),amount:budgetAmt,name:obj.name+' · Budget',includeInBudget:true,isSavings:false,restriction:'none'},userId);
+      }
+      if(generalAmt>0){
+        let general=getDefaultGeneralSavingsGoal() || await ensureDefaultGeneralSavingsGoal();
+        await addSavingsTransaction(general.id,generalAmt,'deposit','bonus_allocation',`Bonus: ${obj.name}`,'');
+        await recordIncomeAllocation(null,obj.name,obj.amount,'general_savings',general.id,generalAmt,'Μοίρασμα bonus');
+      }
+      if(targetAmt>0){
+        if(!targetId){showMiniToast('Διάλεξε στόχο για το ποσό στόχου.','error');return;}
+        await addSavingsTransaction(targetId,targetAmt,'deposit','bonus_allocation',`Bonus: ${obj.name}`,'');
+        await recordIncomeAllocation(null,obj.name,obj.amount,'savings_goal',targetId,targetAmt,'Μοίρασμα bonus');
+      }
+    }
+    closeSavingsSheet(); closeM?.();
+    window.__capvoPendingExtraIncome=null;
+    await fetchAllData(userId); render();
+    showMiniToast('✅ Το έκτακτο εισόδημα κατανεμήθηκε');
+  }catch(error){
+    console.error('applyExtraIncomeAllocation failed',error);
+    showMiniToast('Δεν έγινε η κατανομή. Έλεγξε το SQL του v1.1.6.','error');
+  }
+}
+
+window.saveIncomeSource = async function saveIncomeSource(){
+  const mode=getCurrentIncomeWizardMode?.() || '';
+  const id=$('fISID')?.value;
+  if(mode!=='extra' || id){
+    return capvoV116BaseSaveIncomeSource();
+  }
+  const validation=validateIncomeSourceForm();
+  if(!validation)return;
+  const userId=getDataOwnerId();
+  if(!userId){showMiniToast('❌ Δεν υπάρχει ενεργή σύνδεση Google','error');return;}
+  const obj={
+    id:gid(),
+    name:validation.name,
+    amount:validation.amount,
+    category:$('fISCategory').value || 'Bonus',
+    incomeType:validation.incomeType,
+    includeInBudget:false,
+    isSavings:false,
+    isRecurring:false,
+    restriction:'none',
+    restrictedCategory:$('fISRestrictedCategory').value,
+    notes:$('fISNotes').value.trim(),
+    isPrimaryIncome:false
+  };
+  await ensureDefaultGeneralSavingsGoal();
+  openExtraIncomeAllocationSheet(obj,userId);
+};
