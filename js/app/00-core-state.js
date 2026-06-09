@@ -126,7 +126,6 @@ else capvoUpdateOrientationState();
 const SK = 'current_chat_id';
 
 const MG = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
-const MG_GEN = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
 const DG = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
 
 const CCLR = {
@@ -159,13 +158,7 @@ let D = {
     language:'el'
   },
   budgetCycles:[],
-  budgetCycleIncomes:[],
-  budgetCycleCarryovers:[],
-  savingsGoals:[],
-  savingsTransactions:[],
-  holidaysByYear:{},
-  holidaysLoadedYears:{},
-  holidayFetchStatus:'idle'
+  budgetCycleIncomes:[]
 };
 let curM;
 
@@ -248,166 +241,175 @@ function capvoParseDateKey(value){
 }
 function capvoClampCycleDay(value){
   const n=Math.round(Number(value)||1);
-  return Math.min(31,Math.max(1,n));
+  return Math.min(28,Math.max(1,n));
 }
+
+// CAPVO v1.1.7.11 compatibility helper.
+// 02-supabase-data.js expects normalizeBudgetCycleType to exist.
 function normalizeBudgetCycleType(value){
-  return String(value||'fixed_day')==='last_working_day'?'last_working_day':'fixed_day';
+  const raw = String(value || '').trim();
+  if(raw === 'last_working_day') return 'last_working_day';
+  if(raw === 'fixed_day') return 'fixed_day';
+  if(raw === 'last_business_day') return 'last_working_day';
+  if(raw === 'specific_day') return 'fixed_day';
+  return 'fixed_day';
 }
+
+
+// CAPVO v1.1.7.12 compatibility helpers.
+// Some older modules/settings code call these names directly.
 function getBudgetCycleType(){
-  return normalizeBudgetCycleType(D?.preferences?.budgetCycleType);
-}
-function isLastWorkingDayRule(){
-  return getBudgetCycleType()==='last_working_day';
-}
-function getBudgetCycleStartDay(){
-  return capvoClampCycleDay(D?.preferences?.budgetCycleStartDay||1);
-}
-function capvoAsMiddayDate(value){
-  if(value instanceof Date && !Number.isNaN(value.getTime()))return new Date(value.getFullYear(),value.getMonth(),value.getDate(),12,0,0,0);
-  const parsed=capvoParseDateKey(value);
-  if(parsed)return parsed;
-  const d=new Date(value||Date.now());
-  return Number.isNaN(d.getTime())?new Date():new Date(d.getFullYear(),d.getMonth(),d.getDate(),12,0,0,0);
-}
-function capvoHolidayStorageKey(year){return `capvo_holidays_GR_${year}`;}
-function capvoNormalizeHolidayRows(rows){
-  const set=new Set();
-  (Array.isArray(rows)?rows:[]).forEach(row=>{
-    const raw=typeof row==='string'?row:(row?.date||row?.localDate||'');
-    const key=String(raw||'').slice(0,10);
-    if(/^\d{4}-\d{2}-\d{2}$/.test(key))set.add(key);
-  });
-  return set;
-}
-function capvoLoadHolidayYearFromStorage(year){
   try{
-    const raw=localStorage.getItem(capvoHolidayStorageKey(year));
-    if(!raw)return false;
-    const parsed=JSON.parse(raw);
-    const rows=Array.isArray(parsed?.holidays)?parsed.holidays:[];
-    const set=capvoNormalizeHolidayRows(rows);
-    if(set.size){
-      D.holidaysByYear=D.holidaysByYear||{};
-      D.holidaysByYear[year]=set;
-      D.holidaysLoadedYears=D.holidaysLoadedYears||{};
-      D.holidaysLoadedYears[year]='storage';
-      return true;
-    }
-  }catch(_){/* ignore stale cache */}
-  return false;
-}
-function capvoStoreHolidayYear(year,holidays){
-  try{
-    localStorage.setItem(capvoHolidayStorageKey(year),JSON.stringify({
-      country:'GR',
-      year:Number(year),
-      cachedAt:new Date().toISOString(),
-      holidays:(holidays||[]).map(h=>({date:h.date,name:h.name||h.localName||h.local_name||''}))
-    }));
-  }catch(_){/* storage can be full/blocked */}
-}
-async function capvoFetchHolidayYear(year){
-  const workerUrl=String(CONFIG?.WORKER_URL||'').trim();
-  if(!workerUrl)throw new Error('Missing worker URL');
-  const url=new URL(workerUrl);
-  url.pathname='/holidays';
-  url.searchParams.set('country','GR');
-  url.searchParams.set('year',String(year));
-  const controller=typeof AbortController!=='undefined'?new AbortController():null;
-  const timer=controller?setTimeout(()=>controller.abort(),6000):null;
-  let res;
-  try{
-    res=await fetch(url.toString(),{method:'GET',headers:{'Accept':'application/json'},signal:controller?.signal});
-  }finally{
-    if(timer)clearTimeout(timer);
+    return normalizeBudgetCycleType(D?.preferences?.budgetCycleType || D?.preferences?.budget_cycle_type || 'fixed_day');
+  }catch(e){
+    return 'fixed_day';
   }
-  if(!res.ok)throw new Error('Holiday API failed: '+res.status);
-  const data=await res.json();
-  const holidays=Array.isArray(data?.holidays)?data.holidays:[];
-  capvoStoreHolidayYear(year,holidays);
-  D.holidaysByYear=D.holidaysByYear||{};
-  D.holidaysByYear[year]=capvoNormalizeHolidayRows(holidays);
-  D.holidaysLoadedYears=D.holidaysLoadedYears||{};
-  D.holidaysLoadedYears[year]=data?.source||'api';
-  return D.holidaysByYear[year];
 }
-async function capvoEnsureGreekHolidayYears(years){
-  const unique=[...new Set((years||[]).map(y=>Number(y)).filter(y=>Number.isFinite(y)))];
-  if(!unique.length)return;
-  D.holidayFetchStatus='loading';
-  await Promise.all(unique.map(async year=>{
-    if(D?.holidaysByYear?.[year])return;
-    if(capvoLoadHolidayYearFromStorage(year))return;
-    try{
-      await capvoFetchHolidayYear(year);
-    }catch(err){
-      console.warn('[CAPVO] Greek holidays unavailable for',year,err?.message||err);
-      D.holidaysByYear=D.holidaysByYear||{};
-      if(!D.holidaysByYear[year])D.holidaysByYear[year]=new Set();
-      D.holidaysLoadedYears=D.holidaysLoadedYears||{};
-      D.holidaysLoadedYears[year]='fallback_weekend_only';
-    }
-  }));
-  D.holidayFetchStatus='ready';
+
+function getBudgetCycleStartDay(){
+  try{
+    const raw = D?.preferences?.budgetCycleStartDay ?? D?.preferences?.budget_cycle_start_day ?? 1;
+    return capvoClampCycleDay(raw || 1);
+  }catch(e){
+    return 1;
+  }
 }
-async function capvoEnsureBudgetCycleHolidays(){
-  const today=new Date();
-  const y=today.getFullYear();
-  await capvoEnsureGreekHolidayYears([y-1,y,y+1]);
+
+function setBudgetCycleType(value){
+  if(!D.preferences)D.preferences={};
+  D.preferences.budgetCycleType = normalizeBudgetCycleType(value);
+  return D.preferences.budgetCycleType;
 }
-function capvoIsWeekend(date){return date.getDay()===0 || date.getDay()===6;}
-function capvoIsGreekHoliday(date){
-  const key=capvoDateKey(date);
-  const year=date.getFullYear();
-  return !!(D?.holidaysByYear?.[year]?.has?.(key));
+
+function setBudgetCycleStartDay(value){
+  if(!D.preferences)D.preferences={};
+  D.preferences.budgetCycleStartDay = capvoClampCycleDay(value || 1);
+  return D.preferences.budgetCycleStartDay;
 }
-function capvoIsNonWorkingDay(date){
-  return capvoIsWeekend(date) || capvoIsGreekHoliday(date);
+
+function isLastWorkingDayCycle(){
+  return getBudgetCycleType() === 'last_working_day';
 }
+
+
+// CAPVO v1.1.7.13 compatibility helpers for budget-cycle UI.
+// These keep 02-supabase-data.js/settings/dashboard rendering stable.
+function capvoToDate(value){
+  if(value instanceof Date && !Number.isNaN(value.getTime())){
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate(), 12);
+  }
+  if(typeof capvoParseDateKey === 'function'){
+    const parsed = capvoParseDateKey(value);
+    if(parsed) return parsed;
+  }
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+}
+
+function formatGreekFullDate(value){
+  const d = capvoToDate(value);
+  if(!d) return '—';
+  const months = Array.isArray(MG) ? MG : ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
+  return `${d.getDate()} ${months[d.getMonth()] || ''} ${d.getFullYear()}`;
+}
+
+function formatBudgetCycleDateRange(startValue,endValue){
+  const s = capvoToDate(startValue);
+  const e = capvoToDate(endValue);
+  if(!s || !e) return '—';
+  return `${formatGreekFullDate(s)} – ${formatGreekFullDate(e)}`;
+}
+
+function getBudgetCycleRuleLabel(){
+  const type = getBudgetCycleType();
+  if(type === 'last_working_day') return 'Τελευταία εργάσιμη κάθε μήνα';
+  return `Κάθε ${getBudgetCycleStartDay()} του μήνα`;
+}
+
+function getBudgetCycleRuleShortLabel(){
+  const type = getBudgetCycleType();
+  if(type === 'last_working_day') return 'Τελευταία εργάσιμη';
+  return `${getBudgetCycleStartDay()} κάθε μήνα`;
+}
+
 function capvoLastWorkingDayOfMonth(year,monthIndex){
-  const d=new Date(year,monthIndex+1,0,12,0,0,0);
-  while(capvoIsNonWorkingDay(d)){
-    d.setDate(d.getDate()-1);
+  const d = new Date(year, monthIndex + 1, 0, 12);
+  // Safe fallback: weekends only. Holiday-aware logic can override elsewhere when available.
+  while(d.getDay() === 0 || d.getDay() === 6){
+    d.setDate(d.getDate() - 1);
   }
   return d;
 }
-function getHolidayAwareRuleText(){
-  const years=D?.holidaysLoadedYears||{};
-  const hasAny=Object.keys(years).some(y=>years[y] && years[y]!=='fallback_weekend_only');
-  return hasAny
-    ? 'Το CAPVO υπολογίζει Σαββατοκύριακα και επίσημες ελληνικές αργίες.'
-    : 'Το CAPVO υπολογίζει Σαββατοκύριακα. Αν δεν φορτωθούν οι αργίες, χρησιμοποιείται προσωρινά ο κανόνας Δευτέρα-Παρασκευή.';
+
+function getNextPaydayAfter(dateValue,type){
+  const ref = capvoToDate(dateValue) || new Date();
+  const normalizedType = normalizeBudgetCycleType(type || getBudgetCycleType());
+  const day = getBudgetCycleStartDay();
+
+  let candidate;
+  if(normalizedType === 'last_working_day'){
+    candidate = capvoLastWorkingDayOfMonth(ref.getFullYear(), ref.getMonth());
+    if(candidate <= ref){
+      candidate = capvoLastWorkingDayOfMonth(ref.getFullYear(), ref.getMonth() + 1);
+    }
+    return candidate;
+  }
+
+  candidate = new Date(ref.getFullYear(), ref.getMonth(), day, 12);
+  if(candidate <= ref){
+    candidate = new Date(ref.getFullYear(), ref.getMonth() + 1, day, 12);
+  }
+  return candidate;
 }
-function capvoPaydayForMonth(year,monthIndex,type=getBudgetCycleType()){
-  if(normalizeBudgetCycleType(type)==='last_working_day')return capvoLastWorkingDayOfMonth(year,monthIndex);
-  const lastDay=new Date(year,monthIndex+1,0,12,0,0,0).getDate();
-  const day=Math.min(getBudgetCycleStartDay(),lastDay);
-  return new Date(year,monthIndex,day,12,0,0,0);
+
+function formatNextPaydayMeta(cycle,options={}){
+  const prefix = options && options.prefix ? options.prefix : 'Επόμενη πληρωμή';
+  const next = cycle?.nextStartKey || cycle?.nextStart || getNextPaydayAfter(new Date(), getBudgetCycleType());
+  return `${prefix}: ${formatGreekFullDate(next)}`;
 }
-function getPreviousPaydayOnOrBefore(refDate=new Date(),type=getBudgetCycleType()){
-  const base=capvoAsMiddayDate(refDate);
-  let payday=capvoPaydayForMonth(base.getFullYear(),base.getMonth(),type);
-  if(base<payday)payday=capvoPaydayForMonth(base.getFullYear(),base.getMonth()-1,type);
-  return payday;
+
+function getPendingCycleCarryover(){
+  try{
+    const cycles = (D?.budgetCycles || [])
+      .slice()
+      .sort((a,b)=>String(b.startDate || b.start_date || '').localeCompare(String(a.startDate || a.start_date || '')));
+
+    if(cycles.length < 2) return null;
+
+    const current = getCurrentBudgetCycle();
+    const previous = cycles.find(c => String(c.endDate || c.end_date || '') < String(current.startKey || current.startDate || ''));
+    if(!previous) return null;
+
+    const existing = (D?.budgetCycleCarryovers || D?.budget_cycle_carryovers || []).find(x =>
+      String(x.fromCycleKey || x.from_cycle_key || '') === String(previous.cycleKey || previous.cycle_key || previous.startDate || previous.start_date || '') &&
+      String(x.toCycleKey || x.to_cycle_key || '') === String(current.startKey || current.startDate || '')
+    );
+    if(existing) return null;
+
+    return null;
+  }catch(e){
+    return null;
+  }
 }
-function getNextPaydayAfter(refDate=new Date(),type=getBudgetCycleType()){
-  const base=capvoAsMiddayDate(refDate);
-  let payday=capvoPaydayForMonth(base.getFullYear(),base.getMonth(),type);
-  if(payday<=base)payday=capvoPaydayForMonth(base.getFullYear(),base.getMonth()+1,type);
-  return payday;
+
+function closeCycleCarryoverSheet(){
+  const el = document.getElementById('cycleCarryoverSheet') || document.getElementById('mCycleCarryover');
+  if(el) el.classList.remove('active');
 }
-function getBudgetCycleRuleLabel(){
-  return isLastWorkingDayRule()
-    ? 'Πληρώνομαι την τελευταία εργάσιμη του μήνα'
-    : `Πληρώνομαι κάθε ${getBudgetCycleStartDay()} του μήνα`;
-}
-function getBudgetCycleRuleShortLabel(){
-  return isLastWorkingDayRule()?'Τελευταία εργάσιμη':'Συγκεκριμένη ημέρα';
+
+
+function getBudgetCycleStartDay(){
+  return capvoClampCycleDay(D?.preferences?.budgetCycleStartDay||1);
 }
 function getStandardBudgetCycle(refDate=new Date()){
-  const type=getBudgetCycleType();
-  const start=getPreviousPaydayOnOrBefore(refDate,type);
-  const nextStart=getNextPaydayAfter(start,type);
+  const day=getBudgetCycleStartDay();
+  const today=refDate instanceof Date?new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),12):new Date();
+  let start=new Date(today.getFullYear(),today.getMonth(),day,12);
+  if(today<start){
+    start=new Date(today.getFullYear(),today.getMonth()-1,day,12);
+  }
+  const nextStart=new Date(start.getFullYear(),start.getMonth()+1,day,12);
   const end=new Date(nextStart);
   end.setDate(end.getDate()-1);
   return {
@@ -418,8 +420,7 @@ function getStandardBudgetCycle(refDate=new Date()){
     startKey:capvoDateKey(start),
     endKey:capvoDateKey(end),
     nextStartKey:capvoDateKey(nextStart),
-    startDay:getBudgetCycleStartDay(),
-    budgetCycleType:type,
+    startDay:day,
     source:'normal',
     note:'',
     isGenerated:false,
@@ -462,112 +463,11 @@ function getPrimaryIncomeSource(){
 function getCycleIncomesForCycle(cycleId){
   return (D?.budgetCycleIncomes||[]).filter(i=>String(i.cycleId||i.cycle_id)===String(cycleId||''));
 }
-function capvoCycleKey(cycle){
-  if(!cycle)return '';
-  return String(cycle.startKey||cycle.cycleKey||cycle.cycle_key||cycle.startDate||cycle.start_date||'').slice(0,10);
-}
-function getCycleCarryovers(){
-  return Array.isArray(D?.budgetCycleCarryovers)?D.budgetCycleCarryovers:[];
-}
-function getCarryoverDecision(fromCycle,toCycle){
-  const fromKey=capvoCycleKey(fromCycle);
-  const toKey=capvoCycleKey(toCycle);
-  if(!fromKey || !toKey)return null;
-  return getCycleCarryovers().find(c=>String(c.fromCycleKey)===fromKey && String(c.toCycleKey)===toKey) || null;
-}
-function getCarryInForCycle(cycle){
-  const toKey=capvoCycleKey(cycle);
-  if(!toKey)return 0;
-  return getCycleCarryovers()
-    .filter(c=>String(c.toCycleKey)===toKey && c.action==='carry_to_next')
-    .reduce((sum,c)=>sum+(Number(c.amount)||0),0);
-}
-function getBaseIncomeForCycle(cycle){
-  const cycleId=String(cycle?.id||'');
-  const storedIncomes=cycleId && !String(cycleId).startsWith('standard_') && !String(cycleId).startsWith('normal_')
-    ? getCycleIncomesForCycle(cycleId)
-    : [];
-  const storedTotal=storedIncomes.reduce((s,i)=>s+(Number(i.amount)||0),0);
-  if(storedTotal>0)return storedTotal;
-  if(Number(cycle?.primaryIncomeAmount)>0)return Number(cycle.primaryIncomeAmount)||0;
-  return budgetIncomeTotal();
-}
-function getCycleIncomeTotal(cycle){
-  return getBaseIncomeForCycle(cycle)+getCarryInForCycle(cycle);
-}
-function getExpensesForCycle(cycle){
-  if(!cycle)return [];
-  const start=cycle.start instanceof Date?cycle.start:capvoParseDateKey(cycle.startKey||cycle.startDate||cycle.start_date);
-  const end=cycle.end instanceof Date?cycle.end:capvoParseDateKey(cycle.endKey||cycle.endDate||cycle.end_date);
-  if(!start||!end)return [];
-  return getAllDailyExpenses().filter(e=>{
-    const d=capvoParseDateKey(e.date);
-    return d && d>=start && d<=end;
-  });
-}
-function getCycleSpentTotal(cycle){
-  const daily=getExpensesForCycle(cycle).reduce((s,e)=>s+(Number(e.amount)||0),0);
-  return fixedTotal()+ccPayTotal()+daily;
-}
-function getCycleBalance(cycle){
-  return getCycleIncomeTotal(cycle)-getCycleSpentTotal(cycle);
-}
-function getPreviousBudgetCycleFor(cycle){
-  if(!cycle?.start)return null;
-  const prevRef=new Date(cycle.start.getFullYear(),cycle.start.getMonth(),cycle.start.getDate()-1,12);
-  return getActiveStoredBudgetCycle(prevRef) || getStandardBudgetCycle(prevRef);
-}
-function getPendingCycleCarryover(){
-  const current=getCurrentBudgetCycle();
-  if(!current?.startKey)return null;
-  const previous=getPreviousBudgetCycleFor(current);
-  if(!previous?.startKey || !previous?.endKey)return null;
-
-  const today=new Date();
-  const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate(),12);
-  const currentStart=current.start instanceof Date?current.start:capvoParseDateKey(current.startKey);
-  if(!currentStart || todayMid<currentStart)return null;
-
-  const existing=getCarryoverDecision(previous,current);
-  if(existing)return null;
-
-  const amount=Math.round(Math.max(0,getCycleBalance(previous))*100)/100;
-  if(amount<=0.009)return null;
-
-  return {previous,current,amount};
-}
-function getCurrentCycleAvailableIncome(){
-  return getCycleIncomeTotal(getCurrentBudgetCycle());
-}
-function formatGreekCycleDate(date,{withYear=false}={}){
-  if(!(date instanceof Date) || Number.isNaN(date.getTime()))return '';
-  const month=MG_GEN[date.getMonth()]||'';
-  const year=withYear?` ${date.getFullYear()}`:'';
-  return `${date.getDate()} ${month}${year}`.trim();
-}
-function formatBudgetCycleLabel(start,end,{withYear=false}={}){
+function formatBudgetCycleLabel(start,end){
   if(!(start instanceof Date)||!(end instanceof Date))return 'Τρέχων κύκλος';
-  const s=formatGreekCycleDate(start,{withYear});
-  const e=formatGreekCycleDate(end,{withYear});
+  const s=`${start.getDate()} ${MG[start.getMonth()]?.slice(0,3)||''}`;
+  const e=`${end.getDate()} ${MG[end.getMonth()]?.slice(0,3)||''}`;
   return `${s} - ${e}`;
-}
-function formatBudgetCycleDateRange(startValue,endValue,{withYear=false}={}){
-  const start=startValue instanceof Date?startValue:capvoParseDateKey(startValue);
-  const end=endValue instanceof Date?endValue:capvoParseDateKey(endValue);
-  return formatBudgetCycleLabel(start,end,{withYear});
-}
-function formatGreekFullDate(value,{withYear=false}={}){
-  const dt=value instanceof Date?value:capvoParseDateKey(value);
-  return formatGreekCycleDate(dt,{withYear});
-}
-function formatNextPaydayMeta(cycle,{prefix='Επόμενη πληρωμή',includeRemaining=true}={}){
-  const next=cycle?.nextStartKey||cycle?.nextStartDate||cycle?.nextStart;
-  const nextLabel=next?formatGreekFullDate(next):'';
-  const remaining=cycleDaysRemaining(cycle);
-  const parts=[];
-  if(nextLabel)parts.push(`${prefix}: ${nextLabel}`);
-  if(includeRemaining)parts.push(`${remaining} ${remaining===1?'μέρα':'μέρες'} ακόμα`);
-  return parts.join(' · ');
 }
 function isDateInCurrentBudgetCycle(value){
   const dt=capvoParseDateKey(value);
@@ -596,7 +496,12 @@ function budgetCycleRemainingDays(){
 
 function ensM(k){if(!D.months[k])D.months[k]={daily:[]}}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
-function fmt(n){n=Number(n)||0;return '€'+n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function capvoMoney(n){
+  n=Number(n)||0;
+  // Normalize all money values to cents to avoid €1499,99 style float artifacts.
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+function fmt(n){n=capvoMoney(n);return '€'+n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
 function esc(s){const d=document.createElement('div');d.textContent=s??'';return d.innerHTML}
 function $(id){return document.getElementById(id)}
 function todayISO(){return new Date().toISOString().split('T')[0]}
@@ -641,8 +546,8 @@ function effectiveCardPayment(c){
   return chosen>0?chosen:effectiveCardMinPay(c);
 }
 function ccPayTotal(){return(D.creditCards||[]).filter(c=>c.balance>0).reduce((s,c)=>s+effectiveCardPayment(c),0)}
-function fixedTotal(){return(D.fixedExpenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0)}
-function dailyTotal(){return getCurrentCycleDailyExpenses().reduce((s,e)=>s+(Number(e.amount)||0),0)}
+function fixedTotal(){return capvoMoney((D.fixedExpenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0))}
+function dailyTotal(){return capvoMoney(getCurrentCycleDailyExpenses().reduce((s,e)=>s+(Number(e.amount)||0),0))}
 function allFixedTotal(){return fixedTotal()+ccPayTotal()}
 function incomeSourcesTotal(){
   return (D.incomeSources||[])
@@ -650,31 +555,20 @@ function incomeSourcesTotal(){
 }
 
 function budgetIncomeTotal(){
-  return (D.incomeSources||[])
+  return capvoMoney((D.incomeSources||[])
     .filter(i=>i.includeInBudget)
-    .reduce((s,i)=>s+(Number(i.amount)||0),0);
-}
-
-function isSavingsSource(source){
-  if(!source)return false;
-  return !!source.isSavings || source.restriction==='locked' || source.restriction==='investment' || source.category==='Αποταμίευση';
-}
-
-function isRestrictedPaymentSource(source){
-  if(!source)return false;
-  if(isSavingsSource(source))return false;
-  return !!(source.restriction && source.restriction!=='none');
+    .reduce((s,i)=>s+(Number(i.amount)||0),0));
 }
 
 function savingsIncomeTotal(){
   return (D.incomeSources||[])
-    .filter(i=>isSavingsSource(i))
+    .filter(i=>i.isSavings || !i.includeInBudget)
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
 function restrictedIncomeTotal(){
   return (D.incomeSources||[])
-    .filter(i=>isRestrictedPaymentSource(i))
+    .filter(i=>i.restriction && i.restriction!=='none')
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
@@ -737,14 +631,14 @@ function paymentSourceRemaining(source){
 }
 
 function dailyCashTotal(){
-  return getCurrentCycleDailyExpenses()
+  return capvoMoney(getCurrentCycleDailyExpenses()
     .filter(e=>!e.paymentSourceId)
-    .reduce((s,e)=>s+(Number(e.amount)||0),0);
+    .reduce((s,e)=>s+(Number(e.amount)||0),0));
 }
 
 function totalRestrictedCoverage(){
   return (D.incomeSources||[])
-    .filter(i=>isRestrictedPaymentSource(i))
+    .filter(i=>i.restriction && i.restriction!=='none')
     .reduce((sum,i)=>sum+restrictedCoverageFor(i),0);
 }
 
@@ -756,8 +650,7 @@ function remainingRestrictedAmount(source){
 }
 
 function refreshComputedIncome(){
-  const cycle=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
-  D.income = cycle?getCycleIncomeTotal(cycle):budgetIncomeTotal();
+  D.income = capvoMoney(budgetIncomeTotal());
 }
 
 function save(){return saveToSupabase()}

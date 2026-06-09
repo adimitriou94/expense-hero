@@ -16,7 +16,7 @@ async function fetchAllData(userId){
 
   try{
     if(!ownerUserId){
-      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el'},budgetCycles:[],budgetCycleIncomes:[],budgetCycleCarryovers:[],holidaysByYear:{},holidaysLoadedYears:{},holidayFetchStatus:'idle'};
+      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el',onboardingCompleted:false,onboardingDismissed:false,onboardingStep:''},budgetCycles:[],budgetCycleIncomes:[],budgetCycleCarryovers:[],holidaysByYear:{},holidaysLoadedYears:{},holidayFetchStatus:'idle'};
       refreshComputedIncome();
       return;
     }
@@ -34,7 +34,11 @@ async function fetchAllData(userId){
       budgetCycleType:normalizeBudgetCycleType(prefs.budget_cycle_type),
       budgetCycleStartDay:capvoClampCycleDay(prefs.budget_cycle_start_day||1),
       currency:prefs.currency||'EUR',
-      language:prefs.language||'el'
+      language:prefs.language||'el',
+      onboardingCompleted:!!prefs.onboarding_completed,
+      onboardingDismissed:!!prefs.onboarding_dismissed,
+      onboardingStep:prefs.onboarding_step||'',
+      onboardingCompletedAt:prefs.onboarding_completed_at||''
     };
 
     if(typeof capvoEnsureBudgetCycleHolidays==='function'){
