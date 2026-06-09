@@ -1313,6 +1313,62 @@ function showApp(){
   }
 }
 
+
+function cancelTelegramLinkFlow(){
+  changingTelegramId=false;
+
+  const chatInput=$('chatIdInput');
+  const codeInput=$('telegramCodeInput');
+  const err=$('authError');
+
+  if(chatInput)chatInput.value='';
+  if(codeInput)codeInput.value='';
+  if(err)err.textContent='';
+
+  renderAuthState();
+  hideAuth();
+
+  try{
+    if(currentUser){
+      go('vDash',document.querySelector('[data-v="vDash"]'));
+    }
+  }catch(e){}
+}
+
+function capvoEnsureTelegramLinkTopbar(){
+  const box=$('telegramLinkBox');
+  if(!box || box.querySelector('.capvo-telegram-option-b-topbar'))return;
+
+  const topbar=document.createElement('div');
+  topbar.className='capvo-telegram-option-b-topbar';
+  topbar.innerHTML=`
+    <button type="button" class="capvo-telegram-back-btn" onclick="cancelTelegramLinkFlow()">‹ Πίσω</button>
+    <button type="button" class="capvo-telegram-cancel-btn" onclick="cancelTelegramLinkFlow()">Ακύρωση</button>
+  `;
+  box.prepend(topbar);
+}
+
+function capvoEnsureTelegramOptionBVisual(){
+  const box=$('telegramLinkBox');
+  if(!box || box.querySelector('.capvo-telegram-option-b-orb'))return;
+
+  const userBox=$('authUserBox');
+  const orb=document.createElement('div');
+  orb.className='capvo-telegram-option-b-orb';
+  orb.setAttribute('aria-hidden','true');
+  orb.innerHTML='<span></span>';
+
+  const hero=box.querySelector('.capvo-wizard-hero');
+  if(hero){
+    hero.parentNode.insertBefore(orb, hero);
+  }else if(userBox){
+    userBox.insertAdjacentElement('afterend', orb);
+  }else{
+    box.prepend(orb);
+  }
+}
+
+
 function renderAuthState(){
   const googleBox=$('googleLoginBox');
   const telegramBox=$('telegramLinkBox');
@@ -1340,6 +1396,9 @@ function renderAuthState(){
   if(!shouldShowTelegramLink){
     return;
   }
+
+  capvoEnsureTelegramLinkTopbar();
+  capvoEnsureTelegramOptionBVisual();
 
   if(userBox){
     userBox.innerHTML=`
@@ -2524,9 +2583,86 @@ function capvoEnsureOnboardingPremiumStyles(){
 }
 
 
+
+function capvoEnsureWizardMobileScrollFixStyles(){
+  if(document.getElementById('capvoWizardMobileScrollFixStyles'))return;
+  const style=document.createElement('style');
+  style.id='capvoWizardMobileScrollFixStyles';
+  style.textContent=`
+    #capvoOnboardingOverlay.capvo-onboarding-overlay{
+      overflow:hidden !important;
+    }
+
+    #capvoOnboardingOverlay .ob-stepper-pro{
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
+      -webkit-overflow-scrolling:touch !important;
+      overscroll-behavior:contain !important;
+      grid-template-rows:auto auto auto auto auto auto !important;
+      align-content:start !important;
+      height:100dvh !important;
+      max-height:100dvh !important;
+      padding-bottom:calc(20px + env(safe-area-inset-bottom)) !important;
+    }
+
+    #capvoOnboardingOverlay .ob-pro-body{
+      overflow:visible !important;
+      min-height:auto !important;
+      max-height:none !important;
+      padding-right:0 !important;
+    }
+
+    #capvoOnboardingOverlay .ob-pro-actions{
+      position:relative !important;
+      margin-top:2px !important;
+    }
+
+    #capvoOnboardingOverlay .ob-pro-footnote{
+      padding-bottom:4px !important;
+    }
+
+    #capvoOnboardingOverlay .ob-pro-card.hero{
+      margin-bottom:2px !important;
+    }
+
+    @media (max-width:420px){
+      #capvoOnboardingOverlay .ob-stepper-pro{
+        padding-left:14px !important;
+        padding-right:14px !important;
+        gap:13px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-copy h2{
+        font-size:26px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-card{
+        padding:16px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-card-head h3{
+        font-size:23px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-card-head p{
+        font-size:12.5px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-benefits strong{
+        font-size:12px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-cycle-editor{
+        padding-top:10px !important;
+        gap:9px !important;
+      }
+      #capvoOnboardingOverlay .ob-pro-day-input{
+        min-height:52px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+
 function renderCapvoOnboardingWizard(){
   capvoEnsureOnboardingProStyles();
   capvoEnsureOnboardingPremiumStyles();
+  capvoEnsureWizardMobileScrollFixStyles();
   const overlay=capvoEnsureOnboardingOverlay();
   const s=window.__capvoOnboarding||capvoWizardDefaultState();
   overlay.innerHTML=capvoOnboardingStepHtml(s);

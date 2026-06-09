@@ -12173,3 +12173,407 @@ body.onboarding-open .app-shell{
   .ob-pro-actions.three{grid-template-columns:1fr 1fr !important;}
   .ob-pro-actions.three .ob-pro-link{grid-column:1 / -1 !important; order:3 !important;}
 }
+
+
+/* ============================================================
+   CAPVO v1.1.7.23 — Telegram connection Option B premium flow
+   Scoped only to the Telegram linking screen.
+   ============================================================ */
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card{
+  width:min(100%,430px);
+  min-height:auto;
+  max-height:min(92dvh,860px);
+  overflow-y:auto;
+  padding:18px 18px 22px;
+  border-radius:32px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(101,71,246,.075),transparent 32%),
+    linear-gradient(180deg,rgba(255,255,255,.98),rgba(252,252,255,.96));
+  box-shadow:0 28px 80px rgba(15,23,42,.18);
+}
+
+#telegramLinkBox.capvo-telegram-wizard-v2{
+  display:grid;
+  gap:14px;
+}
+
+#telegramLinkBox .capvo-telegram-option-b-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:2px;
+}
+
+#telegramLinkBox .capvo-telegram-back-btn,
+#telegramLinkBox .capvo-telegram-cancel-btn{
+  border:0;
+  font-family:inherit;
+  cursor:pointer;
+  min-height:36px;
+  border-radius:14px;
+  font-weight:900;
+}
+
+#telegramLinkBox .capvo-telegram-back-btn{
+  padding:0 12px;
+  background:#fff;
+  color:#475467;
+  border:1px solid rgba(226,232,240,.95);
+  box-shadow:0 8px 18px rgba(15,23,42,.04);
+}
+
+#telegramLinkBox .capvo-telegram-cancel-btn{
+  padding:0 10px;
+  background:transparent;
+  color:#6d4df7;
+}
+
+#telegramLinkBox .capvo-wizard-user{
+  display:block;
+  margin:0;
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(226,232,240,.9);
+  background:rgba(255,255,255,.76);
+  color:#667085;
+  font-size:11.5px;
+  line-height:1.35;
+  font-weight:800;
+}
+
+#telegramLinkBox .capvo-wizard-user strong{
+  color:#111827;
+  font-size:12.5px;
+}
+
+#telegramLinkBox .capvo-telegram-option-b-orb{
+  width:76px;
+  height:76px;
+  margin:4px auto 2px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 38% 28%,rgba(255,255,255,.92),transparent 26%),
+    linear-gradient(135deg,#31b7f1,#6547f6);
+  box-shadow:
+    0 20px 44px rgba(49,183,241,.22),
+    0 14px 34px rgba(101,71,246,.18),
+    inset 0 1px 0 rgba(255,255,255,.42);
+}
+
+#telegramLinkBox .capvo-telegram-option-b-orb span{
+  width:36px;
+  height:28px;
+  background:#fff;
+  clip-path:polygon(0 48%,100% 0,74% 100%,47% 66%,29% 83%);
+  filter:drop-shadow(0 8px 12px rgba(30,64,175,.14));
+}
+
+#telegramLinkBox .capvo-wizard-hero{
+  text-align:center;
+  padding:0 10px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+#telegramLinkBox .capvo-wizard-hero .capvo-kicker{
+  display:block;
+  margin-bottom:7px;
+  color:#2563eb;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+#telegramLinkBox .capvo-wizard-hero h2{
+  margin:0;
+  color:#101828;
+  font-size:30px;
+  line-height:1.07;
+  letter-spacing:-.055em;
+  font-weight:950;
+}
+
+#telegramLinkBox .capvo-wizard-hero p{
+  max-width:300px;
+  margin:10px auto 0;
+  color:#667085;
+  font-size:13.5px;
+  line-height:1.45;
+  font-weight:720;
+}
+
+#telegramLinkBox .capvo-wizard-flow{
+  position:relative;
+  display:grid;
+  gap:12px;
+  padding:4px 10px 2px;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+#telegramLinkBox .capvo-wizard-flow::before{
+  content:"";
+  position:absolute;
+  left:31px;
+  top:24px;
+  bottom:24px;
+  width:2px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#31b7f1,#6547f6);
+  opacity:.42;
+}
+
+#telegramLinkBox .capvo-wizard-step{
+  position:relative;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+#telegramLinkBox .capvo-wizard-step b{
+  position:relative;
+  z-index:1;
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#31b7f1,#6547f6);
+  color:#fff;
+  font-size:14px;
+  font-weight:950;
+  box-shadow:0 12px 24px rgba(37,99,235,.20);
+}
+
+#telegramLinkBox .capvo-wizard-step div{
+  min-height:54px;
+  display:grid;
+  align-content:center;
+  padding:10px 12px;
+  border:1px solid rgba(226,232,240,.92);
+  border-radius:18px;
+  background:rgba(255,255,255,.84);
+  box-shadow:0 12px 26px rgba(15,23,42,.045);
+}
+
+#telegramLinkBox .capvo-wizard-step strong{
+  color:#111827;
+  font-size:13.5px;
+  line-height:1.25;
+  font-weight:920;
+}
+
+#telegramLinkBox .capvo-wizard-step span{
+  color:#667085;
+  font-size:12.5px;
+  line-height:1.35;
+  font-weight:760;
+}
+
+#telegramLinkBox .capvo-bot-open-main{
+  min-height:54px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#2563eb,#6547f6);
+  color:#fff;
+  font-weight:950;
+  box-shadow:0 18px 34px rgba(37,99,235,.22);
+}
+
+#telegramLinkBox .capvo-bot-open-main span{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  background:rgba(255,255,255,.18);
+  display:grid;
+  place-items:center;
+}
+
+#telegramLinkBox .capvo-wizard-form-v2{
+  display:grid;
+  gap:12px;
+  padding:14px;
+  border-radius:22px;
+  border:1px solid rgba(226,232,240,.92);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 14px 34px rgba(15,23,42,.055);
+}
+
+#telegramLinkBox .capvo-field-group label{
+  color:#667085;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+#telegramLinkBox .capvo-input-wrap{
+  min-height:54px;
+  border-radius:18px;
+  border:1px solid rgba(226,232,240,.96);
+  background:#f8fafc;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+#telegramLinkBox .capvo-input-wrap input{
+  color:#101828;
+  font-weight:850;
+  letter-spacing:.02em;
+}
+
+#telegramLinkBox .capvo-field-hint{
+  margin-top:8px;
+  color:#667085;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:750;
+}
+
+#telegramLinkBox .capvo-wizard-submit{
+  min-height:54px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#2563eb,#6547f6);
+  color:#fff;
+  font-weight:950;
+  box-shadow:0 18px 34px rgba(37,99,235,.22);
+}
+
+#telegramLinkBox .capvo-command-strip-v3{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+#telegramLinkBox .capvo-command-strip-v3 button{
+  min-height:54px;
+  border-radius:18px;
+  border:1px solid rgba(226,232,240,.92);
+  background:rgba(255,255,255,.84);
+  box-shadow:0 10px 24px rgba(15,23,42,.04);
+}
+
+#telegramLinkBox .capvo-command-strip-v3 code{
+  color:#2563eb;
+  font-weight:950;
+}
+
+#telegramLinkBox .capvo-wizard-note-v2{
+  border:1px solid rgba(99,102,241,.16);
+  background:linear-gradient(180deg,rgba(238,242,255,.78),rgba(255,255,255,.82));
+  color:#667085;
+  border-radius:18px;
+  padding:12px 14px;
+  font-size:12.5px;
+  line-height:1.4;
+  font-weight:760;
+}
+
+#telegramLinkBox .capvo-wizard-logout{
+  min-height:52px;
+  border-radius:18px;
+  background:#fff1f2;
+  color:#e11d48;
+  border:0;
+  font-weight:950;
+}
+
+@media (max-width:420px){
+  .auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card{
+    width:100%;
+    min-height:100dvh;
+    max-height:100dvh;
+    border-radius:0;
+    padding:14px 14px 20px;
+  }
+  #telegramLinkBox .capvo-wizard-hero h2{
+    font-size:28px;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.24 — Telegram bottom spacing + wizard mobile scroll
+   ============================================================ */
+#telegramLinkBox.capvo-telegram-wizard-v2{
+  padding-bottom:10px !important;
+}
+
+#telegramLinkBox .capvo-wizard-form-v2{
+  gap:16px !important;
+  margin-top:4px !important;
+  margin-bottom:14px !important;
+  padding:16px !important;
+}
+
+#telegramLinkBox .capvo-field-group{
+  display:grid !important;
+  gap:8px !important;
+}
+
+#telegramLinkBox .capvo-field-group + .capvo-field-group{
+  margin-top:4px !important;
+}
+
+#telegramLinkBox .capvo-field-hint{
+  margin-top:2px !important;
+  padding:0 2px !important;
+}
+
+#telegramLinkBox .capvo-wizard-submit{
+  margin-top:8px !important;
+}
+
+#telegramLinkBox .capvo-command-strip-v3{
+  margin-top:6px !important;
+  margin-bottom:12px !important;
+  gap:12px !important;
+}
+
+#telegramLinkBox .capvo-wizard-note-v2{
+  margin-top:0 !important;
+  margin-bottom:12px !important;
+  padding:14px 16px !important;
+}
+
+#telegramLinkBox .capvo-wizard-logout{
+  margin-top:2px !important;
+  margin-bottom:6px !important;
+}
+
+#telegramLinkBox .auth-input-wrap.capvo-input-wrap{
+  min-height:56px !important;
+}
+
+#telegramLinkBox .capvo-input-wrap input{
+  min-height:52px !important;
+}
+
+@media (max-width:420px){
+  #telegramLinkBox.capvo-telegram-wizard-v2{
+    gap:16px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-form-v2{
+    padding:16px !important;
+    gap:17px !important;
+  }
+
+  #telegramLinkBox .capvo-command-strip-v3{
+    gap:12px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-note-v2{
+    line-height:1.5 !important;
+  }
+}
+
