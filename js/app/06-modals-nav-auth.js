@@ -1400,9 +1400,11 @@ function renderAuthState(){
   capvoEnsureTelegramLinkTopbar();
   capvoEnsureTelegramOptionBVisual();
 
+  capvoResetTelegramScrollTop();
+
   if(userBox){
     userBox.innerHTML=`
-      Συνδέθηκες ως:<br>
+      <span>Google λογαριασμός</span>
       <strong>${esc(currentUser.email||'Google user')}</strong>
     `;
   }
@@ -1434,7 +1436,11 @@ function showAuth(message){
   }
 
   if(err)err.textContent=message||'';
-  if(input)setTimeout(()=>input.focus(),80);
+
+  // Do not autofocus during Telegram linking.
+  // On mobile this opens the keyboard and scrolls the screen directly to the fields.
+  const shouldAutoFocus = !changingTelegramId && !window.matchMedia?.('(max-width: 720px)')?.matches;
+  if(input && shouldAutoFocus)setTimeout(()=>input.focus(),80);
 }
 
 function hideAuth(){
@@ -1469,6 +1475,30 @@ async function connectWithChatId(ev){
   return saveTelegramChatId(ev);
 }
 
+
+function capvoResetTelegramScrollTop(){
+  const auth=$('authScreen');
+  const card=auth?.querySelector?.('.capvo-auth-card');
+  const box=$('telegramLinkBox');
+
+  const reset=()=>{
+    try{
+      window.scrollTo(0,0);
+      document.documentElement.scrollTop=0;
+      document.body.scrollTop=0;
+      if(auth)auth.scrollTop=0;
+      if(card)card.scrollTop=0;
+      if(box)box.scrollTop=0;
+    }catch(e){}
+  };
+
+  reset();
+  requestAnimationFrame(reset);
+  setTimeout(reset,60);
+  setTimeout(reset,220);
+}
+
+
 function switchChatId(){
 
   changingTelegramId=true;
@@ -1476,10 +1506,25 @@ function switchChatId(){
   closeM();
 
   const input=$('chatIdInput');
-  if(input)input.value='';
+  const codeInput=$('telegramCodeInput');
+  if(input){
+    input.value='';
+    input.blur();
+  }
+  if(codeInput){
+    codeInput.value='';
+    codeInput.blur();
+  }
+  try{document.activeElement?.blur?.();}catch(e){}
 
   showAuth(getTelegramChatId()?'Σύνδεσε νέο Telegram Chat ID. Μέχρι να ολοκληρωθεί η αλλαγή, η παλιά σύνδεση παραμένει ενεργή.':'Σύνδεσε το Telegram για να ενεργοποιήσεις το Sync.');
   renderAuthState();
+
+  const auth=$('authScreen');
+  const card=auth?.querySelector?.('.capvo-auth-card');
+  const box=$('telegramLinkBox');
+
+  capvoResetTelegramScrollTop();
 
   const btn=$('authSubmitBtn');
 
@@ -1488,9 +1533,7 @@ function switchChatId(){
     btn.textContent='Σύνδεση Telegram';
   }
 
-  setTimeout(()=>{
-    input?.focus();
-  },100);
+  capvoResetTelegramScrollTop();
 }
 
 function cleanOAuthUrl(){
@@ -2901,12 +2944,14 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     curM=curMK();
     ensM(curM);
     render();
-    go('vDash',document.querySelector('[data-v="vDash"]'));
-    showMiniToast('✅ Το CAPVO είναι έτοιμο');
 
     if(openTelegramAfter){
-      setTimeout(()=>switchChatId?.(),450);
+      switchChatId?.();
+      return;
     }
+
+    go('vDash',document.querySelector('[data-v="vDash"]'));
+    showMiniToast('✅ Το CAPVO είναι έτοιμο');
 
   }catch(e){
     console.error('finish onboarding failed',e);

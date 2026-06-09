@@ -12577,3 +12577,135 @@ body.onboarding-open .app-shell{
   }
 }
 
+
+
+/* ============================================================
+   CAPVO v1.1.7.25 — Telegram mobile flow polish
+   ============================================================ */
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]){
+  align-items:flex-start !important;
+  justify-content:center !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding:calc(12px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom)) !important;
+}
+
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card{
+  margin:0 auto !important;
+  border-radius:30px !important;
+  max-height:none !important;
+  min-height:auto !important;
+  overflow:visible !important;
+}
+
+#telegramLinkBox .capvo-telegram-option-b-topbar{
+  margin:0 0 8px !important;
+}
+
+#telegramLinkBox .capvo-telegram-back-btn{
+  min-width:96px !important;
+  min-height:44px !important;
+  border-radius:16px !important;
+}
+
+#telegramLinkBox .capvo-telegram-cancel-btn{
+  min-height:44px !important;
+  padding:0 8px !important;
+}
+
+#telegramLinkBox .capvo-wizard-user{
+  display:grid !important;
+  gap:2px !important;
+  padding:12px 14px !important;
+  border-radius:18px !important;
+}
+
+#telegramLinkBox .capvo-wizard-user span{
+  display:block !important;
+  color:#8a94a6 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  line-height:1.2 !important;
+}
+
+#telegramLinkBox .capvo-wizard-user strong{
+  display:block !important;
+  color:#111827 !important;
+  font-size:14px !important;
+  line-height:1.25 !important;
+}
+
+#telegramLinkBox .capvo-wizard-flow{
+  margin-bottom:4px !important;
+}
+
+#telegramLinkBox .capvo-bot-open-main{
+  margin-top:2px !important;
+  margin-bottom:2px !important;
+}
+
+#telegramLinkBox .capvo-wizard-logout{
+  margin-bottom:0 !important;
+}
+
+@media (max-width:420px){
+  .auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]){
+    padding:calc(8px + env(safe-area-inset-top)) 10px calc(14px + env(safe-area-inset-bottom)) !important;
+    align-items:flex-start !important;
+  }
+
+  .auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card{
+    width:100% !important;
+    min-height:auto !important;
+    max-height:none !important;
+    border-radius:28px !important;
+    padding:18px 14px 18px !important;
+    overflow:visible !important;
+  }
+
+  #telegramLinkBox .capvo-telegram-option-b-orb{
+    width:68px !important;
+    height:68px !important;
+    margin-top:0 !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-hero h2{
+    font-size:27px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-hero p{
+    font-size:13px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-step{
+    grid-template-columns:40px minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-step b{
+    width:40px !important;
+    height:40px !important;
+  }
+
+  #telegramLinkBox .capvo-wizard-flow::before{
+    left:29px !important;
+  }
+}
+
+
+/* CAPVO v1.1.7.26 — Telegram no-autofocus / stable open position */
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]){
+  scroll-behavior:auto !important;
+  overflow-anchor:none !important;
+}
+
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card,
+#telegramLinkBox.capvo-telegram-wizard-v2{
+  scroll-behavior:auto !important;
+  overflow-anchor:none !important;
+}
+
+#telegramLinkBox input{
+  scroll-margin-top:120px !important;
+}
+
