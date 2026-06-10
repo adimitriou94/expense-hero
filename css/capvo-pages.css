@@ -13912,3 +13912,219 @@ body.capvo-dashboard-to-wizard-transition #vDash{
   line-height:1.5 !important;
   font-weight:800 !important;
 }
+
+
+/* ============================================================
+   CAPVO v1.8.3 — Compact budget-limit line + info bottom sheet
+   ============================================================ */
+
+/* Fix mobile corner clipping on the dashboard hero/gradient layers */
+.modern-hero-card,
+.modern-dashboard-hero,
+.dashboard-hero,
+.hero-card,
+#vDash .modern-hero-card{
+  overflow:hidden !important;
+  isolation:isolate !important;
+  border-radius:28px !important;
+  -webkit-mask-image:-webkit-radial-gradient(white, black) !important;
+}
+
+.modern-hero-card::before,
+.modern-hero-card::after,
+.modern-dashboard-hero::before,
+.modern-dashboard-hero::after,
+.dashboard-hero::before,
+.dashboard-hero::after{
+  border-radius:inherit !important;
+  pointer-events:none !important;
+}
+
+.dashboard-budget-limit-note.compact{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  min-height:38px !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  background:rgba(255,255,255,.105) !important;
+  color:#fff !important;
+  border-radius:16px !important;
+  padding:8px 10px 8px 12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15) !important;
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+
+.dashboard-budget-limit-note.compact span{
+  display:block !important;
+  min-width:0 !important;
+  color:rgba(255,255,255,.92) !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:900 !important;
+  letter-spacing:-.01em !important;
+  white-space:normal !important;
+}
+
+.dashboard-budget-limit-note.compact i{
+  flex:0 0 auto !important;
+  width:22px !important;
+  height:22px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(255,255,255,.16) !important;
+  color:#fff !important;
+  font-style:normal !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+
+.budget-limit-sheet-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:9999 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  padding:16px !important;
+  background:rgba(15,23,42,.38) !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:opacity .18s ease !important;
+  backdrop-filter:blur(8px) !important;
+  -webkit-backdrop-filter:blur(8px) !important;
+}
+
+.budget-limit-sheet-overlay.active{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.budget-limit-sheet{
+  width:min(440px,100%) !important;
+  border-radius:28px !important;
+  padding:10px 18px 18px !important;
+  background:linear-gradient(180deg,#ffffff 0%,#f8f7ff 100%) !important;
+  box-shadow:0 28px 80px rgba(17,24,39,.26) !important;
+  border:1px solid rgba(101,71,246,.12) !important;
+  transform:translateY(18px) scale(.985) !important;
+  transition:transform .22s cubic-bezier(.2,.9,.2,1) !important;
+}
+
+.budget-limit-sheet-overlay.active .budget-limit-sheet{
+  transform:translateY(0) scale(1) !important;
+}
+
+.budget-limit-handle{
+  width:42px !important;
+  height:5px !important;
+  border-radius:999px !important;
+  background:#d8d5ef !important;
+  margin:0 auto 14px !important;
+}
+
+.budget-limit-sheet-head{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+}
+
+.budget-limit-sheet-head span{
+  display:block !important;
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  margin-bottom:4px !important;
+}
+
+.budget-limit-sheet-head h3{
+  margin:0 !important;
+  color:#101828 !important;
+  font-size:20px !important;
+  line-height:1.15 !important;
+  letter-spacing:-.04em !important;
+  font-weight:950 !important;
+}
+
+.budget-limit-sheet-head button{
+  width:38px !important;
+  height:38px !important;
+  border:0 !important;
+  border-radius:14px !important;
+  background:#f0effb !important;
+  color:#667085 !important;
+  font-size:22px !important;
+  font-weight:850 !important;
+}
+
+.budget-limit-metrics{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+
+.budget-limit-metrics div{
+  border:1px solid rgba(101,71,246,.10) !important;
+  border-radius:18px !important;
+  background:rgba(255,255,255,.82) !important;
+  padding:12px !important;
+}
+
+.budget-limit-metrics span{
+  display:block !important;
+  color:#8a94a8 !important;
+  font-size:11px !important;
+  font-weight:850 !important;
+  margin-bottom:5px !important;
+}
+
+.budget-limit-metrics strong{
+  display:block !important;
+  color:#111827 !important;
+  font-size:16px !important;
+  font-weight:950 !important;
+  letter-spacing:-.03em !important;
+}
+
+.budget-limit-sheet p{
+  margin:0 0 16px !important;
+  color:#667085 !important;
+  font-size:13px !important;
+  line-height:1.5 !important;
+  font-weight:750 !important;
+}
+
+.budget-limit-sheet-primary{
+  width:100% !important;
+  min-height:50px !important;
+  border:0 !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  color:#fff !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+  box-shadow:0 14px 32px rgba(101,71,246,.24) !important;
+}
+
+@media (max-width:380px){
+  .dashboard-budget-limit-note.compact span{
+    font-size:10.5px !important;
+  }
+
+  .budget-limit-metrics{
+    grid-template-columns:1fr !important;
+  }
+}

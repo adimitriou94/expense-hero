@@ -807,10 +807,10 @@ function renderDashboardAllowanceCards(balanceOverride=null){
   const daily=remainingDays>0?safeBalance/remainingDays:0;
   const weekly=daily*7;
   const limitInfo=reserved>0
-    ? `<div class="dashboard-budget-limit-note">
-        <strong>Όριο εξόδων ${fmt(income)} · Υπόλοιπο τώρα ${fmt(balance)}</strong>
-        <small>Από συνολικό ποσό κύκλου ${fmt(cycleAmount)}. ${fmt(reserved)} μένουν εκτός budget.</small>
-      </div>`
+    ? `<button type="button" class="dashboard-budget-limit-note compact" onclick="openBudgetLimitInfoSheet()">
+        <span>Όριο ${fmt(income)} · Υπόλοιπο ${fmt(balance)} · ${fmt(reserved)} εκτός budget</span>
+        <i aria-hidden="true">i</i>
+      </button>`
     : '';
 
   el.innerHTML=`
@@ -834,6 +834,73 @@ function renderDashboardAllowanceCards(balanceOverride=null){
     </article>
   `;
 }
+
+
+function openBudgetLimitInfoSheet(){
+  const income=Number(D.income)||0;
+  const cycleAmount=typeof totalCycleAmount==='function'?totalCycleAmount():income;
+  const reserved=typeof budgetLimitReservedAmount==='function'?budgetLimitReservedAmount():0;
+  const spent=capvoMoney(fixedTotal()+ccPayTotal()+dailyCashTotal());
+  const balance=capvoMoney(income-spent);
+
+  let overlay=document.getElementById('budgetLimitInfoSheet');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='budgetLimitInfoSheet';
+    overlay.className='budget-limit-sheet-overlay';
+    overlay.innerHTML=`
+      <div class="budget-limit-sheet" onclick="event.stopPropagation()">
+        <div class="budget-limit-handle"></div>
+        <div class="budget-limit-sheet-head">
+          <div>
+            <span>Budget εξόδων</span>
+            <h3>Πώς λειτουργεί το όριο;</h3>
+          </div>
+          <button type="button" onclick="closeBudgetLimitInfoSheet()" aria-label="Κλείσιμο">×</button>
+        </div>
+
+        <div class="budget-limit-metrics">
+          <div><span>Συνολικό ποσό κύκλου</span><strong id="budgetLimitTotalAmount">—</strong></div>
+          <div><span>Όριο για έξοδα</span><strong id="budgetLimitSpendingAmount">—</strong></div>
+          <div><span>Υπόλοιπο τώρα</span><strong id="budgetLimitRemainingAmount">—</strong></div>
+          <div><span>Εκτός budget</span><strong id="budgetLimitReservedAmount">—</strong></div>
+        </div>
+
+        <p>
+          Το ποσό εκτός budget δεν μετράει στο ημερήσιο διαθέσιμο. Αν ξεπεράσεις το όριο,
+          το CAPVO θα σε προειδοποιήσει αλλά δεν θα μπλοκάρει την καταχώρηση.
+        </p>
+
+        <button type="button" class="budget-limit-sheet-primary" onclick="closeBudgetLimitInfoSheet()">Το κατάλαβα</button>
+      </div>
+    `;
+    overlay.addEventListener('click',closeBudgetLimitInfoSheet);
+    document.body.appendChild(overlay);
+  }
+
+  const set=(id,value)=>{
+    const el=document.getElementById(id);
+    if(el)el.textContent=value;
+  };
+
+  set('budgetLimitTotalAmount',fmt(cycleAmount));
+  set('budgetLimitSpendingAmount',fmt(income));
+  set('budgetLimitRemainingAmount',fmt(balance));
+  set('budgetLimitReservedAmount',fmt(reserved));
+
+  document.body.classList.add('modal-open','budget-limit-sheet-open');
+  requestAnimationFrame(()=>overlay.classList.add('active'));
+}
+
+function closeBudgetLimitInfoSheet(){
+  const overlay=document.getElementById('budgetLimitInfoSheet');
+  if(overlay)overlay.classList.remove('active');
+  document.body.classList.remove('budget-limit-sheet-open');
+  setTimeout(()=>{
+    if(!document.querySelector('.modal-overlay.active'))document.body.classList.remove('modal-open');
+  },180);
+}
+
 
 function paymentSourceExists(id){
   if(!id)return true;
