@@ -796,6 +796,8 @@ function renderDashboardAllowanceCards(balanceOverride=null){
   const cashDaily=dailyCashTotal();
   const spent=fxS+ccS+cashDaily;
   const income=Number(D.income)||0;
+  const cycleAmount=typeof totalCycleAmount==='function'?totalCycleAmount():income;
+  const reserved=typeof budgetLimitReservedAmount==='function'?budgetLimitReservedAmount():0;
   const balance=balanceOverride!==null && balanceOverride!==undefined
     ? Number(balanceOverride)||0
     : income-spent;
@@ -804,8 +806,15 @@ function renderDashboardAllowanceCards(balanceOverride=null){
   const safeBalance=Math.max(0,balance);
   const daily=remainingDays>0?safeBalance/remainingDays:0;
   const weekly=daily*7;
+  const limitInfo=reserved>0
+    ? `<div class="dashboard-budget-limit-note">
+        <strong>Όριο εξόδων ${fmt(income)} · Υπόλοιπο τώρα ${fmt(balance)}</strong>
+        <small>Από συνολικό ποσό κύκλου ${fmt(cycleAmount)}. ${fmt(reserved)} μένουν εκτός budget.</small>
+      </div>`
+    : '';
 
   el.innerHTML=`
+    ${limitInfo}
     <article class="dashboard-allowance-card is-primary">
       <span>Ημέρα</span>
       <strong>${fmt(daily)}</strong>
@@ -988,6 +997,10 @@ function renderIncomeList(){
 
           <div class="income-badges">
             ${i.isPrimaryIncome?'<span class="income-badge budget">Βασικό budget</span>':''}
+            ${Number(i.spendingLimit)>0 && Number(i.spendingLimit)<Number(i.amount)
+              ? `<span class="income-badge budget">Όριο ${fmt(i.spendingLimit)}</span>`
+              : ''
+            }
             ${i.includeInBudget?'<span class="income-badge budget">Στο budget</span>':'<span class="income-badge savings">Εκτός budget</span>'}
             ${i.isSavings?'<span class="income-badge savings">Αποταμίευση</span>':''}
             ${i.restriction&&i.restriction!=='none'
@@ -999,7 +1012,13 @@ function renderIncomeList(){
           </div>
         </div>
 
-        <div class="income-source-amount">${fmt(i.amount)}</div>
+        <div class="income-source-amount">
+          ${fmt(typeof incomeBudgetAmount==='function'?incomeBudgetAmount(i):i.amount)}
+          ${Number(i.spendingLimit)>0 && Number(i.spendingLimit)<Number(i.amount)
+            ? `<small>από ${fmt(i.amount)}</small>`
+            : ''
+          }
+        </div>
 
         <div class="expense-actions" onclick="event.stopPropagation()">
           <button class="edit-btn" onclick="editIncomeSource('${i.id}')">✎</button>
@@ -1024,6 +1043,7 @@ function editIncomeSource(id){
 
   $('fISName').value=i.name;
   $('fISAmount').value=i.amount;
+  if($('fISSpendingLimit'))$('fISSpendingLimit').value=Number(i.spendingLimit)>0?i.spendingLimit:'';
   $('fISCategory').value=i.category;
   $('fISType').value=i.incomeType;
   $('fISRestriction').value=i.restriction;
@@ -1095,7 +1115,7 @@ async function saveIncomeSourceRow(userId,item){
       is_recurring:item.isRecurring,
       restriction:item.restriction,
       restricted_category:item.restrictedCategory||null,
-      notes:item.notes||null,
+      notes:typeof capvoEncodeIncomeNotes==='function'?capvoEncodeIncomeNotes(item.notes,item.spendingLimit):(item.notes||null),
       is_primary_income:!!item.isPrimaryIncome,
       updated_at:new Date().toISOString()
     },{onConflict:'id'});
@@ -1127,7 +1147,7 @@ function setIncomeModalFeedback(message,type='error'){
 }
 
 function clearIncomeValidation(){
-  ['fISName','fISAmount','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+  ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
     const el=$(id);
     if(el)el.classList.remove('income-field-error');
   });
@@ -1160,35 +1180,35 @@ function getIncomePresetConfig(type){
   const configs={
     salary:{
       icon:'💼',
-      kicker:'Πηγή εισοδήματος',
-      title:'Προσθήκη μισθού',
-      intro:'Βάλε το βασικό σου μηνιαίο εισόδημα για να υπολογίζεται σωστά το υπόλοιπο.',
-      summaryTitle:'Μισθός',
-      summaryText:'Σταθερό μηνιαίο εισόδημα που μετράει στο budget σου.',
-      amountLabel:'Πόσο είναι ο μηνιαίος μισθός;',
-      amountHint:'Θα προστεθεί στο διαθέσιμο budget κάθε μήνα.',
+      kicker:'Βασικό budget',
+      title:'Μισθός / Budget κύκλου',
+      intro:'Βάλε το ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.',
+      summaryTitle:'Μισθός / Budget',
+      summaryText:'Το βασικό ποσό του κύκλου. Προαιρετικά βάλε όριο για έξοδα.',
+      amountLabel:'Ποσό κύκλου',
+      amountHint:'Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο.',
       nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
-      restrictedHint:'Συνήθως ο μισθός δεν χρειάζεται περιορισμό.',
-      saveText:'Αποθήκευση μισθού',
-      successText:'✅ Ο μισθός προστέθηκε',
+      restrictedHint:'Το βασικό budget συνήθως δεν χρειάζεται περιορισμό.',
+      saveText:'Αποθήκευση budget',
+      successText:'✅ Το βασικό budget αποθηκεύτηκε',
       showRestricted:false,
       advancedHint:'Προαιρετικά'
     },
     budget:{
-      icon:'💰',
-      kicker:'Πηγή εισοδήματος',
-      title:'Προσθήκη budget',
-      intro:'Δήλωσε το ποσό που έχεις διαθέσιμο για τον μήνα.',
-      summaryTitle:'Budget μήνα',
-      summaryText:'Το βασικό ποσό που θες να χρησιμοποιείς μέσα στον μήνα.',
-      amountLabel:'Πόσο budget έχεις διαθέσιμο;',
-      amountHint:'Το CAPVO θα το χρησιμοποιήσει για υπόλοιπο, ημερήσιο διαθέσιμο και progress.',
-      nameLabel:'Πώς να το ονομάσουμε;',
+      icon:'💼',
+      kicker:'Βασικό budget',
+      title:'Μισθός / Budget κύκλου',
+      intro:'Βάλε το ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.',
+      summaryTitle:'Μισθός / Budget',
+      summaryText:'Το βασικό ποσό του κύκλου. Προαιρετικά βάλε όριο για έξοδα.',
+      amountLabel:'Ποσό κύκλου',
+      amountHint:'Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο.',
+      nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
-      restrictedHint:'Το γενικό budget συνήθως δεν χρειάζεται περιορισμό.',
+      restrictedHint:'Το βασικό budget συνήθως δεν χρειάζεται περιορισμό.',
       saveText:'Αποθήκευση budget',
-      successText:'✅ Το budget προστέθηκε',
+      successText:'✅ Το βασικό budget αποθηκεύτηκε',
       showRestricted:false,
       advancedHint:'Προαιρετικά'
     },
@@ -1254,6 +1274,7 @@ function setIncomeWizardMode(type,opts={}){
     modal.dataset.incomePreset=type;
     if(!opts.keepAdvanced)modal.dataset.advancedOpen='false';
     modal.classList.toggle('income-restricted-mode',!!cfg.showRestricted);
+    modal.classList.toggle('income-budget-limit-mode',type==='salary'||type==='budget');
   }
 
   if($('incomeWizardIcon'))$('incomeWizardIcon').textContent=cfg.icon;
@@ -1281,12 +1302,12 @@ function inferIncomePresetFromSource(i){
   if(i.restriction==='food_only' || i.category==='Ticket Restaurant')return 'ticket';
   if(i.restriction==='card_only' || i.category==='Άυλη κάρτα')return 'voucher';
   if(i.isRecurring===false)return 'extra';
-  if(i.category==='Μισθός')return 'salary';
-  return 'budget';
+  if(i.category==='Μισθός'||i.isPrimaryIncome||i.name==='Budget μήνα'||i.name==='Μισθός / Budget')return 'salary';
+  return 'salary';
 }
 
 function getCurrentIncomeWizardMode(){
-  return document.querySelector('#mIncomeSource .income-source-modal')?.dataset.incomePreset || 'budget';
+  return document.querySelector('#mIncomeSource .income-source-modal')?.dataset.incomePreset || 'salary';
 }
 
 function toggleIncomeAdvanced(force){
@@ -1305,7 +1326,7 @@ function applyIncomePreset(type){
 
   const presets={
     salary:{
-      name:'Μισθός',
+      name:'Μισθός / Budget',
       category:'Μισθός',
       incomeType:'bank',
       restriction:'none',
@@ -1314,11 +1335,11 @@ function applyIncomePreset(type){
       isSavings:false,
       isRecurring:true,
       notes:'',
-      isPrimaryIncome:false
+      isPrimaryIncome:true
     },
     budget:{
-      name:'Budget μήνα',
-      category:'Άλλο',
+      name:'Μισθός / Budget',
+      category:'Μισθός',
       incomeType:'bank',
       restriction:'none',
       restrictedCategory:'',
@@ -1326,7 +1347,7 @@ function applyIncomePreset(type){
       isSavings:false,
       isRecurring:true,
       notes:'',
-      isPrimaryIncome:false
+      isPrimaryIncome:true
     },
     ticket:{
       name:'Ticket Restaurant',
@@ -1372,6 +1393,7 @@ function applyIncomePreset(type){
   const currentAmount=$('fISAmount')?.value || '';
   $('fISName').value=preset.name;
   if($('fISAmount'))$('fISAmount').value=currentAmount;
+  if($('fISSpendingLimit') && type!=='salary' && type!=='budget')$('fISSpendingLimit').value='';
   setIncomeSelectValue('fISCategory',preset.category);
   setIncomeSelectValue('fISType',preset.incomeType);
   setIncomeSelectValue('fISRestriction',preset.restriction);
@@ -1393,9 +1415,12 @@ function validateIncomeSourceForm(){
   const name=$('fISName').value.trim();
   const rawAmount=$('fISAmount').value;
   const amount=parseIncomeAmountValue(rawAmount);
+  const rawSpendingLimit=$('fISSpendingLimit')?.value||'';
+  const spendingLimit=String(rawSpendingLimit||'').trim()===''?0:parseIncomeAmountValue(rawSpendingLimit);
+  const mode=getCurrentIncomeWizardMode();
 
   if(!name){
-    setIncomeModalFeedback('Συμπλήρωσε όνομα πηγής, π.χ. Μισθός ή Budget μήνα.','error');
+    setIncomeModalFeedback('Συμπλήρωσε όνομα πηγής, π.χ. Μισθός / Budget.','error');
     showMiniToast('Συμπλήρωσε όνομα πηγής','error');
     markIncomeFieldError('fISName');
     return null;
@@ -1422,6 +1447,27 @@ function validateIncomeSourceForm(){
     return null;
   }
 
+  if(String(rawSpendingLimit||'').trim()!=='' && !Number.isFinite(spendingLimit)){
+    setIncomeModalFeedback('Το όριο δεν είναι έγκυρο. Γράψε π.χ. 900 ή άφησέ το κενό.','error');
+    showMiniToast('Το όριο δεν είναι έγκυρο','error');
+    markIncomeFieldError('fISSpendingLimit');
+    return null;
+  }
+
+  if(spendingLimit<0){
+    setIncomeModalFeedback('Το όριο δεν μπορεί να είναι αρνητικό.','error');
+    showMiniToast('Το όριο δεν μπορεί να είναι αρνητικό','error');
+    markIncomeFieldError('fISSpendingLimit');
+    return null;
+  }
+
+  if(spendingLimit>0 && spendingLimit>amount){
+    setIncomeModalFeedback('Το όριο εξόδων δεν μπορεί να είναι μεγαλύτερο από το ποσό κύκλου.','error');
+    showMiniToast('Το όριο δεν μπορεί να ξεπερνά το ποσό','error');
+    markIncomeFieldError('fISSpendingLimit');
+    return null;
+  }
+
   const incomeType=$('fISType').value;
   const restriction=$('fISRestriction').value;
   const includeInBudget=$('fISIncludeBudget').checked;
@@ -1434,7 +1480,7 @@ function validateIncomeSourceForm(){
     return null;
   }
 
-  return {name,amount,incomeType,restriction,includeInBudget,isSavings,isPrimaryIncome:!!$('fISPrimary')?.checked};
+  return {name,amount,spendingLimit:mode==='salary'||mode==='budget'?capvoMoney(spendingLimit):0,incomeType,restriction,includeInBudget,isSavings,isPrimaryIncome:!!$('fISPrimary')?.checked};
 }
 
 async function saveIncomeSource(){
@@ -1457,6 +1503,7 @@ async function saveIncomeSource(){
     id:id||gid(),
     name:validation.name,
     amount:validation.amount,
+    spendingLimit:validation.spendingLimit||0,
     category:$('fISCategory').value,
     incomeType:validation.incomeType,
     includeInBudget:validation.includeInBudget,
@@ -1556,7 +1603,7 @@ async function deleteIncomeSource(id){
 // v1.0.11 — clear inline validation while user edits Add Income/Budget fields
 (function setupIncomeSourceValidationCleanup(){
   function bind(){
-    ['fISName','fISAmount','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+    ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
       const el=$(id);
       if(!el || el.dataset.incomeValidationCleanup==='1')return;
       el.dataset.incomeValidationCleanup='1';

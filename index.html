@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.1.7.5">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.8.2">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.1.7.5">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.1.7.5">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.1.7.5">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.1.7.5">
-  <link rel="manifest" href="manifest.webmanifest?v=1.1.7.5">
-  <!-- <link rel="stylesheet" href="style.css?v=1.1.7.5"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.8.2">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.8.2">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.8.2">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.8.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.8.2">
+  <!-- <link rel="stylesheet" href="style.css?v=1.8.2"> -->
 </head>
 
 <body class="auth-pending">
@@ -843,7 +843,7 @@
           <div>
             <span class="settings-kicker">Telegram Sync</span>
             <h3>Συγχρονισμός εξόδων</h3>
-            <p>Τράβα αυτόματα τα έξοδα που έστειλες στο Telegram Bot.</p>
+            <p>Σύνδεσε το Telegram Bot για να περνάς έξοδα με μήνυμα ή φωνή χωρίς να ανοίγεις την εφαρμογή.</p>
           </div>
         </div>
 
@@ -1448,46 +1448,58 @@
 </div>
 
 <div class="modal-overlay income-source-overlay" id="mIncomeSource">
-  <div class="modal income-source-modal income-wizard-modal" data-income-preset="budget" data-advanced-open="false">
+  <div class="modal income-source-modal income-wizard-modal" data-income-preset="salary" data-advanced-open="false">
     <button type="button" class="income-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
     <div class="income-modal-hero income-wizard-hero">
       <div class="income-modal-icon" id="incomeWizardIcon">💰</div>
       <div class="income-modal-heading">
         <div class="income-modal-kicker" id="incomeModalKicker">Πηγή εισοδήματος</div>
-        <h2 id="mIncomeSourceTitle">Προσθήκη budget</h2>
-        <p id="incomeModalIntro">Διάλεξε τι προσθέτεις και κράτα μόνο τα απαραίτητα πεδία.</p>
+        <h2 id="mIncomeSourceTitle">Βασικό budget κύκλου</h2>
+        <p id="incomeModalIntro">Βάλε το ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.</p>
       </div>
     </div>
 
     <div class="income-modal-quick-presets income-wizard-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
-      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Μισθός</button>
-      <button type="button" data-income-preset="budget" onclick="applyIncomePreset('budget')">📊 Budget μήνα</button>
+      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Μισθός / Budget</button>
       <button type="button" data-income-preset="ticket" onclick="applyIncomePreset('ticket')">🎫 Ticket</button>
       <button type="button" data-income-preset="voucher" onclick="applyIncomePreset('voucher')">💳 Voucher</button>
       <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">✨ Έκτακτο</button>
     </div>
 
     <div class="income-wizard-summary" id="incomeWizardSummary">
-      <strong>Budget μήνα</strong>
-      <span>Το βασικό ποσό που θες να χρησιμοποιείς μέσα στον μήνα.</span>
+      <strong>Μισθός / Budget</strong>
+      <span>Το βασικό ποσό με το οποίο πορεύεσαι στον οικονομικό κύκλο.</span>
     </div>
 
     <div class="income-modal-feedback hidden" id="incomeModalFeedback" role="status"></div>
 
     <div class="income-modal-amount-card income-wizard-card income-wizard-amount-card">
-      <label for="fISAmount" id="incomeAmountLabel">Πόσο έχεις διαθέσιμο;</label>
+      <label for="fISAmount" id="incomeAmountLabel">Ποσό κύκλου</label>
       <div class="income-modal-amount-input">
         <span>€</span>
         <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0" inputmode="decimal">
       </div>
-      <p class="income-wizard-field-hint" id="incomeAmountHint">Βάλε το ποσό που θες να υπολογίζεται στο dashboard.</p>
+      <p class="income-wizard-field-hint" id="incomeAmountHint">Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο.</p>
+    </div>
+
+    <div class="income-modal-form-card income-wizard-card income-spending-limit-card" id="incomeSpendingLimitCard">
+      <div class="form-group income-full-row">
+        <label for="fISSpendingLimit" id="incomeSpendingLimitLabel">Όριο διαθέσιμο για έξοδα <span>Προαιρετικό</span></label>
+        <div class="income-modal-amount-input income-limit-input">
+          <span>€</span>
+          <input type="number" id="fISSpendingLimit" placeholder="π.χ. 900" step="0.01" min="0" inputmode="decimal">
+        </div>
+        <p class="income-wizard-field-hint" id="incomeSpendingLimitHint">
+          Αν θέλεις να κρατήσεις μέρος του ποσού εκτός budget, βάλε εδώ πόσα θες να ξοδεύεις. Αν μείνει κενό, διαθέσιμο θεωρείται όλο το ποσό.
+        </p>
+      </div>
     </div>
 
     <div class="income-modal-form-card income-wizard-card income-basic-card">
       <div class="form-group income-full-row">
         <label for="fISName" id="incomeNameLabel">Πώς να το ονομάσουμε;</label>
-        <input type="text" id="fISName" placeholder="π.χ. Μισθός, Budget μήνα, Ticket">
+        <input type="text" id="fISName" placeholder="π.χ. Μισθός / Budget, Ticket">
       </div>
     </div>
 
@@ -1637,25 +1649,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.1.7.5"></script>
+<script src="js/app-version.js?v=1.8.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.1.7.5"></script>
+<script src="js/config.js?v=1.8.2"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.1.7.5"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.1.7.5"></script>
-<script src="js/app/02-supabase-data.js?v=1.1.7.5"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.1.7.5"></script>
-<script src="js/app/04-reports-archive.js?v=1.1.7.5"></script>
-<script src="js/app/05-income-pickers.js?v=1.1.7.5"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.1.7.5"></script>
-<script src="js/app/07-add-center.js?v=1.1.7.5"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.1.7.5"></script>
+<script src="js/app/00-core-state.js?v=1.8.2"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.8.2"></script>
+<script src="js/app/02-supabase-data.js?v=1.8.2"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.8.2"></script>
+<script src="js/app/04-reports-archive.js?v=1.8.2"></script>
+<script src="js/app/05-income-pickers.js?v=1.8.2"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.8.2"></script>
+<script src="js/app/07-add-center.js?v=1.8.2"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.8.2"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.1.7.5"></script>
-<script src="js/sync.js?v=1.1.7.5"></script>
-<script src="js/advisor.js?v=1.1.7.5"></script>
+<script src="js/cards.js?v=1.8.2"></script>
+<script src="js/sync.js?v=1.8.2"></script>
+<script src="js/advisor.js?v=1.8.2"></script>
 
 
 

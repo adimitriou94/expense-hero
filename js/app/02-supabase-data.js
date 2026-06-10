@@ -52,20 +52,24 @@ async function fetchAllData(userId){
 
     if(errIncomeSources)throw errIncomeSources;
 
-    D.incomeSources=(incomeSources||[]).map(i=>({
-      id:i.id,
-      name:i.name,
-      amount:Number(i.amount)||0,
-      category:i.category||'Άλλο',
-      incomeType:i.income_type||'cash',
-      includeInBudget:i.include_in_budget,
-      isSavings:i.is_savings,
-      isRecurring:i.is_recurring,
-      restriction:i.restriction||'none',
-      restrictedCategory:i.restricted_category||'',
-      notes:i.notes||'',
-      isPrimaryIncome:!!i.is_primary_income
-    }));
+    D.incomeSources=(incomeSources||[]).map(i=>{
+      const rawNotes=i.notes||'';
+      return {
+        id:i.id,
+        name:i.name,
+        amount:Number(i.amount)||0,
+        category:i.category||'Άλλο',
+        incomeType:i.income_type||'cash',
+        includeInBudget:i.include_in_budget,
+        isSavings:i.is_savings,
+        isRecurring:i.is_recurring,
+        restriction:i.restriction||'none',
+        restrictedCategory:i.restricted_category||'',
+        notes:typeof capvoStripSpendingLimitFromNotes==='function'?capvoStripSpendingLimitFromNotes(rawNotes):rawNotes,
+        spendingLimit:typeof capvoParseSpendingLimitFromNotes==='function'?capvoParseSpendingLimitFromNotes(rawNotes):0,
+        isPrimaryIncome:!!i.is_primary_income
+      };
+    });
 
     const {data:budgetCycles,error:errBudgetCycles}=await supabaseClient
       .from('budget_cycles')
@@ -1024,7 +1028,7 @@ function renderSettingsPage(){
   if(telegramDesc){
     telegramDesc.innerHTML=chatId
       ? 'Τράβα αυτόματα τα έξοδα που έστειλες στο Telegram Bot.'
-      : 'Σύνδεσε το Telegram bot για να καταχωρείς έξοδα με μήνυμα ή φωνή, χωρίς να ανοίγεις την εφαρμογή.<br><small>Παραδείγματα: “καφές 3”, “βενζίνη 20”, “σούπερ 25 ticket”</small>';
+      : 'Σύνδεσε το Telegram Bot για να περνάς έξοδα με μήνυμα ή φωνή τη στιγμή που γίνονται, χωρίς να ανοίγεις το CAPVO.<br><small>Π.χ. “καφές 3”, “βενζίνη 20” ή “σούπερ 25 ticket”.</small>';
   }
 
   if(syncBtn){

@@ -74,7 +74,7 @@ function openModal(t){
     $('fISID').value='';
     $('btnIncomeSource').textContent='Αποθήκευση budget';
     if(typeof clearIncomeValidation==='function')clearIncomeValidation();
-    if(typeof applyIncomePreset==='function')applyIncomePreset('budget');
+    if(typeof applyIncomePreset==='function')applyIncomePreset('salary');
     else refreshIncomeCustomPickers();
     // autofocus disabled: user taps the field when ready;
   }
@@ -272,9 +272,9 @@ async function validateExpenseBeforeSave(expense,{editing=false,errorTarget=null
 
     if(projected<0){
       const proceed=await showConfirmModal({
-        title:'Υπέρβαση budget',
-        message:`Με αυτή την καταχώρηση το διαθέσιμο budget θα πάει στα ${fmt(projected)}. Θέλεις να συνεχίσεις;`,
-        confirmText:'Καταχώρηση anyway',
+        title:'Υπέρβαση ορίου εξόδων',
+        message:`Με αυτή την καταχώρηση ξεπερνάς το διαθέσιμο budget κατά ${fmt(Math.abs(projected))}. Το όριο είναι προειδοποιητικό, όχι μπλοκάρισμα. Θέλεις να συνεχίσεις;`,
+        confirmText:'Συνέχεια καταχώρησης',
         cancelText:'Ακύρωση'
       });
 
@@ -2064,8 +2064,9 @@ document.addEventListener('DOMContentLoaded', setupQuickAddMobileState);
    CAPVO v1.1.7 - First-use Wizard / Onboarding
    ============================================================ */
 function capvoHasBasicSetup(){
-  const hasPrimary=(D.incomeSources||[]).some(s=>s && s.includeInBudget && (s.isPrimaryIncome || s.category==='Μισθός' || s.name==='Μισθός'));
-  const hasBudget=(D.incomeSources||[]).some(s=>s && s.includeInBudget && capvoMoney(Number(s.amount)||0)>0);
+  const money=typeof capvoMoney==='function'?capvoMoney:(n=>Math.round(((Number(n)||0)+Number.EPSILON)*100)/100);
+  const hasPrimary=(D.incomeSources||[]).some(s=>s && s.includeInBudget && (s.isPrimaryIncome || s.category==='Μισθός' || s.name==='Μισθός' || s.name==='Μισθός / Budget'));
+  const hasBudget=(D.incomeSources||[]).some(s=>s && s.includeInBudget && money(Number(s.amount)||0)>0);
   const hasDaily=Object.values(D.months||{}).some(m=>(m.daily||[]).length>0);
   return hasPrimary || hasBudget || hasDaily;
 }
@@ -2116,7 +2117,8 @@ function capvoWizardDefaultState(){
     step:0,
     cycleType:prefs.budgetCycleType||'fixed_day',
     cycleDay:prefs.budgetCycleStartDay||1,
-    salaryName:'Μισθός',
+    salaryName:'Μισθός / Budget',
+    spendingLimit:'',
     salaryAmount:'',
     ticketAmount:'',
     voucherAmount:'',
@@ -2150,8 +2152,9 @@ function capvoOnboardingUpdateFromInputs(){
     s.cycleDay=Math.max(1,Math.min(31,Number(get('obCycleDay')?.value)||1));
   }
   if(get('obSalaryAmount')){
-    s.salaryName=(get('obSalaryName')?.value||'Μισθός').trim()||'Μισθός';
+    s.salaryName=(get('obSalaryName')?.value||'Μισθός / Budget').trim()||'Μισθός / Budget';
     s.salaryAmount=get('obSalaryAmount')?.value||'';
+    s.spendingLimit=get('obSpendingLimit')?.value||'';
   }
   if(get('obTicketAmount')||get('obVoucherAmount')){
     s.ticketAmount=get('obTicketAmount')?.value||'';
@@ -2244,7 +2247,7 @@ function capvoOnboardingStepHtml(s){
     {label:'Κύκλος', icon:'1'},
     {label:'Budget', icon:'2'},
     {label:'Πάγια', icon:'3'},
-    {label:'Features', icon:'4'},
+    {label:'Δυνατότητες', icon:'4'},
     {label:'Telegram', icon:'5'},
     {label:'Τέλος', icon:'✓'}
   ];
@@ -2282,26 +2285,26 @@ function capvoOnboardingStepHtml(s){
   if(step===0){
     return shell(
       'Καλωσόρισες στο CAPVO',
-      'Ας ρυθμίσουμε τον κύκλο σου σε λίγα βήματα.',
+      'Πες μας πότε πληρώνεσαι, για να υπολογίζουμε σωστά το διαθέσιμο ποσό μέχρι την επόμενη πληρωμή.',
       `
       <div class="ob-pro-card hero ob-pro-welcome-exact">
         <div class="ob-pro-card-head">
           <div>
             <span>1ο βήμα</span>
-            <h3>Οικονομικός κύκλος</h3>
-            <p>Επίλεξε τη διάρκεια του οικονομικού σου κύκλου για να ξεκινήσουμε.</p>
+            <h3>Ορισμός οικονομικού κύκλου</h3>
+            <p>Ο κύκλος είναι η περίοδος από τη μία πληρωμή μέχρι την επόμενη.</p>
           </div>
           <div class="ob-pro-hero-icon premium-cycle" aria-hidden="true"></div>
         </div>
 
         <div class="ob-pro-benefits">
-          <div><i class="premium-mini-icon calendar"></i><strong>Παρακολούθησε τον κύκλο σου με ακρίβεια.</strong></div>
-          <div><i class="premium-mini-icon chart"></i><strong>Έλεγξε έσοδα και έξοδα σε πραγματικό χρόνο.</strong></div>
-          <div><i class="premium-mini-icon target"></i><strong>Πάρε καλύτερες αποφάσεις με ξεκάθαρα δεδομένα.</strong></div>
+          <div><i class="premium-mini-icon calendar"></i><strong>Οργανώνει το budget σου ανά κύκλο πληρωμής.</strong></div>
+          <div><i class="premium-mini-icon chart"></i><strong>Υπολογίζει πόσα μπορείς να ξοδεύεις κάθε μέρα.</strong></div>
+          <div><i class="premium-mini-icon target"></i><strong>Δείχνει καθαρά υπόλοιπο, πρόοδο και υπερβάσεις.</strong></div>
         </div>
 
         <div class="ob-pro-cycle-editor">
-          <label class="ob-pro-label">Τύπος κύκλου</label>
+          <label class="ob-pro-label">Τρόπος πληρωμής</label>
           <div class="ob-pro-pill-grid two">
             <label class="ob-pro-pill ${!isLast?'selected':''}" data-cycle-type="fixed_day">
               <input type="radio" name="obCycleType" id="obCycleTypeFixed" value="fixed_day" ${!isLast?'checked':''}>
@@ -2321,7 +2324,7 @@ function capvoOnboardingStepHtml(s){
               <input id="obCycleDay" type="number" min="1" max="31" inputmode="numeric" value="${esc(s.cycleDay||1)}" ${isLast?'disabled':''}>
               <span>του μήνα</span>
             </div>
-            <div class="ob-pro-inline-note">${isLast?'Δεν χρειάζεται ημέρα. Το CAPVO θα βρίσκει αυτόματα την τελευταία εργάσιμη.':'Γράψε οποιαδήποτε ημέρα από 1 έως 31, π.χ. 8 ή 28.'}</div>
+            <div class="ob-pro-inline-note">${isLast?'Δεν χρειάζεται ημέρα. Το CAPVO θα βρίσκει αυτόματα την τελευταία εργάσιμη.':'Γράψε την ημέρα του μήνα από 1 έως 31, π.χ. 8 ή 28.'}</div>
           </div>
         </div>
       </div>`,
@@ -2341,7 +2344,9 @@ function capvoOnboardingStepHtml(s){
           <input id="obSalaryAmount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(s.salaryAmount||'')}" placeholder="800,00">
           <small>${esc(capvoCurrentCycleLabelSafe())}</small>
         </label>
-        <label class="ob-pro-inline-input"><span>Όνομα πηγής</span><input id="obSalaryName" type="text" value="${esc(s.salaryName||'Μισθός')}" placeholder="Μισθός"></label>
+        <label class="ob-pro-inline-input"><span>Όνομα πηγής</span><input id="obSalaryName" type="text" value="${esc(s.salaryName||'Μισθός / Budget')}" placeholder="Μισθός / Budget"></label>
+        <label class="ob-pro-inline-input ob-pro-limit-input"><span>Όριο για έξοδα <small>Προαιρετικό</small></span><input id="obSpendingLimit" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(s.spendingLimit||'')}" placeholder="π.χ. 900"></label>
+        <div class="ob-pro-inline-note">Αν αφήσεις το όριο κενό, όλο το ποσό κύκλου θα θεωρηθεί διαθέσιμο.</div>
         <div class="ob-pro-toggle-panel">
           <strong>Χρήση ως βασικό budget</strong>
           <small>Θα χρησιμοποιείται ως σημείο αναφοράς σε όλη την εφαρμογή.</small>
@@ -2387,8 +2392,8 @@ function capvoOnboardingStepHtml(s){
       `
       <div class="ob-pro-card features">
         <div class="ob-feature-grid">
-          <div class="ob-feature-item"><i class="premium-mini-icon advisor"></i><strong>Advisor</strong><span>Πρακτικές προτάσεις για το budget σου.</span></div>
-          <div class="ob-feature-item"><i class="premium-mini-icon reports"></i><strong>Reports</strong><span>Καθαρή εικόνα για έξοδα και συνήθειες.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon advisor"></i><strong>Σύμβουλος</strong><span>Δες αν κινείσαι σωστά μέσα στον κύκλο.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon reports"></i><strong>Αναφορές</strong><span>Καθαρή εικόνα για έξοδα και συνήθειες.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon savings"></i><strong>Κουμπαράδες</strong><span>Κράτα χρήματα εκτός budget για στόχους.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon quick"></i><strong>Quick Add</strong><span>Γρήγορη καταχώρηση από κινητό.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon wallet"></i><strong>Πηγές πληρωμής</strong><span>Budget, Ticket, Voucher και κάρτες.</span></div>
@@ -2401,20 +2406,21 @@ function capvoOnboardingStepHtml(s){
 
   if(step===4){
     return shell(
-      'Σύνδεση Telegram',
-      'Προαιρετικό. Το CAPVO δουλεύει κανονικά χωρίς Telegram και μπορείς να το συνδέσεις αργότερα από τις Ρυθμίσεις.',
+      'Προαιρετική σύνδεση Telegram',
+      'Σύνδεσε το Telegram Bot για να καταχωρείς έξοδα με μήνυμα ή φωνή, χωρίς να ανοίγεις την εφαρμογή.',
       `
       <div class="ob-pro-card telegram">
         <div class="ob-pro-telegram-orb premium-telegram" aria-hidden="true"></div>
+        <p class="ob-pro-telegram-copy">Ιδανικό όταν είσαι έξω και θέλεις να περνάς γρήγορα κινήσεις όπως “καφές 3” ή “βενζίνη 20”. Αν δεν το θες τώρα, μπορείς να το συνδέσεις αργότερα από τις Ρυθμίσεις.</p>
         <div class="ob-pro-benefits three">
-          <div><i class="premium-mini-icon chat"></i><strong>“καφές 3”</strong></div>
-          <div><i class="premium-mini-icon voice"></i><strong>φωνητικά</strong></div>
-          <div><i class="premium-mini-icon sync"></i><strong>optional sync</strong></div>
+          <div><i class="premium-mini-icon chat"></i><strong>Γρήγορη καταχώρηση με μήνυμα</strong></div>
+          <div><i class="premium-mini-icon voice"></i><strong>Καταχώρηση με φωνητικό</strong></div>
+          <div><i class="premium-mini-icon sync"></i><strong>Αυτόματος συγχρονισμός στο CAPVO</strong></div>
         </div>
       </div>`,
       `<div class="ob-pro-actions telegram">
         <button type="button" class="ob-pro-primary" onclick="finishCapvoOnboarding(true)">Σύνδεση Telegram <span>→</span></button>
-        <button type="button" class="ob-pro-secondary" onclick="finishCapvoOnboarding(false)">Όχι τώρα, ολοκλήρωση</button>
+        <button type="button" class="ob-pro-secondary" onclick="finishCapvoOnboarding(false)">Παράλειψη και ολοκλήρωση</button>
         <button type="button" class="ob-pro-link wide" onclick="capvoOnboardingPrev()">Πίσω</button>
       </div>`
     );
@@ -2936,7 +2942,7 @@ function renderCapvoOnboardingWizard(){
     if(note){
       note.textContent=isLast
         ? 'Δεν χρειάζεται ημέρα. Το CAPVO θα βρίσκει αυτόματα την τελευταία εργάσιμη.'
-        : 'Γράψε οποιαδήποτε ημέρα από 1 έως 31, π.χ. 8 ή 28.';
+        : 'Γράψε την ημέρα του μήνα από 1 έως 31, π.χ. 8 ή 28.';
     }
     const fixedCard=fixed?.closest?.('.ob-pro-pill, .ob-pill-choice');
     const lastCard=last?.closest?.('.ob-pro-pill, .ob-pill-choice');
@@ -3040,10 +3046,18 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
   }
 
   const salaryAmount=Number(String(s.salaryAmount||'').replace(',','.'))||0;
+  const spendingLimit=Number(String(s.spendingLimit||'').replace(',','.'))||0;
   if(salaryAmount<=0){
     s.step=1;
     renderCapvoOnboardingWizard();
     showMiniToast('Βάλε βασικό budget για να ολοκληρώσεις.','error');
+    return;
+  }
+
+  if(spendingLimit>0 && spendingLimit>salaryAmount){
+    s.step=1;
+    renderCapvoOnboardingWizard();
+    showMiniToast('Το όριο δεν μπορεί να ξεπερνά το ποσό κύκλου.','error');
     return;
   }
 
@@ -3062,8 +3076,9 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
 
     const salaryObj={
       id:gid(),
-      name:s.salaryName||'Μισθός',
+      name:s.salaryName||'Μισθός / Budget',
       amount:salaryAmount,
+      spendingLimit:(spendingLimit>0 && spendingLimit<salaryAmount)?capvoMoney(spendingLimit):0,
       category:'Μισθός',
       incomeType:'bank',
       includeInBudget:true,

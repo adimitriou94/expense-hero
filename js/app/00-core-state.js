@@ -554,10 +554,84 @@ function incomeSourcesTotal(){
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
+/* CAPVO v1.8.1 — Salary/Budget + optional soft spending limit.
+   amount = total cycle amount.
+   spendingLimit = optional amount available for expenses.
+   Stored in notes metadata for this patch, so no DB migration is required yet. */
+const CAPVO_SPENDING_LIMIT_RE=/\[\[CAPVO_SPENDING_LIMIT:([0-9]+(?:\.[0-9]+)?)\]\]/;
+
+function capvoParseSpendingLimitFromNotes(notes){
+  const match=String(notes||'').match(CAPVO_SPENDING_LIMIT_RE);
+  const value=match?Number(match[1]):0;
+  return Number.isFinite(value)&&value>0?capvoMoney(value):0;
+}
+
+function capvoStripSpendingLimitFromNotes(notes){
+  return String(notes||'')
+    .replace(CAPVO_SPENDING_LIMIT_RE,'')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
+
+function capvoEncodeIncomeNotes(notes,spendingLimit){
+  const clean=capvoStripSpendingLimitFromNotes(notes);
+  const limit=capvoMoney(Number(spendingLimit)||0);
+  if(limit>0){
+    return `${clean}${clean?' ':''}[[CAPVO_SPENDING_LIMIT:${limit}]]`.trim();
+  }
+  return clean||null;
+}
+
+function incomeBudgetAmount(source){
+  const amount=capvoMoney(Number(source?.amount)||0);
+  const limit=capvoMoney(Number(source?.spendingLimit)||0);
+  if(limit>0&&limit<amount)return limit;
+  return amount;
+}
+
+function primaryBudgetSource(){
+  return (D.incomeSources||[]).find(i=>
+    i &&
+    i.includeInBudget &&
+    !i.isSavings &&
+    (!i.restriction || i.restriction==='none') &&
+    i.isPrimaryIncome &&
+    (Number(i.amount)||0)>0
+  )||null;
+}
+
 function budgetIncomeTotal(){
-  return capvoMoney((D.incomeSources||[])
-    .filter(i=>i.includeInBudget)
-    .reduce((s,i)=>s+(Number(i.amount)||0),0));
+  const sources=(D.incomeSources||[]).filter(i=>i&&i.includeInBudget&&!i.isSavings);
+  const primary=primaryBudgetSource();
+
+  if(primary){
+    const extras=sources
+      .filter(i=>i.id!==primary.id)
+      .filter(i=>{
+        if(i.restriction&&i.restriction!=='none')return false;
+        return i.isRecurring===false;
+      })
+      .reduce((sum,i)=>sum+(Number(i.amount)||0),0);
+
+    return capvoMoney(incomeBudgetAmount(primary)+extras);
+  }
+
+  return capvoMoney(sources
+    .filter(i=>!i.restriction||i.restriction==='none')
+    .reduce((sum,i)=>sum+incomeBudgetAmount(i),0));
+}
+
+function totalCycleAmount(){
+  const primary=primaryBudgetSource();
+  return capvoMoney(primary?(Number(primary.amount)||0):budgetIncomeTotal());
+}
+
+function budgetLimitReservedAmount(){
+  const primary=primaryBudgetSource();
+  if(!primary)return 0;
+  const amount=capvoMoney(Number(primary.amount)||0);
+  const effective=incomeBudgetAmount(primary);
+  return capvoMoney(Math.max(0,amount-effective));
 }
 
 function savingsIncomeTotal(){

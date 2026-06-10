@@ -13820,3 +13820,95 @@ body.capvo-dashboard-to-wizard-transition #vDash{
     animation:none !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.8.1 — Salary/Budget + clearer onboarding/telegram copy
+   ============================================================ */
+.income-source-modal:not(.income-budget-limit-mode) #incomeSpendingLimitCard{
+  display:none !important;
+}
+
+.income-spending-limit-card{
+  border:1px solid rgba(101,71,246,.14) !important;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(101,71,246,.10),transparent 34%),
+    rgba(255,255,255,.86) !important;
+}
+
+#incomeSpendingLimitLabel{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+
+#incomeSpendingLimitLabel span{
+  display:inline-flex !important;
+  align-items:center !important;
+  min-height:26px !important;
+  padding:0 10px !important;
+  border-radius:999px !important;
+  background:rgba(101,71,246,.10) !important;
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+}
+
+.income-limit-input{
+  margin-top:8px !important;
+}
+
+.income-source-amount small{
+  display:block !important;
+  margin-top:2px !important;
+  color:#98a2b3 !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+}
+
+.dashboard-budget-limit-note{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  border:1px solid rgba(255,255,255,.22) !important;
+  background:rgba(255,255,255,.14) !important;
+  color:rgba(255,255,255,.96) !important;
+  border-radius:20px !important;
+  padding:14px 15px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16) !important;
+  backdrop-filter:blur(14px) !important;
+}
+
+.dashboard-budget-limit-note strong{
+  display:block !important;
+  margin-bottom:4px !important;
+  font-size:13px !important;
+  line-height:1.25 !important;
+  font-weight:950 !important;
+  letter-spacing:-.01em !important;
+  color:#fff !important;
+}
+
+.dashboard-budget-limit-note small{
+  display:block !important;
+  font-size:11px !important;
+  line-height:1.35 !important;
+  font-weight:800 !important;
+  color:rgba(255,255,255,.72) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-limit-input small{
+  color:#8b5cf6 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-telegram-copy{
+  margin:0 auto 18px !important;
+  max-width:310px !important;
+  color:#7b8497 !important;
+  text-align:center !important;
+  font-size:13px !important;
+  line-height:1.5 !important;
+  font-weight:800 !important;
+}
