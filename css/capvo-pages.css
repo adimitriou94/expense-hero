@@ -12693,19 +12693,1130 @@ body.onboarding-open .app-shell{
 }
 
 
-/* CAPVO v1.1.7.26 — Telegram no-autofocus / stable open position */
+/* ============================================================
+   CAPVO v1.1.7.26 — Wizard features + completion + Telegram single exit
+   ============================================================ */
+#capvoOnboardingOverlay .ob-pro-stepper-six{
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  padding:0 2px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-stepper-six .ob-pro-step small{
+  max-width:58px !important;
+  font-size:9px !important;
+}
+
+#capvoOnboardingOverlay .ob-feature-grid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+}
+
+#capvoOnboardingOverlay .ob-feature-item{
+  min-height:112px !important;
+  border:1px solid rgba(226,232,240,.92) !important;
+  border-radius:20px !important;
+  background:rgba(255,255,255,.82) !important;
+  padding:14px !important;
+  display:grid !important;
+  align-content:start !important;
+  gap:8px !important;
+  box-shadow:0 12px 24px rgba(15,23,42,.035) !important;
+}
+
+#capvoOnboardingOverlay .ob-feature-item strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  line-height:1.2 !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-feature-item span{
+  color:#667085 !important;
+  font-size:11.5px !important;
+  line-height:1.35 !important;
+  font-weight:740 !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-screen .ob-pro-copy h2{
+  font-size:clamp(25px,7vw,34px) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card.complete{
+  text-align:center !important;
+  align-content:center !important;
+  gap:18px !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-mark{
+  width:92px !important;
+  height:92px !important;
+  border-radius:999px !important;
+  margin:2px auto 0 !important;
+  display:grid !important;
+  place-items:center !important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(255,255,255,.95),transparent 25%),
+    linear-gradient(135deg,#22c55e,#6547f6) !important;
+  box-shadow:0 20px 42px rgba(34,197,94,.18),0 16px 34px rgba(101,71,246,.14) !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-mark span{
+  color:#fff !important;
+  font-size:42px !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-list{
+  display:grid !important;
+  gap:10px !important;
+  text-align:left !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-list div{
+  display:grid !important;
+  grid-template-columns:34px 1fr !important;
+  gap:10px !important;
+  align-items:center !important;
+  border:1px solid rgba(226,232,240,.9) !important;
+  border-radius:18px !important;
+  background:rgba(255,255,255,.78) !important;
+  padding:12px !important;
+}
+
+#capvoOnboardingOverlay .ob-complete-list strong{
+  color:#344054 !important;
+  font-size:12.5px !important;
+  line-height:1.35 !important;
+  font-weight:850 !important;
+}
+
+#capvoOnboardingOverlay .premium-mini-icon.advisor::before{
+  width:16px;height:16px;border-radius:999px;border:2px solid rgba(101,71,246,.62);top:7px;left:7px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.advisor::after{
+  width:8px;height:8px;border-radius:999px;background:rgba(101,71,246,.24);top:11px;left:11px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.reports::before{
+  width:16px;height:12px;border-left:2px solid rgba(101,71,246,.62);border-bottom:2px solid rgba(101,71,246,.62);left:8px;top:9px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.reports::after{
+  width:14px;height:8px;border-top:2px solid rgba(101,71,246,.62);border-right:2px solid rgba(101,71,246,.45);transform:skewY(-25deg);left:10px;top:12px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.savings::before{
+  width:16px;height:13px;border:2px solid rgba(101,71,246,.62);border-radius:999px 999px 8px 8px;left:7px;top:10px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.savings::after{
+  width:8px;height:2px;background:rgba(101,71,246,.62);left:12px;top:8px;border-radius:999px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.quick::before{
+  width:10px;height:18px;background:rgba(101,71,246,.62);clip-path:polygon(45% 0,100% 0,65% 42%,100% 42%,30% 100%,45% 56%,0 56%);left:11px;top:7px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.wallet::before{
+  width:17px;height:13px;border:2px solid rgba(101,71,246,.62);border-radius:5px;left:7px;top:10px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.wallet::after{
+  width:6px;height:6px;border-radius:999px;background:rgba(101,71,246,.42);right:8px;top:14px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.cycle::before{
+  width:17px;height:17px;border:2px solid rgba(101,71,246,.62);border-left-color:transparent;border-radius:999px;left:7px;top:7px;
+}
+#capvoOnboardingOverlay .premium-mini-icon.cycle::after{
+  width:0;height:0;border-left:5px solid rgba(101,71,246,.62);border-top:4px solid transparent;border-bottom:4px solid transparent;right:7px;top:8px;transform:rotate(34deg);
+}
+
+#telegramLinkBox .capvo-telegram-option-b-topbar{
+  justify-content:flex-end !important;
+}
+
+#telegramLinkBox .capvo-telegram-back-btn,
+#telegramLinkBox .capvo-telegram-cancel-btn{
+  display:none !important;
+}
+
+#telegramLinkBox .capvo-telegram-single-exit-btn{
+  border:0 !important;
+  min-height:44px !important;
+  border-radius:16px !important;
+  padding:0 14px !important;
+  background:#fff !important;
+  color:#6d4df7 !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.04) !important;
+  font-family:inherit !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+@media (max-width:420px){
+  #capvoOnboardingOverlay .ob-pro-stepper-six .ob-pro-step small{
+    font-size:8px !important;
+    max-width:48px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-feature-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  #capvoOnboardingOverlay .ob-feature-item{
+    min-height:0 !important;
+    grid-template-columns:34px 1fr !important;
+    align-items:center !important;
+  }
+
+  #capvoOnboardingOverlay .ob-feature-item span,
+  #capvoOnboardingOverlay .ob-feature-item strong{
+    grid-column:2 !important;
+  }
+
+  #capvoOnboardingOverlay .ob-feature-item i{
+    grid-row:1 / span 2 !important;
+  }
+}
+
+
+
+/* ============================================================
+   CAPVO v1.1.7.28 — Restore premium wizard visuals after v1.1.7.27 guard hotfix
+   ============================================================ */
+#capvoOnboardingOverlay .ob-stepper-pro{
+  width:min(100%,420px) !important;
+  min-height:100dvh !important;
+  margin:0 auto !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto auto 1fr auto auto !important;
+  gap:14px !important;
+  padding:22px 18px calc(18px + env(safe-area-inset-bottom)) !important;
+  background:
+    radial-gradient(circle at 16% 0%,rgba(124,58,237,.16),transparent 34%),
+    radial-gradient(circle at 100% 0%,rgba(45,212,191,.13),transparent 36%),
+    linear-gradient(180deg,#ffffff 0%,#f9f7ff 54%,#ffffff 100%) !important;
+  color:#101828 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  box-shadow:0 28px 90px rgba(15,23,42,.16) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-header{
+  display:grid !important;
+  grid-template-columns:44px 1fr auto !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-brand{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  font-weight:950 !important;
+  letter-spacing:.14em !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-brand img{
+  width:27px !important;
+  height:27px !important;
+  border-radius:8px !important;
+  display:block !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-back,
+#capvoOnboardingOverlay .ob-pro-skip{
+  border:0 !important;
+  min-height:38px !important;
+  border-radius:999px !important;
+  font-family:inherit !important;
+  font-weight:900 !important;
+  background:rgba(255,255,255,.74) !important;
+  color:#667085 !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.055) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-back.is-hidden,
+#capvoOnboardingOverlay .ob-pro-skip.is-hidden{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-stepper{
+  display:grid !important;
+  align-items:start !important;
+  gap:0 !important;
+  margin:2px 0 4px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step{
+  position:relative !important;
+  display:grid !important;
+  justify-items:center !important;
+  gap:5px !important;
+  color:#98a2b3 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step span{
+  position:relative !important;
+  z-index:2 !important;
+  width:28px !important;
+  height:28px !important;
+  border-radius:999px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#fff !important;
+  border:1px solid rgba(226,232,240,.96) !important;
+  color:#667085 !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.04) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step.active span,
+#capvoOnboardingOverlay .ob-pro-step.done span{
+  background:linear-gradient(135deg,#5b5cf6,#8b3df5) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+  box-shadow:0 12px 28px rgba(101,71,246,.25) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step i{
+  position:absolute !important;
+  top:14px !important;
+  left:50% !important;
+  width:100% !important;
+  height:2px !important;
+  background:#e7e8f0 !important;
+  z-index:1 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step.done i{
+  background:linear-gradient(90deg,#7c3aed,#8b5cf6) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-step small{
+  font-size:9px !important;
+  font-weight:900 !important;
+  color:inherit !important;
+  line-height:1.1 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-copy{
+  text-align:center !important;
+  padding:0 8px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-copy h2{
+  margin:0 !important;
+  color:#0f172a !important;
+  font-size:clamp(28px,7vw,36px) !important;
+  line-height:.98 !important;
+  letter-spacing:-.06em !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-copy p{
+  margin:10px auto 0 !important;
+  max-width:330px !important;
+  color:#667085 !important;
+  font-size:14.5px !important;
+  line-height:1.45 !important;
+  font-weight:760 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-body{
+  overflow:visible !important;
+  min-height:0 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card{
+  border:1px solid rgba(226,232,240,.88) !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(circle at 84% 14%,rgba(124,58,237,.10),transparent 30%),
+    rgba(255,255,255,.78) !important;
+  box-shadow:0 18px 45px rgba(15,23,42,.07) !important;
+  padding:18px !important;
+  display:grid !important;
+  gap:16px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card-head{
+  display:grid !important;
+  grid-template-columns:1fr 82px !important;
+  gap:14px !important;
+  align-items:start !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card-head span{
+  color:#6d4df7 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card-head h3{
+  margin:6px 0 6px !important;
+  color:#0f172a !important;
+  font-size:27px !important;
+  line-height:1.04 !important;
+  letter-spacing:-.05em !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-card-head p{
+  margin:0 !important;
+  color:#667085 !important;
+  font-size:13px !important;
+  line-height:1.38 !important;
+  font-weight:760 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-hero-icon{
+  width:78px !important;
+  height:78px !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(circle at 45% 35%,rgba(255,255,255,.9),transparent 24%),
+    linear-gradient(135deg,rgba(139,92,246,.18),rgba(99,102,241,.08)) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-benefits{
+  display:grid !important;
+  gap:11px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-benefits div{
+  display:grid !important;
+  grid-template-columns:34px 1fr !important;
+  gap:10px !important;
+  align-items:center !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-benefits strong{
+  color:#344054 !important;
+  font-size:12.5px !important;
+  line-height:1.35 !important;
+  font-weight:850 !important;
+}
+
+#capvoOnboardingOverlay .premium-mini-icon{
+  width:31px !important;
+  height:31px !important;
+  border-radius:11px !important;
+  background:rgba(124,58,237,.08) !important;
+  position:relative !important;
+  display:block !important;
+}
+
+#capvoOnboardingOverlay .premium-mini-icon::before,
+#capvoOnboardingOverlay .premium-mini-icon::after{
+  content:"" !important;
+  position:absolute !important;
+  box-sizing:border-box !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-label,
+#capvoOnboardingOverlay .ob-pro-small-label{
+  display:block !important;
+  color:#667085 !important;
+  font-size:12px !important;
+  line-height:1.2 !important;
+  font-weight:950 !important;
+  margin-bottom:7px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill-grid.two{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill{
+  min-height:64px !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+  border-radius:18px !important;
+  padding:12px !important;
+  background:#fff !important;
+  display:grid !important;
+  gap:4px !important;
+  cursor:pointer !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill.selected{
+  border-color:#8b5cf6 !important;
+  background:linear-gradient(180deg,#fff,#faf7ff) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill input{
+  display:none !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill strong{
+  color:#111827 !important;
+  font-size:12.5px !important;
+  line-height:1.2 !important;
+  font-weight:950 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-pill small{
+  color:#667085 !important;
+  font-size:10.5px !important;
+  font-weight:760 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-day-input{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:10px !important;
+  min-height:54px !important;
+  border:1px solid #e7e8f0 !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  padding:0 14px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-day-input input{
+  width:100% !important;
+  height:52px !important;
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  color:#111827 !important;
+  font-size:26px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:-.04em !important;
+  padding:0 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-day-input span{
+  color:#8a94a6 !important;
+  font-size:13px !important;
+  font-weight:850 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-inline-note{
+  background:rgba(124,58,237,.08) !important;
+  color:#667085 !important;
+  border-radius:14px !important;
+  padding:10px 12px !important;
+  font-size:11.5px !important;
+  line-height:1.35 !important;
+  font-weight:800 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions{
+  display:grid !important;
+  gap:10px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.single{
+  grid-template-columns:1fr !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three{
+  grid-template-columns:1fr 1fr !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-primary{
+  grid-column:1 / -1 !important;
+  order:3 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.telegram{
+  grid-template-columns:1fr !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-primary,
+#capvoOnboardingOverlay .ob-pro-secondary,
+#capvoOnboardingOverlay .ob-pro-link{
+  border:0 !important;
+  min-height:52px !important;
+  border-radius:18px !important;
+  font-family:inherit !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+  cursor:pointer !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-primary{
+  background:linear-gradient(135deg,#6547f6,#8b3df5) !important;
+  color:#fff !important;
+  box-shadow:0 18px 38px rgba(101,71,246,.24) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-secondary{
+  background:#fff !important;
+  color:#475467 !important;
+  border:1px solid rgba(226,232,240,.92) !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-link{
+  background:transparent !important;
+  color:#8a94a6 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-footnote{
+  text-align:center !important;
+  color:#98a2b3 !important;
+  font-size:11px !important;
+  font-weight:760 !important;
+}
+
+@media (max-width:420px){
+  #capvoOnboardingOverlay .ob-stepper-pro{
+    width:100% !important;
+    padding:18px 14px calc(18px + env(safe-area-inset-bottom)) !important;
+    gap:13px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-copy h2{
+    font-size:29px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-card{
+    padding:16px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-card-head{
+    grid-template-columns:1fr 68px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-card-head h3{
+    font-size:24px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.29 — Smooth onboarding intro after login
+   ============================================================ */
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro{
+  animation:capvoOverlaySoftIn .46s cubic-bezier(.22,1,.36,1) both !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-stepper-pro{
+  animation:capvoWizardSheetSoftIn .58s cubic-bezier(.22,1,.36,1) both !important;
+  transform-origin:center 58% !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-header,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{
+  animation:capvoWizardContentSoftIn .62s cubic-bezier(.22,1,.36,1) both !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper{animation-delay:.05s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy{animation-delay:.09s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body{animation-delay:.13s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions{animation-delay:.17s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{animation-delay:.20s !important;}
+
+@keyframes capvoOverlaySoftIn{
+  from{
+    opacity:0;
+    backdrop-filter:blur(0px);
+  }
+  to{
+    opacity:1;
+    backdrop-filter:blur(10px);
+  }
+}
+
+@keyframes capvoWizardSheetSoftIn{
+  from{
+    opacity:0;
+    transform:translateY(18px) scale(.982);
+    filter:blur(5px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    filter:blur(0);
+  }
+}
+
+@keyframes capvoWizardContentSoftIn{
+  from{
+    opacity:0;
+    transform:translateY(10px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-stepper-pro,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-header,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{
+    animation:none !important;
+  }
+}
+
+
+
+/* ============================================================
+   CAPVO v1.1.7.30 — Wizard skip cleanup + smoother intro
+   ============================================================ */
+body.capvo-auth-to-wizard-transition{
+  background:#3b394e !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro{
+  animation:capvoOverlaySoftInStrong .58s cubic-bezier(.16,1,.3,1) both !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-stepper-pro{
+  animation:capvoWizardSheetSoftInStrong .72s cubic-bezier(.16,1,.3,1) both !important;
+  transform-origin:center 62% !important;
+  will-change:transform,opacity,filter !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-header,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions,
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{
+  animation:capvoWizardContentSoftInStrong .78s cubic-bezier(.16,1,.3,1) both !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-header{animation-delay:.04s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper{animation-delay:.09s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy{animation-delay:.14s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body{animation-delay:.20s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions{animation-delay:.26s !important;}
+#capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{animation-delay:.30s !important;}
+
+@keyframes capvoOverlaySoftInStrong{
+  from{
+    opacity:0;
+    background:rgba(59,57,78,0);
+    backdrop-filter:blur(0);
+  }
+  to{
+    opacity:1;
+    background:rgba(59,57,78,.96);
+    backdrop-filter:blur(12px);
+  }
+}
+
+@keyframes capvoWizardSheetSoftInStrong{
+  0%{
+    opacity:0;
+    transform:translateY(34px) scale(.955);
+    filter:blur(10px);
+  }
+  55%{
+    opacity:1;
+    filter:blur(1.5px);
+  }
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    filter:blur(0);
+  }
+}
+
+@keyframes capvoWizardContentSoftInStrong{
+  from{
+    opacity:0;
+    transform:translateY(16px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+#capvoOnboardingOverlay .ob-pro-header-spacer{
+  width:44px !important;
+  min-height:38px !important;
+  display:block !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-header{
+  grid-template-columns:44px minmax(0,1fr) 44px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three{
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  align-items:center !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-primary{
+  grid-column:1 / -1 !important;
+  order:1 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-secondary{
+  order:2 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-link{
+  order:3 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-secondary,
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-link{
+  min-height:46px !important;
+  border-radius:16px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-link{
+  background:rgba(255,255,255,.66) !important;
+  border:1px solid rgba(226,232,240,.78) !important;
+  color:#8a94a6 !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.single .ob-pro-primary{
+  min-height:56px !important;
+}
+
+@media (max-width:420px){
+  #capvoOnboardingOverlay .ob-pro-actions{
+    padding-bottom:2px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-actions.three{
+    gap:9px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-primary{
+    min-height:56px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-stepper-pro,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-header,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-stepper,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-copy,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-body,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-actions,
+  #capvoOnboardingOverlay.capvo-wizard-smooth-intro .ob-pro-footnote{
+    animation:none !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.31 — Keep only top Skip, remove bottom Skip
+   ============================================================ */
+#capvoOnboardingOverlay .ob-pro-header{
+  grid-template-columns:44px minmax(0,1fr) auto !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-skip{
+  display:inline-grid !important;
+  place-items:center !important;
+  min-width:92px !important;
+  padding:0 14px !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.two{
+  display:grid !important;
+  grid-template-columns:.78fr 1.22fr !important;
+  gap:10px !important;
+  align-items:center !important;
+}
+
+#capvoOnboardingOverlay .ob-pro-actions.two .ob-pro-secondary,
+#capvoOnboardingOverlay .ob-pro-actions.two .ob-pro-primary{
+  min-height:56px !important;
+}
+
+@media (max-width:420px){
+  #capvoOnboardingOverlay .ob-pro-actions.two{
+    grid-template-columns:.72fr 1.28fr !important;
+    gap:9px !important;
+  }
+
+  #capvoOnboardingOverlay .ob-pro-skip{
+    min-width:84px !important;
+    padding:0 12px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.32 — Fixed expenses icons + dashboard transition
+   ============================================================ */
+
+/* Restore premium icons on Fixed Expenses rows */
+#capvoOnboardingOverlay .premium-mini-icon.home::before{
+  width:16px !important;
+  height:12px !important;
+  border:2px solid rgba(101,71,246,.62) !important;
+  border-top:0 !important;
+  border-radius:0 0 4px 4px !important;
+  left:7px !important;
+  top:13px !important;
+}
+#capvoOnboardingOverlay .premium-mini-icon.home::after{
+  width:14px !important;
+  height:14px !important;
+  border-left:2px solid rgba(101,71,246,.62) !important;
+  border-top:2px solid rgba(101,71,246,.62) !important;
+  transform:rotate(45deg) !important;
+  left:8px !important;
+  top:6px !important;
+  border-radius:3px 0 0 0 !important;
+}
+
+#capvoOnboardingOverlay .premium-mini-icon.wifi::before{
+  width:18px !important;
+  height:18px !important;
+  border:2px solid rgba(101,71,246,.62) !important;
+  border-left-color:transparent !important;
+  border-bottom-color:transparent !important;
+  border-radius:999px !important;
+  transform:rotate(-45deg) !important;
+  left:6px !important;
+  top:7px !important;
+}
+#capvoOnboardingOverlay .premium-mini-icon.wifi::after{
+  width:7px !important;
+  height:7px !important;
+  border-radius:999px !important;
+  background:rgba(101,71,246,.62) !important;
+  left:12px !important;
+  top:17px !important;
+}
+
+#capvoOnboardingOverlay .premium-mini-icon.repeat::before{
+  width:17px !important;
+  height:17px !important;
+  border:2px solid rgba(101,71,246,.62) !important;
+  border-right-color:transparent !important;
+  border-radius:999px !important;
+  left:7px !important;
+  top:7px !important;
+}
+#capvoOnboardingOverlay .premium-mini-icon.repeat::after{
+  width:0 !important;
+  height:0 !important;
+  border-left:6px solid rgba(101,71,246,.62) !important;
+  border-top:4px solid transparent !important;
+  border-bottom:4px solid transparent !important;
+  right:7px !important;
+  top:8px !important;
+  transform:rotate(28deg) !important;
+}
+
+/* Smooth outro from completion screen to Dashboard */
+#capvoOnboardingOverlay.capvo-wizard-dashboard-outro{
+  animation:capvoWizardOverlayOutro .30s cubic-bezier(.4,0,.2,1) both !important;
+  pointer-events:none !important;
+}
+
+#capvoOnboardingOverlay.capvo-wizard-dashboard-outro .ob-stepper-pro{
+  animation:capvoWizardSheetOutro .30s cubic-bezier(.4,0,.2,1) both !important;
+  transform-origin:center 60% !important;
+}
+
+body.capvo-dashboard-soft-enter #vDash{
+  animation:capvoDashboardSoftEnter .46s cubic-bezier(.22,1,.36,1) both !important;
+}
+
+@keyframes capvoWizardOverlayOutro{
+  from{
+    opacity:1;
+    backdrop-filter:blur(12px);
+  }
+  to{
+    opacity:0;
+    backdrop-filter:blur(2px);
+  }
+}
+
+@keyframes capvoWizardSheetOutro{
+  from{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    filter:blur(0);
+  }
+  to{
+    opacity:0;
+    transform:translateY(-10px) scale(.985);
+    filter:blur(4px);
+  }
+}
+
+@keyframes capvoDashboardSoftEnter{
+  from{
+    opacity:0;
+    transform:translateY(14px);
+    filter:blur(4px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+    filter:blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  #capvoOnboardingOverlay.capvo-wizard-dashboard-outro,
+  #capvoOnboardingOverlay.capvo-wizard-dashboard-outro .ob-stepper-pro,
+  body.capvo-dashboard-soft-enter #vDash{
+    animation:none !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.33 — Telegram opens top + Settings sync CTA polish
+   ============================================================ */
+
+/* Never let the Telegram linking card preserve a lower scroll position when opened */
 .auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]){
   scroll-behavior:auto !important;
-  overflow-anchor:none !important;
 }
 
-.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card,
-#telegramLinkBox.capvo-telegram-wizard-v2{
+.auth-screen.capvo-auth-screen:has(#telegramLinkBox[style*="block"]) .capvo-auth-card{
   scroll-behavior:auto !important;
-  overflow-anchor:none !important;
 }
 
-#telegramLinkBox input{
-  scroll-margin-top:120px !important;
+/* Settings Telegram card: when the only action is Connect, make it feel like the primary section CTA */
+.capvo-sync-card .capvo-sync-actions,
+.settings-card .capvo-sync-actions,
+.capvo-telegram-sync-card .capvo-sync-actions,
+.telegram-sync-card .capvo-sync-actions{
+  display:grid !important;
+  gap:10px !important;
 }
 
+.capvo-sync-card .capvo-sync-actions:has(button:only-child),
+.settings-card .capvo-sync-actions:has(button:only-child),
+.capvo-telegram-sync-card .capvo-sync-actions:has(button:only-child),
+.telegram-sync-card .capvo-sync-actions:has(button:only-child){
+  grid-template-columns:1fr !important;
+}
+
+.capvo-sync-card .capvo-sync-actions:has(button:only-child) button,
+.settings-card .capvo-sync-actions:has(button:only-child) button,
+.capvo-telegram-sync-card .capvo-sync-actions:has(button:only-child) button,
+.telegram-sync-card .capvo-sync-actions:has(button:only-child) button{
+  width:100% !important;
+  min-height:54px !important;
+  border-radius:18px !important;
+}
+
+/* Broader safe fallback for the existing Settings Telegram button if classes differ */
+#vSettings button[onclick*="switchChatId"],
+#vSettings button[onclick*="Telegram"],
+#vSettings .telegram-card button[onclick*="switchChatId"],
+#vSettings .telegram-sync button[onclick*="switchChatId"]{
+  min-height:54px;
+  border-radius:18px;
+}
+
+/* If the connect button is the only visible button inside its immediate action row, let it span */
+#vSettings .settings-action-row:has(button[onclick*="switchChatId"]:only-child),
+#vSettings .capvo-action-row:has(button[onclick*="switchChatId"]:only-child),
+#vSettings .telegram-actions:has(button[onclick*="switchChatId"]:only-child){
+  display:grid !important;
+  grid-template-columns:1fr !important;
+}
+
+#vSettings .settings-action-row:has(button[onclick*="switchChatId"]:only-child) button,
+#vSettings .capvo-action-row:has(button[onclick*="switchChatId"]:only-child) button,
+#vSettings .telegram-actions:has(button[onclick*="switchChatId"]:only-child) button{
+  width:100% !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.34 — Force Settings Telegram connect CTA full width
+   ============================================================ */
+#vSettings .capvo-telegram-connect-full-row{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  width:100% !important;
+  max-width:none !important;
+}
+
+#vSettings .capvo-telegram-connect-full-btn{
+  width:100% !important;
+  max-width:none !important;
+  min-height:54px !important;
+  border-radius:18px !important;
+  justify-content:center !important;
+  text-align:center !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.1.7.35 — Exact Settings Telegram CTA + dashboard wizard intro
+   ============================================================ */
+
+/* Actual Settings Telegram card markup uses .settings-telegram-card / .settings-actions / #changeTelegramBtn */
+#vSettings .settings-telegram-card .settings-actions.telegram-disconnected{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  width:100% !important;
+  gap:0 !important;
+}
+
+#vSettings .settings-telegram-card .settings-actions.telegram-disconnected #syncBtn{
+  display:none !important;
+}
+
+#vSettings .settings-telegram-card .settings-actions.telegram-disconnected #changeTelegramBtn{
+  width:100% !important;
+  max-width:none !important;
+  min-height:54px !important;
+  border-radius:18px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+}
+
+#vSettings .settings-telegram-card .settings-actions.telegram-connected{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  width:100% !important;
+}
+
+body.capvo-dashboard-to-wizard-transition #vDash{
+  animation:capvoDashboardBeforeWizard .20s ease-out both !important;
+}
+
+@keyframes capvoDashboardBeforeWizard{
+  from{
+    opacity:1;
+    filter:blur(0);
+    transform:scale(1);
+  }
+  to{
+    opacity:.82;
+    filter:blur(3px);
+    transform:scale(.992);
+  }
+}
+
+@media (max-width:420px){
+  #vSettings .settings-telegram-card .settings-actions.telegram-connected{
+    grid-template-columns:1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  body.capvo-dashboard-to-wizard-transition #vDash{
+    animation:none !important;
+  }
+}

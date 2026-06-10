@@ -1317,6 +1317,9 @@ function showApp(){
 function cancelTelegramLinkFlow(){
   changingTelegramId=false;
 
+  const cameFromWizard=!!window.__capvoTelegramFromWizardFinish;
+  window.__capvoTelegramFromWizardFinish=false;
+
   const chatInput=$('chatIdInput');
   const codeInput=$('telegramCodeInput');
   const err=$('authError');
@@ -1328,6 +1331,11 @@ function cancelTelegramLinkFlow(){
   renderAuthState();
   hideAuth();
 
+  if(cameFromWizard && typeof showCapvoOnboardingCompletion==='function'){
+    showCapvoOnboardingCompletion();
+    return;
+  }
+
   try{
     if(currentUser){
       go('vDash',document.querySelector('[data-v="vDash"]'));
@@ -1337,15 +1345,19 @@ function cancelTelegramLinkFlow(){
 
 function capvoEnsureTelegramLinkTopbar(){
   const box=$('telegramLinkBox');
-  if(!box || box.querySelector('.capvo-telegram-option-b-topbar'))return;
+  if(!box)return;
 
-  const topbar=document.createElement('div');
-  topbar.className='capvo-telegram-option-b-topbar';
+  let topbar=box.querySelector('.capvo-telegram-option-b-topbar');
+  if(!topbar){
+    topbar=document.createElement('div');
+    topbar.className='capvo-telegram-option-b-topbar';
+    box.prepend(topbar);
+  }
+
+  const label=window.__capvoTelegramFromWizardFinish ? 'Πίσω στο τέλος' : 'Ακύρωση';
   topbar.innerHTML=`
-    <button type="button" class="capvo-telegram-back-btn" onclick="cancelTelegramLinkFlow()">‹ Πίσω</button>
-    <button type="button" class="capvo-telegram-cancel-btn" onclick="cancelTelegramLinkFlow()">Ακύρωση</button>
+    <button type="button" class="capvo-telegram-single-exit-btn" onclick="cancelTelegramLinkFlow()">${label}</button>
   `;
-  box.prepend(topbar);
 }
 
 function capvoEnsureTelegramOptionBVisual(){
@@ -1400,7 +1412,21 @@ function renderAuthState(){
   capvoEnsureTelegramLinkTopbar();
   capvoEnsureTelegramOptionBVisual();
 
-  capvoResetTelegramScrollTop();
+  const forceTelegramTop=()=>{
+    const auth=$('authScreen');
+    const card=auth?.querySelector?.('.capvo-auth-card');
+    const box=$('telegramLinkBox');
+    try{
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+      document.documentElement.scrollTop=0;
+      document.body.scrollTop=0;
+      if(auth)auth.scrollTop=0;
+      if(card)card.scrollTop=0;
+      if(box)box.scrollTop=0;
+    }catch(e){}
+  };
+  requestAnimationFrame(forceTelegramTop);
+  setTimeout(forceTelegramTop,80);
 
   if(userBox){
     userBox.innerHTML=`
@@ -1437,10 +1463,11 @@ function showAuth(message){
 
   if(err)err.textContent=message||'';
 
-  // Do not autofocus during Telegram linking.
-  // On mobile this opens the keyboard and scrolls the screen directly to the fields.
-  const shouldAutoFocus = !changingTelegramId && !window.matchMedia?.('(max-width: 720px)')?.matches;
-  if(input && shouldAutoFocus)setTimeout(()=>input.focus(),80);
+  // Avoid auto-focus on Telegram linking screens, especially mobile.
+  // Focusing the Chat ID field opens the keyboard and scrolls the card to the lower inputs.
+  if(input && !changingTelegramId){
+    setTimeout(()=>input.focus(),80);
+  }
 }
 
 function hideAuth(){
@@ -1458,14 +1485,48 @@ function hideAuth(){
   }
 }
 
+
+function capvoShouldOpenOnboardingBeforeDashboard(){
+  try{
+    const prefs=D.preferences||{};
+    if(prefs.onboardingCompleted || prefs.onboardingDismissed)return false;
+    if(typeof capvoHasBasicSetup==='function' && capvoHasBasicSetup())return false;
+    return !!currentUser;
+  }catch(e){
+    return false;
+  }
+}
+
 async function loadUserData(userId){
   const ownerId=userId||getDataOwnerId();
   await fetchAllData(ownerId);
   curM=curMK();
   ensM(curM);
+
+  const openWizardFirst=capvoShouldOpenOnboardingBeforeDashboard();
+
   render();
+
+  if(openWizardFirst){
+    document.body.classList.add('capvo-auth-to-wizard-transition');
+    hideAuth();
+    window.__capvoWizardSmoothIntro=true;
+
+    await new Promise(resolve=>setTimeout(resolve,140));
+
+    if(typeof openCapvoOnboardingWizard==='function'){
+      openCapvoOnboardingWizard(0);
+    }else if(typeof capvoAfterUserDataLoaded==='function'){
+      await capvoAfterUserDataLoaded(ownerId);
+    }
+
+    setTimeout(()=>document.body.classList.remove('capvo-auth-to-wizard-transition'),760);
+    return;
+  }
+
   go('vDash',document.querySelector('[data-v="vDash"]'));
   hideAuth();
+
   if(typeof capvoAfterUserDataLoaded==='function'){
     await capvoAfterUserDataLoaded(ownerId);
   }
@@ -1475,30 +1536,6 @@ async function connectWithChatId(ev){
   return saveTelegramChatId(ev);
 }
 
-
-function capvoResetTelegramScrollTop(){
-  const auth=$('authScreen');
-  const card=auth?.querySelector?.('.capvo-auth-card');
-  const box=$('telegramLinkBox');
-
-  const reset=()=>{
-    try{
-      window.scrollTo(0,0);
-      document.documentElement.scrollTop=0;
-      document.body.scrollTop=0;
-      if(auth)auth.scrollTop=0;
-      if(card)card.scrollTop=0;
-      if(box)box.scrollTop=0;
-    }catch(e){}
-  };
-
-  reset();
-  requestAnimationFrame(reset);
-  setTimeout(reset,60);
-  setTimeout(reset,220);
-}
-
-
 function switchChatId(){
 
   changingTelegramId=true;
@@ -1507,15 +1544,8 @@ function switchChatId(){
 
   const input=$('chatIdInput');
   const codeInput=$('telegramCodeInput');
-  if(input){
-    input.value='';
-    input.blur();
-  }
-  if(codeInput){
-    codeInput.value='';
-    codeInput.blur();
-  }
-  try{document.activeElement?.blur?.();}catch(e){}
+  if(input)input.value='';
+  if(codeInput)codeInput.value='';
 
   showAuth(getTelegramChatId()?'Σύνδεσε νέο Telegram Chat ID. Μέχρι να ολοκληρωθεί η αλλαγή, η παλιά σύνδεση παραμένει ενεργή.':'Σύνδεσε το Telegram για να ενεργοποιήσεις το Sync.');
   renderAuthState();
@@ -1524,7 +1554,20 @@ function switchChatId(){
   const card=auth?.querySelector?.('.capvo-auth-card');
   const box=$('telegramLinkBox');
 
-  capvoResetTelegramScrollTop();
+  const forceTelegramTop=()=>{
+    try{
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+      document.documentElement.scrollTop=0;
+      document.body.scrollTop=0;
+      if(auth)auth.scrollTop=0;
+      if(card)card.scrollTop=0;
+      if(box)box.scrollTop=0;
+    }catch(e){}
+  };
+
+  requestAnimationFrame(forceTelegramTop);
+  setTimeout(forceTelegramTop,80);
+  setTimeout(forceTelegramTop,220);
 
   const btn=$('authSubmitBtn');
 
@@ -1533,8 +1576,96 @@ function switchChatId(){
     btn.textContent='Σύνδεση Telegram';
   }
 
-  capvoResetTelegramScrollTop();
+  // Do not auto-focus here. The Telegram screen should always open from the top.
+  // User can tap the fields manually after reading the instructions.
 }
+
+
+
+/* CAPVO v1.1.7.35 — Exact Settings Telegram card CTA layout */
+function capvoPolishSettingsTelegramCta(){
+  try{
+    const card=document.querySelector('#vSettings .settings-telegram-card');
+    if(!card)return;
+
+    const row=card.querySelector('.settings-actions');
+    const syncBtn=card.querySelector('#syncBtn');
+    const changeBtn=card.querySelector('#changeTelegramBtn');
+    const label=card.querySelector('#settingsTelegramLabel');
+
+    if(!row || !changeBtn)return;
+
+    const labelText=(label?.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+    const chatIdText=(card.querySelector('#settingsChatId')?.textContent||'').replace(/\s+/g,' ').trim();
+    const disconnected =
+      labelText.includes('δεν έχει συνδεθεί') ||
+      labelText.includes('δεν εχει συνδεθει') ||
+      labelText.includes('not connected') ||
+      !chatIdText ||
+      chatIdText==='—' ||
+      chatIdText==='-';
+
+    if(disconnected){
+      row.classList.add('telegram-disconnected');
+      row.classList.remove('telegram-connected');
+
+      if(syncBtn){
+        syncBtn.style.display='none';
+        syncBtn.setAttribute('aria-hidden','true');
+      }
+
+      changeBtn.style.display='flex';
+      changeBtn.style.width='100%';
+      changeBtn.style.maxWidth='none';
+      changeBtn.style.justifyContent='center';
+      changeBtn.style.alignItems='center';
+      changeBtn.textContent='Σύνδεση Telegram';
+    }else{
+      row.classList.remove('telegram-disconnected');
+      row.classList.add('telegram-connected');
+
+      if(syncBtn){
+        syncBtn.style.display='';
+        syncBtn.removeAttribute('aria-hidden');
+      }
+
+      changeBtn.style.display='';
+      changeBtn.style.width='';
+      changeBtn.style.maxWidth='';
+      changeBtn.style.justifyContent='';
+      changeBtn.style.alignItems='';
+      if(!/αλλαγή|αλλαγη/i.test(changeBtn.textContent||'')){
+        changeBtn.textContent='Αλλαγή Telegram';
+      }
+    }
+  }catch(e){}
+}
+
+function capvoInstallSettingsTelegramCtaPolish(){
+  if(window.__capvoSettingsTelegramCtaObserverInstalledV35)return;
+  window.__capvoSettingsTelegramCtaObserverInstalledV35=true;
+
+  const run=()=>capvoPolishSettingsTelegramCta();
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',run,{once:true});
+  }else{
+    run();
+  }
+
+  const obs=new MutationObserver(()=>{
+    if(window.__capvoSettingsTelegramCtaPolishTimer)clearTimeout(window.__capvoSettingsTelegramCtaPolishTimer);
+    window.__capvoSettingsTelegramCtaPolishTimer=setTimeout(run,40);
+  });
+
+  obs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true});
+  setTimeout(run,100);
+  setTimeout(run,400);
+  setInterval(run,1000);
+}
+
+capvoInstallSettingsTelegramCtaPolish();
+
 
 function cleanOAuthUrl(){
   if(window.location.search.includes('code=')){
@@ -2042,7 +2173,7 @@ function capvoOnboardingUpdateFromInputs(){
 }
 
 function capvoPersistOnboardingStep(step){
-  const numericStep=Math.max(0,Math.min(3,Number(step)||0));
+  const numericStep=Math.max(0,Math.min(5,Number(step)||0));
   if(D.preferences){
     D.preferences.onboardingStep=String(numericStep);
   }
@@ -2071,29 +2202,67 @@ function capvoCurrentCycleLabelSafe(){
   return 'Τρέχων κύκλος';
 }
 
+
+function capvoSetWizardStep(step){
+  window.__capvoOnboarding=window.__capvoOnboarding||capvoWizardDefaultState();
+  window.__capvoOnboarding.step=step;
+  renderCapvoOnboardingWizard();
+}
+
+function showCapvoOnboardingCompletion(){
+  window.__capvoOnboarding=window.__capvoOnboarding||capvoWizardDefaultState();
+  window.__capvoOnboarding.step=5;
+  renderCapvoOnboardingWizard();
+}
+
+function capvoGoToDashboardAfterOnboarding(){
+  const overlay=document.getElementById('capvoOnboardingOverlay');
+  document.body.classList.add('capvo-wizard-to-dashboard-transition');
+
+  if(overlay){
+    overlay.classList.add('capvo-wizard-dashboard-outro');
+  }
+
+  setTimeout(()=>{
+    closeCapvoOnboardingWizard();
+    try{
+      go('vDash',document.querySelector('[data-v="vDash"]'));
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+    }catch(e){}
+
+    document.body.classList.add('capvo-dashboard-soft-enter');
+
+    setTimeout(()=>{
+      document.body.classList.remove('capvo-wizard-to-dashboard-transition','capvo-dashboard-soft-enter');
+    },520);
+  },260);
+}
+
 function capvoOnboardingStepHtml(s){
-  const step=Math.max(0,Math.min(3,Number(s.step)||0));
+  const step=Math.max(0,Math.min(5,Number(s.step)||0));
   const steps=[
     {label:'Κύκλος', icon:'1'},
     {label:'Budget', icon:'2'},
     {label:'Πάγια', icon:'3'},
-    {label:'Telegram', icon:'4'}
+    {label:'Features', icon:'4'},
+    {label:'Telegram', icon:'5'},
+    {label:'Τέλος', icon:'✓'}
   ];
   const isLast=s.cycleType==='last_working_day';
   const day=Number(s.cycleDay||1);
 
-  const stepper=()=>`<div class="ob-pro-stepper" aria-label="CAPVO onboarding progress">${steps.map((item,idx)=>`
+  const stepper=()=>`<div class="ob-pro-stepper ob-pro-stepper-six" aria-label="CAPVO onboarding progress">${steps.map((item,idx)=>`
     <div class="ob-pro-step ${idx<step?'done':idx===step?'active':'upcoming'}">
       <span>${idx<step?'✓':item.icon}</span>
       ${idx<steps.length-1?'<i></i>':''}
       <small>${item.label}</small>
     </div>`).join('')}</div>`;
 
-  const shell=(title,subtitle,body,actions='')=>`<section class="capvo-onboarding-sheet ob-stepper-pro" onclick="event.stopPropagation()">
+  const shell=(title,subtitle,body,actions='',opts={})=>`<section class="capvo-onboarding-sheet ob-stepper-pro ${opts.extraClass||''}" onclick="event.stopPropagation()">
     <div class="ob-pro-header">
-      <button type="button" class="ob-pro-back ${step===0?'is-hidden':''}" onclick="capvoOnboardingPrev()" aria-label="Πίσω">‹</button>
+      <button type="button" class="ob-pro-back ${step===0||step===5?'is-hidden':''}" onclick="capvoOnboardingPrev()" aria-label="Πίσω">‹</button>
       <div class="ob-pro-brand"><img src="assets/capvo-mark.png" alt="CAPVO" onerror="this.style.display='none'"><strong>CAPVO</strong></div>
-      <button type="button" class="ob-pro-skip" onclick="skipCapvoOnboarding()">Παράλειψη</button>
+      <button type="button" class="ob-pro-skip ${step===5?'is-hidden':''}" onclick="skipCapvoOnboarding()">Παράλειψη</button>
     </div>
     ${stepper()}
     <div class="ob-pro-copy">
@@ -2102,14 +2271,12 @@ function capvoOnboardingStepHtml(s){
     </div>
     <div class="capvo-onboarding-body ob-pro-body">${body}</div>
     ${actions}
-    <div class="ob-pro-footnote">Μπορείς να επιστρέψεις ή να αλλάξεις τα πάντα αργότερα.</div>
+    <div class="ob-pro-footnote">${step===5?'Η ρύθμιση αποθηκεύτηκε στον λογαριασμό σου.':'Μπορείς να επιστρέψεις ή να αλλάξεις τα πάντα αργότερα.'}</div>
   </section>`;
 
-  const triActions=(primaryText='Συνέχεια', primaryAction='capvoOnboardingNext()', tertiary='')=>`<div class="ob-pro-actions three">
-      <button type="button" class="ob-pro-link" onclick="skipCapvoOnboarding()">Παράλειψη</button>
+  const triActions=(primaryText='Συνέχεια', primaryAction='capvoOnboardingNext()')=>`<div class="ob-pro-actions two">
       <button type="button" class="ob-pro-secondary" onclick="capvoOnboardingPrev()">Πίσω</button>
       <button type="button" class="ob-pro-primary" onclick="${primaryAction}">${primaryText} <span>→</span></button>
-      ${tertiary}
     </div>`;
 
   if(step===0){
@@ -2139,7 +2306,7 @@ function capvoOnboardingStepHtml(s){
             <label class="ob-pro-pill ${!isLast?'selected':''}" data-cycle-type="fixed_day">
               <input type="radio" name="obCycleType" id="obCycleTypeFixed" value="fixed_day" ${!isLast?'checked':''}>
               <strong>Συγκεκριμένη ημέρα</strong>
-              <small>π.χ. κάθε 1 του μήνα</small>
+              <small>π.χ. κάθε 8 του μήνα</small>
             </label>
             <label class="ob-pro-pill ${isLast?'selected':''}" data-cycle-type="last_working_day">
               <input type="radio" name="obCycleType" id="obCycleTypeLast" value="last_working_day" ${isLast?'checked':''}>
@@ -2158,7 +2325,7 @@ function capvoOnboardingStepHtml(s){
           </div>
         </div>
       </div>`,
-      `<div class="ob-pro-actions single"><button type="button" class="ob-pro-primary" onclick="capvoOnboardingNext()">Ξεκίνα το setup <span>→</span></button></div>`
+      `<div class="ob-pro-actions single"><button type="button" class="ob-pro-primary" onclick="capvoOnboardingNext()">Συνέχεια <span>→</span></button></div>`
     );
   }
 
@@ -2194,9 +2361,9 @@ function capvoOnboardingStepHtml(s){
 
   if(step===2){
     const rows=(s.fixed||[]).map((row,idx)=>{
-      const icon=idx===0?'🏠':idx===1?'📶':'▶️';
+      const iconClass=idx===0?'home':idx===1?'wifi':'repeat';
       return `<label class="ob-pro-fixed-row">
-        <i>${icon}</i>
+        <i class="premium-mini-icon ${iconClass}"></i>
         <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Πάγιο">
         <input id="obFixed${idx}Amount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(row.amount||'')}" placeholder="0,00">
       </label>`;
@@ -2213,26 +2380,64 @@ function capvoOnboardingStepHtml(s){
     );
   }
 
+  if(step===3){
+    return shell(
+      'Τι άλλο θα βρεις στο CAPVO',
+      'Μετά το setup μπορείς να χρησιμοποιήσεις περισσότερα εργαλεία για να ελέγχεις τα χρήματά σου.',
+      `
+      <div class="ob-pro-card features">
+        <div class="ob-feature-grid">
+          <div class="ob-feature-item"><i class="premium-mini-icon advisor"></i><strong>Advisor</strong><span>Πρακτικές προτάσεις για το budget σου.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon reports"></i><strong>Reports</strong><span>Καθαρή εικόνα για έξοδα και συνήθειες.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon savings"></i><strong>Κουμπαράδες</strong><span>Κράτα χρήματα εκτός budget για στόχους.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon quick"></i><strong>Quick Add</strong><span>Γρήγορη καταχώρηση από κινητό.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon wallet"></i><strong>Πηγές πληρωμής</strong><span>Budget, Ticket, Voucher και κάρτες.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon cycle"></i><strong>Κύκλοι</strong><span>Έλεγχος μέχρι την επόμενη πληρωμή.</span></div>
+        </div>
+      </div>`,
+      triActions('Συνέχεια','capvoOnboardingNext()')
+    );
+  }
+
+  if(step===4){
+    return shell(
+      'Σύνδεση Telegram',
+      'Προαιρετικό. Το CAPVO δουλεύει κανονικά χωρίς Telegram και μπορείς να το συνδέσεις αργότερα από τις Ρυθμίσεις.',
+      `
+      <div class="ob-pro-card telegram">
+        <div class="ob-pro-telegram-orb premium-telegram" aria-hidden="true"></div>
+        <div class="ob-pro-benefits three">
+          <div><i class="premium-mini-icon chat"></i><strong>“καφές 3”</strong></div>
+          <div><i class="premium-mini-icon voice"></i><strong>φωνητικά</strong></div>
+          <div><i class="premium-mini-icon sync"></i><strong>optional sync</strong></div>
+        </div>
+      </div>`,
+      `<div class="ob-pro-actions telegram">
+        <button type="button" class="ob-pro-primary" onclick="finishCapvoOnboarding(true)">Σύνδεση Telegram <span>→</span></button>
+        <button type="button" class="ob-pro-secondary" onclick="finishCapvoOnboarding(false)">Όχι τώρα, ολοκλήρωση</button>
+        <button type="button" class="ob-pro-link wide" onclick="capvoOnboardingPrev()">Πίσω</button>
+      </div>`
+    );
+  }
+
   return shell(
-    'Σύνδεση Telegram',
-    'Προαιρετικό. Το CAPVO δουλεύει κανονικά χωρίς Telegram και μπορείς να το συνδέσεις αργότερα από τις Ρυθμίσεις.',
+    'Το CAPVO είναι έτοιμο',
+    'Η βασική ρύθμιση ολοκληρώθηκε. Μπορείς τώρα να ξεκινήσεις να καταχωρείς έξοδα και να παρακολουθείς το budget σου.',
     `
-    <div class="ob-pro-card telegram">
-      <div class="ob-pro-telegram-orb premium-telegram" aria-hidden="true"></div>
-      <div class="ob-pro-benefits three">
-        <div><i class="premium-mini-icon chat"></i><strong>“καφές 3”</strong></div>
-        <div><i class="premium-mini-icon voice"></i><strong>φωνητικά</strong></div>
-        <div><i class="premium-mini-icon sync"></i><strong>optional sync</strong></div>
+    <div class="ob-pro-card complete">
+      <div class="ob-complete-mark"><span>✓</span></div>
+      <div class="ob-complete-list">
+        <div><i class="premium-mini-icon wallet"></i><strong>Το βασικό budget σου αποθηκεύτηκε.</strong></div>
+        <div><i class="premium-mini-icon cycle"></i><strong>Ο οικονομικός κύκλος είναι έτοιμος.</strong></div>
+        <div><i class="premium-mini-icon quick"></i><strong>Συνέχισε με Quick Add ή πρόσθεσε τα πρώτα σου έξοδα.</strong></div>
       </div>
     </div>`,
-    `<div class="ob-pro-actions telegram">
-      <button type="button" class="ob-pro-secondary" onclick="capvoOnboardingPrev()">Πίσω στο wizard</button>
-      <button type="button" class="ob-pro-primary" onclick="finishCapvoOnboarding(true)">Σύνδεση Telegram <span>→</span></button>
-      <button type="button" class="ob-pro-link wide" onclick="finishCapvoOnboarding()">Θα το κάνω αργότερα</button>
-    </div>`
+    `<div class="ob-pro-actions single">
+      <button type="button" class="ob-pro-primary" onclick="capvoGoToDashboardAfterOnboarding()">Άνοιγμα Dashboard <span>→</span></button>
+    </div>`,
+    {extraClass:'ob-complete-screen'}
   );
 }
-
 
 
 function capvoEnsureOnboardingProStyles(){
@@ -2346,7 +2551,6 @@ width:28px !important;height:28px !important;min-width:28px !important;border-ra
   `;
   document.head.appendChild(style);
 }
-
 
 function capvoEnsureOnboardingPremiumStyles(){
   if(document.getElementById('capvoOnboardingPremiumStyles'))return;
@@ -2625,8 +2829,6 @@ function capvoEnsureOnboardingPremiumStyles(){
   document.head.appendChild(style);
 }
 
-
-
 function capvoEnsureWizardMobileScrollFixStyles(){
   if(document.getElementById('capvoWizardMobileScrollFixStyles'))return;
   const style=document.createElement('style');
@@ -2701,7 +2903,6 @@ function capvoEnsureWizardMobileScrollFixStyles(){
   document.head.appendChild(style);
 }
 
-
 function renderCapvoOnboardingWizard(){
   capvoEnsureOnboardingProStyles();
   capvoEnsureOnboardingPremiumStyles();
@@ -2710,6 +2911,13 @@ function renderCapvoOnboardingWizard(){
   const s=window.__capvoOnboarding||capvoWizardDefaultState();
   overlay.innerHTML=capvoOnboardingStepHtml(s);
   overlay.classList.add('active');
+
+  if(window.__capvoWizardSmoothIntro){
+    overlay.classList.add('capvo-wizard-smooth-intro');
+    window.__capvoWizardSmoothIntro=false;
+    setTimeout(()=>overlay.classList.remove('capvo-wizard-smooth-intro'),720);
+  }
+
   document.body.classList.add('modal-open','onboarding-open');
 
   if(s && Number.isFinite(Number(s.step))){
@@ -2764,7 +2972,7 @@ function capvoOnboardingPrev(){
 function capvoOnboardingNext(){
   const s=capvoOnboardingUpdateFromInputs();
 
-  if(s.step===2){
+  if(s.step===1){
     const amount=Number(String(s.salaryAmount||'').replace(',','.'))||0;
     if(amount<=0){
       showMiniToast('Βάλε βασικό budget για να συνεχίσεις.','error');
@@ -2773,7 +2981,7 @@ function capvoOnboardingNext(){
     }
   }
 
-  s.step=Math.min(6,(s.step||0)+1);
+  s.step=Math.min(5,(s.step||0)+1);
   renderCapvoOnboardingWizard();
 }
 
@@ -2839,7 +3047,7 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     return;
   }
 
-  const btn=document.querySelector('#capvoOnboardingOverlay .ob-primary');
+  const btn=document.querySelector('#capvoOnboardingOverlay .ob-pro-primary, #capvoOnboardingOverlay .ob-primary');
   if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
 
   try{
@@ -2939,19 +3147,19 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
       }).eq('user_id',ownerUserId).eq('id',general.id);
     }
 
-    closeCapvoOnboardingWizard();
     await fetchAllData(ownerUserId);
     curM=curMK();
     ensM(curM);
     render();
 
     if(openTelegramAfter){
+      closeCapvoOnboardingWizard();
+      window.__capvoTelegramFromWizardFinish=true;
       switchChatId?.();
       return;
     }
 
-    go('vDash',document.querySelector('[data-v="vDash"]'));
-    showMiniToast('✅ Το CAPVO είναι έτοιμο');
+    showCapvoOnboardingCompletion();
 
   }catch(e){
     console.error('finish onboarding failed',e);
@@ -2973,9 +3181,16 @@ function openCapvoSetupFromDashboard(){
   const prefs=D.preferences||{};
   window.__capvoOnboarding=capvoWizardDefaultState();
   const savedStep=Number(prefs.onboardingStep);
-  const resumeStep=Number.isFinite(savedStep)?Math.max(0,Math.min(3,savedStep)):0;
+  const resumeStep=Number.isFinite(savedStep)?Math.max(0,Math.min(5,savedStep)):0;
   window.__capvoOnboarding.step=resumeStep;
-  openCapvoOnboardingWizard(resumeStep);
+
+  window.__capvoWizardSmoothIntro=true;
+  document.body.classList.add('capvo-dashboard-to-wizard-transition');
+
+  setTimeout(()=>{
+    openCapvoOnboardingWizard(resumeStep);
+    setTimeout(()=>document.body.classList.remove('capvo-dashboard-to-wizard-transition'),760);
+  },90);
 }
 
 function capvoEnsureDashboardSetupPrompt(){
