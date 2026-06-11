@@ -16,7 +16,7 @@ async function fetchAllData(userId){
 
   try{
     if(!ownerUserId){
-      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el',onboardingCompleted:false,onboardingDismissed:false,onboardingStep:''},budgetCycles:[],budgetCycleIncomes:[],budgetCycleCarryovers:[],holidaysByYear:{},holidaysLoadedYears:{},holidayFetchStatus:'idle'};
+      D={income:0,incomeSources:[],fixedExpenses:[],creditCards:[],creditCardTransactions:[],creditCardInstallmentPlans:[],creditCardInstallmentItems:[],months:{},preferences:{budgetCycleType:'fixed_day',budgetCycleStartDay:1,currency:'EUR',language:'el',onboardingCompleted:false,onboardingDismissed:false,onboardingStep:''},budgetCycles:[],budgetCycleIncomes:[],budgetCycleCarryovers:[],holidaysByYear:{},holidaysLoadedYears:{},holidayFetchStatus:'idle'};
       refreshComputedIncome();
       return;
     }
@@ -54,20 +54,30 @@ async function fetchAllData(userId){
 
     D.incomeSources=(incomeSources||[]).map(i=>{
       const rawNotes=i.notes||'';
+      const sourceType=i.source_type || (typeof capvoInferMoneySourceType==='function'?capvoInferMoneySourceType(i):'income');
+      const isBenefit=sourceType==='benefit';
+      const restriction=i.restriction || (isBenefit?'specific_category':'none');
+      const dbLimit=Number(i.spending_limit)||0;
+
       return {
         id:i.id,
         name:i.name,
         amount:Number(i.amount)||0,
         category:i.category||'Άλλο',
         incomeType:i.income_type||'cash',
-        includeInBudget:i.include_in_budget,
-        isSavings:i.is_savings,
-        isRecurring:i.is_recurring,
-        restriction:i.restriction||'none',
+        includeInBudget:typeof i.include_in_budget==='boolean'?i.include_in_budget:!isBenefit,
+        isSavings:!!i.is_savings,
+        isRecurring:typeof i.is_recurring==='boolean'?i.is_recurring:true,
+        restriction,
         restrictedCategory:i.restricted_category||'',
         notes:typeof capvoStripSpendingLimitFromNotes==='function'?capvoStripSpendingLimitFromNotes(rawNotes):rawNotes,
-        spendingLimit:typeof capvoParseSpendingLimitFromNotes==='function'?capvoParseSpendingLimitFromNotes(rawNotes):0,
-        isPrimaryIncome:!!i.is_primary_income
+        spendingLimit:dbLimit>0?dbLimit:(typeof capvoParseSpendingLimitFromNotes==='function'?capvoParseSpendingLimitFromNotes(rawNotes):0),
+        isPrimaryIncome:!!i.is_primary_income,
+        sourceType,
+        sourceCategory:i.source_category || (typeof capvoInferMoneySourceCategory==='function'?capvoInferMoneySourceCategory(i,sourceType):''),
+        restrictionType:i.restriction_type || (isBenefit?'benefit':null),
+        isRestricted:typeof i.is_restricted==='boolean'?i.is_restricted:isBenefit,
+        allocationTarget:i.allocation_target || (isBenefit?'restricted_balance':((typeof i.include_in_budget==='boolean'?i.include_in_budget:true)?'spending_budget':'outside_budget'))
       };
     });
 
@@ -222,11 +232,92 @@ async function fetchAllData(userId){
     D.creditCards=(cards||[]).map(c=>({
       id:c.id,
       name:c.name,
-      balance:c.balance||0,
-      rate:c.rate||0,
-      minPay:c.min_pay||0,
-      limit:c.limit_amount||0,
-      chosenPay:c.chosen_pay||0
+      balance:Number(c.balance)||0,
+      rate:Number(c.rate)||0,
+      minPay:Number(c.min_pay)||0,
+      limit:Number(c.limit_amount)||0,
+      chosenPay:Number(c.chosen_pay)||0,
+      accountType:c.account_type||'credit_card',
+      bankName:c.bank_name||'',
+      statementDay:c.statement_day||null,
+      paymentDueDay:c.payment_due_day||null,
+      paymentDueDate:c.payment_due_date||'',
+      isActive:c.is_active!==false,
+      notes:c.notes||'',
+      lastPaymentDate:c.last_payment_date||'',
+      budgetTreatment:c.budget_treatment||'payment_only',
+      loanType:c.loan_type||'',
+      loanPurpose:c.loan_purpose||'',
+      originalAmount:Number(c.original_amount)||0
+    }));
+
+    const {data:ccTx,error:errCcTx}=await supabaseClient
+      .from('credit_card_transactions')
+      .select('*')
+      .eq('user_id',ownerUserId)
+      .order('transaction_date',{ascending:false});
+
+    if(errCcTx)throw errCcTx;
+
+    D.creditCardTransactions=(ccTx||[]).map(t=>({
+      id:t.id,
+      cardId:t.card_id,
+      expenseId:t.expense_id||'',
+      installmentPlanId:t.installment_plan_id||'',
+      type:t.type,
+      amount:Number(t.amount)||0,
+      transactionDate:t.transaction_date,
+      description:t.description||'',
+      category:t.category||'',
+      affectsBudget:!!t.affects_budget,
+      budgetEffectType:t.budget_effect_type||'none',
+      createdAt:t.created_at||''
+    }));
+
+    const {data:plans,error:errPlans}=await supabaseClient
+      .from('credit_card_installment_plans')
+      .select('*')
+      .eq('user_id',ownerUserId);
+
+    if(errPlans)throw errPlans;
+
+    D.creditCardInstallmentPlans=(plans||[]).map(p=>({
+      id:p.id,
+      cardId:p.card_id,
+      originalExpenseId:p.original_expense_id||'',
+      originalTransactionId:p.original_transaction_id||'',
+      title:p.title,
+      category:p.category||'',
+      totalAmount:Number(p.total_amount)||0,
+      installmentCount:Number(p.installment_count)||1,
+      installmentAmount:Number(p.installment_amount)||0,
+      paidInstallments:Number(p.paid_installments)||0,
+      firstDueDate:p.first_due_date||'',
+      nextDueDate:p.next_due_date||'',
+      interestFree:p.interest_free!==false,
+      interestRate:Number(p.interest_rate)||0,
+      affectsBudgetMode:p.affects_budget_mode||'installment_only',
+      status:p.status||'active',
+      notes:p.notes||''
+    }));
+
+    const {data:items,error:errItems}=await supabaseClient
+      .from('credit_card_installment_items')
+      .select('*')
+      .eq('user_id',ownerUserId);
+
+    if(errItems)throw errItems;
+
+    D.creditCardInstallmentItems=(items||[]).map(i=>({
+      id:i.id,
+      planId:i.plan_id,
+      cardId:i.card_id,
+      installmentNo:Number(i.installment_no)||1,
+      dueDate:i.due_date||'',
+      amount:Number(i.amount)||0,
+      status:i.status||'pending',
+      paidAt:i.paid_at||'',
+      paymentTransactionId:i.payment_transaction_id||''
     }));
 
     const {data:daily,error:errDaily}=await supabaseClient
@@ -244,12 +335,23 @@ async function fetchAllData(userId){
       D.months[mk].daily.push({
         id:e.id,
         name:e.name,
-        amount:e.amount,
+        amount:Number(e.amount)||0,
         category:e.category,
         date:e.date,
         paymentSourceId:e.payment_source_id||'',
         paymentSourceName:e.payment_source_name||'',
-        paymentSourceType:e.payment_source_type||''
+        paymentSourceType:e.payment_source_type||'',
+        paymentAccountType:e.payment_account_type||'cash',
+        creditCardId:e.credit_card_id||'',
+        creditCardTransactionId:e.credit_card_transaction_id||'',
+        installmentPlanId:e.installment_plan_id||'',
+        affectsCashBudget:e.affects_cash_budget!==false,
+        isCreditCardPurchase:!!e.is_credit_card_purchase,
+        purchaseMode:e.purchase_mode||'normal',
+        installmentCount:e.installment_count||null,
+        interestFree:e.interest_free!==false,
+        installmentRate:Number(e.installment_rate)||0,
+        installmentAmount:Number(e.installment_amount)||0
       });
     });
 
@@ -287,6 +389,12 @@ async function syncIncomeSources(userId){
           restriction:i.restriction,
           restricted_category:i.restrictedCategory||null,
           notes:i.notes||null,
+          spending_limit:Number(i.spendingLimit)||null,
+          source_type:i.sourceType||'income',
+          source_category:i.sourceCategory||null,
+          restriction_type:i.restrictionType||null,
+          is_restricted:!!i.isRestricted,
+          allocation_target:i.allocationTarget||null,
           is_primary_income:!!i.isPrimaryIncome,
           updated_at:new Date().toISOString()
         })),
@@ -371,7 +479,20 @@ async function saveToSupabase(){
           rate:c.rate,
           min_pay:c.minPay,
           limit_amount:c.limit,
-          chosen_pay:c.chosenPay
+          chosen_pay:c.chosenPay,
+          account_type:c.accountType||'credit_card',
+          bank_name:c.bankName||null,
+          statement_day:c.statementDay||null,
+          payment_due_day:c.paymentDueDay||null,
+          payment_due_date:c.paymentDueDate||null,
+          is_active:c.isActive!==false,
+          notes:c.notes||null,
+          last_payment_date:c.lastPaymentDate||null,
+          budget_treatment:c.budgetTreatment||'payment_only',
+          loan_type:c.loanType||null,
+          loan_purpose:c.loanPurpose||null,
+          original_amount:c.originalAmount||null,
+          updated_at:new Date().toISOString()
         })),
         {onConflict:'id'}
       );
@@ -407,7 +528,18 @@ async function saveToSupabase(){
           month_key:monthKey,
           payment_source_id:e.paymentSourceId||null,
           payment_source_name:e.paymentSourceName||null,
-          payment_source_type:e.paymentSourceType||null
+          payment_source_type:e.paymentSourceType||null,
+          payment_account_type:e.paymentAccountType||'cash',
+          credit_card_id:e.creditCardId||null,
+          credit_card_transaction_id:e.creditCardTransactionId||null,
+          installment_plan_id:e.installmentPlanId||null,
+          affects_cash_budget:e.affectsCashBudget!==false,
+          is_credit_card_purchase:!!e.isCreditCardPurchase,
+          purchase_mode:e.purchaseMode||'normal',
+          installment_count:e.installmentCount||null,
+          interest_free:e.interestFree!==false,
+          installment_rate:e.installmentRate||null,
+          installment_amount:e.installmentAmount||null
         });
       });
     });
@@ -588,6 +720,10 @@ async function saveBudgetCyclePreference(inputId='settingsBudgetCycleDay'){
       budgetCycleType:type,
       budgetCycleStartDay:day
     };
+
+    if(type==='last_working_day' && typeof capvoEnsureBudgetCycleHolidays==='function'){
+      await capvoEnsureBudgetCycleHolidays();
+    }
 
     curM=curMK();
     ensM(curM);
@@ -834,6 +970,13 @@ async function movePreviousCycleCarryoverToSavings(options={}){
         restriction:'locked',
         restricted_category:null,
         notes:savingsSource.notes,
+        spending_limit:null,
+        source_type:'transfer',
+        source_category:'carryover_savings',
+        restriction_type:null,
+        include_in_budget:false,
+        is_restricted:false,
+        allocation_target:'savings',
         is_primary_income:false,
         updated_at:new Date().toISOString()
       },{onConflict:'id'});

@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.8.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.8.5.35">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.8.3">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.8.3">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.8.3">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.8.3">
-  <link rel="manifest" href="manifest.webmanifest?v=1.8.3">
-  <!-- <link rel="stylesheet" href="style.css?v=1.8.3"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.8.5.35">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.8.5.35">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.8.5.35">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.8.5.35">
+  <link rel="manifest" href="manifest.webmanifest?v=1.8.5.35">
+  <!-- <link rel="stylesheet" href="style.css?v=1.8.5.35"> -->
 </head>
 
 <body class="auth-pending">
@@ -205,7 +205,7 @@
 
     <button class="desktop-nav-btn nav-btn" data-v="vCards" onclick="go('vCards',this)">
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      <span>Κάρτες & Πηγές</span>
+      <span>Κάρτες & Οφειλές</span>
     </button>
 
     <button class="desktop-nav-btn nav-btn" data-v="vAdvisor" onclick="go('vAdvisor',this)">
@@ -381,7 +381,7 @@
       <aside class="modern-dashboard-side">
         <div class="modern-side-title">
           <span>Snapshot</span>
-          <small>τρέχων μήνας</small>
+          <small>τρέχων κύκλος</small>
         </div>
 
         <div class="modern-stats-grid">
@@ -397,7 +397,7 @@
           <button type="button" class="bento-card stat-widget stat-cards modern-stat-card stat-nav-card" onclick="go('vCards',document.querySelector('[data-v=vCards]'))" aria-label="Άνοιγμα καρτών και debt planner">
             <div class="widget-icon blue">💳</div>
             <div>
-              <div class="stat-label">Κάρτες</div>
+              <div class="stat-label">Πληρωμές καρτών</div>
               <div class="stat-value blue" id="sCC">€0</div>
             </div>
             <span class="stat-chevron" aria-hidden="true">›</span>
@@ -406,7 +406,7 @@
           <button type="button" class="bento-card stat-widget stat-daily modern-stat-card stat-nav-card" onclick="go('vTransactions',document.querySelector('[data-v=vTransactions]'))" aria-label="Άνοιγμα ημερήσιων κινήσεων">
             <div class="widget-icon amber">🧾</div>
             <div>
-              <div class="stat-label">Ημερήσια</div>
+              <div class="stat-label">Κινήσεις budget</div>
               <div class="stat-value amber" id="sDaily">€0</div>
             </div>
             <span class="stat-chevron" aria-hidden="true">›</span>
@@ -459,7 +459,7 @@
         <div>
           <div class="eyebrow">Transactions</div>
           <h2>Κινήσεις</h2>
-          <p>Οι καθημερινές κινήσεις σου καθαρά, ανά ημέρα και κατηγορία.</p>
+          <p>Όλες οι κινήσεις του οικονομικού κύκλου, με καθαρή επίδραση στο budget.</p>
         </div>
 
         <button type="button" class="transactions-add-btn" onclick="(window.openAddCenterSheet?openAddCenterSheet('manual'):openModal('daily'))">
@@ -474,9 +474,11 @@
         </label>
         <div class="mobile-transaction-chips">
           <button type="button" class="mobile-transaction-chip active" data-mobile-transaction-filter="all" onclick="setMobileTransactionFilter('all')">Όλα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="budget" onclick="setMobileTransactionFilter('budget')">Budget</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="cards" onclick="setMobileTransactionFilter('cards')">Κάρτες</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="savings" onclick="setMobileTransactionFilter('savings')">Κουμπαράδες</button>
           <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="today" onclick="setMobileTransactionFilter('today')">Σήμερα</button>
           <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">Εβδομάδα</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="month" onclick="setMobileTransactionFilter('month')">Μήνας</button>
         </div>
       </div>
 
@@ -630,11 +632,11 @@
     <section class="page-grid">
       <div class="page-hero bento-card capvo-branded-hero capvo-hero-debt">
         <div>
-          <div class="eyebrow">DEBT PLANNER</div>
-          <h2>Πιστωτικές κάρτες & δάνεια</h2>
-          <p>Η δόση εμφανίζεται αυτόματα στα πάγια και αφαιρείται από το υπόλοιπο.</p>
+          <div class="eyebrow">ΟΦΕΙΛΕΣ & ΠΛΗΡΩΜΕΣ</div>
+          <h2>Κάρτες & Οφειλές</h2>
+          <p>Παρακολούθησε πιστωτικές, δάνεια και πλάνα δόσεων χωρίς να μπερδεύονται με τα καθημερινά έξοδα.</p>
         </div>
-        <button class="section-add primary-add" onclick="openModal('cc')">+ Κάρτα</button>
+        <button class="section-add primary-add" onclick="openModal('cc')">+ Προσθήκη</button>
       </div>
 
       <div id="ccList"></div>
@@ -673,7 +675,7 @@
       <section class="reports-card reports-snapshot-card">
         <div class="reports-section-head">
           <span class="reports-section-index">1.</span>
-          <h3>Μηνιαία εικόνα</h3>
+          <h3>Εικόνα κύκλου</h3>
         </div>
 
         <div class="reports-kpi-grid">
@@ -681,7 +683,7 @@
             <div class="reports-kpi-icon">💳</div>
             <span>Σύνολο εξόδων</span>
             <strong id="reportsTotal">€0,00</strong>
-            <small id="reportsTotalDelta">τρέχων μήνας</small>
+            <small id="reportsTotalDelta">τρέχων κύκλος</small>
           </div>
 
           <div class="reports-kpi">
@@ -1014,7 +1016,7 @@
 
         <button class="more-menu-item" onclick="go('vCards',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">💳</span>
-          <span><strong>Κάρτες & Πηγές</strong><small>Πιστωτικές, πηγές πληρωμής και δόσεις</small></span>
+          <span><strong>Κάρτες & Οφειλές</strong><small>Πιστωτικές, δάνεια και πλάνα δόσεων</small></span>
           <em>›</em>
         </button>
 
@@ -1293,34 +1295,99 @@
       <input type="text" id="fDN" placeholder="π.χ. Σούπερ μάρκετ">
     </div>
 
-    <div class="form-row">
+    <div class="form-row daily-amount-category-row">
       <div class="form-group">
         <label>Ποσό (€)</label>
         <input type="number" id="fDA" placeholder="0.00" step="0.01" min="0">
       </div>
 
-      <div class="form-group">
+      <div class="form-group daily-category-group">
         <label>Κατηγορία</label>
-        <select id="fDC">
-          <option value="Τρόφιμα">🛒 Τρόφιμα</option>
-          <option value="Καφέδες">☕ Καφέδες</option>
-          <option value="Μεταφορά">🚗 Μεταφορά</option>
-          <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
-          <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
-          <option value="Υγεία">🏥 Υγεία</option>
-          <option value="Ρούχα">👕 Ρούχα</option>
-          <option value="Δάνεια">🏦 Δάνεια</option>
-          <option value="Συνδρομές">📱 Συνδρομές</option>
-          <option value="Άλλο">📌 Άλλο</option>
+        <select id="fDC" class="daily-category-native" onchange="syncDailyCategoryUI && syncDailyCategoryUI(this.value)">
+          <option value="Τρόφιμα">Τρόφιμα</option>
+          <option value="Καφέδες">Καφέδες</option>
+          <option value="Μεταφορά">Μεταφορά</option>
+          <option value="Ψυχαγωγία">Ψυχαγωγία</option>
+          <option value="Φαγητό έξω">Φαγητό έξω</option>
+          <option value="Υγεία">Υγεία</option>
+          <option value="Ρούχα">Ρούχα</option>
+          <option value="Δάνεια">Δάνεια</option>
+          <option value="Συνδρομές">Συνδρομές</option>
+          <option value="Άλλο" selected>Άλλο</option>
         </select>
+
+        <div class="daily-category-picker" id="dailyCategoryPicker">
+          <button type="button" class="daily-category-trigger" id="dailyCategoryTrigger" onclick="toggleDailyCategoryMenu()">
+            <span id="dailyCategoryTriggerLabel">Επίλεξε κατηγορία</span>
+            <strong id="dailyCategoryCurrent">Άλλο</strong>
+            <em>▾</em>
+          </button>
+          <div class="daily-category-menu" id="dailyCategoryMenu">
+            <button type="button" data-category="Τρόφιμα" onclick="setDailyCategory('Τρόφιμα')">Τρόφιμα</button>
+            <button type="button" data-category="Καφέδες" onclick="setDailyCategory('Καφέδες')">Καφέδες</button>
+            <button type="button" data-category="Μεταφορά" onclick="setDailyCategory('Μεταφορά')">Μεταφορά</button>
+            <button type="button" data-category="Ψυχαγωγία" onclick="setDailyCategory('Ψυχαγωγία')">Ψυχαγωγία</button>
+            <button type="button" data-category="Φαγητό έξω" onclick="setDailyCategory('Φαγητό έξω')">Φαγητό έξω</button>
+            <button type="button" data-category="Υγεία" onclick="setDailyCategory('Υγεία')">Υγεία</button>
+            <button type="button" data-category="Ρούχα" onclick="setDailyCategory('Ρούχα')">Ρούχα</button>
+            <button type="button" data-category="Δάνεια" onclick="setDailyCategory('Δάνεια')">Δάνεια</button>
+            <button type="button" data-category="Συνδρομές" onclick="setDailyCategory('Συνδρομές')">Συνδρομές</button>
+            <button type="button" data-category="Άλλο" class="active" onclick="setDailyCategory('Άλλο')">Άλλο</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="form-group">
+    <div class="form-group payment-source-group" id="fDPayGroup">
       <label>Πληρώθηκε από</label>
       <select id="fDPay">
         <option value="">Κανονικό budget</option>
       </select>
+      <div class="locked-card-source" id="lockedCardSource" style="display:none">
+        <span>💳</span>
+        <div>
+          <strong id="lockedCardSourceName">Πιστωτική</strong>
+          <small>Η αγορά θα συνδεθεί με αυτή την κάρτα.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="credit-card-purchase-options" id="creditCardPurchaseOptions" style="display:none" aria-hidden="true">
+      <div class="credit-card-purchase-note">
+        <strong>Αγορά με πιστωτική</strong>
+        <span>Θα φανεί στις κινήσεις της κάρτας και δεν θα αφαιρεθεί άμεσα από το dashboard. Το budget μειώνεται όταν πληρώσεις την κάρτα ή τη δόση.</span>
+      </div>
+
+      <div class="card-purchase-type-tabs" id="cardPurchaseTypeTabs" role="radiogroup" aria-label="Τύπος αγοράς">
+        <button type="button" class="active" data-purchase-mode="normal" onclick="setCardPurchaseMode('normal')">Κανονική αγορά</button>
+        <button type="button" data-purchase-mode="installment" onclick="setCardPurchaseMode('installment')">Με δόσεις</button>
+      </div>
+      <input type="hidden" id="fDPurchaseMode" value="normal">
+
+      <div class="card-installment-fields" id="cardInstallmentFields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Αριθμός δόσεων</label>
+            <input type="number" id="fDInstallments" min="1" step="1" placeholder="π.χ. 6">
+          </div>
+        </div>
+        <input type="hidden" id="fDInstallmentRate" value="0">
+        <div class="installment-rate-note" id="fDInstallmentRateAutoNote" style="display:none"></div>
+
+        <button type="button" class="interest-free-toggle active" id="interestFreeToggle" onclick="toggleInterestFree()">
+          <span>✓</span>
+          <div>
+            <strong>Άτοκες δόσεις</strong>
+            <small>Αν δεν είναι άτοκες, βάλε επιτόκιο για εκτίμηση δόσης.</small>
+          </div>
+        </button>
+        <input type="checkbox" id="fDInterestFree" checked hidden>
+
+        <div class="installment-estimate" id="installmentEstimate" style="display:none">
+          <span>Εκτίμηση δόσης</span>
+          <strong id="installmentEstimateValue">—</strong>
+        </div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -1380,60 +1447,101 @@
 </div>
 
 <div class="modal-overlay debt-card-overlay" id="mCC">
-  <div class="modal debt-card-modal">
+  <div class="modal debt-card-modal" data-debt-type="credit_card">
     <button type="button" class="debt-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
     <div class="debt-modal-hero">
-      <div class="debt-modal-icon">💳</div>
+      <div class="debt-modal-icon" id="debtModalIcon">💳</div>
       <div class="debt-modal-heading">
-        <div class="debt-modal-kicker">Debt planner</div>
-        <h2 id="mCCTitle">Νέα κάρτα</h2>
-        <p>Πρόσθεσε πιστωτική, δάνειο ή υπόλοιπο αποπληρωμής για να υπολογίζεται σωστά το πλάνο σου.</p>
+        <div class="debt-modal-kicker">Κάρτες & Οφειλές</div>
+        <h2 id="mCCTitle">Νέα πιστωτική κάρτα</h2>
+        <p id="ccModalIntro">Η κάρτα έχει πιστωτικό όριο και τρέχον χρέος. Οι αγορές με κάρτα αυξάνουν το χρέος, ενώ οι πληρωμές κάρτας αφαιρούνται από το budget.</p>
       </div>
     </div>
 
-    <div class="debt-modal-presets" aria-label="Γρήγορες επιλογές κάρτας">
-      <button type="button" class="debt-preset-chip active" data-card-preset="credit" onclick="applyCCPreset('credit')">💳 Πιστωτική</button>
-      <button type="button" class="debt-preset-chip" data-card-preset="loan" onclick="applyCCPreset('loan')">🏦 Δάνειο</button>
-      <button type="button" class="debt-preset-chip" data-card-preset="zero" onclick="applyCCPreset('zero')">✨ Άτοκο</button>
+    <input type="hidden" id="fCCType" value="credit_card">
+
+    <div class="debt-type-tabs" aria-label="Τύπος οφειλής">
+      <button type="button" class="active" data-card-preset="credit_card" onclick="applyCCPreset('credit_card')"><span>💳</span> Πιστωτική</button>
+      <button type="button" data-card-preset="loan" onclick="applyCCPreset('loan')"><span>🏦</span> Δάνειο</button>
     </div>
 
-    <div class="debt-modal-amount-card">
-      <div class="debt-modal-amount-head">
-        <label for="fCCB">Υπόλοιπο / χρέος</label>
-        <small>Πόσο απομένει σήμερα</small>
-      </div>
-      <div class="debt-modal-amount-input">
-        <span>€</span>
-        <input type="number" id="fCCB" placeholder="0,00" step="0.01" min="0" inputmode="decimal">
-      </div>
+    <div class="debt-context-note" id="ccContextNote">
+      Οι αγορές με πιστωτική και οι άτοκες δόσεις καταχωρούνται από την Προσθήκη εξόδου, επιλέγοντας την κάρτα ως τρόπο πληρωμής.
     </div>
 
     <div class="debt-modal-form-card">
+      <div class="debt-form-section-title" id="ccSectionTitleMain">Βασικά στοιχεία</div>
+
       <div class="form-group debt-full-row">
-        <label>Όνομα</label>
+        <label id="fCCNLabel">Όνομα κάρτας</label>
         <input type="text" id="fCCN" placeholder="π.χ. Visa Eurobank" autocomplete="off">
       </div>
 
+      <div class="form-group debt-full-row debt-bank-row" id="ccBankRow">
+        <label id="fCCBankLabel">Τράπεζα <span>προαιρετικό</span></label>
+        <input type="text" id="fCCBank" placeholder="π.χ. Eurobank, Alpha Bank" autocomplete="off">
+      </div>
+
+      <div class="form-group debt-full-row debt-loan-type-row" id="ccLoanTypeRow" style="display:none">
+        <label>Τύπος δανείου</label>
+        <input type="hidden" id="fCCLoanType" value="mortgage">
+        <div class="loan-type-custom" id="ccLoanTypeCustom" role="radiogroup" aria-label="Τύπος δανείου">
+          <button type="button" data-loan-type="mortgage" onclick="setLoanType('mortgage')">🏠 Στεγαστικό</button>
+          <button type="button" class="active" data-loan-type="consumer" onclick="setLoanType('consumer')">🛒 Καταναλωτικό</button>
+          <button type="button" data-loan-type="business" onclick="setLoanType('business')">💼 Επιχειρηματικό</button>
+          <button type="button" data-loan-type="personal" onclick="setLoanType('personal')">👤 Προσωπικό</button>
+          <button type="button" data-loan-type="other" onclick="setLoanType('other')">••• Άλλο</button>
+        </div>
+      </div>
+
+      <div class="form-group debt-full-row debt-loan-purpose-row" id="ccLoanPurposeRow" style="display:none">
+        <label>Σκοπός δανείου</label>
+        <input type="hidden" id="fCCLoanPurpose" value="other">
+        <div class="loan-purpose-custom" id="ccLoanPurposeCustom" role="radiogroup" aria-label="Σκοπός δανείου">
+          <button type="button" data-loan-purpose="car_purchase" onclick="setLoanPurpose('car_purchase')">🚗 Αγορά αυτοκινήτου</button>
+          <button type="button" data-loan-purpose="renovation" onclick="setLoanPurpose('renovation')">🛠️ Ανακαίνιση</button>
+          <button type="button" data-loan-purpose="studies" onclick="setLoanPurpose('studies')">🎓 Σπουδές</button>
+          <button type="button" data-loan-purpose="medical" onclick="setLoanPurpose('medical')">🏥 Ιατρικά</button>
+          <button type="button" data-loan-purpose="debt_consolidation" onclick="setLoanPurpose('debt_consolidation')">🔁 Ρύθμιση οφειλών</button>
+          <button type="button" class="active" data-loan-purpose="other" onclick="setLoanPurpose('other')">••• Άλλο</button>
+        </div>
+      </div>
+
+      <div class="debt-form-section-title" id="ccSectionTitleAmounts">Ποσά & πληρωμή</div>
+
       <div class="debt-modal-grid">
+        <div class="form-group debt-credit-only" id="ccLimitRow">
+          <label>Πιστωτικό όριο</label>
+          <input type="number" id="fCCL" placeholder="π.χ. 2000" step="0.01" min="0" inputmode="decimal">
+          <small>Το συνολικό ποσό που σου δίνει η κάρτα.</small>
+        </div>
+
+        <div class="form-group">
+          <label id="fCCBLabel">Τρέχον χρέος κάρτας</label>
+          <input type="number" id="fCCB" placeholder="π.χ. 350" step="0.01" min="0" inputmode="decimal">
+          <small id="fCCBHelp">Πόσα χρωστάς σήμερα στην κάρτα.</small>
+        </div>
+
+        <div class="form-group">
+          <label id="fCCMLabel">Ελάχιστη πληρωμή</label>
+          <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+          <small id="fCCMHelp">Αν δεν την ξέρεις, άφησέ την 0.</small>
+        </div>
+
         <div class="form-group">
           <label>Επιτόκιο %</label>
           <input type="number" id="fCCR" placeholder="18.5" step="0.1" min="0" inputmode="decimal">
         </div>
 
         <div class="form-group">
-          <label>Ελάχιστη δόση</label>
-          <input type="number" id="fCCM" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
-        </div>
-
-        <div class="form-group debt-full-row">
-          <label>Πιστωτικό όριο <span>προαιρετικό</span></label>
-          <input type="number" id="fCCL" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+          <label id="fCCDueLabel">Ημέρα πληρωμής</label>
+          <input type="number" id="fCCDueDay" placeholder="π.χ. 15" step="1" min="1" max="31" inputmode="numeric">
         </div>
       </div>
 
-      <div class="debt-modal-hint">
-        Αν δεν ξέρεις την ελάχιστη δόση, άφησέ την 0 και το CAPVO θα κάνει εκτίμηση.
+      <div class="debt-modal-hint" id="ccModalHint">
+        Πιστωτικό όριο = το συνολικό διαθέσιμο της κάρτας. Τρέχον χρέος = πόσα χρωστάς σήμερα.
       </div>
     </div>
 
@@ -1442,7 +1550,7 @@
     <input type="hidden" id="fCCID">
 
     <div class="debt-modal-savebar">
-      <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση κάρτας</button>
+      <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση πιστωτικής</button>
     </div>
   </div>
 </div>
@@ -1461,15 +1569,15 @@
     </div>
 
     <div class="income-modal-quick-presets income-wizard-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
-      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Μισθός / Budget</button>
-      <button type="button" data-income-preset="ticket" onclick="applyIncomePreset('ticket')">🎫 Ticket</button>
-      <button type="button" data-income-preset="voucher" onclick="applyIncomePreset('voucher')">💳 Voucher</button>
-      <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">✨ Έκτακτο</button>
+      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Budget κύκλου</button>
+      <button type="button" data-income-preset="other" onclick="applyIncomePreset('other')">🏠 Άλλο εισόδημα</button>
+      <button type="button" data-income-preset="benefit" onclick="applyIncomePreset('benefit')">🎫 Ticket / Voucher</button>
+      <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">✨ Έκτακτο ποσό</button>
     </div>
 
     <div class="income-wizard-summary" id="incomeWizardSummary">
-      <strong>Μισθός / Budget</strong>
-      <span>Το βασικό ποσό με το οποίο πορεύεσαι στον οικονομικό κύκλο.</span>
+      <strong>Budget κύκλου</strong>
+      <span>Το βασικό ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.</span>
     </div>
 
     <div class="income-modal-feedback hidden" id="incomeModalFeedback" role="status"></div>
@@ -1499,7 +1607,7 @@
     <div class="income-modal-form-card income-wizard-card income-basic-card">
       <div class="form-group income-full-row">
         <label for="fISName" id="incomeNameLabel">Πώς να το ονομάσουμε;</label>
-        <input type="text" id="fISName" placeholder="π.χ. Μισθός / Budget, Ticket">
+        <input type="text" id="fISName" placeholder="π.χ. Μισθός / Budget, Ενοίκιο ακινήτου, Ticket">
       </div>
     </div>
 
@@ -1538,6 +1646,9 @@
               <option value="Άυλη κάρτα">Άυλη κάρτα</option>
               <option value="Μερίσματα">Μερίσματα</option>
               <option value="Freelance">Freelance</option>
+              <option value="Δεύτερη δουλειά">Δεύτερη δουλειά</option>
+              <option value="Επίδομα">Επίδομα</option>
+              <option value="Επιστροφή χρημάτων">Επιστροφή χρημάτων</option>
               <option value="Δώρο">Δώρο</option>
               <option value="Αποταμίευση">Αποταμίευση</option>
               <option value="Άλλο">Άλλο</option>
@@ -1649,25 +1760,25 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.8.3"></script>
+<script src="js/app-version.js?v=1.8.5.35"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.8.3"></script>
+<script src="js/config.js?v=1.8.5.35"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.8.3"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.8.3"></script>
-<script src="js/app/02-supabase-data.js?v=1.8.3"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.8.3"></script>
-<script src="js/app/04-reports-archive.js?v=1.8.3"></script>
-<script src="js/app/05-income-pickers.js?v=1.8.3"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.8.3"></script>
-<script src="js/app/07-add-center.js?v=1.8.3"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.8.3"></script>
+<script src="js/app/00-core-state.js?v=1.8.5.35"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.8.5.35"></script>
+<script src="js/app/02-supabase-data.js?v=1.8.5.35"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.8.5.35"></script>
+<script src="js/app/04-reports-archive.js?v=1.8.5.35"></script>
+<script src="js/app/05-income-pickers.js?v=1.8.5.35"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.8.5.35"></script>
+<script src="js/app/07-add-center.js?v=1.8.5.35"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.8.5.35"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.8.3"></script>
-<script src="js/sync.js?v=1.8.3"></script>
-<script src="js/advisor.js?v=1.8.3"></script>
+<script src="js/cards.js?v=1.8.5.35"></script>
+<script src="js/sync.js?v=1.8.5.35"></script>
+<script src="js/advisor.js?v=1.8.5.35"></script>
 
 
 
@@ -1770,6 +1881,7 @@
     <div id="mobileTransactionDetailContent"></div>
   </div>
 </div>
+
 
 </body>
 </html>

@@ -23,8 +23,8 @@ function selectAllVisible(type){
   }
 
   if(type==='daily'){
-    const m=D.months[curM]||{daily:[]};
-    m.daily.forEach(e=>selectedDaily.add(e.id));
+    const rows=typeof getCurrentCycleDailyExpenses==='function' ? getCurrentCycleDailyExpenses() : ((D.months[curM]||{daily:[]}).daily||[]);
+    rows.forEach(e=>selectedDaily.add(e.id));
   }
 
   render();
@@ -91,6 +91,10 @@ async function bulkDelete(type){
   const table=type==='fixed'?'fixed_expenses':'expenses';
 
   try{
+    if(type==='daily' && typeof deleteCreditCardExpenseSideEffectsForIds==='function'){
+      await deleteCreditCardExpenseSideEffectsForIds(ids);
+    }
+
     await deleteRowsFromTable(table,ids);
 
     if(type==='fixed'){

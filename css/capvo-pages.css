@@ -14128,3 +14128,2298 @@ body.capvo-dashboard-to-wizard-transition #vDash{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.8.3.1 — Auth flow hotfix
+   Keep only the splash loader visible while Google session/data bootstraps.
+   Prevents the empty logo-only auth card from flashing after OAuth.
+   ============================================================ */
+.auth-screen.capvo-auth-screen.capvo-auth-loading{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:9999 !important;
+}
+
+.auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-card{
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  transform:translateY(10px) scale(.985) !important;
+}
+
+.auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:5 !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex-direction:column !important;
+}
+
+.auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-bg{
+  opacity:.9 !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5 — Production credit card UX
+   ============================================================ */
+.credit-card-purchase-options{
+  display:grid;
+  gap:12px;
+  margin:12px 0 4px;
+  padding:14px;
+  border-radius:18px;
+  background:linear-gradient(180deg,#f8f7ff,#fff);
+  border:1px solid rgba(101,71,246,.14);
+}
+
+.credit-card-purchase-note{
+  display:grid;
+  gap:4px;
+}
+
+.credit-card-purchase-note strong{
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+}
+
+.credit-card-purchase-note span{
+  color:#667085;
+  font-size:12px;
+  line-height:1.45;
+  font-weight:700;
+}
+
+.credit-card-checkbox{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:850;
+  color:#475467;
+}
+
+.cc-production-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin:14px 0 2px;
+}
+
+.cc-production-actions button{
+  min-height:40px;
+  border:0;
+  border-radius:14px;
+  background:#f1efff;
+  color:#6547f6;
+  font-weight:950;
+  font-size:12px;
+}
+
+.cc-production-actions button:first-child{
+  background:linear-gradient(135deg,#6547f6,#7c3aed);
+  color:#fff;
+  box-shadow:0 12px 24px rgba(101,71,246,.18);
+}
+
+.card-payment-sheet-overlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:16px;
+  background:rgba(15,23,42,.38);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.card-payment-sheet-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.card-payment-sheet{
+  width:min(440px,100%);
+  border-radius:28px;
+  padding:10px 18px 18px;
+  background:linear-gradient(180deg,#ffffff 0%,#f8f7ff 100%);
+  border:1px solid rgba(101,71,246,.12);
+  box-shadow:0 28px 80px rgba(17,24,39,.26);
+  transform:translateY(18px) scale(.985);
+  transition:transform .22s cubic-bezier(.2,.9,.2,1);
+}
+
+.card-payment-sheet-overlay.active .card-payment-sheet{
+  transform:translateY(0) scale(1);
+}
+
+.card-payment-handle{
+  width:42px;
+  height:5px;
+  border-radius:999px;
+  background:#d8d5ef;
+  margin:0 auto 14px;
+}
+
+.card-payment-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.card-payment-head span{
+  display:block;
+  color:#6547f6;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+
+.card-payment-head h3{
+  margin:0 0 5px;
+  color:#101828;
+  font-size:21px;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+
+.card-payment-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.4;
+  font-weight:700;
+}
+
+.card-payment-head button{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:14px;
+  background:#f0effb;
+  color:#667085;
+  font-size:22px;
+  font-weight:850;
+}
+
+.card-payment-amount{
+  display:grid;
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.card-payment-amount label{
+  font-size:12px;
+  font-weight:900;
+  color:#344054;
+}
+
+.card-payment-amount div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #e4e7ec;
+  border-radius:18px;
+  background:#fff;
+  padding:0 14px;
+}
+
+.card-payment-amount div span{
+  color:#6547f6;
+  font-weight:950;
+}
+
+.card-payment-amount input{
+  flex:1;
+  min-height:52px;
+  border:0;
+  outline:0;
+  font-size:22px;
+  font-weight:950;
+  color:#111827;
+  background:transparent;
+}
+
+.card-payment-amount small{
+  color:#667085;
+  font-size:12px;
+  line-height:1.4;
+  font-weight:700;
+}
+
+.card-payment-error{
+  min-height:18px;
+  color:#dc2626;
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.card-payment-primary{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:18px;
+  background:linear-gradient(135deg,#6547f6,#7c3aed);
+  color:#fff;
+  font-size:14px;
+  font-weight:950;
+  box-shadow:0 14px 32px rgba(101,71,246,.24);
+}
+
+@media (max-width:380px){
+  .cc-production-actions{grid-template-columns:1fr;}
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.1 — Cards & debts production UI cleanup
+   ============================================================ */
+.debt-type-selector{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:10px !important;
+  margin:12px 0 14px !important;
+}
+
+.debt-type-card{
+  display:grid !important;
+  grid-template-columns:34px 1fr !important;
+  grid-template-areas:"icon title" "icon text" !important;
+  column-gap:10px !important;
+  align-items:center !important;
+  width:100% !important;
+  text-align:left !important;
+  border:1px solid rgba(101,71,246,.13) !important;
+  background:rgba(255,255,255,.78) !important;
+  border-radius:18px !important;
+  padding:12px !important;
+  box-shadow:0 8px 20px rgba(16,24,40,.045) !important;
+}
+
+.debt-type-card span{
+  grid-area:icon !important;
+  width:34px !important;
+  height:34px !important;
+  border-radius:14px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f1efff !important;
+  color:#6547f6 !important;
+  font-size:17px !important;
+}
+
+.debt-type-card strong{
+  grid-area:title !important;
+  color:#101828 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+.debt-type-card small{
+  grid-area:text !important;
+  color:#667085 !important;
+  font-size:11px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+}
+
+.debt-type-card.active{
+  border-color:rgba(101,71,246,.42) !important;
+  background:linear-gradient(135deg,rgba(101,71,246,.12),rgba(255,255,255,.94)) !important;
+  box-shadow:0 12px 26px rgba(101,71,246,.13) !important;
+}
+
+.debt-type-card.active span{
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  color:#fff !important;
+}
+
+.debt-modal-form-card .form-group small{
+  display:block;
+  margin-top:6px;
+  color:#8a94a8;
+  font-size:11px;
+  line-height:1.32;
+  font-weight:750;
+}
+
+.debt-installment-check{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:12px;
+  padding:12px;
+  border-radius:16px;
+  background:#f8f7ff;
+  color:#475467;
+  font-size:12px;
+  font-weight:900;
+}
+
+.debt-account-card.type-loan .cc-icon{
+  background:linear-gradient(135deg,#1d4ed8,#2563eb) !important;
+}
+
+.debt-account-card.type-bnpl .cc-icon{
+  background:linear-gradient(135deg,#0891b2,#06b6d4) !important;
+}
+
+.empty-debt-state{
+  border:1px solid rgba(101,71,246,.10);
+  background:rgba(255,255,255,.78);
+}
+
+@media (min-width:480px){
+  .debt-type-selector{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.2 — Cards & debts mobile spacing polish
+   ============================================================ */
+
+/* More label/card safety */
+.more-card .more-item-title,
+.more-section .more-item-title{
+  letter-spacing:-.02em;
+}
+
+/* Debt modal: more breathing room and clearer grouping */
+.debt-card-modal{
+  max-height:min(86vh,760px) !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  padding-bottom:92px !important;
+}
+
+.debt-card-modal .debt-modal-hero{
+  margin-bottom:14px !important;
+}
+
+.debt-card-modal .debt-modal-heading h2{
+  line-height:1.06 !important;
+  letter-spacing:-.045em !important;
+}
+
+.debt-card-modal .debt-modal-heading p{
+  max-width:95% !important;
+  line-height:1.38 !important;
+}
+
+.debt-type-selector{
+  gap:12px !important;
+  margin:14px 0 16px !important;
+}
+
+.debt-type-card{
+  min-height:68px !important;
+  padding:13px 14px !important;
+}
+
+.debt-modal-form-card{
+  display:grid !important;
+  gap:14px !important;
+  padding:14px !important;
+  border-radius:24px !important;
+}
+
+.debt-form-section-title{
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.10em !important;
+  text-transform:uppercase !important;
+  margin:2px 0 -4px !important;
+}
+
+.debt-modal-grid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:14px 12px !important;
+}
+
+.debt-modal-form-card .form-group{
+  margin:0 !important;
+  min-width:0 !important;
+}
+
+.debt-modal-form-card .form-group label{
+  margin-bottom:7px !important;
+  line-height:1.15 !important;
+}
+
+.debt-modal-form-card input,
+.debt-modal-form-card select{
+  min-height:52px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+}
+
+.debt-modal-form-card .form-group small{
+  min-height:28px !important;
+  margin-top:7px !important;
+  line-height:1.35 !important;
+}
+
+.debt-full-row{
+  grid-column:1 / -1 !important;
+}
+
+/* Custom loan type selector */
+.loan-type-custom{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:9px !important;
+  margin-top:2px !important;
+}
+
+.loan-type-custom button{
+  min-height:44px !important;
+  border:1px solid rgba(101,71,246,.12) !important;
+  background:#fff !important;
+  color:#475467 !important;
+  border-radius:15px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  text-align:left !important;
+  padding:10px 11px !important;
+  box-shadow:0 6px 16px rgba(16,24,40,.04) !important;
+}
+
+.loan-type-custom button.active{
+  border-color:rgba(101,71,246,.46) !important;
+  color:#fff !important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  box-shadow:0 10px 24px rgba(101,71,246,.18) !important;
+}
+
+/* Installment checkbox clearer and not cramped */
+.debt-installment-check{
+  min-height:46px !important;
+  padding:12px 14px !important;
+  border:1px solid rgba(101,71,246,.10) !important;
+  background:linear-gradient(180deg,#f8f7ff,#fff) !important;
+  border-radius:17px !important;
+}
+
+.debt-modal-hint{
+  margin-top:0 !important;
+  line-height:1.45 !important;
+  border-radius:17px !important;
+}
+
+/* Sticky savebar should not hide inputs */
+.debt-modal-savebar{
+  position:sticky !important;
+  bottom:0 !important;
+  z-index:12 !important;
+  padding-top:10px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.96) 24%,rgba(255,255,255,1)) !important;
+}
+
+@media (max-width:420px){
+  .debt-card-modal{
+    width:calc(100vw - 20px) !important;
+    max-height:84vh !important;
+    border-radius:28px 28px 24px 24px !important;
+  }
+
+  .debt-type-selector{
+    gap:9px !important;
+  }
+
+  .debt-type-card{
+    min-height:62px !important;
+    padding:11px 12px !important;
+  }
+
+  .debt-type-card small{
+    font-size:10.5px !important;
+  }
+
+  .debt-modal-grid{
+    grid-template-columns:1fr 1fr !important;
+    gap:13px 10px !important;
+  }
+
+  .debt-modal-form-card{
+    padding:13px !important;
+    gap:13px !important;
+  }
+
+  .debt-modal-form-card input,
+  .debt-modal-form-card select{
+    min-height:50px !important;
+    font-size:14px !important;
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  .debt-modal-form-card .form-group small{
+    font-size:10.5px !important;
+    min-height:auto !important;
+  }
+
+  .loan-type-custom{
+    grid-template-columns:1fr !important;
+  }
+}
+
+@media (max-width:360px){
+  .debt-modal-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .debt-modal-form-card .form-group small{
+    min-height:auto !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.3 — Correct card/debt logic UI
+   ============================================================ */
+.debt-type-tabs{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  padding:5px!important;
+  margin:12px 0 10px!important;
+  border-radius:18px!important;
+  background:rgba(101,71,246,.07)!important;
+  border:1px solid rgba(101,71,246,.10)!important;
+}
+.debt-type-tabs button{
+  min-height:44px!important;
+  border:0!important;
+  border-radius:14px!important;
+  background:transparent!important;
+  color:#667085!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+}
+.debt-type-tabs button.active{
+  background:linear-gradient(135deg,#6547f6,#7c3aed)!important;
+  color:#fff!important;
+  box-shadow:0 10px 24px rgba(101,71,246,.18)!important;
+}
+.debt-context-note{
+  margin:0 0 14px!important;
+  padding:11px 12px!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.78)!important;
+  border:1px solid rgba(101,71,246,.10)!important;
+  color:#667085!important;
+  font-size:11.5px!important;
+  line-height:1.42!important;
+  font-weight:780!important;
+}
+.debt-type-selector{display:none!important;}
+.loan-purpose-custom{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:9px!important;
+  margin-top:2px!important;
+}
+.loan-purpose-custom button{
+  min-height:44px!important;
+  border:1px solid rgba(101,71,246,.12)!important;
+  background:#fff!important;
+  color:#475467!important;
+  border-radius:15px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  text-align:left!important;
+  padding:10px 11px!important;
+  box-shadow:0 6px 16px rgba(16,24,40,.04)!important;
+}
+.loan-purpose-custom button.active{
+  border-color:rgba(101,71,246,.46)!important;
+  color:#fff!important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed)!important;
+  box-shadow:0 10px 24px rgba(101,71,246,.18)!important;
+}
+.cc-installment-mini{
+  margin:12px 0 2px!important;
+  padding:12px!important;
+  border:1px solid rgba(101,71,246,.12)!important;
+  background:linear-gradient(180deg,#f8f7ff,#fff)!important;
+  border-radius:18px!important;
+}
+.cc-installment-title{
+  color:#6547f6!important;
+  font-size:11px!important;
+  font-weight:950!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  margin-bottom:8px!important;
+}
+.cc-installment-row{
+  display:grid!important;
+  grid-template-columns:1fr auto!important;
+  gap:3px 8px!important;
+  padding:8px 0!important;
+  border-top:1px solid rgba(101,71,246,.08)!important;
+}
+.cc-installment-row:first-of-type{border-top:0!important;padding-top:0!important;}
+.cc-installment-row span{color:#111827!important;font-size:12px!important;font-weight:900!important;}
+.cc-installment-row strong{color:#111827!important;font-size:12px!important;font-weight:950!important;}
+.cc-installment-row small{grid-column:1/-1!important;color:#667085!important;font-size:11px!important;font-weight:750!important;}
+@media(max-width:420px){
+  .loan-purpose-custom,.loan-type-custom{grid-template-columns:1fr!important}
+  .debt-context-note{font-size:11px!important}
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.4 — Dedicated credit card purchase flow
+   ============================================================ */
+
+.locked-card-source{
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+  padding:11px 12px;
+  border:1px solid rgba(101,71,246,.12);
+  background:linear-gradient(180deg,#f8f7ff,#fff);
+  border-radius:16px;
+}
+.locked-card-source > span{
+  width:32px;height:32px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#6547f6,#7c3aed);color:#fff;
+}
+.locked-card-source strong{display:block;color:#111827;font-size:13px;font-weight:950;}
+.locked-card-source small{display:block;color:#667085;font-size:11px;line-height:1.3;font-weight:750;}
+.payment-source-group select:disabled{display:none;}
+
+.credit-card-purchase-options{
+  padding:14px !important;border-radius:22px !important;border:1px solid rgba(101,71,246,.14) !important;
+  background:linear-gradient(180deg,#faf9ff,#fff) !important;box-shadow:0 10px 28px rgba(16,24,40,.045) !important;
+}
+.credit-card-purchase-note{padding-bottom:2px;}
+.credit-card-purchase-note strong{font-size:14px !important;letter-spacing:-.02em;}
+.credit-card-purchase-note span{font-size:12px !important;color:#667085 !important;}
+
+.card-purchase-type-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:5px;border-radius:17px;
+  background:rgba(101,71,246,.07);border:1px solid rgba(101,71,246,.09);margin-top:8px;
+}
+.card-purchase-type-tabs button{
+  min-height:42px;border:0;border-radius:13px;background:transparent;color:#667085;font-size:12px;font-weight:950;
+}
+.card-purchase-type-tabs button.active{
+  background:linear-gradient(135deg,#6547f6,#7c3aed);color:#fff;box-shadow:0 9px 22px rgba(101,71,246,.18);
+}
+.card-installment-fields{gap:12px;margin-top:6px;}
+
+.interest-free-toggle{
+  width:100%;display:flex;align-items:center;gap:11px;border:1px solid rgba(101,71,246,.12);
+  background:#fff;border-radius:18px;padding:12px;text-align:left;color:#475467;
+}
+.interest-free-toggle > span{
+  flex:0 0 auto;width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  background:#f1efff;color:#6547f6;font-weight:950;
+}
+.interest-free-toggle strong{display:block;color:#111827;font-size:13px;font-weight:950;}
+.interest-free-toggle small{display:block;margin-top:2px;color:#667085;font-size:11px;line-height:1.35;font-weight:750;}
+.interest-free-toggle.active{border-color:rgba(101,71,246,.32);background:linear-gradient(180deg,#f7f4ff,#fff);}
+.interest-free-toggle.active > span{background:linear-gradient(135deg,#6547f6,#7c3aed);color:#fff;}
+
+.installment-estimate{
+  align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:16px;
+  background:rgba(16,24,40,.04);border:1px solid rgba(16,24,40,.06);
+}
+.installment-estimate span{color:#667085;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;}
+.installment-estimate strong{color:#111827;font-size:14px;font-weight:950;}
+
+@media (max-width:380px){
+  .card-purchase-type-tabs{grid-template-columns:1fr;}
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.5 — Card purchase fixes & spacing
+   ============================================================ */
+
+/* More vertical breathing room between repayment planner and summary */
+.cc-card{
+  margin-bottom:24px !important;
+}
+
+#ccSummary{
+  margin-top:26px !important;
+}
+
+#ccSummary > *,
+.cc-summary-card,
+.summary-card,
+.chart-container{
+  margin-top:16px !important;
+}
+
+.cc-card .tip,
+.cc-card .tip.green{
+  margin-top:13px !important;
+  margin-bottom:10px !important;
+}
+
+/* Better spacing for the repayment block if current CSS uses these classes */
+.cc-repay-card,
+.repay-card,
+.debt-pay-card,
+.card-payment-plan{
+  margin-bottom:24px !important;
+}
+
+/* Daily category custom chips */
+.daily-category-native{
+  display:none !important;
+}
+
+.daily-category-chips{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+
+.daily-category-chips button{
+  min-height:44px !important;
+  border:1px solid rgba(101,71,246,.12) !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  color:#475467 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  text-align:left !important;
+  padding:9px 10px !important;
+  box-shadow:0 6px 16px rgba(16,24,40,.04) !important;
+}
+
+.daily-category-chips button.active{
+  border-color:rgba(101,71,246,.46) !important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  color:#fff !important;
+  box-shadow:0 10px 22px rgba(101,71,246,.18) !important;
+}
+
+.card-installment-fields .form-row{
+  align-items:start !important;
+}
+
+.installment-estimate{
+  margin-top:2px !important;
+}
+
+@media (max-width:420px){
+  .daily-amount-category-row{
+    grid-template-columns:1fr !important;
+  }
+
+  .daily-category-chips{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+
+@media (max-width:360px){
+  .daily-category-chips{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.6 — Final card purchase bugfix
+   ============================================================ */
+
+.daily-category-chips{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+
+.daily-category-chips button{
+  min-height:46px !important;
+  border:1px solid rgba(101,71,246,.12) !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg,#ffffff,#fafaff) !important;
+  color:#475467 !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  text-align:left !important;
+  padding:8px 9px !important;
+  box-shadow:0 7px 18px rgba(16,24,40,.045) !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+}
+
+.daily-category-chips button span{
+  flex:0 0 auto !important;
+  width:24px !important;
+  height:24px !important;
+  border-radius:9px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f1efff !important;
+  color:#6547f6 !important;
+  font-size:9px !important;
+  font-weight:950 !important;
+  letter-spacing:.02em !important;
+}
+
+.daily-category-chips button.active{
+  border-color:rgba(101,71,246,.52) !important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  color:#fff !important;
+  box-shadow:0 10px 24px rgba(101,71,246,.20) !important;
+}
+
+.daily-category-chips button.active span{
+  background:rgba(255,255,255,.18) !important;
+  color:#fff !important;
+}
+
+/* stronger separation between card repayment panel and total */
+#ccSummary{
+  margin-top:34px !important;
+}
+
+.cc-card{
+  margin-bottom:28px !important;
+}
+
+.cc-card + #ccSummary,
+.cc-card + .summary-card,
+.cc-card + .chart-container{
+  margin-top:34px !important;
+}
+
+@media (max-width:380px){
+  .daily-category-chips button{
+    font-size:11.5px !important;
+    padding:8px !important;
+  }
+
+  .daily-category-chips button span{
+    width:22px !important;
+    height:22px !important;
+    font-size:8px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.7 — cards purchase production polish
+   ============================================================ */
+.daily-category-native{display:none!important;}
+.daily-category-picker{position:relative;}
+.daily-category-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:54px;border:1px solid rgba(101,71,246,.14);border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.05);padding:12px 14px;text-align:left;}
+.daily-category-trigger span{display:block;color:#667085;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;}
+.daily-category-trigger strong{display:block;flex:1;color:#111827;font-size:14px;font-weight:900;}
+.daily-category-trigger em{font-style:normal;color:#667085;font-size:15px;font-weight:900;}
+.daily-category-picker.is-open .daily-category-trigger{border-color:rgba(101,71,246,.35);box-shadow:0 10px 28px rgba(101,71,246,.12);}
+.daily-category-menu{display:none;position:absolute;top:calc(100% + 10px);left:0;right:0;z-index:25;background:#fff;border:1px solid rgba(101,71,246,.12);border-radius:20px;padding:10px;box-shadow:0 22px 42px rgba(16,24,40,.16);grid-template-columns:1fr 1fr;gap:8px;}
+.daily-category-picker.is-open .daily-category-menu{display:grid;}
+.daily-category-menu button{min-height:42px;border:1px solid rgba(101,71,246,.10);border-radius:14px;background:#fbfaff;color:#475467;font-size:12px;font-weight:850;padding:8px 10px;text-align:left;}
+.daily-category-menu button.active{background:linear-gradient(135deg,#6547f6,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 12px 24px rgba(101,71,246,.18);}
+.installment-rate-note{display:block;padding:11px 13px;border-radius:14px;background:#f7f5ff;border:1px solid rgba(101,71,246,.12);color:#5f6480;font-size:12px;font-weight:800;line-height:1.45;margin-top:2px;}
+.credit-card-purchase-options{gap:14px!important;}
+.credit-card-purchase-note{padding:14px 16px!important;border-radius:18px!important;}
+.card-purchase-type-tabs{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+.card-purchase-type-tabs button{min-height:46px!important;font-size:12px!important;font-weight:900!important;border-radius:14px!important;}
+.interest-free-toggle{min-height:58px!important;padding:12px 14px!important;align-items:flex-start!important;}
+#vCards .cc-card{margin-bottom:18px!important;}
+#vCards #ccSummary{display:block!important;clear:both!important;margin-top:26px!important;}
+#vCards .cc-summary-card{margin-top:26px!important;}
+#vCards .cc-production-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin-top:14px!important;}
+#vCards .cc-production-actions button{min-height:46px!important;border-radius:15px!important;font-size:12px!important;font-weight:900!important;}
+.cc-installment-mini{margin-top:14px!important;}
+.cc-installment-footer{margin-top:10px!important;}
+.cc-installment-footer button{width:100%;min-height:40px;border:none;border-radius:12px;background:#f5f3ff;color:#6547f6;font-size:12px;font-weight:900;padding:0 12px;}
+.card-plans-sheet #cardPlansList{display:grid;gap:12px;}
+.card-plan-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px;border:1px solid rgba(101,71,246,.10);border-radius:16px;background:#fff;box-shadow:0 10px 24px rgba(16,24,40,.04);}
+.card-plan-main{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.card-plan-main strong{color:#111827;font-size:14px;font-weight:950;}
+.card-plan-main span{color:#4b5563;font-size:12px;font-weight:850;}
+.card-plan-main small{color:#667085;font-size:11px;font-weight:750;}
+.card-plan-delete{flex:0 0 auto;min-height:38px;padding:0 12px;border:none;border-radius:12px;background:#fff1f2;color:#dc2626;font-size:12px;font-weight:900;}
+.card-plans-empty{padding:18px;border-radius:16px;background:#f8fafc;color:#667085;font-size:13px;font-weight:800;text-align:center;}
+@media (max-width:420px){.daily-category-menu{grid-template-columns:1fr 1fr!important;}#vCards .cc-production-actions{grid-template-columns:1fr 1fr 1fr!important;}.card-plan-row{flex-direction:column;align-items:stretch;}.card-plan-delete{width:100%;}}
+
+
+/* ============================================================
+   CAPVO v1.8.5.8 — Final card purchase UI cleanup
+   ============================================================ */
+
+/* Νέα αγορά με κάρτα: μην στριμώχνεις ποσό + κατηγορία σε δύο στήλες */
+#dailyModal .daily-amount-category-row,
+#mDaily .daily-amount-category-row,
+.modal .daily-amount-category-row{
+  grid-template-columns:1fr !important;
+  gap:14px !important;
+}
+
+#dailyModal .daily-category-group,
+#mDaily .daily-category-group,
+.modal .daily-category-group{
+  width:100% !important;
+  grid-column:1 / -1 !important;
+}
+
+/* Category picker: full width, stable dropdown, production look */
+.daily-category-picker{
+  width:100% !important;
+  position:relative !important;
+  z-index:30 !important;
+}
+
+.daily-category-trigger{
+  width:100% !important;
+  min-height:56px !important;
+  border-radius:18px !important;
+  padding:12px 14px !important;
+  background:linear-gradient(180deg,#ffffff,#fbfaff) !important;
+  border:1px solid rgba(101,71,246,.16) !important;
+  box-shadow:0 8px 22px rgba(16,24,40,.055) !important;
+}
+
+.daily-category-trigger strong{
+  font-size:14px !important;
+  font-weight:950 !important;
+}
+
+.daily-category-menu{
+  left:0 !important;
+  right:0 !important;
+  width:100% !important;
+  max-height:260px !important;
+  overflow:auto !important;
+  grid-template-columns:1fr 1fr !important;
+  z-index:12000 !important;
+  border-radius:20px !important;
+  padding:10px !important;
+}
+
+.daily-category-menu button{
+  min-height:42px !important;
+  border-radius:14px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  white-space:normal !important;
+}
+
+/* Installment section: full-width info and no cramped controls */
+.card-installment-fields{
+  width:100% !important;
+  display:grid !important;
+  gap:13px !important;
+}
+
+.card-installment-fields .form-row{
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+}
+
+.interest-free-toggle{
+  width:100% !important;
+  min-height:68px !important;
+  border-radius:18px !important;
+  padding:14px !important;
+  align-items:flex-start !important;
+}
+
+.interest-free-toggle div{
+  flex:1 !important;
+  min-width:0 !important;
+}
+
+.interest-free-toggle strong{
+  font-size:13px !important;
+}
+
+.interest-free-toggle small{
+  font-size:11.5px !important;
+  line-height:1.45 !important;
+  max-width:100% !important;
+}
+
+.installment-rate-note{
+  width:100% !important;
+  border-radius:16px !important;
+  padding:12px 14px !important;
+  line-height:1.5 !important;
+}
+
+/* Card actions now only 2 buttons */
+#vCards .cc-production-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+
+#vCards .cc-production-actions button{
+  min-height:46px !important;
+  border-radius:15px !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+}
+
+/* Plans in card: compact summary only */
+.cc-installment-mini.cc-installment-compact{
+  margin-top:15px !important;
+  padding:14px !important;
+  border-radius:20px !important;
+  background:linear-gradient(180deg,#ffffff,#fbfaff) !important;
+  border:1px solid rgba(101,71,246,.14) !important;
+  box-shadow:0 8px 24px rgba(16,24,40,.045) !important;
+}
+
+.cc-installment-title-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin-bottom:12px !important;
+}
+
+.cc-installment-title-row div{
+  display:grid !important;
+  gap:3px !important;
+}
+
+.cc-installment-title-row span{
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+}
+
+.cc-installment-title-row strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+.cc-installment-title-row em{
+  flex:0 0 auto !important;
+  min-width:34px !important;
+  height:34px !important;
+  border-radius:13px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:linear-gradient(135deg,#6547f6,#7c3aed) !important;
+  color:#fff !important;
+  font-size:14px !important;
+  font-style:normal !important;
+  font-weight:950 !important;
+  box-shadow:0 10px 22px rgba(101,71,246,.18) !important;
+}
+
+.cc-installment-open-btn{
+  width:100% !important;
+  min-height:44px !important;
+  border:0 !important;
+  border-radius:15px !important;
+  background:#f3f0ff !important;
+  color:#6547f6 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+/* Remove old embedded plan rows if cached markup leaks */
+.cc-installment-mini.cc-installment-compact .cc-installment-row,
+.cc-installment-mini.cc-installment-compact .cc-installment-footer{
+  display:none !important;
+}
+
+/* Spacing around repayment + summary */
+#vCards .cc-card{
+  margin-bottom:30px !important;
+}
+
+#vCards .cc-card .cc-body{
+  padding-bottom:10px !important;
+}
+
+#vCards #ccSummary{
+  position:relative !important;
+  z-index:1 !important;
+  display:block !important;
+  clear:both !important;
+  margin-top:36px !important;
+  margin-bottom:28px !important;
+}
+
+#vCards .cc-summary-card,
+#ccSummary .cc-summary-card,
+#ccSummary > .adv-card,
+#ccSummary > .chart-container{
+  margin-top:0 !important;
+  border-radius:24px !important;
+  position:relative !important;
+  z-index:1 !important;
+  background:#fff !important;
+}
+
+/* Give page enough bottom room above mobile nav */
+#vCards{
+  padding-bottom:150px !important;
+}
+
+@media (max-width:420px){
+  .daily-category-menu{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  .daily-category-trigger{
+    min-height:54px !important;
+  }
+}
+
+@media (max-width:360px){
+  .daily-category-menu{
+    grid-template-columns:1fr !important;
+  }
+
+  #vCards .cc-production-actions{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.9 — Cards page summary/evaluation spacing fix
+   ============================================================ */
+
+/* Stop Summary and Evaluation blocks from visually colliding */
+#vCards #ccSummary{
+  display:block !important;
+  position:relative !important;
+  z-index:2 !important;
+  clear:both !important;
+  margin-top:42px !important;
+  margin-bottom:54px !important;
+  padding-bottom:0 !important;
+}
+
+#vCards #ccSummary > *{
+  position:relative !important;
+  z-index:2 !important;
+  margin-bottom:0 !important;
+}
+
+/* The evaluation section must start after the summary with clear breathing room */
+#vCards #ccPlanAnalysis{
+  display:block !important;
+  position:relative !important;
+  z-index:1 !important;
+  clear:both !important;
+  margin-top:54px !important;
+  padding-top:0 !important;
+}
+
+/* If the evaluation card uses generic classes, force it below the summary */
+#vCards #ccPlanAnalysis > *,
+#vCards .cc-plan-analysis,
+#vCards .plan-analysis-card{
+  position:relative !important;
+  z-index:1 !important;
+  margin-top:0 !important;
+}
+
+/* Make the summary card self-contained */
+#vCards .cc-summary-card,
+#vCards #ccSummary .adv-card,
+#vCards #ccSummary .chart-container{
+  position:relative !important;
+  z-index:2 !important;
+  overflow:hidden !important;
+  margin-bottom:0 !important;
+}
+
+/* Extra safe bottom room above the floating nav */
+#vCards{
+  padding-bottom:190px !important;
+}
+
+
+
+
+/* ============================================================
+   CAPVO v1.8.5.12 — Clean fix from v1.8.5.10
+   ============================================================ */
+
+/* Splash: restore real center without forcing app-ready/capvo-ready behavior */
+.capvo-splash{
+  left:0 !important;
+  right:0 !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+}
+
+.capvo-splash-mark,
+.capvo-splash-word,
+.capvo-splash-line{
+  margin-left:auto !important;
+  margin-right:auto !important;
+  align-self:center !important;
+}
+
+/* Cards page: hard separation between Summary and Analysis */
+#vCards #ccSummary{
+  display:block !important;
+  clear:both !important;
+  position:relative !important;
+  z-index:3 !important;
+  margin-top:42px !important;
+  margin-bottom:0 !important;
+  padding-bottom:0 !important;
+}
+
+#vCards #ccSummary > *{
+  position:relative !important;
+  z-index:3 !important;
+}
+
+#vCards #ccPlanAnalysis{
+  display:block !important;
+  clear:both !important;
+  position:relative !important;
+  z-index:1 !important;
+  margin-top:0 !important;
+  padding-top:0 !important;
+}
+
+#vCards .cc-plan-analysis-spacer{
+  display:block !important;
+  height:72px !important;
+  min-height:72px !important;
+  clear:both !important;
+}
+
+#vCards .cc-plan-analysis-card{
+  position:relative !important;
+  z-index:1 !important;
+  margin-top:0 !important;
+}
+
+/* keep bottom nav safe */
+#vCards{
+  padding-bottom:210px !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.15 — Cards section final two-issue fix
+   ============================================================ */
+
+/* The scrollable page needs padding on the actual grid, not only #vCards */
+#vCards .page-grid{
+  padding-bottom:calc(320px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Keep cards, summary and analysis in clean grid flow */
+#vCards #ccList,
+#vCards #ccSummary,
+#vCards #ccPlanAnalysis{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  min-width:0 !important;
+  clear:both !important;
+  position:relative !important;
+  transform:none !important;
+  float:none !important;
+}
+
+#vCards #ccList{
+  z-index:1 !important;
+}
+
+#vCards #ccSummary{
+  z-index:2 !important;
+  margin-top:38px !important;
+  margin-bottom:120px !important;
+  padding-bottom:0 !important;
+}
+
+#vCards #ccSummary > *{
+  position:relative !important;
+  z-index:2 !important;
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  transform:none !important;
+}
+
+#vCards #ccPlanAnalysis{
+  z-index:1 !important;
+  margin-top:0 !important;
+  padding-top:0 !important;
+  margin-bottom:160px !important;
+}
+
+#vCards #ccPlanAnalysis > *{
+  position:relative !important;
+  z-index:1 !important;
+  margin-top:0 !important;
+  transform:none !important;
+}
+
+/* Prevent fixed bottom nav from covering the final cards at max scroll */
+#vCards #ccPlanAnalysis::after{
+  content:"" !important;
+  display:block !important;
+  height:180px !important;
+}
+
+/* Make summary visually self-contained */
+#vCards .cc-summary-card{
+  border-radius:24px !important;
+  background:#fff !important;
+  overflow:hidden !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+}
+
+/* Keep the compact plans from expanding the main card */
+#vCards .cc-installment-compact{
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.19 — Cards summary + mature analysis final polish
+   ============================================================ */
+
+/* Actual Cards page flow */
+#vCards .page-grid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:18px !important;
+  align-content:start !important;
+  padding-bottom:calc(230px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Keep the sections in normal order and prevent old patches from stacking them */
+#vCards #ccList,
+#vCards #ccSummary,
+#vCards #ccPlanAnalysis{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  display:block !important;
+  float:none !important;
+  clear:both !important;
+  position:relative !important;
+  transform:none !important;
+  min-width:0 !important;
+}
+
+/* Summary: close enough to the repayment card, but never under the nav */
+#vCards #ccSummary{
+  z-index:2 !important;
+  margin-top:14px !important;
+  margin-bottom:0 !important;
+  padding:0 !important;
+}
+
+#vCards #ccSummary > *,
+#vCards .cc-summary-card{
+  position:relative !important;
+  z-index:2 !important;
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  transform:none !important;
+  border-radius:24px !important;
+  background:#fff !important;
+  overflow:hidden !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+}
+
+/* Analysis: normal gap below summary, with safe space above bottom nav */
+#vCards #ccPlanAnalysis{
+  z-index:1 !important;
+  margin-top:26px !important;
+  margin-bottom:0 !important;
+  padding-bottom:160px !important;
+}
+
+/* Disable old artificial spacers */
+#vCards .cc-plan-analysis-spacer,
+#vCards #cardsSummaryAnalysisGap{
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* Mature analysis card */
+#vCards .mature-analysis-card{
+  width:100% !important;
+  background:#fff !important;
+  border:1px solid rgba(101,71,246,.09) !important;
+  border-radius:24px !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+  padding:16px !important;
+  overflow:hidden !important;
+  color:#111827 !important;
+}
+
+#vCards .mature-analysis-header{
+  display:grid !important;
+  grid-template-columns:58px 1fr !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding:14px !important;
+  border-radius:20px !important;
+  background:linear-gradient(180deg,#f8f7ff,#ffffff) !important;
+  border:1px solid rgba(101,71,246,.10) !important;
+}
+
+#vCards .mature-score-circle{
+  width:56px !important;
+  height:56px !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#fff !important;
+  font-size:17px !important;
+  font-weight:950 !important;
+  box-shadow:0 12px 24px rgba(16,24,40,.12) !important;
+}
+
+#vCards .mature-score-circle.good{
+  background:linear-gradient(135deg,#10b981,#34d399) !important;
+}
+
+#vCards .mature-score-circle.ok{
+  background:linear-gradient(135deg,#f59e0b,#fbbf24) !important;
+}
+
+#vCards .mature-score-circle.bad{
+  background:linear-gradient(135deg,#ef4444,#f97316) !important;
+}
+
+#vCards .mature-analysis-copy{
+  display:grid !important;
+  gap:3px !important;
+  min-width:0 !important;
+}
+
+#vCards .mature-analysis-copy small,
+#vCards .mature-section-title{
+  color:#6547f6 !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  letter-spacing:.09em !important;
+  text-transform:uppercase !important;
+}
+
+#vCards .mature-analysis-copy h3{
+  margin:0 !important;
+  color:#111827 !important;
+  font-size:15px !important;
+  line-height:1.15 !important;
+  font-weight:950 !important;
+  letter-spacing:-.02em !important;
+}
+
+#vCards .mature-analysis-copy p{
+  margin:0 !important;
+  color:#667085 !important;
+  font-size:12px !important;
+  line-height:1.4 !important;
+  font-weight:760 !important;
+}
+
+#vCards .mature-analysis-section{
+  margin-top:14px !important;
+  padding:14px !important;
+  border-radius:18px !important;
+  background:#fbfaff !important;
+  border:1px solid rgba(101,71,246,.08) !important;
+}
+
+#vCards .mature-section-title{
+  margin-bottom:10px !important;
+}
+
+#vCards .mature-card-plan-row{
+  display:grid !important;
+  gap:6px !important;
+  padding:11px 0 !important;
+  border-top:1px solid rgba(101,71,246,.08) !important;
+}
+
+#vCards .mature-card-plan-row:first-of-type{
+  border-top:0 !important;
+  padding-top:0 !important;
+}
+
+#vCards .mature-card-plan-row > div{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+
+#vCards .mature-card-plan-row strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+#vCards .mature-card-plan-row span{
+  color:#6547f6 !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+}
+
+#vCards .mature-card-plan-row small{
+  color:#667085 !important;
+  font-size:11px !important;
+  line-height:1.4 !important;
+  font-weight:760 !important;
+}
+
+#vCards .mature-card-plan-row small.danger{
+  color:#dc2626 !important;
+}
+
+#vCards .suggestions-section{
+  background:#fff !important;
+}
+
+#vCards .mature-suggestion-row{
+  display:grid !important;
+  grid-template-columns:22px 1fr !important;
+  gap:8px !important;
+  align-items:start !important;
+  padding:10px !important;
+  border-radius:14px !important;
+  background:#f8fafc !important;
+  border:1px solid rgba(16,24,40,.05) !important;
+  margin-top:8px !important;
+}
+
+#vCards .mature-suggestion-row:first-of-type{
+  margin-top:0 !important;
+}
+
+#vCards .mature-suggestion-row span{
+  width:20px !important;
+  height:20px !important;
+  border-radius:8px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#dcfce7 !important;
+  color:#059669 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+}
+
+#vCards .mature-suggestion-row p{
+  margin:0 !important;
+  color:#475467 !important;
+  font-size:12px !important;
+  line-height:1.45 !important;
+  font-weight:780 !important;
+}
+
+@media (max-width:380px){
+  #vCards .mature-analysis-header{
+    grid-template-columns:50px 1fr !important;
+    gap:11px !important;
+    padding:12px !important;
+  }
+
+  #vCards .mature-score-circle{
+    width:50px !important;
+    height:50px !important;
+    font-size:15px !important;
+  }
+
+  #vCards .mature-card-plan-row > div{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    gap:3px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.20 — Cards Summary real layout fix
+   ============================================================ */
+
+/* Final cards page flow: isolate it from older patches and generic card rules */
+#vCards.cards-final-flow{
+  overflow:visible !important;
+  padding-bottom:0 !important;
+}
+
+#vCards.cards-final-flow .page-grid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:22px !important;
+  align-content:start !important;
+  padding-bottom:calc(240px + env(safe-area-inset-bottom)) !important;
+}
+
+/* The three main blocks must be normal grid rows */
+#vCards.cards-final-flow #ccList,
+#vCards.cards-final-flow #ccSummary,
+#vCards.cards-final-flow #ccPlanAnalysis{
+  grid-column:1 / -1 !important;
+  display:block !important;
+  position:relative !important;
+  float:none !important;
+  clear:both !important;
+  transform:none !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+}
+
+/* Card list should end before the summary starts */
+#vCards.cards-final-flow #ccList{
+  z-index:1 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+#vCards.cards-final-flow #ccList::after{
+  content:"" !important;
+  display:block !important;
+  clear:both !important;
+  height:0 !important;
+}
+
+/* Give the last repayment card inside the list a real physical bottom space */
+#vCards.cards-final-flow #ccList .cc-card:last-child{
+  margin-bottom:26px !important;
+}
+
+/* Summary: dedicated self-contained card, not generic adv-card behavior */
+#vCards.cards-final-flow #ccSummary.cards-final-summary{
+  z-index:2 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+#vCards.cards-final-flow #ccSummary.cards-final-summary > .cc-summary-final-card{
+  display:block !important;
+  position:relative !important;
+  z-index:2 !important;
+  width:100% !important;
+  min-height:auto !important;
+  margin:0 !important;
+  padding:18px !important;
+  border-radius:24px !important;
+  background:#fff !important;
+  border:1px solid rgba(101,71,246,.07) !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+  overflow:hidden !important;
+  transform:none !important;
+}
+
+/* override any old adv-card/blue/negative rules if cached class remains somewhere */
+#vCards.cards-final-flow #ccSummary.cards-final-summary > *{
+  float:none !important;
+  clear:both !important;
+  transform:none !important;
+  max-height:none !important;
+}
+
+#vCards.cards-final-flow .cc-summary-final-card h3{
+  margin:0 0 14px 0 !important;
+  color:#111827 !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  line-height:1.2 !important;
+}
+
+/* Summary rows */
+#vCards.cards-final-flow .cc-summary-final-card .cc-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  padding:8px 0 !important;
+  margin:0 !important;
+}
+
+/* Analysis starts after summary with a clean gap */
+#vCards.cards-final-flow #ccPlanAnalysis.cards-final-analysis{
+  z-index:1 !important;
+  margin:8px 0 0 0 !important;
+  padding:0 0 150px 0 !important;
+}
+
+#vCards.cards-final-flow #ccPlanAnalysis.cards-final-analysis > *{
+  position:relative !important;
+  z-index:1 !important;
+  margin-top:0 !important;
+  transform:none !important;
+}
+
+/* Kill old spacer hacks if present */
+#vCards.cards-final-flow #cardsSummaryAnalysisGap,
+#vCards.cards-final-flow .cc-plan-analysis-spacer{
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* Keep floating bottom nav from covering final content */
+#vCards.cards-final-flow::after{
+  content:"" !important;
+  display:block !important;
+  height:140px !important;
+}
+
+/* ============================================================
+   CAPVO v1.8.5.21 — Real Cards Summary fix
+   Root cause: global #ccList had max-height:70vh + overflow-y:auto,
+   so the cards list became an internal scroll container and the Summary
+   was visually trapped/covered near the floating bottom nav.
+   ============================================================ */
+
+/* Disable the global internal scroll only for Cards & Debts page */
+#vCards #ccList,
+#vCards.cards-final-flow #ccList,
+#vCards .page-grid #ccList{
+  max-height:none !important;
+  height:auto !important;
+  overflow:visible !important;
+  overflow-y:visible !important;
+  padding-right:0 !important;
+  margin-bottom:24px !important;
+}
+
+/* Make the cards section a normal document flow: card list -> summary -> analysis */
+#vCards .page-grid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  align-content:start !important;
+  gap:24px !important;
+  padding-bottom:calc(190px + env(safe-area-inset-bottom)) !important;
+}
+
+#vCards #ccList,
+#vCards #ccSummary,
+#vCards #ccPlanAnalysis{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  display:block !important;
+  position:relative !important;
+  float:none !important;
+  clear:both !important;
+  transform:none !important;
+  min-width:0 !important;
+}
+
+/* Summary must not be affected by any old adv-card/list scroll behavior */
+#vCards #ccSummary{
+  margin:0 !important;
+  padding:0 !important;
+  z-index:2 !important;
+}
+
+#vCards #ccSummary > .cc-summary-card,
+#vCards #ccSummary > .cc-summary-final-card,
+#vCards #ccSummary > *{
+  margin:0 !important;
+  position:relative !important;
+  transform:none !important;
+  float:none !important;
+  clear:both !important;
+  z-index:2 !important;
+}
+
+/* Analysis comes after summary with a readable gap and enough bottom safe area */
+#vCards #ccPlanAnalysis{
+  margin:2px 0 0 0 !important;
+  padding:0 0 160px 0 !important;
+  z-index:1 !important;
+}
+
+#vCards #ccPlanAnalysis > *{
+  margin-top:0 !important;
+  position:relative !important;
+  transform:none !important;
+  z-index:1 !important;
+}
+
+/* kill old artificial spacers from previous patches */
+#vCards #cardsSummaryAnalysisGap,
+#vCards .cc-plan-analysis-spacer{
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.5.22 — Cards bottom whitespace trim
+   ============================================================ */
+
+/* The previous fix solved the overlap, but left too much empty space.
+   Keep only the minimum safe area needed above the floating bottom nav. */
+#vCards.cards-final-flow .page-grid,
+#vCards .page-grid{
+  padding-bottom:calc(112px + env(safe-area-inset-bottom)) !important;
+}
+
+/* The analysis card itself should not add a second large blank area. */
+#vCards.cards-final-flow #ccPlanAnalysis.cards-final-analysis,
+#vCards #ccPlanAnalysis{
+  padding-bottom:18px !important;
+  margin-bottom:0 !important;
+}
+
+/* Remove old artificial bottom spacers from previous attempts. */
+#vCards.cards-final-flow::after,
+#vCards::after,
+#vCards #ccPlanAnalysis::after,
+#vCards.cards-final-flow #ccPlanAnalysis::after{
+  content:none !important;
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* Keep the final evaluation card clear of the nav without creating a huge blank screen. */
+#vCards #ccPlanAnalysis > *:last-child{
+  margin-bottom:18px !important;
+}
+
+/* ============================================================
+   CAPVO v1.8.5.26 — Card purchase flow fixes
+   ============================================================ */
+#cardInstallmentFields[hidden],
+#cardInstallmentFields.is-hidden{
+  display:none !important;
+}
+
+.cc-card-transactions{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid rgba(101,71,246,.10);
+  border-radius:18px;
+  background:linear-gradient(180deg,#fbfaff,#fff);
+  display:grid;
+  gap:9px;
+}
+
+.cc-card-transactions-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#667085;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.cc-card-transactions-head strong{
+  min-width:24px;
+  height:24px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(101,71,246,.10);
+  color:#6547f6;
+  font-size:12px;
+}
+
+.cc-card-transaction-row{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:10px;
+  padding:10px 11px;
+  border-radius:15px;
+  background:#fff;
+  border:1px solid rgba(16,24,40,.06);
+}
+
+.cc-card-transaction-row strong{
+  display:block;
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+}
+
+.cc-card-transaction-row small{
+  display:block;
+  margin-top:2px;
+  color:#98a2b3;
+  font-size:11px;
+  font-weight:750;
+}
+
+.cc-card-transaction-row > span{
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+.cc-card-transaction-row.type-payment > span{
+  color:#16a34a;
+}
+
+.cc-card-transaction-row button{
+  width:28px;
+  height:28px;
+  border:0;
+  border-radius:999px;
+  background:rgba(239,68,68,.08);
+  color:#ef4444;
+  font-weight:950;
+}
+
+@media (max-width:420px){
+  .cc-card-transaction-row{
+    grid-template-columns:1fr auto;
+  }
+  .cc-card-transaction-row button{
+    grid-column:2;
+  }
+}
+
+/* ============================================================
+   CAPVO v1.8.5.27 — Compact card activity lists
+   ============================================================ */
+.cc-card-lists-compact{
+  margin-top:14px !important;
+  padding:12px !important;
+  border:1px solid rgba(101,71,246,.10) !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg,#ffffff,#fbfaff) !important;
+  box-shadow:0 8px 22px rgba(16,24,40,.04) !important;
+  display:grid !important;
+  gap:9px !important;
+}
+
+.cc-card-lists-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+
+.cc-card-lists-head span{
+  color:#6547f6 !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+}
+
+.cc-card-lists-head small{
+  color:#98a2b3 !important;
+  font-size:10.5px !important;
+  font-weight:800 !important;
+}
+
+.cc-card-lists-grid{
+  display:grid !important;
+  gap:8px !important;
+}
+
+.cc-card-list-item{
+  width:100% !important;
+  min-height:50px !important;
+  border:1px solid rgba(101,71,246,.10) !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  color:#101828 !important;
+  padding:10px 12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  text-align:left !important;
+  box-shadow:0 6px 16px rgba(16,24,40,.035) !important;
+}
+
+.cc-card-list-item span{
+  display:grid !important;
+  gap:2px !important;
+  min-width:0 !important;
+}
+
+.cc-card-list-item small{
+  color:#667085 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.05em !important;
+}
+
+.cc-card-list-item strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+.cc-card-list-item em{
+  flex:0 0 auto !important;
+  min-width:30px !important;
+  height:30px !important;
+  border-radius:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(101,71,246,.10) !important;
+  color:#6547f6 !important;
+  font-size:13px !important;
+  font-style:normal !important;
+  font-weight:950 !important;
+}
+
+.card-transactions-sheet #cardTransactionsList,
+.card-plans-sheet #cardPlansList{
+  display:grid !important;
+  gap:10px !important;
+  max-height:min(54vh,420px) !important;
+  overflow-y:auto !important;
+  padding-right:2px !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+.card-transaction-sheet-row{
+  display:grid !important;
+  grid-template-columns:1fr auto auto !important;
+  align-items:center !important;
+  gap:10px !important;
+  padding:13px !important;
+  border:1px solid rgba(16,24,40,.06) !important;
+  border-radius:16px !important;
+  background:#fff !important;
+  box-shadow:0 8px 20px rgba(16,24,40,.035) !important;
+}
+
+.card-transaction-sheet-main{
+  display:grid !important;
+  gap:3px !important;
+  min-width:0 !important;
+}
+
+.card-transaction-sheet-main strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.card-transaction-sheet-main span{
+  color:#667085 !important;
+  font-size:11.5px !important;
+  font-weight:850 !important;
+}
+
+.card-transaction-sheet-main small{
+  color:#98a2b3 !important;
+  font-size:11px !important;
+  font-weight:750 !important;
+}
+
+.card-transaction-sheet-amount{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+}
+
+.card-transaction-sheet-row.type-payment .card-transaction-sheet-amount{
+  color:#16a34a !important;
+}
+
+.card-transaction-delete{
+  width:30px !important;
+  height:30px !important;
+  border:0 !important;
+  border-radius:999px !important;
+  background:rgba(239,68,68,.08) !important;
+  color:#ef4444 !important;
+  font-weight:950 !important;
+}
+
+@media (max-width:420px){
+  .cc-card-lists-head{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+    gap:2px !important;
+  }
+
+  .card-transaction-sheet-row{
+    grid-template-columns:1fr auto !important;
+  }
+
+  .card-transaction-delete{
+    grid-column:2 !important;
+  }
+}
+
+/* CAPVO v1.8.5.29 — budget-impact separation for card purchases */
+.payment-badge.credit-card{
+  background:rgba(116,92,255,.12) !important;
+  color:#6d4dff !important;
+}
+
+.payment-badge.no-budget{
+  background:rgba(100,116,139,.10) !important;
+  color:#64748b !important;
+}
+
+.expense-amount.is-neutral,
+.dashboard-preview-amount.is-neutral{
+  color:#64748b !important;
+}
+
+.dashboard-preview-amount.is-payment{
+  color:#16a34a !important;
+}
+
+/* CAPVO v1.8.5.34 - Savings source/destination choices */
+.savings-transfer-choice{
+  display:grid;
+  gap:8px;
+  border:1px solid rgba(99,102,241,.14);
+  background:linear-gradient(135deg,rgba(248,250,252,.95),rgba(255,255,255,.98));
+  border-radius:18px;
+  padding:10px;
+}
+.savings-transfer-choice>p{
+  margin:0 0 2px;
+  color:#64748b;
+  font-size:12px;
+  font-weight:950;
+}
+.savings-transfer-choice .savings-source-option{
+  display:flex !important;
+  align-items:flex-start;
+  gap:10px;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:11px 12px;
+  background:#fff;
+  cursor:pointer;
+}
+.savings-transfer-choice .savings-source-option input{
+  width:18px;
+  min-width:18px;
+  height:18px;
+  margin:2px 0 0;
+  padding:0;
+  accent-color:#6d5dfc;
+}
+.savings-transfer-choice .savings-source-option span{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+.savings-transfer-choice .savings-source-option strong{
+  color:#111827;
+  font-size:13px;
+  line-height:1.25;
+}
+.savings-transfer-choice .savings-source-option small{
+  color:#64748b;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:850;
+}
+.savings-transfer-choice .savings-source-option:has(input:checked){
+  border-color:rgba(109,93,252,.42);
+  background:linear-gradient(135deg,rgba(238,242,255,.95),rgba(255,255,255,.98));
+  box-shadow:0 10px 22px rgba(109,93,252,.08);
+}
+
+/* CAPVO v1.8.5.35 - Unified transactions ledger badges/details */
+.payment-badge.savings{
+  background:rgba(16,185,129,.12) !important;
+  color:#059669 !important;
+}
+
+.payment-badge.budget-return{
+  background:rgba(14,165,233,.12) !important;
+  color:#0284c7 !important;
+}
+
+#vTransactions .expense-amount.is-return,
+#vTransactions .day-total.is-return,
+.tx-v25-amount.is-return{
+  color:#16a34a !important;
+}
+
+.tx-v25-amount.is-neutral{
+  color:#64748b !important;
+}
+
+.tx-v25-readonly-note{
+  margin:14px 0 0;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(100,116,139,.08);
+  border:1px solid rgba(148,163,184,.18);
+  color:#64748b;
+  font-size:12px;
+  line-height:1.45;
+  font-weight:750;
+}
+
+#vTransactions .tx-ledger-day-header small{
+  color:#94a3b8 !important;
+}

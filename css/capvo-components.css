@@ -6484,3 +6484,40 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.8.5.33 — Toast wrapping / mobile-safe feedback
+   Keeps long validation messages inside the visible app viewport.
+   ============================================================ */
+.mini-toast,
+.quick-toast,
+.success-toast,
+.error-toast{
+  left:50% !important;
+  width:max-content !important;
+  max-width:min(420px, calc(100vw - 28px)) !important;
+  box-sizing:border-box !important;
+  padding:12px 16px !important;
+  border-radius:18px !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  text-align:center !important;
+  line-height:1.35 !important;
+  font-size:13px !important;
+  font-weight:850 !important;
+}
+
+@media (max-width: 480px){
+  .mini-toast,
+  .quick-toast,
+  .success-toast,
+  .error-toast{
+    max-width:calc(100vw - 22px) !important;
+    padding:11px 14px !important;
+    border-radius:16px !important;
+    font-size:12px !important;
+    line-height:1.32 !important;
+  }
+}

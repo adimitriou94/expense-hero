@@ -47,6 +47,7 @@ function paymentSourceIconById(id){
     ? paymentSourceById(id)
     : (D.incomeSources||[]).find(s=>s.id===id);
 
+  if(typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(source))return '💳';
   if(source?.restriction && source.restriction!=='none')return '🎫';
   if(source?.isSavings)return '🏦';
   if(source?.incomeType==='card')return '💳';
@@ -363,6 +364,9 @@ async function saveAddCenterManualExpense(){
     }
 
     await saveDailyExpenseRow(userId,expense);
+    if(typeof saveCreditCardPurchaseSideEffects==='function')await saveCreditCardPurchaseSideEffects(userId,expense);
+    if(typeof persistCreditCardBalanceForPurchase==='function')await persistCreditCardBalanceForPurchase(userId,expense);
+    await saveDailyExpenseRow(userId,expense);
     curM=monthKey;
     render();
     closeAddCenterSheet();
@@ -437,7 +441,7 @@ let txCompleteDetailState = null;
 let addCenterEditState = null;
 
 function txCompleteTodayISO(){
-  return new Date().toISOString().split('T')[0];
+  return typeof todayISO==='function'?todayISO():new Date().toISOString().slice(0,10);
 }
 
 function txCompleteDateLabel(dateStr){
@@ -477,15 +481,46 @@ function txCompleteFindDailyById(id){
   return found;
 }
 
+function txCompleteFindMovementById(id){
+  if(typeof getCurrentCycleAllMovements!=='function')return null;
+  return (getCurrentCycleAllMovements()||[]).find(e=>String(e.id)===String(id))||null;
+}
+
 function txCompleteFindByTypeAndId(type,id){
   if(type==='fixed')return (D.fixedExpenses||[]).find(e=>e.id===id)||null;
+  if(type==='movement')return txCompleteFindMovementById(id);
   return txCompleteFindDailyById(id);
 }
 
 function txCompletePaymentText(e,type){
   if(type==='fixed')return 'Σταθερό έξοδο';
-  if(e.paymentSourceName)return e.paymentSourceName;
+  if(e?.sourceLabel)return e.sourceLabel;
+  if(e?.isCardPayment || e?.paymentAccountType==='credit_card_payment')return 'Πληρωμή κάρτας · Επηρεάζει budget';
+  if(e?.isCreditCardPurchase || e?.paymentAccountType==='credit_card')return 'Αγορά με πιστωτική · Δεν επηρεάζει budget';
+  if(e?.isSavingsMovement)return e?.isSavingsTransfer?'Εσωτερική μεταφορά κουμπαρά':'Κουμπαράς';
+  if(e?.paymentSourceName)return e.paymentSourceName;
   return 'Budget / Μετρητά';
+}
+
+function txCompleteFormatMovementAmount(e,type){
+  const amount=Number(e?.amount)||0;
+  const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(e?.affectsBudget===false?0:amount);
+  const affects=!!(e?.affectsBudget ?? e?.affectsCashBudget ?? e?.affects_cash_budget);
+  if(!affects)return fmt(Math.abs(amount));
+  if(impact<0)return '+'+fmt(Math.abs(impact));
+  return '-'+fmt(Math.abs(impact));
+}
+
+function txCompleteMovementTypeLabel(e,type){
+  if(type==='fixed')return 'Πάγιο έξοδο';
+  const mt=String(e?.movementType||'');
+  if(mt==='card_payment')return 'Πληρωμή κάρτας';
+  if(mt==='credit_card_purchase')return 'Αγορά με πιστωτική';
+  if(mt==='savings_deposit')return 'Αποταμίευση';
+  if(mt==='savings_withdrawal')return 'Επιστροφή από κουμπαρά';
+  if(mt==='savings_transfer_in' || mt==='savings_transfer_out')return 'Εσωτερική μεταφορά';
+  if(mt==='restricted_expense')return 'Κίνηση παροχής';
+  return 'Κίνηση budget';
 }
 
 function txCompleteFillManualForm(e,{edit=false}={}){
@@ -604,51 +639,51 @@ function showMobileTransactionDetail(type,id){
   const content=document.getElementById('mobileTransactionDetailContent');
   if(!overlay || !content)return;
 
-  const icon=CEMO[e.category]||'📌';
-  const payText=txCompletePaymentText(e,type);
   const category=e.category||'Άλλο';
-  const amount=Number(e.amount)||0;
+  const icon=CEMO[category]||'📌';
+  const payText=txCompletePaymentText(e,type);
+  const dateLabel=type==='fixed' ? 'Κάθε μήνα' : txCompleteLongDate(e.date);
+  const typeLabel=txCompleteMovementTypeLabel(e,type);
+  const amountLabel=txCompleteFormatMovementAmount(e,type);
+  const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(e.affectsBudget===false?0:Number(e.amount)||0);
+  const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
+  const noteText=e.notes || e.note || '';
+  const canEdit=type!=='movement' && e.canEdit!==false;
+  const canDelete=type!=='movement' && e.canDelete!==false;
+  const actions=(canEdit||canDelete)?`
+    <div class="tx-v25-actions">
+      ${canEdit?`<button type="button" class="tx-v25-action primary" onclick="txCompleteOpenManualForEdit('${type}','${id}')"><span>✎</span>Επεξεργασία</button>`:''}
+      ${canEdit?`<button type="button" class="tx-v25-action secondary" onclick="txCompleteOpenManualForDuplicate('${type}','${id}')"><span>⧉</span>Αντιγραφή</button>`:''}
+      ${canDelete?`<button type="button" class="tx-v25-action danger" onclick="txCompleteDeleteWithConfirm('${type}','${id}')"><span>🗑</span>Διαγραφή</button>`:''}
+    </div>`:`
+    <div class="tx-v25-readonly-note">
+      Αυτή η κίνηση προέρχεται από κάρτα ή κουμπαρά και εμφανίζεται εδώ πληροφοριακά. Η διαχείρισή της γίνεται από την αντίστοιχη ενότητα.
+    </div>`;
 
   content.innerHTML=`
-    <div class="tx-v3-detail-head">
-      <button class="tx-v3-sheet-close" type="button" onclick="closeMobileTransactionDetail()">×</button>
-      <div class="tx-v3-detail-icon ${CCLS[category]||'cat-other'}">${icon}</div>
-      <div class="tx-v3-detail-kicker">${type==='fixed'?'Πάγιο':'Ημερήσιο έξοδο'}</div>
+    <div class="tx-v25-detail-hero">
+      <button class="tx-v25-close" type="button" onclick="closeMobileTransactionDetail()" aria-label="Κλείσιμο">×</button>
+      <div class="tx-v25-icon ${CCLS[category]||'cat-other'}">${icon}</div>
+      <div class="tx-v25-kicker">${esc(typeLabel)}</div>
       <h3>${esc(e.name)}</h3>
-      <div class="tx-v3-detail-amount">-${fmt(amount)}</div>
-      <div class="tx-v3-detail-subtitle">${esc(category)} · ${esc(payText)}</div>
+      <div class="tx-v25-amount ${!affects?'is-neutral':''} ${impact<0?'is-return':''}">${amountLabel}</div>
+      <div class="tx-v25-subtitle">${esc(category)} · ${esc(payText)}</div>
     </div>
 
-    <div class="tx-v3-detail-grid">
-      <div class="tx-v3-info-tile">
-        <span>Ημερομηνία</span>
-        <strong>${txCompleteLongDate(e.date)}</strong>
-      </div>
-      <div class="tx-v3-info-tile">
-        <span>Κατηγορία</span>
-        <strong>${esc(category)}</strong>
-      </div>
-      <div class="tx-v3-info-tile">
-        <span>Πληρωμή</span>
-        <strong>${esc(payText)}</strong>
-      </div>
-      <div class="tx-v3-info-tile">
-        <span>ID</span>
-        <strong>${esc(String(e.id||'').slice(0,8))}</strong>
-      </div>
+    <div class="tx-v25-summary">
+      <div class="tx-v25-summary-item"><span>Ημερομηνία</span><strong>${esc(dateLabel)}</strong></div>
+      <div class="tx-v25-summary-item"><span>Κατηγορία</span><strong>${esc(category)}</strong></div>
+      <div class="tx-v25-summary-item"><span>Πηγή</span><strong>${esc(e.paymentSourceName||payText)}</strong></div>
+      <div class="tx-v25-summary-item"><span>Budget</span><strong>${affects?(impact<0?'Επιστρέφει budget':'Επηρεάζει budget'):'Δεν επηρεάζει budget'}</strong></div>
     </div>
 
-    <div class="tx-v3-detail-actions">
-      <button type="button" class="tx-v3-action primary" onclick="txCompleteOpenManualForEdit('${type}','${id}')">✎ Επεξεργασία</button>
-      <button type="button" class="tx-v3-action secondary" onclick="txCompleteOpenManualForDuplicate('${type}','${id}')">⧉ Αντιγραφή</button>
-      <button type="button" class="tx-v3-action danger" onclick="txCompleteDeleteWithConfirm('${type}','${id}')">🗑 Διαγραφή</button>
-    </div>
+    ${noteText ? `<div class="tx-v25-note"><span>Σημείωση</span><p>${esc(noteText)}</p></div>` : ''}
+    ${actions}
   `;
 
   overlay.classList.add('active');
   document.body.classList.add('sheet-open');
 }
-
 function closeMobileTransactionDetail(){
   const overlay=document.getElementById('mobileTransactionDetail');
   overlay?.classList.remove('active');
@@ -660,44 +695,65 @@ function txCompleteDailyRow(e){
   const category=e.category||'Άλλο';
   const c=CCLS[category]||'cat-other';
   const em=CEMO[category]||'📌';
-  const pay=e.paymentSourceName ? ` · ${esc(e.paymentSourceName)}` : '';
-  const isSelected=selectedDaily.has(e.id);
-  const showSelect=selectionMode.daily;
+  const isSelected=selectedDaily.has(e.sourceId||e.id);
+  const showSelect=selectionMode.daily && e.canDelete!==false && e.movementType==='daily_expense';
+  const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
+  const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(affects?(Number(e.amount)||0):0);
+  const detailType=e.readOnly || e.canEdit===false ? 'movement' : 'daily';
+  const detailId=detailType==='movement'?e.id:(e.sourceId||e.id);
+  const isCard=String(e.movementGroup||'')==='cards' || e.isCardPayment || e.isCreditCardPurchase || e.paymentAccountType==='credit_card';
+  const isSavings=String(e.movementGroup||'')==='savings' || e.isSavingsMovement;
+  const amountLabel=!affects
+    ? fmt(Math.abs(Number(e.amount)||0))
+    : (impact<0 ? '+'+fmt(Math.abs(impact)) : '-'+fmt(Math.abs(impact)));
+
+  const badges=[];
+  if(isCard)badges.push(`<span class="payment-badge credit-card">Κάρτα</span>`);
+  if(isSavings)badges.push(`<span class="payment-badge savings">Κουμπαράς</span>`);
+  if(!affects)badges.push(`<span class="payment-badge no-budget">Δεν επηρεάζει budget</span>`);
+  if(affects && impact<0)badges.push(`<span class="payment-badge budget-return">Επιστροφή budget</span>`);
+
+  const meta=[
+    esc(category),
+    e.paymentSourceName?esc(e.paymentSourceName):'',
+    e.sourceLabel?esc(e.sourceLabel):''
+  ].filter(Boolean).join(' · ');
 
   return `
-    <div class="expense-item tx-v3-row fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('daily','${e.id}')`:''}">
+    <div class="expense-item tx-v3-row fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${detailType}','${detailId}')`:''}">
       ${showSelect?`
         <label class="select-box" onclick="event.stopPropagation()">
-          <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('daily','${e.id}',this.checked)">
+          <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('daily','${e.sourceId||e.id}',this.checked)">
         </label>`:''}
       <div class="expense-icon ${c}">${em}</div>
       <div class="expense-info">
         <div class="expense-name">${esc(e.name)}</div>
-        <div class="expense-cat">${esc(category)}${pay}</div>
+        <div class="expense-cat">${meta}${badges.join('')}</div>
       </div>
       <div class="tx-v3-row-right">
-        <div class="expense-amount is-daily">-${fmt(e.amount)}</div>
+        <div class="expense-amount is-daily ${!affects?'is-neutral':''} ${impact<0?'is-return':''}">${amountLabel}</div>
       </div>
     </div>`;
 }
 
+function txFormatBudgetImpactTotal(total){
+  const value=capvoMoney(Number(total)||0);
+  if(value<0)return '+'+fmt(Math.abs(value));
+  if(value>0)return '-'+fmt(value);
+  return fmt(0);
+}
+
 function renderDailyList(){
-  const m=D.months[curM]||{daily:[]};
+  const movementRows=typeof getCurrentCycleAllMovements==='function'
+    ? getCurrentCycleAllMovements()
+    : (typeof getCurrentCycleDailyExpenses==='function' ? getCurrentCycleDailyExpenses() : ((D.months[curM]||{daily:[]}).daily||[]));
   const countEl=$('cDaily');
   const listEl=$('lDaily');
   if(!countEl || !listEl)return;
 
-  countEl.innerHTML=`
-    ${m.daily.length} εγγραφές
-    <button class="mini-action" onclick="toggleSelectMode('daily')">${selectionMode.daily?'Άκυρο':'Επιλογή'}</button>
-    ${selectionMode.daily?`
-      <button class="mini-action" onclick="selectAllVisible('daily')">Όλα</button>
-      <button class="mini-action" onclick="clearSelected('daily')">Κανένα</button>
-      <button class="mini-action danger" onclick="bulkDelete('daily')">Διαγραφή</button>
-    `:''}
-  `;
+  countEl.innerHTML=`${movementRows.length} κινήσεις κύκλου`;
 
-  if((m.daily||[]).length===0){
+  if((movementRows||[]).length===0){
     listEl.innerHTML=`
       <div class="empty tx-v3-empty">
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -711,9 +767,9 @@ function renderDailyList(){
     return;
   }
 
-  const filtered=[...(m.daily||[])]
+  const filtered=[...(movementRows||[])]
     .filter(e=>mobileTransactionMatchesSearch(e) && mobileTransactionMatchesFilter(e))
-    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || String(b.id||'').localeCompare(String(a.id||'')));
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||'')) || String(b.id||'').localeCompare(String(a.id||'')));
 
   if(filtered.length===0){
     listEl.innerHTML=`
@@ -734,7 +790,7 @@ function renderDailyList(){
   });
 
   const isMobile=window.innerWidth<=768;
-  const visibleLimit=isMobile && !txMobileDailyExpanded ? 4 : filtered.length;
+  const visibleLimit=isMobile && !txMobileDailyExpanded ? 8 : filtered.length;
   const visibleItems=filtered.slice(0, visibleLimit);
   const visibleGrouped={};
   visibleItems.forEach(e=>{
@@ -746,19 +802,19 @@ function renderDailyList(){
   let html='';
   Object.keys(visibleGrouped).sort().reverse().forEach(dt=>{
     const allForDay=grouped[dt]||[];
-    const dayTotal=allForDay.reduce((s,e)=>s+(Number(e.amount)||0),0);
+    const dayImpact=allForDay.reduce((s,e)=>s+(typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(e.affectsBudget===false?0:Number(e.amount)||0)),0);
     html+=`
-      <div class="day-header tx-v3-day-header">
+      <div class="day-header tx-v3-day-header tx-ledger-day-header">
         <div>
           <span>${txCompleteDateLabel(dt)}</span>
-          <small>${allForDay.length} κινήσεις</small>
+          <small>${allForDay.length} κινήσεις · Επίδραση budget</small>
         </div>
-        <span class="day-total">-${fmt(dayTotal)}</span>
+        <span class="day-total ${dayImpact<0?'is-return':''}">${txFormatBudgetImpactTotal(dayImpact)}</span>
       </div>`;
     visibleGrouped[dt].forEach(e=>html+=txCompleteDailyRow(e));
   });
 
-  if(isMobile && filtered.length>4){
+  if(isMobile && filtered.length>visibleLimit){
     html+=`
       <button type="button" class="tx-mobile-more-btn" onclick="toggleTxMobileDailyExpanded()">
         ${txMobileDailyExpanded?'Προβολή λιγότερων':'Προβολή περισσότερων'}
@@ -836,22 +892,37 @@ async function saveAddCenterManualExpense(){
     return false;
   }
 
-  const expense={
-    id,
-    name,
-    amount,
-    category,
-    date,
-    paymentSourceId,
-    paymentSourceName:paymentSource?.name||'',
-    paymentSourceType:paymentSource?.incomeType||''
-  };
+  const expense=typeof makeCreditCardExpensePayload==='function'
+    ? makeCreditCardExpensePayload({
+        id,
+        name,
+        amount,
+        category,
+        date,
+        paymentSourceId,
+        paymentSourceName:paymentSource?.name||'',
+        paymentSourceType:paymentSource?.incomeType||''
+      },paymentSource)
+    : {
+        id,
+        name,
+        amount,
+        category,
+        date,
+        paymentSourceId,
+        paymentSourceName:paymentSource?.name||'',
+        paymentSourceType:paymentSource?.incomeType||''
+      };
 
   const monthKey=date.substring(0,7);
   ensM(monthKey);
 
+  const oldExpense=editing && typeof getExistingDailyExpenseById==='function' ? getExistingDailyExpenseById(id) : null;
+
   const canSave=await validateExpenseBeforeSave(expense,{editing,errorTarget:'addCenterManualError'});
   if(!canSave)return false;
+
+  if(typeof applyCreditCardPurchaseBalance==='function')applyCreditCardPurchaseBalance(expense,oldExpense);
 
   // Optimistic local update. For edits, remove the old copy from every month first.
   if(editing){
@@ -868,6 +939,9 @@ async function saveAddCenterManualExpense(){
       btn.textContent=editing?'Ενημέρωση...':'Αποθήκευση...';
     }
 
+    await saveDailyExpenseRow(userId,expense);
+    if(typeof saveCreditCardPurchaseSideEffects==='function')await saveCreditCardPurchaseSideEffects(userId,expense);
+    if(typeof persistCreditCardBalanceForPurchase==='function')await persistCreditCardBalanceForPurchase(userId,expense);
     await saveDailyExpenseRow(userId,expense);
     curM=monthKey;
     addCenterEditState=null;

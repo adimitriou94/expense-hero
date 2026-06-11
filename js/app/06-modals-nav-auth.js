@@ -9,6 +9,69 @@ function closeM(){
   document.body.classList.remove('modal-open');
 }
 
+
+function ensureCardByIdHelper(){
+  if(typeof window.cardById!=='function'){
+    window.cardById=function(id){
+      return (D?.creditCards||[]).find(c=>String(c.id)===String(id))||null;
+    };
+  }
+}
+ensureCardByIdHelper();
+
+function toggleDailyCategoryMenu(forceState){
+  const picker=$('dailyCategoryPicker');
+  if(!picker)return;
+  const shouldOpen=typeof forceState==='boolean'?forceState:!picker.classList.contains('is-open');
+  picker.classList.toggle('is-open',shouldOpen);
+}
+
+function syncDailyCategoryUI(category){
+  const current=category||$('fDC')?.value||'Άλλο';
+  const label=$('dailyCategoryCurrent');
+  if(label)label.textContent=current;
+  const helper=$('dailyCategoryTriggerLabel');
+  if(helper)helper.textContent='Επίλεξε κατηγορία';
+  document.querySelectorAll('#dailyCategoryMenu button').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.category===current);
+  });
+}
+
+function getSelectedCreditCardRate(){
+  const pay=$('fDPay')?.value||'';
+  const source=typeof paymentSourceById==='function' ? paymentSourceById(pay) : null;
+  const card=window.cardById?.(source?.id||pay)||null;
+  return Number(card?.rate)||0;
+}
+
+function validateCreditCardAvailableLimit(expense,oldExpense=null){
+  const source=typeof paymentSourceById==='function' ? paymentSourceById(expense?.paymentSourceId||'') : null;
+  const isCard=typeof isCreditCardPaymentSource==='function' ? isCreditCardPaymentSource(source) : (source?.type==='credit_card');
+  if(!isCard)return {ok:true};
+  const card=window.cardById?.(expense.creditCardId||expense.paymentSourceId);
+  if(!card || !(Number(card.limit)>0))return {ok:true};
+
+  const activePlans=(D.creditCardInstallmentPlans||[])
+    .filter(p=>String(p.cardId)===String(card.id) && (p.status||'active')==='active');
+
+  const planDebt=activePlans.reduce((sum,p)=>{
+    const total=Number(p.totalAmount)||0;
+    const count=Math.max(1,Number(p.installmentCount)||1);
+    const paid=Number(p.paidInstallments)||0;
+    const paidAmount=(total/count)*paid;
+    return sum+Math.max(0,total-paidAmount);
+  },0);
+
+  let baseBalance=(Number(card.balance)||0)+planDebt;
+
+  const oldIsSameCard=oldExpense && (oldExpense.isCreditCardPurchase || oldExpense.paymentAccountType==='credit_card') && String(oldExpense.creditCardId||oldExpense.paymentSourceId)===String(card.id);
+  if(oldIsSameCard)baseBalance=Math.max(0,baseBalance-(Number(oldExpense.amount)||0));
+
+  const projected=baseBalance+(Number(expense.amount)||0);
+  const available=Math.max(0,(Number(card.limit)||0)-baseBalance);
+  return {ok:projected<=(Number(card.limit)||0)+0.0001,available};
+}
+
 function openModal(t){
   capvoSuppressAutoFocus?.(900);
   closeM();
@@ -23,7 +86,23 @@ function openModal(t){
     $('fDID').value='';
     $('btnDaily').textContent='Αποθήκευση';
 
+    window.capvoLockedCardPurchaseId='';
     fillPaymentSourceSelect('');
+    const pay=$('fDPay');
+    if(pay){
+      pay.disabled=false;
+      delete pay.dataset.lockedCardId;
+    }
+    if($('lockedCardSource'))$('lockedCardSource').style.display='none';
+    setCardPurchaseMode('normal');
+    if($('fDInstallments'))$('fDInstallments').value='';
+    if($('fDInstallmentRate'))$('fDInstallmentRate').value='';
+    if($('fDInterestFree'))$('fDInterestFree').checked=true;
+    if($('interestFreeToggle'))$('interestFreeToggle').classList.add('active');
+    if($('fDInstallmentRateGroup'))$('fDInstallmentRateGroup').style.display='none';
+    updateDailyCreditCardOptions();
+    syncDailyCategoryUI('Άλλο');
+    toggleDailyCategoryMenu(false);
 
     // autofocus disabled: user taps the field when ready;
   }
@@ -42,15 +121,19 @@ function openModal(t){
 
   if(t==='cc'){
     $('mCC').classList.add('active');
-    $('mCCTitle').textContent='Νέα κάρτα';
+    $('fCCID').value='';
     $('fCCN').value='';
     $('fCCB').value='';
     $('fCCR').value='18.5';
     $('fCCM').value='';
     $('fCCL').value='';
-    $('fCCID').value='';
-    $('btnCC').textContent='Αποθήκευση κάρτας';
-    if(typeof resetCCFormUI==='function') resetCCFormUI('credit');
+    if($('fCCBank'))$('fCCBank').value='';
+    if($('fCCDueDay'))$('fCCDueDay').value='';
+    if($('fCCLoanType'))$('fCCLoanType').value='consumer';
+    if(typeof setLoanType==='function')setLoanType('consumer');
+    if($('fCCLoanPurpose'))$('fCCLoanPurpose').value='other';
+    if(typeof setLoanPurpose==='function')setLoanPurpose('other');
+    if(typeof resetCCFormUI==='function') resetCCFormUI('credit_card');
     // autofocus disabled: user taps the field when ready;
   }
 
@@ -117,11 +200,19 @@ function editExp(t,id){
   $('fDN').value=e.name;
   $('fDA').value=e.amount;
   $('fDC').value=e.category;
+  syncDailyCategoryChips?.(e.category);
   $('fDD').value=e.date;
   $('fDID').value=id;
   $('btnDaily').textContent='Ενημέρωση';
 
   fillPaymentSourceSelect(e.paymentSourceId||'');
+  updateDailyCreditCardOptions();
+  setCardPurchaseMode(e.purchaseMode||'normal');
+  const countEl=$('fDInstallments');if(countEl)countEl.value=e.installmentCount||'';
+  const freeEl=$('fDInterestFree');if(freeEl)freeEl.checked=e.interestFree!==false;
+  const toggle=$('interestFreeToggle');if(toggle)toggle.classList.toggle('active',e.interestFree!==false);
+  const rateGroup=$('fDInstallmentRateGroup');if(rateGroup)rateGroup.style.display=(e.interestFree!==false)?'none':'block';
+  updateInstallmentEstimate();
 
   $('fDN').focus();
 }
@@ -132,6 +223,8 @@ async function saveDailyExpenseRow(userId,expense){
 
   if(!token)throw new Error('Δεν υπάρχει ενεργό session.');
   if(!ownerUserId)throw new Error('Missing authenticated user id.');
+
+  expense=typeof normalizeCreditCardExpensePayload==='function' ? normalizeCreditCardExpensePayload(expense) : expense;
 
   const row={
     id:expense.id,
@@ -145,7 +238,18 @@ async function saveDailyExpenseRow(userId,expense){
     month_key:expense.date.substring(0,7),
     payment_source_id:expense.paymentSourceId||null,
     payment_source_name:expense.paymentSourceName||null,
-    payment_source_type:expense.paymentSourceType||null
+    payment_source_type:expense.paymentSourceType||null,
+    payment_account_type:expense.paymentAccountType||'cash',
+    credit_card_id:expense.creditCardId||null,
+    credit_card_transaction_id:expense.creditCardTransactionId||null,
+    installment_plan_id:expense.installmentPlanId||null,
+    affects_cash_budget:expense.affectsCashBudget!==false,
+    is_credit_card_purchase:!!expense.isCreditCardPurchase,
+    purchase_mode:expense.purchaseMode||'normal',
+    installment_count:expense.installmentCount||null,
+    interest_free:expense.interestFree!==false,
+    installment_rate:expense.installmentRate||null,
+    installment_amount:expense.installmentAmount||null
   };
 
   const res=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/expenses`,{
@@ -169,6 +273,372 @@ async function saveDailyExpenseRow(userId,expense){
 
 
 
+
+
+function setDailyCategory(category){
+  const el=$('fDC');
+  if(el)el.value=category;
+  syncDailyCategoryUI(category);
+  toggleDailyCategoryMenu(false);
+}
+
+
+function syncDailyCategoryChips(category){
+  syncDailyCategoryUI(category);
+}
+
+
+function updateDailyCreditCardOptions(){
+  const pay=$('fDPay');
+  const box=$('creditCardPurchaseOptions');
+  const locked=$('lockedCardSource');
+  const lockedName=$('lockedCardSourceName');
+  if(!pay || !box)return;
+
+  const source=paymentSourceById(pay.value||'');
+  const isCard=typeof isCreditCardPaymentSource==='function'?isCreditCardPaymentSource(source):(source?.type==='credit_card');
+
+  box.style.display=isCard?'grid':'none';
+  box.setAttribute('aria-hidden',String(!isCard));
+
+  if(!isCard){
+    setCardPurchaseMode('normal');
+  }
+
+  if(locked && pay.disabled && isCard){
+    locked.style.display='flex';
+    if(lockedName)lockedName.textContent=source?.name||'Πιστωτική';
+  }else if(locked){
+    locked.style.display='none';
+  }
+
+  updateInstallmentEstimate();
+}
+
+function setCardPurchaseMode(mode){
+  mode=mode==='installment'?'installment':'normal';
+  const hidden=$('fDPurchaseMode');
+  if(hidden)hidden.value=mode;
+
+  document.querySelectorAll('#cardPurchaseTypeTabs button').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.purchaseMode===mode);
+  });
+
+  const fields=$('cardInstallmentFields');
+  if(fields){
+    const show=mode==='installment';
+    fields.hidden=!show;
+    fields.classList.toggle('is-hidden',!show);
+    fields.setAttribute('aria-hidden',String(!show));
+    fields.style.display=show?'grid':'none';
+  }
+
+  updateInstallmentEstimate();
+}
+
+function toggleInterestFree(){
+  const cb=$('fDInterestFree');
+  if(!cb)return;
+  cb.checked=!cb.checked;
+  const btn=$('interestFreeToggle');
+  if(btn)btn.classList.toggle('active',cb.checked);
+  updateInstallmentEstimate();
+}
+
+
+function calculateInstallmentPayment(amount,count,annualRate,interestFree){
+  amount=Number(amount)||0;
+  count=Math.max(1,Number(count)||1);
+  annualRate=Number(annualRate)||0;
+  if(!amount || count<=0)return 0;
+  if(interestFree || !annualRate)return capvoMoney(amount/count);
+  const monthlyRate=(annualRate/100)/12;
+  const payment=amount*(monthlyRate*Math.pow(1+monthlyRate,count))/(Math.pow(1+monthlyRate,count)-1);
+  return capvoMoney(payment || (amount/count));
+}
+
+
+function updateInstallmentEstimate(){
+  const mode=$('fDPurchaseMode')?.value||'normal';
+  const estimate=$('installmentEstimate');
+  const rateNote=$('fDInstallmentRateAutoNote');
+  const rateInput=$('fDInstallmentRate');
+  if(!estimate)return;
+
+  if(mode!=='installment'){
+    estimate.style.display='none';
+    if(rateNote)rateNote.style.display='none';
+    return;
+  }
+
+  const amount=Number($('fDA')?.value)||0;
+  const count=Number($('fDInstallments')?.value)||0;
+  const interestFree=$('fDInterestFree')?.checked!==false;
+  const autoRate=getSelectedCreditCardRate();
+  if(rateInput)rateInput.value=String(autoRate||0);
+
+  if(rateNote){
+    rateNote.textContent=interestFree
+      ? 'Άτοκες δόσεις: το ποσό μοιράζεται ισόποσα ανά μήνα.'
+      : 'Η εκτίμηση γίνεται αυτόματα με το επιτόκιο της κάρτας ('+(autoRate||0)+'%).';
+    rateNote.style.display='block';
+  }
+
+  if(!amount || !count){
+    estimate.style.display='none';
+    return;
+  }
+
+  const value=calculateInstallmentPayment(amount,count,autoRate,interestFree);
+  const el=$('installmentEstimateValue');
+  if(el)el.textContent=fmt(value)+' / μήνα';
+  estimate.style.display='flex';
+}
+
+
+document.addEventListener('change',e=>{
+  if(e.target && e.target.id==='fDPay')updateDailyCreditCardOptions();
+  if(e.target && ['fDInstallments','fDInstallmentRate'].includes(e.target.id))updateInstallmentEstimate();
+  if(e.target && e.target.id==='fDC')syncDailyCategoryUI(e.target.value);
+});
+
+document.addEventListener('input',e=>{
+  if(e.target && ['fDA','fDInstallments','fDInstallmentRate'].includes(e.target.id))updateInstallmentEstimate();
+});
+
+
+function makeCreditCardExpensePayload(base,paymentSource){
+  const isCard=typeof isCreditCardPaymentSource==='function'?isCreditCardPaymentSource(paymentSource):(paymentSource?.type==='credit_card');
+  const mode=$('fDPurchaseMode')?.value||'normal';
+  const installments=Math.max(1,Number($('fDInstallments')?.value)||1);
+  const interestFree=$('fDInterestFree')?.checked!==false;
+  const cardRate=isCard ? (Number(window.cardById?.(paymentSource?.id||base.paymentSourceId)?.rate)||0) : 0;
+  const installmentRate=!interestFree?cardRate:0;
+  const installmentAmount=isCard && mode==='installment'
+    ? calculateInstallmentPayment(base.amount,installments,installmentRate,interestFree)
+    : null;
+
+  return normalizeCreditCardExpensePayload({
+    ...base,
+    paymentAccountType:isCard?'credit_card':(base.paymentSourceId?'restricted_balance':'cash'),
+    creditCardId:isCard?paymentSource.id:'',
+    affectsCashBudget:!isCard && !base.paymentSourceId,
+    isCreditCardPurchase:!!isCard,
+    purchaseMode:isCard?mode:'normal',
+    installmentCount:isCard && mode==='installment'?installments:null,
+    interestFree:isCard?interestFree:true,
+    installmentRate:isCard && mode==='installment' && !interestFree?installmentRate:0,
+    installmentAmount
+  });
+}
+
+function normalizeCreditCardExpensePayload(expense){
+  if(!expense)return expense;
+  const source=typeof paymentSourceById==='function' ? paymentSourceById(expense.paymentSourceId||expense.creditCardId||'') : null;
+  const isCard=typeof isCreditCardPaymentSource==='function'
+    ? isCreditCardPaymentSource(source)
+    : (source?.type==='credit_card' || source?.accountType==='credit_card');
+
+  if(!isCard)return {
+    ...expense,
+    paymentAccountType:expense.paymentAccountType || (expense.paymentSourceId?'restricted_balance':'cash'),
+    affectsCashBudget:expense.affectsCashBudget!==false && !expense.paymentSourceId,
+    isCreditCardPurchase:false
+  };
+
+  const cardId=source?.id || expense.creditCardId || expense.paymentSourceId;
+  const mode=expense.purchaseMode==='installment'?'installment':'normal';
+  return {
+    ...expense,
+    paymentSourceId:expense.paymentSourceId || cardId,
+    paymentSourceName:expense.paymentSourceName || source?.name || '',
+    paymentSourceType:expense.paymentSourceType || 'card',
+    paymentAccountType:'credit_card',
+    creditCardId:cardId,
+    affectsCashBudget:false,
+    isCreditCardPurchase:true,
+    purchaseMode:mode,
+    interestFree:expense.interestFree!==false
+  };
+}
+
+
+function applyCreditCardPurchaseBalance(expense,oldExpense=null){
+  const oldIsCard=!!(oldExpense && (oldExpense.isCreditCardPurchase || oldExpense.paymentAccountType==='credit_card'));
+  const newIsCard=!!(expense && (expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card'));
+
+  if(oldIsCard && oldExpense.purchaseMode!=='installment'){
+    const oldCard=cardById(oldExpense.creditCardId||oldExpense.paymentSourceId);
+    if(oldCard)oldCard.balance=capvoMoney(Math.max(0,(Number(oldCard.balance)||0)-(Number(oldExpense.amount)||0)));
+  }
+
+  if(newIsCard && expense.purchaseMode!=='installment'){
+    const card=cardById(expense.creditCardId||expense.paymentSourceId);
+    if(card)card.balance=capvoMoney((Number(card.balance)||0)+(Number(expense.amount)||0));
+  }
+}
+
+function capvoAddMonths(dateStr,months){
+  const d=dateStr?new Date(dateStr+'T00:00:00'):new Date();
+  d.setMonth(d.getMonth()+months);
+  return d.toISOString().split('T')[0];
+}
+
+async function persistCreditCardBalanceForPurchase(userId,expense){
+  if(!expense?.isCreditCardPurchase || expense.purchaseMode==='installment')return;
+  const ownerUserId=String(userId || getDataOwnerId() || '').trim();
+  if(!ownerUserId)return;
+
+  const card=cardById(expense.creditCardId||expense.paymentSourceId);
+  if(!card)return;
+
+  const {error}=await supabaseClient
+    .from('credit_cards')
+    .update({
+      balance:Number(card.balance)||0,
+      updated_at:new Date().toISOString()
+    })
+    .eq('id',card.id)
+    .eq('user_id',ownerUserId);
+
+  if(error)throw error;
+}
+
+async function saveCreditCardPurchaseSideEffects(userId,expense){
+  expense=normalizeCreditCardExpensePayload(expense);
+  if(!expense?.isCreditCardPurchase)return;
+
+  const ownerUserId=String(userId || getDataOwnerId() || '').trim();
+  if(!ownerUserId)return;
+
+  const cardId=expense.creditCardId||expense.paymentSourceId;
+  const txId=expense.creditCardTransactionId || ('cc_tx_'+expense.id);
+  const isInstallment=expense.purchaseMode==='installment';
+
+  let planId=expense.installmentPlanId||'';
+  if(isInstallment && !planId){
+    planId='cc_plan_'+expense.id;
+    expense.installmentPlanId=planId;
+  }
+
+  const tx={
+    id:txId,
+    user_id:ownerUserId,
+    card_id:cardId,
+    expense_id:expense.id,
+    installment_plan_id:planId||null,
+    type:isInstallment?'installment_purchase':'purchase',
+    amount:expense.amount,
+    transaction_date:expense.date,
+    description:expense.name,
+    category:expense.category,
+    affects_budget:false,
+    budget_effect_type:'card_purchase_tracked',
+    updated_at:new Date().toISOString()
+  };
+
+  const {error:txErr}=await supabaseClient
+    .from('credit_card_transactions')
+    .upsert(tx,{onConflict:'id'});
+  if(txErr)throw txErr;
+
+  expense.creditCardTransactionId=txId;
+
+  if(!Array.isArray(D.creditCardTransactions))D.creditCardTransactions=[];
+  const txLocal={
+    id:txId,
+    cardId,
+    expenseId:expense.id,
+    installmentPlanId:planId,
+    type:tx.type,
+    amount:Number(expense.amount)||0,
+    transactionDate:expense.date,
+    description:expense.name,
+    category:expense.category,
+    affectsBudget:false,
+    budgetEffectType:'card_purchase_tracked'
+  };
+  const ix=D.creditCardTransactions.findIndex(x=>x.id===txId);
+  if(ix>=0)D.creditCardTransactions[ix]=txLocal;else D.creditCardTransactions.unshift(txLocal);
+
+  if(isInstallment){
+    const count=Math.max(1,Number(expense.installmentCount)||1);
+    const card=cardById(cardId);
+    const installmentAmount=expense.installmentAmount || calculateInstallmentPayment(expense.amount,count,expense.installmentRate||0,expense.interestFree!==false);
+    let firstDue=capvoAddMonths(expense.date,1);
+    const dueDay=Number(card?.paymentDueDay)||0;
+    if(dueDay>=1 && dueDay<=31){
+      const d=new Date(firstDue+'T00:00:00');
+      d.setDate(Math.min(dueDay,28));
+      firstDue=d.toISOString().split('T')[0];
+    }
+
+    const plan={
+      id:planId,
+      user_id:ownerUserId,
+      card_id:cardId,
+      original_expense_id:expense.id,
+      original_transaction_id:txId,
+      title:expense.name,
+      category:expense.category,
+      total_amount:expense.amount,
+      installment_count:count,
+      installment_amount:installmentAmount,
+      paid_installments:0,
+      first_due_date:firstDue,
+      next_due_date:firstDue,
+      interest_free:expense.interestFree!==false,
+      interest_rate:expense.interestFree===false ? (Number(expense.installmentRate)||Number(cardById(cardId)?.rate)||0) : null,
+      affects_budget_mode:'installment_only',
+      status:'active',
+      updated_at:new Date().toISOString()
+    };
+
+    const {error:planErr}=await supabaseClient
+      .from('credit_card_installment_plans')
+      .upsert(plan,{onConflict:'id'});
+    if(planErr)throw planErr;
+
+    const items=[];
+    for(let i=1;i<=count;i++){
+      items.push({
+        id:`${planId}_item_${i}`,
+        user_id:ownerUserId,
+        plan_id:planId,
+        card_id:cardId,
+        installment_no:i,
+        due_date:capvoAddMonths(firstDue,i-1),
+        amount:installmentAmount,
+        status:'pending',
+        updated_at:new Date().toISOString()
+      });
+    }
+
+    const {error:itemsErr}=await supabaseClient
+      .from('credit_card_installment_items')
+      .upsert(items,{onConflict:'id'});
+    if(itemsErr)throw itemsErr;
+
+    if(!Array.isArray(D.creditCardInstallmentPlans))D.creditCardInstallmentPlans=[];
+    if(!Array.isArray(D.creditCardInstallmentItems))D.creditCardInstallmentItems=[];
+    const localPlan={
+      id:planId,cardId,originalExpenseId:expense.id,originalTransactionId:txId,
+      title:expense.name,category:expense.category,totalAmount:Number(expense.amount)||0,
+      installmentCount:count,installmentAmount,paidInstallments:0,
+      firstDueDate:firstDue,nextDueDate:firstDue,interestFree:expense.interestFree!==false,
+      interestRate:expense.interestFree===false ? (Number(expense.installmentRate)||Number(cardById(cardId)?.rate)||0) : 0,
+      affectsBudgetMode:'installment_only',status:'active'
+    };
+    const pix=D.creditCardInstallmentPlans.findIndex(x=>x.id===planId);
+    if(pix>=0)D.creditCardInstallmentPlans[pix]=localPlan;else D.creditCardInstallmentPlans.push(localPlan);
+
+    D.creditCardInstallmentItems=D.creditCardInstallmentItems.filter(x=>x.planId!==planId)
+      .concat(items.map(i=>({
+        id:i.id,planId,cardId,installmentNo:i.installment_no,dueDate:i.due_date,amount:Number(i.amount)||0,status:'pending'
+      })));
+  }
+}
+
 function getExistingDailyExpenseById(id){
   if(!id)return null;
 
@@ -186,13 +656,14 @@ function hasBudgetIncomeConfigured(){
 
 function expenseUsesRestrictedSource(expense){
   const source=paymentSourceById(expense?.paymentSourceId||'');
+  if(typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(source))return false;
   return !!(source && source.restriction && source.restriction!=='none');
 }
 
 function projectedRestrictedRemainingAfterExpense(expense,{editing=false}={}){
   const source=paymentSourceById(expense?.paymentSourceId||'');
 
-  if(!source || !source.restriction || source.restriction==='none'){
+  if(!source || (typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(source)) || !source.restriction || source.restriction==='none'){
     return {source:null,remainingAfter:null,available:null};
   }
 
@@ -214,14 +685,14 @@ function projectedNormalBudgetAfterExpense(expense,{editing=false}={}){
 
   if(editing){
     const old=getExistingDailyExpenseById(expense.id);
-    if(old && !old.paymentSourceId){
+    if(old && (typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(old):!old.paymentSourceId)){
       currentCashDaily-=Number(old.amount)||0;
     }
   }
 
-  const newCashDaily=expense?.paymentSourceId
-    ? currentCashDaily
-    : currentCashDaily+(Number(expense.amount)||0);
+  const newCashDaily=(typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(expense):!expense?.paymentSourceId)
+    ? currentCashDaily+(Number(expense.amount)||0)
+    : currentCashDaily;
 
   return (Number(D.income)||0)-fixedTotal()-ccPayTotal()-newCashDaily;
 }
@@ -267,7 +738,7 @@ async function validateExpenseBeforeSave(expense,{editing=false,errorTarget=null
     return true;
   }
 
-  if(!expense?.paymentSourceId){
+  if(typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(expense):!expense?.paymentSourceId){
     const projected=projectedNormalBudgetAfterExpense(expense,{editing});
 
     if(projected<0){
@@ -292,10 +763,15 @@ async function saveDaily(){
   const id=$('fDID').value;
   const date=$('fDD').value||new Date().toISOString().split('T')[0];
   const category=$('fDC').value;
-  const paymentSourceId=$('fDPay')?.value||'';
+  const payEl=$('fDPay');
+  let paymentSourceId=payEl?.value||'';
+  const lockedCardId=payEl?.dataset?.lockedCardId || window.capvoLockedCardPurchaseId || '';
+  if(!paymentSourceId && lockedCardId)paymentSourceId=lockedCardId;
   const paymentSource=paymentSourceById(paymentSourceId);
   const userId=getDataOwnerId();
   const btn=$('btnDaily');
+
+  if(btn?.dataset?.saving==='1')return;
 
   if(!n){
     $('fDN').style.borderColor='var(--red)';
@@ -321,7 +797,7 @@ async function saveDaily(){
   let expense;
 
   if(id){
-    expense={
+    expense=makeCreditCardExpensePayload({
       id,
       name:n,
       amount:a,
@@ -330,9 +806,9 @@ async function saveDaily(){
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
       paymentSourceType:paymentSource?.incomeType||''
-    };
+    },paymentSource);
   }else{
-    expense={
+    expense=makeCreditCardExpensePayload({
       id:gid(),
       name:n,
       amount:a,
@@ -341,11 +817,35 @@ async function saveDaily(){
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
       paymentSourceType:paymentSource?.incomeType||''
-    };
+    },paymentSource);
+  }
+
+  const oldExpense=id?getExistingDailyExpenseById(id):null;
+
+  const limitValidation=validateCreditCardAvailableLimit(expense,oldExpense);
+  if(!limitValidation.ok){
+    showMiniToast('❌ Το ποσό ξεπερνά το διαθέσιμο όριο της κάρτας ('+fmt(limitValidation.available)+').','error');
+    $('fDA')?.focus();
+    return;
+  }
+
+  if(btn){
+    btn.disabled=true;
+    btn.dataset.saving='1';
+    btn.textContent='Αποθήκευση...';
   }
 
   const canSave=await validateExpenseBeforeSave(expense,{editing:!!id});
-  if(!canSave)return;
+  if(!canSave){
+    if(btn){
+      btn.disabled=false;
+      btn.dataset.saving='0';
+      btn.textContent='Αποθήκευση';
+    }
+    return;
+  }
+
+  applyCreditCardPurchaseBalance(expense,oldExpense);
 
   if(id){
     Object.values(D.months||{}).forEach(m=>{
@@ -356,15 +856,18 @@ async function saveDaily(){
   D.months[monthKey].daily.push(expense);
 
   try{
-    if(btn){
-      btn.disabled=true;
-      btn.textContent='Αποθήκευση...';
-    }
-
+    await saveDailyExpenseRow(userId,expense);
+    await saveCreditCardPurchaseSideEffects(userId,expense);
+    await persistCreditCardBalanceForPurchase(userId,expense);
     await saveDailyExpenseRow(userId,expense);
 
     closeM();
     render();
+
+    const isCardPurchase=!!(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card' || paymentSource?.accountType==='credit_card');
+    if(isCardPurchase){
+      showMiniToast?.(id?'✅ Η αγορά κάρτας ενημερώθηκε':'✅ Η αγορά με πιστωτική καταχωρήθηκε');
+    }
 
   }catch(e){
     console.error('saveDaily failed:',e);
@@ -376,6 +879,7 @@ async function saveDaily(){
   }finally{
     if(btn){
       btn.disabled=false;
+      btn.dataset.saving='0';
       btn.textContent='Αποθήκευση';
     }
   }
@@ -463,6 +967,11 @@ async function saveFixed(){
     closeM();
     render();
 
+    const isCardPurchase=!!(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card' || paymentSource?.accountType==='credit_card');
+    if(isCardPurchase){
+      showMiniToast?.(id?'✅ Η αγορά κάρτας ενημερώθηκε':'✅ Η αγορά με πιστωτική καταχωρήθηκε');
+    }
+
   }catch(e){
     console.error('saveFixed failed:',e);
     showMiniToast(
@@ -479,7 +988,81 @@ async function saveFixed(){
 }
 
 
+
+function findCreditCardExpensePlan(expense){
+  if(!expense)return null;
+  const planId=expense.installmentPlanId||'';
+  if(planId)return (D.creditCardInstallmentPlans||[]).find(p=>String(p.id)===String(planId))||null;
+  return (D.creditCardInstallmentPlans||[]).find(p=>String(p.originalExpenseId||'')===String(expense.id))||null;
+}
+
+async function deleteCreditCardExpenseSideEffects(expense){
+  if(!expense || !(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card'))return;
+
+  const ownerUserId=String(getDataOwnerId?.()||'').trim();
+  const cardId=expense.creditCardId||expense.paymentSourceId||'';
+  const card=cardById?.(cardId);
+  const isInstallment=expense.purchaseMode==='installment' || !!expense.installmentPlanId;
+  const plan=findCreditCardExpensePlan(expense);
+  const txId=expense.creditCardTransactionId || plan?.originalTransactionId || ('cc_tx_'+expense.id);
+
+  if(isInstallment && plan && (Number(plan.paidInstallments)||0)>0){
+    throw new Error('Δεν μπορείς να διαγράψεις αγορά με δόσεις που έχει ήδη πληρωμένες δόσεις.');
+  }
+
+  if(ownerUserId && typeof supabaseClient!=='undefined'){
+    if(plan?.id){
+      await supabaseClient.from('credit_card_installment_items').delete().eq('plan_id',plan.id).eq('user_id',ownerUserId);
+      await supabaseClient.from('credit_card_installment_plans').delete().eq('id',plan.id).eq('user_id',ownerUserId);
+    }else if(expense.installmentPlanId){
+      await supabaseClient.from('credit_card_installment_items').delete().eq('plan_id',expense.installmentPlanId).eq('user_id',ownerUserId);
+      await supabaseClient.from('credit_card_installment_plans').delete().eq('id',expense.installmentPlanId).eq('user_id',ownerUserId);
+    }
+
+    if(txId){
+      await supabaseClient.from('credit_card_transactions').delete().eq('id',txId).eq('user_id',ownerUserId);
+    }
+    await supabaseClient.from('credit_card_transactions').delete().eq('expense_id',expense.id).eq('user_id',ownerUserId);
+  }
+
+  if(!isInstallment && card){
+    card.balance=capvoMoney(Math.max(0,(Number(card.balance)||0)-(Number(expense.amount)||0)));
+
+    if(ownerUserId && typeof supabaseClient!=='undefined'){
+      const {error}=await supabaseClient
+        .from('credit_cards')
+        .update({balance:Number(card.balance)||0,updated_at:new Date().toISOString()})
+        .eq('id',card.id)
+        .eq('user_id',ownerUserId);
+      if(error)throw error;
+    }
+  }
+
+  if(plan?.id){
+    D.creditCardInstallmentPlans=(D.creditCardInstallmentPlans||[]).filter(p=>String(p.id)!==String(plan.id));
+    D.creditCardInstallmentItems=(D.creditCardInstallmentItems||[]).filter(i=>String(i.planId)!==String(plan.id));
+  }
+
+  D.creditCardTransactions=(D.creditCardTransactions||[]).filter(t=>{
+    if(txId && String(t.id)===String(txId))return false;
+    if(String(t.expenseId||'')===String(expense.id))return false;
+    if(plan?.id && String(t.installmentPlanId||'')===String(plan.id))return false;
+    return true;
+  });
+}
+
+async function deleteCreditCardExpenseSideEffectsForIds(ids){
+  for(const id of ids||[]){
+    const expense=typeof getExistingDailyExpenseById==='function' ? getExistingDailyExpenseById(id) : null;
+    if(expense)await deleteCreditCardExpenseSideEffects(expense);
+  }
+}
+
 async function deleteExpenseRow(type,id){
+  if(type==='daily'){
+    const expense=typeof getExistingDailyExpenseById==='function' ? getExistingDailyExpenseById(id) : null;
+    if(expense)await deleteCreditCardExpenseSideEffects(expense);
+  }
   const table=type==='fixed'?'fixed_expenses':'expenses';
   await deleteRowsFromTable(table,[id]);
 }
@@ -859,16 +1442,27 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
     return false;
   }
 
-  const expense={
-    id:gid(),
-    name:parsed.name || 'Έξοδο',
-    amount:Number(parsed.amount)||0,
-    category:parsed.category || 'Άλλο',
-    date:parsed.date||new Date().toISOString().split('T')[0],
-    paymentSourceId:parsed.paymentSourceId||'',
-    paymentSourceName:parsed.paymentSourceName||'',
-    paymentSourceType:parsed.paymentSourceType||''
-  };
+  const expense=typeof normalizeCreditCardExpensePayload==='function'
+    ? normalizeCreditCardExpensePayload({
+        id:gid(),
+        name:parsed.name || 'Έξοδο',
+        amount:Number(parsed.amount)||0,
+        category:parsed.category || 'Άλλο',
+        date:parsed.date||new Date().toISOString().split('T')[0],
+        paymentSourceId:parsed.paymentSourceId||'',
+        paymentSourceName:parsed.paymentSourceName||'',
+        paymentSourceType:parsed.paymentSourceType||''
+      })
+    : {
+        id:gid(),
+        name:parsed.name || 'Έξοδο',
+        amount:Number(parsed.amount)||0,
+        category:parsed.category || 'Άλλο',
+        date:parsed.date||new Date().toISOString().split('T')[0],
+        paymentSourceId:parsed.paymentSourceId||'',
+        paymentSourceName:parsed.paymentSourceName||'',
+        paymentSourceType:parsed.paymentSourceType||''
+      };
 
   const monthKey=expense.date.substring(0,7);
   ensM(monthKey);
@@ -879,6 +1473,9 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
   try{
     D.months[monthKey].daily.push(expense);
 
+    await saveDailyExpenseRow(userId,expense);
+    if(typeof saveCreditCardPurchaseSideEffects==='function')await saveCreditCardPurchaseSideEffects(userId,expense);
+    if(typeof persistCreditCardBalanceForPurchase==='function')await persistCreditCardBalanceForPurchase(userId,expense);
     await saveDailyExpenseRow(userId,expense);
 
     input.value='';
@@ -1042,6 +1639,8 @@ function chMonth(d){const[y,mo]=curM.split('-').map(Number);let nm=mo+d,ny=y;if(
 function goM(k){curM=k;ensM(k);go('vDash',document.querySelector('[data-v="vDash"]'));render()}
 
 async function signInWithGoogle(){
+  showAuthLoader();
+
   const redirectTo=window.location.origin+window.location.pathname;
 
   const {error}=await supabaseClient.auth.signInWithOAuth({
@@ -1049,12 +1648,14 @@ async function signInWithGoogle(){
     options:{
       redirectTo,
       queryParams:{
-        access_type:'offline'
+        access_type:'offline',
+        prompt:'select_account'
       }
     }
   });
 
   if(error){
+    clearAuthLoader();
     const err=$('authError');
     if(err)err.textContent='Σφάλμα Google login: '+error.message;
   }
@@ -1299,7 +1900,34 @@ async function saveTelegramChatId(ev){
   }
 }
 
+
+function showAuthLoader(){
+  document.body.classList.add('auth-pending');
+
+  const auth=$('authScreen');
+  const err=$('authError');
+
+  if(auth){
+    auth.classList.remove('auth-hidden');
+    auth.classList.add('capvo-auth-loading');
+    auth.style.display='flex';
+    auth.style.pointerEvents='auto';
+    auth.style.opacity='1';
+    auth.style.visibility='visible';
+    auth.style.zIndex='9999';
+  }
+
+  if(err)err.textContent='';
+}
+
+function clearAuthLoader(){
+  const auth=$('authScreen');
+  if(auth)auth.classList.remove('capvo-auth-loading');
+}
+
 function showApp(){
+  clearAuthLoader();
+
   document.body.classList.remove('auth-pending');
 
   const auth=$('authScreen');
@@ -1446,6 +2074,8 @@ function renderAuthState(){
 function setAuthLoading(isLoading){const btn=$('authSubmitBtn');if(!btn)return;btn.disabled=isLoading;btn.textContent=isLoading?'Σύνδεση...':'Σύνδεση'}
 
 function showAuth(message){
+  clearAuthLoader();
+
   document.body.classList.add('auth-pending');
 
   const auth=$('authScreen');
@@ -1471,6 +2101,8 @@ function showAuth(message){
 }
 
 function hideAuth(){
+  clearAuthLoader();
+
   document.body.classList.remove('auth-pending');
 
   const auth=$('authScreen');
@@ -1758,6 +2390,8 @@ async function initApp(){
       return;
     }
 
+    showAuthLoader();
+
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
@@ -1813,6 +2447,8 @@ supabaseClient.auth.onAuthStateChange(async (event,session)=>{
   }
 
   try{
+    showAuthLoader();
+
     currentProfile=await getOrCreateProfile(currentUser);
     renderAuthState();
 
@@ -3371,3 +4007,10 @@ function updateCapvoDashboardSetupPrompt(){
     setTimeout(()=>{try{updateCapvoDashboardSetupPrompt();}catch(e){}},250);
   },{once:true});
 })();
+
+
+document.addEventListener('click',e=>{
+  const picker=$('dailyCategoryPicker');
+  if(!picker)return;
+  if(!picker.contains(e.target))toggleDailyCategoryMenu(false);
+});
