@@ -795,6 +795,53 @@ function getCurrentCycleSavingsAllMovements(){
     .filter(Boolean);
 }
 
+function fixedExpenseMovementDate(e){
+  const cycle=typeof getCurrentBudgetCycle==='function'?getCurrentBudgetCycle():null;
+  const cycleStart=cycle?.startKey || todayISO();
+  const created=typeof normalizeDateValue==='function' ? normalizeDateValue(fixedExpenseCreatedAt(e)) : String(fixedExpenseCreatedAt(e)||'').slice(0,10);
+
+  // A new fixed expense created during the current cycle should appear in the
+  // Transactions ledger on the day it was created. Older recurring fixed
+  // expenses still represent this cycle from the cycle start.
+  if(created && typeof isDateInCurrentBudgetCycle==='function' && isDateInCurrentBudgetCycle(created)){
+    return created;
+  }
+
+  return cycleStart;
+}
+
+function getCurrentCycleFixedExpenseMovements(){
+  return (Array.isArray(D?.fixedExpenses)?D.fixedExpenses:[])
+    .map(e=>{
+      const amount=capvoMoney(Number(e.amount)||0);
+      if(amount<=0)return null;
+      const date=fixedExpenseMovementDate(e);
+      return {
+        id:`fixed_${e.id||gid()}`,
+        sourceId:e.id||'',
+        movementType:'fixed_expense',
+        movementGroup:'budget',
+        name:e.name||'Πάγιο έξοδο',
+        amount,
+        budgetImpactAmount:amount,
+        affectsBudget:true,
+        affectsCashBudget:true,
+        category:e.category||'Πάγια',
+        date,
+        createdAt:e.createdAt||e.created_at||date,
+        paymentSourceId:'fixed',
+        paymentSourceName:'Πάγιο έξοδο',
+        paymentAccountType:'fixed_expense',
+        sourceLabel:'Πάγιο έξοδο · Επηρεάζει budget',
+        canEdit:true,
+        canDelete:true,
+        readOnly:false,
+        isFixedExpense:true
+      };
+    })
+    .filter(Boolean);
+}
+
 function getCurrentCycleAllMovements(){
   const daily=(typeof getCurrentCycleDailyExpenses==='function'?getCurrentCycleDailyExpenses():[])
     .map(e=>{
@@ -853,8 +900,9 @@ function getCurrentCycleAllMovements(){
     .filter(Boolean);
 
   const savings=typeof getCurrentCycleSavingsAllMovements==='function'?getCurrentCycleSavingsAllMovements():[];
+  const fixed=typeof getCurrentCycleFixedExpenseMovements==='function'?getCurrentCycleFixedExpenseMovements():[];
 
-  return [...daily,...cardPayments,...savings].sort((a,b)=>
+  return [...fixed,...daily,...cardPayments,...savings].sort((a,b)=>
     String(b.date||'').localeCompare(String(a.date||'')) ||
     String(capvoMovementSortKey(b)).localeCompare(String(capvoMovementSortKey(a))) ||
     String(b.id||'').localeCompare(String(a.id||''))

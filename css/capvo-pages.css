@@ -16423,3 +16423,109 @@ body.capvo-dashboard-to-wizard-transition #vDash{
 #vTransactions .tx-ledger-day-header small{
   color:#94a3b8 !important;
 }
+
+/* ===== CAPVO v1.8.6.6 Advisor production model polish ===== */
+#vAdvisor .advisor-cycle-card,
+#vAdvisor .advisor-payday-card{
+  overflow:hidden;
+}
+
+#vAdvisor .advisor-breakdown-list{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+
+#vAdvisor .advisor-breakdown-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 13px;
+  border-radius:18px;
+  border:1px solid rgba(120,132,170,.12);
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,255,.86));
+}
+
+#vAdvisor .advisor-breakdown-row div{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+
+#vAdvisor .advisor-breakdown-row strong{
+  font-size:13px;
+  font-weight:950;
+  color:#111827;
+}
+
+#vAdvisor .advisor-breakdown-row span{
+  font-size:11px;
+  line-height:1.25;
+  color:#72809a;
+  font-weight:800;
+}
+
+#vAdvisor .advisor-breakdown-row b{
+  flex:0 0 auto;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:-.04em;
+  color:#111827;
+}
+
+#vAdvisor .advisor-breakdown-positive b{color:#10b981;}
+#vAdvisor .advisor-breakdown-negative b{color:#ef4444;}
+
+#vAdvisor .advisor-signal-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+
+#vAdvisor .advisor-signal{
+  min-width:0;
+  display:grid;
+  gap:5px;
+  padding:13px 12px;
+  border-radius:20px;
+  border:1px solid rgba(120,132,170,.12);
+  background:rgba(248,250,255,.9);
+}
+
+#vAdvisor .advisor-signal span{
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#72809a;
+}
+
+#vAdvisor .advisor-signal strong{
+  font-size:18px;
+  font-weight:950;
+  letter-spacing:-.07em;
+  color:#111827;
+}
+
+#vAdvisor .advisor-signal small{
+  font-size:11px;
+  line-height:1.25;
+  color:#72809a;
+  font-weight:800;
+}
+
+#vAdvisor .advisor-signal-good strong{color:#10b981;}
+#vAdvisor .advisor-signal-warn strong{color:#f59e0b;}
+#vAdvisor .advisor-signal-bad strong{color:#ef4444;}
+
+@media (max-width:560px){
+  #vAdvisor .advisor-signal-grid{
+    grid-template-columns:1fr;
+  }
+
+  #vAdvisor .advisor-breakdown-row{
+    align-items:flex-start;
+  }
+}

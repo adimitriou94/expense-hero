@@ -697,6 +697,43 @@ function projectedNormalBudgetAfterExpense(expense,{editing=false}={}){
   return (Number(D.income)||0)-fixedTotal()-ccPayTotal()-newCashDaily;
 }
 
+
+function capvoNormalizeCategoryValue(value){
+  return String(value||'')
+    .trim()
+    .toLocaleLowerCase('el-GR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'');
+}
+
+function validateRestrictedSourceCategory(expense){
+  const source=typeof paymentSourceById==='function'
+    ? paymentSourceById(expense?.paymentSourceId||'')
+    : null;
+
+  if(!source)return {ok:true,source:null,allowed:[]};
+  if(typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(source))return {ok:true,source,allowed:[]};
+  if(!(typeof isRestrictedPaymentSource==='function'
+    ? isRestrictedPaymentSource(source)
+    : (source.restriction && source.restriction!=='none'))){
+    return {ok:true,source,allowed:[]};
+  }
+
+  const allowed=typeof restrictedCategoriesFor==='function'
+    ? restrictedCategoriesFor(source)
+    : [];
+
+  // Some restricted sources, such as card_only/voucher balances, do not have a
+  // category restriction yet; they are only limited by their available balance.
+  if(!Array.isArray(allowed) || allowed.length===0)return {ok:true,source,allowed:[]};
+
+  const categoryKey=capvoNormalizeCategoryValue(expense?.category||'');
+  const allowedKeys=allowed.map(capvoNormalizeCategoryValue);
+  const ok=allowedKeys.includes(categoryKey);
+
+  return {ok,source,allowed};
+}
+
 async function validateExpenseBeforeSave(expense,{editing=false,errorTarget=null}={}){
   const amount=Number(expense?.amount)||0;
 
@@ -714,6 +751,13 @@ async function validateExpenseBeforeSave(expense,{editing=false,errorTarget=null
   if(restrictedCheck.source && restrictedCheck.remainingAfter<0){
     return fail(
       `Το υπόλοιπο ${restrictedCheck.source.name} δεν επαρκεί. Διαθέσιμο: ${fmt(restrictedCheck.available)}.`
+    );
+  }
+
+  const restrictedCategoryCheck=validateRestrictedSourceCategory(expense);
+  if(!restrictedCategoryCheck.ok){
+    return fail(
+      `Η πηγή ${restrictedCategoryCheck.source?.name||'πληρωμής'} χρησιμοποιείται μόνο για: ${restrictedCategoryCheck.allowed.join(', ')}.`
     );
   }
 
@@ -867,6 +911,8 @@ async function saveDaily(){
     const isCardPurchase=!!(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card' || paymentSource?.accountType==='credit_card');
     if(isCardPurchase){
       showMiniToast?.(id?'✅ Η αγορά κάρτας ενημερώθηκε':'✅ Η αγορά με πιστωτική καταχωρήθηκε');
+    }else{
+      showMiniToast?.(id?'✅ Η κίνηση ενημερώθηκε':'✅ Η κίνηση καταχωρήθηκε');
     }
 
   }catch(e){
@@ -903,6 +949,39 @@ async function saveFixedExpenseRow(userId,expense){
   if(error)throw error;
 }
 
+
+function validateFixedExpenseBudgetLimit(fixedExpenseId,amount){
+  const value=capvoMoney(Number(amount)||0);
+  const budget=capvoMoney(typeof budgetIncomeTotal==='function' ? budgetIncomeTotal() : (Number(D.income)||0));
+
+  if(budget<=0){
+    return {
+      ok:false,
+      available:0,
+      message:'Πρόσθεσε πρώτα διαθέσιμο budget πριν καταχωρήσεις πάγιο έξοδο.'
+    };
+  }
+
+  const currentId=String(fixedExpenseId||'');
+  const otherFixed=capvoMoney((D.fixedExpenses||[])
+    .filter(x=>String(x.id||'')!==currentId)
+    .reduce((sum,x)=>sum+(Number(x.amount)||0),0));
+
+  const cardPayments=capvoMoney(typeof ccPayTotal==='function' ? ccPayTotal() : 0);
+  const budgetMovements=capvoMoney(typeof dailyCashTotal==='function' ? dailyCashTotal() : 0);
+  const available=capvoMoney(Math.max(0,budget-otherFixed-cardPayments-budgetMovements));
+
+  if(value>available+0.004){
+    return {
+      ok:false,
+      available,
+      message:`Το πάγιο ξεπερνά το διαθέσιμο budget. Διαθέσιμα για πάγια: ${typeof fmt==='function'?fmt(available):available+'€'}.`
+    };
+  }
+
+  return {ok:true,available};
+}
+
 async function saveFixed(){
   const n=$('fFN').value.trim();
   const a=parseFloat($('fFA').value);
@@ -910,6 +989,8 @@ async function saveFixed(){
   const category=$('fFC').value;
   const userId=getDataOwnerId();
   const btn=$('btnFixed');
+
+  if(btn?.dataset?.saving==='1')return;
 
   if(!n){
     $('fFN').style.borderColor='var(--red)';
@@ -929,6 +1010,13 @@ async function saveFixed(){
     return;
   }
 
+  const fixedBudgetCheck=validateFixedExpenseBudgetLimit(id,a);
+  if(!fixedBudgetCheck.ok){
+    $('fFA').style.borderColor='var(--red)';
+    showMiniToast(fixedBudgetCheck.message,'error');
+    return;
+  }
+
   let expense;
 
   if(id){
@@ -944,7 +1032,8 @@ async function saveFixed(){
       id:gid(),
       name:n,
       amount:a,
-      category
+      category,
+      createdAt:typeof todayISO==='function'?todayISO():new Date().toISOString().split('T')[0]
     };
 
     D.fixedExpenses.push(expense);
@@ -955,6 +1044,7 @@ async function saveFixed(){
   try{
     if(btn){
       btn.disabled=true;
+      btn.dataset.saving='1';
       btn.textContent='Αποθήκευση...';
     }
 
@@ -967,10 +1057,7 @@ async function saveFixed(){
     closeM();
     render();
 
-    const isCardPurchase=!!(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card' || paymentSource?.accountType==='credit_card');
-    if(isCardPurchase){
-      showMiniToast?.(id?'✅ Η αγορά κάρτας ενημερώθηκε':'✅ Η αγορά με πιστωτική καταχωρήθηκε');
-    }
+    showMiniToast?.(id?'✅ Το πάγιο ενημερώθηκε':'✅ Το πάγιο αποθηκεύτηκε');
 
   }catch(e){
     console.error('saveFixed failed:',e);
@@ -982,6 +1069,7 @@ async function saveFixed(){
   }finally{
     if(btn){
       btn.disabled=false;
+      btn.dataset.saving='0';
       btn.textContent='Αποθήκευση';
     }
   }
@@ -996,6 +1084,40 @@ function findCreditCardExpensePlan(expense){
   return (D.creditCardInstallmentPlans||[]).find(p=>String(p.originalExpenseId||'')===String(expense.id))||null;
 }
 
+
+function capvoHasCardPaymentAfterExpense(expense){
+  if(!expense)return false;
+  const cardId=String(expense.creditCardId||expense.paymentSourceId||'');
+  if(!cardId)return false;
+  const expenseDate=normalizeDateValue(expense.date||expense.createdAt||expense.created_at||todayISO())||todayISO();
+
+  return (D.creditCardTransactions||[]).some(t=>{
+    const txCardId=String(t.cardId||t.card_id||'');
+    if(txCardId!==cardId)return false;
+    const isPayment=String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment';
+    if(!isPayment)return false;
+    const txDate=normalizeDateValue(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at||todayISO())||todayISO();
+    return txDate>=expenseDate;
+  });
+}
+
+function capvoCardDeletionHasReconciliationRisk(expense,plan){
+  if(!expense)return false;
+
+  if(plan){
+    const paidAmount=typeof capvoPlanPaidAmount==='function'
+      ? capvoPlanPaidAmount(plan)
+      : (Number(plan.paidInstallments)||0)*(Number(plan.installmentAmount)||0);
+    if(paidAmount>0)return true;
+
+    if(typeof capvoLegacyUnallocatedPlanPaymentForCard==='function' && capvoLegacyUnallocatedPlanPaymentForCard(plan.cardId)>0){
+      return true;
+    }
+  }
+
+  return capvoHasCardPaymentAfterExpense(expense);
+}
+
 async function deleteCreditCardExpenseSideEffects(expense){
   if(!expense || !(expense.isCreditCardPurchase || expense.paymentAccountType==='credit_card'))return;
 
@@ -1006,8 +1128,8 @@ async function deleteCreditCardExpenseSideEffects(expense){
   const plan=findCreditCardExpensePlan(expense);
   const txId=expense.creditCardTransactionId || plan?.originalTransactionId || ('cc_tx_'+expense.id);
 
-  if(isInstallment && plan && (Number(plan.paidInstallments)||0)>0){
-    throw new Error('Δεν μπορείς να διαγράψεις αγορά με δόσεις που έχει ήδη πληρωμένες δόσεις.');
+  if(capvoCardDeletionHasReconciliationRisk(expense,plan)){
+    throw new Error('Δεν μπορείς να διαγράψεις αγορά κάρτας που έχει ήδη σχετικές πληρωμές. Κάνε πρώτα αναίρεση/διόρθωση της πληρωμής από την κάρτα.');
   }
 
   if(ownerUserId && typeof supabaseClient!=='undefined'){

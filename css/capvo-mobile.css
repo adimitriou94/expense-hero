@@ -9798,3 +9798,87 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     margin-bottom:0 !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.8.6.2 — Fixed expense modal mobile safety
+   Fixes recurring edit sheet being covered by the floating bottom nav
+   and keeps the save button reachable on small screens.
+   ============================================================ */
+@media (max-width: 768px){
+  body.modal-open .mobile-bottom-nav,
+  body.modal-open .mobile-nav-fab,
+  body:has(#mFixed.active) .mobile-bottom-nav,
+  body:has(#mFixed.active) .mobile-nav-fab{
+    opacity:0 !important;
+    transform:translateX(-50%) translateY(22px) scale(.96) !important;
+    pointer-events:none !important;
+    visibility:hidden !important;
+  }
+
+  #mFixed.modal-overlay{
+    z-index:13060 !important;
+    align-items:flex-end !important;
+    padding:0 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    overflow:hidden !important;
+  }
+
+  #mFixed .modal{
+    width:100% !important;
+    max-width:440px !important;
+    max-height:calc(100dvh - 26px - env(safe-area-inset-bottom)) !important;
+    min-height:0 !important;
+    margin:0 auto !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+    padding:10px 18px calc(18px + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom:calc(86px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mFixed .modal h2,
+  #mFixed .modal .modal-note,
+  #mFixed .modal .form-group,
+  #mFixed .modal .form-row{
+    flex:0 0 auto !important;
+  }
+
+  #mFixed #btnFixed{
+    position:sticky !important;
+    bottom:0 !important;
+    z-index:4 !important;
+    flex:0 0 auto !important;
+    margin-top:8px !important;
+    box-shadow:0 -12px 24px rgba(255,255,255,.92), 0 16px 34px rgba(101,71,246,.26) !important;
+  }
+}
+
+@media (max-width: 768px) and (max-height: 700px){
+  #mFixed .modal{
+    padding:8px 16px calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mFixed h2{
+    margin-bottom:10px !important;
+    font-size:20px !important;
+  }
+
+  #mFixed .modal::before{
+    margin-bottom:12px !important;
+  }
+
+  #mFixed .modal-note{
+    margin-bottom:12px !important;
+  }
+
+  #mFixed input,
+  #mFixed select,
+  #mFixed .fixed-category-trigger,
+  #mFixed #btnFixed{
+    min-height:50px !important;
+    height:50px !important;
+  }
+}

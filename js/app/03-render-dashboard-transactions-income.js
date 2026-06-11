@@ -93,18 +93,36 @@ function renderDashboardAdvisorSnapshot(pct,bal){
   let tone='teal';
   let icon='✅';
 
-  if(D.income<=0){
-    label='Setup';
-    tone='amber';
-    icon='💡';
-  }else if(bal<0 || pct>100){
-    label='Υπέρβαση';
-    tone='red';
-    icon='🚨';
-  }else if(pct>=70){
-    label='Προσοχή';
-    tone='amber';
-    icon='⚠️';
+  // v1.8.6.6: the dashboard Advisor badge follows the same production
+  // model as the full Advisor page. It is based on budget-impact movements,
+  // cards, savings and current budget cycle, not raw monthly expenses.
+  if(typeof capvoAdvisorBuildModel==='function' && typeof capvoAdvisorDashboardStatus==='function'){
+    try{
+      const model=capvoAdvisorBuildModel();
+      const status=capvoAdvisorDashboardStatus(model);
+      label=status.label||label;
+      tone=status.tone||tone;
+      icon=status.icon||icon;
+    }catch(_){
+      // Fall back to the old lightweight status below.
+      if(D.income<=0){label='Setup';tone='amber';icon='💡';}
+      else if(bal<0 || pct>100){label='Υπέρβαση';tone='red';icon='🚨';}
+      else if(pct>=70){label='Προσοχή';tone='amber';icon='⚠️';}
+    }
+  }else{
+    if(D.income<=0){
+      label='Setup';
+      tone='amber';
+      icon='💡';
+    }else if(bal<0 || pct>100){
+      label='Υπέρβαση';
+      tone='red';
+      icon='🚨';
+    }else if(pct>=70){
+      label='Προσοχή';
+      tone='amber';
+      icon='⚠️';
+    }
   }
 
   valueEl.textContent=label;
@@ -452,12 +470,16 @@ function renderDashboardPreview(){
   const el = $('dashRecentList');
   if(!el)return;
 
-  const sourceRows = typeof getCurrentCycleBudgetMovements==='function'
-    ? getCurrentCycleBudgetMovements()
-    : getCurrentCycleDailyExpenses();
-  const recent = [...sourceRows]
+  const sourceRows = typeof getCurrentCycleAllMovements==='function'
+    ? getCurrentCycleAllMovements()
+    : (typeof getCurrentCycleBudgetMovements==='function'
+      ? getCurrentCycleBudgetMovements()
+      : getCurrentCycleDailyExpenses());
+
+  const recent = [...(sourceRows||[])]
     .sort((a,b)=>
       String(b.date || '').localeCompare(String(a.date || '')) ||
+      String(b.createdAt || b.created_at || '').localeCompare(String(a.createdAt || a.created_at || '')) ||
       String(b.id || '').localeCompare(String(a.id || ''))
     )
     .slice(0,5);
@@ -472,28 +494,46 @@ function renderDashboardPreview(){
   }
 
   el.innerHTML = recent.map(e => {
-    const amount=Number(e.amount)||0;
-    const isReturn=amount<0;
-    const amountLabel=isReturn?`+${fmt(Math.abs(amount))}`:`-${fmt(amount)}`;
+    const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
+    const impact=typeof capvoMovementBudgetImpact==='function'
+      ? capvoMovementBudgetImpact(e)
+      : (affects?(Number(e.amount)||0):0);
+    const rawAmount=Number(e.amount)||0;
+    const isReturn=affects && impact<0;
+    const amountLabel=!affects
+      ? fmt(Math.abs(rawAmount))
+      : (isReturn?`+${fmt(Math.abs(impact))}`:`-${fmt(Math.abs(impact))}`);
+
+    const group=String(e.movementGroup||'');
+    const isCard=group==='cards' || e.isCardPayment || e.isCreditCardPurchase || e.paymentAccountType==='credit_card';
+    const isSavings=group==='savings' || e.isSavingsMovement;
+    const isFixed=String(e.movementType||'')==='fixed_expense' || e.isFixedExpense;
+    const badges=[];
+    if(isFixed)badges.push('Πάγιο');
+    if(isCard)badges.push('Κάρτα');
+    if(isSavings)badges.push('Κουμπαράς');
+    if(!affects)badges.push('Δεν επηρεάζει budget');
+    if(affects && isReturn)badges.push('Επιστροφή budget');
+
     const meta=[
-      esc(e.category),
+      esc(e.category || 'Άλλο'),
       e.date||'',
-      e.isCardPayment?'Πληρωμή κάρτας':'',
-      e.isSavingsMovement?(isReturn?'επιστροφή από κουμπαρά':'μεταφορά σε κουμπαρά'):''
+      e.sourceLabel?esc(e.sourceLabel):'',
+      ...badges.map(esc)
     ].filter(Boolean).join(' · ');
 
     return `
     <div class="dashboard-preview-row">
       <div class="expense-icon ${CCLS[e.category] || 'cat-other'}">
-        ${CEMO[e.category] || '📌'}
+        ${CEMO[e.category] || (isFixed?'📌':'📌')}
       </div>
 
       <div class="dashboard-preview-info">
-        <strong>${esc(e.name)}</strong>
+        <strong>${esc(e.name || 'Κίνηση')}</strong>
         <span>${meta}</span>
       </div>
 
-      <div class="dashboard-preview-amount ${e.isCardPayment?'is-payment':''} ${isReturn?'is-return':''}">
+      <div class="dashboard-preview-amount ${e.isCardPayment?'is-payment':''} ${isReturn?'is-return':''} ${!affects?'is-neutral':''}">
         ${amountLabel}
       </div>
     </div>`;

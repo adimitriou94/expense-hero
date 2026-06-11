@@ -699,7 +699,9 @@ function txCompleteDailyRow(e){
   const showSelect=selectionMode.daily && e.canDelete!==false && e.movementType==='daily_expense';
   const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
   const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(affects?(Number(e.amount)||0):0);
-  const detailType=e.readOnly || e.canEdit===false ? 'movement' : 'daily';
+  const detailType=String(e.movementType||'')==='fixed_expense'
+    ? 'fixed'
+    : (e.readOnly || e.canEdit===false ? 'movement' : 'daily');
   const detailId=detailType==='movement'?e.id:(e.sourceId||e.id);
   const isCard=String(e.movementGroup||'')==='cards' || e.isCardPayment || e.isCreditCardPurchase || e.paymentAccountType==='credit_card';
   const isSavings=String(e.movementGroup||'')==='savings' || e.isSavingsMovement;
@@ -830,13 +832,15 @@ function toggleTxMobileDailyExpanded(){
   renderDailyList();
 }
 
-const txCompleteLegacyEditExp = typeof editExp==='function' ? editExp : null;
-function editExp(t,id){
+const txCompleteLegacyEditExp = (typeof window!=='undefined' && typeof window.editExp==='function')
+  ? window.editExp.bind(window)
+  : null;
+window.editExp=function(t,id){
   if(t==='daily' && window.innerWidth<=768){
     return txCompleteOpenManualForEdit(t,id);
   }
   return txCompleteLegacyEditExp ? txCompleteLegacyEditExp(t,id) : undefined;
-}
+};
 
 function closeAddCenterSheet(event){
   if(event && event.target && event.target.id!=='addCenterSheet')return;
