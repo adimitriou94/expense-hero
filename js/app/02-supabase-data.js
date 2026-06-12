@@ -674,7 +674,7 @@ function syncBudgetCycleTypeControls(type=getBudgetCycleType()){
   if(row)row.classList.toggle('is-last-working-day',normalized==='last_working_day');
   const ruleLabel=$('cycleManagerRuleLabel');
   if(ruleLabel){
-    const day=capvoClampCycleDay(input?.value || D?.preferences?.budgetCycleStartDay || 1);
+    const day=readBudgetCycleDayInput(input,D?.preferences?.budgetCycleStartDay || 1) || capvoClampCycleDay(D?.preferences?.budgetCycleStartDay || 1);
     ruleLabel.textContent=normalized==='last_working_day'
       ? 'Πληρώνομαι την τελευταία εργάσιμη του μήνα'
       : `Πληρώνομαι κάθε ${day} του μήνα`;
@@ -689,11 +689,14 @@ function syncBudgetCycleTypeControls(type=getBudgetCycleType()){
 async function saveBudgetCyclePreference(inputId='settingsBudgetCycleDay'){
   const ownerUserId=getFinanceUserId();
   const input=$(inputId)||$('settingsBudgetCycleDay')||$('cycleManagerBudgetCycleDay');
-  const raw=input?input.value:1;
-  const day=capvoClampCycleDay(raw);
+  const raw=input?String(input.value||'').trim():'1';
   const type=getSelectedBudgetCycleType();
-
-  if(input)input.value=String(day);
+  if(type==='fixed_day' && raw===''){
+    showMiniToast('Βάλε ημέρα πληρωμής από 1 έως 31.','error');
+    input?.focus?.();
+    return;
+  }
+  const day=finalizeBudgetCycleDayInput(input,D?.preferences?.budgetCycleStartDay || 1);
   if(!ownerUserId){
     showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');
     return;

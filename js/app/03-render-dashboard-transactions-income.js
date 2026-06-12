@@ -87,11 +87,13 @@ function render(){
 function renderDashboardAdvisorSnapshot(pct,bal){
   const valueEl=$('sAdvisor');
   const iconEl=$('sAdvisorIcon');
+  const labelEl=valueEl?.parentElement?.querySelector?.('.stat-label');
   if(!valueEl)return;
 
   let label='OK';
   let tone='teal';
   let icon='✅';
+  let summary='Advisor';
 
   // v1.8.6.6: the dashboard Advisor badge follows the same production
   // model as the full Advisor page. It is based on budget-impact movements,
@@ -103,6 +105,7 @@ function renderDashboardAdvisorSnapshot(pct,bal){
       label=status.label||label;
       tone=status.tone||tone;
       icon=status.icon||icon;
+      summary=status.summary||summary;
     }catch(_){
       // Fall back to the old lightweight status below.
       if(D.income<=0){label='Setup';tone='amber';icon='💡';}
@@ -127,6 +130,8 @@ function renderDashboardAdvisorSnapshot(pct,bal){
 
   valueEl.textContent=label;
   valueEl.className='stat-value '+tone;
+  valueEl.title=summary;
+  if(labelEl)labelEl.textContent=summary;
   if(iconEl)iconEl.textContent=icon;
 }
 

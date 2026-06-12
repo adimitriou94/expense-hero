@@ -2891,6 +2891,7 @@ function capvoWizardDefaultState(){
 }
 
 function openCapvoOnboardingWizard(step){
+  capvoEnsureDefaultSavingsQuietly();
   window.__capvoOnboarding=window.__capvoOnboarding||capvoWizardDefaultState();
   if(typeof step==='number')window.__capvoOnboarding.step=step;
   renderCapvoOnboardingWizard();
@@ -2902,12 +2903,91 @@ function closeCapvoOnboardingWizard(){
   document.body.classList.remove('modal-open','onboarding-open');
 }
 
+
+function capvoWizardMoney(value){
+  if(value===null || value===undefined)return 0;
+  const raw=String(value).trim().replace(/\s+/g,'').replace(',','.');
+  const num=Number(raw);
+  return Number.isFinite(num) ? capvoMoney(num) : 0;
+}
+
+function capvoWizardBudgetAmount(s){
+  return capvoWizardMoney(s?.salaryAmount);
+}
+
+function capvoWizardSpendingLimitAmount(s){
+  return capvoWizardMoney(s?.spendingLimit);
+}
+
+function capvoWizardEffectiveBudgetLimit(s){
+  const salary=capvoWizardBudgetAmount(s);
+  const limit=capvoWizardSpendingLimitAmount(s);
+  if(limit>0 && salary>0)return Math.min(limit,salary);
+  return salary;
+}
+
+function capvoWizardFixedTotal(s){
+  return (Array.isArray(s?.fixed)?s.fixed:[]).reduce((sum,row)=>sum+capvoWizardMoney(row?.amount),0);
+}
+
+function capvoWizardValidateBudgetStep(s,{focus=true}={}){
+  const amount=capvoWizardBudgetAmount(s);
+  const limit=capvoWizardSpendingLimitAmount(s);
+  if(amount<=0){
+    showMiniToast('Βάλε βασικό budget για να συνεχίσεις.','error');
+    if(focus)document.getElementById('obSalaryAmount')?.focus();
+    return false;
+  }
+  if(limit>0 && limit>amount){
+    showMiniToast('Το όριο εξόδων δεν μπορεί να ξεπερνά το budget κύκλου.','error');
+    if(focus)document.getElementById('obSpendingLimit')?.focus();
+    return false;
+  }
+  return true;
+}
+
+function capvoWizardValidateFixedStep(s,{focus=true}={}){
+  const base=capvoWizardEffectiveBudgetLimit(s);
+  const fixed=capvoWizardFixedTotal(s);
+  if(base>0 && fixed>base){
+    const availableLabel=typeof fmt==='function'?fmt(base):`€${base.toFixed(2)}`;
+    const fixedLabel=typeof fmt==='function'?fmt(fixed):`€${fixed.toFixed(2)}`;
+    showMiniToast(`Τα πάγια (${fixedLabel}) ξεπερνούν το διαθέσιμο budget (${availableLabel}).`,'error');
+    if(focus){
+      const rows=Array.isArray(s?.fixed)?s.fixed:[];
+      const idx=rows.findIndex(row=>capvoWizardMoney(row?.amount)>0);
+      document.getElementById(`obFixed${Math.max(0,idx)}Amount`)?.focus();
+    }
+    return false;
+  }
+  return true;
+}
+
+function capvoEnsureDefaultSavingsQuietly(){
+  try{
+    if(typeof ensureDefaultGeneralSavingsGoal!=='function')return;
+    const owner=getFinanceUserId?.() || getDataOwnerId?.();
+    if(!owner)return;
+    if(window.__capvoEnsuringDefaultSavings)return;
+    if(typeof getDefaultGeneralSavingsGoal==='function' && getDefaultGeneralSavingsGoal())return;
+    window.__capvoEnsuringDefaultSavings=true;
+    Promise.resolve(ensureDefaultGeneralSavingsGoal())
+      .catch(e=>console.warn('[CAPVO] default savings bootstrap skipped',e))
+      .finally(()=>{window.__capvoEnsuringDefaultSavings=false;});
+  }catch(e){
+    window.__capvoEnsuringDefaultSavings=false;
+    console.warn('[CAPVO] default savings bootstrap skipped',e);
+  }
+}
+
 function capvoOnboardingUpdateFromInputs(){
   const s=window.__capvoOnboarding||capvoWizardDefaultState();
   const get=id=>document.getElementById(id);
   if(get('obCycleTypeFixed')||get('obCycleTypeLast')){
     s.cycleType=get('obCycleTypeLast')?.checked?'last_working_day':'fixed_day';
-    s.cycleDay=Math.max(1,Math.min(31,Number(get('obCycleDay')?.value)||1));
+    const cycleDayInput=get('obCycleDay');
+    const nextCycleDay=readBudgetCycleDayInput(cycleDayInput,s.cycleDay||1);
+    if(nextCycleDay!==null)s.cycleDay=nextCycleDay;
   }
   if(get('obSalaryAmount')){
     s.salaryName=(get('obSalaryName')?.value||'Μισθός / Budget').trim()||'Μισθός / Budget';
@@ -3079,7 +3159,7 @@ function capvoOnboardingStepHtml(s){
           <div class="ob-pro-day-input-wrap ${isLast?'is-disabled':''}">
             <label class="ob-pro-label" for="obCycleDay">Ημέρα πληρωμής</label>
             <div class="ob-pro-day-input">
-              <input id="obCycleDay" type="number" min="1" max="31" inputmode="numeric" value="${esc(s.cycleDay||1)}" ${isLast?'disabled':''}>
+              <input id="obCycleDay" type="text" min="1" max="31" maxlength="2" pattern="[0-9]*" inputmode="numeric" value="${esc(s.cycleDay||1)}" ${isLast?'disabled':''}>
               <span>του μήνα</span>
             </div>
             <div class="ob-pro-inline-note">${isLast?'Δεν χρειάζεται ημέρα. Το CAPVO θα βρίσκει αυτόματα την τελευταία εργάσιμη.':'Γράψε την ημέρα του μήνα από 1 έως 31, π.χ. 8 ή 28.'}</div>
@@ -3718,10 +3798,8 @@ function renderCapvoOnboardingWizard(){
       syncDay();
     });
   });
-  day?.addEventListener('input',()=>{
-    const v=Math.max(1,Math.min(31,Number(day.value)||1));
-    if(String(day.value)!==String(v))day.value=String(v);
-  });
+  day?.addEventListener('input',()=>handleBudgetCycleDayInput(day));
+  day?.addEventListener('blur',()=>finalizeBudgetCycleDayInput(day,s.cycleDay||1));
   fixed?.addEventListener('change',syncDay);
   last?.addEventListener('change',syncDay);
   syncDay();
@@ -3736,13 +3814,22 @@ function capvoOnboardingPrev(){
 function capvoOnboardingNext(){
   const s=capvoOnboardingUpdateFromInputs();
 
-  if(s.step===1){
-    const amount=Number(String(s.salaryAmount||'').replace(',','.'))||0;
-    if(amount<=0){
-      showMiniToast('Βάλε βασικό budget για να συνεχίσεις.','error');
-      document.getElementById('obSalaryAmount')?.focus();
+  if(s.step===0 && s.cycleType==='fixed_day'){
+    const dayInput=document.getElementById('obCycleDay');
+    if(dayInput && String(dayInput.value||'').trim()===''){
+      showMiniToast('Βάλε ημέρα πληρωμής από 1 έως 31.','error');
+      dayInput.focus();
       return;
     }
+    s.cycleDay=finalizeBudgetCycleDayInput(dayInput,s.cycleDay||1);
+  }
+
+  if(s.step===1){
+    if(!capvoWizardValidateBudgetStep(s))return;
+  }
+
+  if(s.step===2){
+    if(!capvoWizardValidateFixedStep(s))return;
   }
 
   s.step=Math.min(5,(s.step||0)+1);
@@ -3774,13 +3861,13 @@ async function capvoUpsertUserPreferencePatch(patch){
 
 async function skipCapvoOnboarding(){
   const overlay=document.getElementById('capvoOnboardingOverlay');
-  const btn=overlay?.querySelector('.ob-skip-top, .capvo-onboarding-top button');
+  const btn=overlay?.querySelector('.ob-pro-skip, .ob-skip-top, .capvo-onboarding-top button');
   try{
     const s=capvoOnboardingUpdateFromInputs();
     if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
     await capvoUpsertUserPreferencePatch({
       onboarding_dismissed:true,
-      onboarding_step:String(Math.max(0,Math.min(3,Number(s.step)||0)))
+      onboarding_step:String(Math.max(0,Math.min(4,Number(s.step)||0)))
     });
     closeCapvoOnboardingWizard();
     requestAnimationFrame(()=>{
@@ -3803,19 +3890,17 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     return;
   }
 
-  const salaryAmount=Number(String(s.salaryAmount||'').replace(',','.'))||0;
-  const spendingLimit=Number(String(s.spendingLimit||'').replace(',','.'))||0;
-  if(salaryAmount<=0){
+  const salaryAmount=capvoWizardBudgetAmount(s);
+  const spendingLimit=capvoWizardSpendingLimitAmount(s);
+  if(!capvoWizardValidateBudgetStep(s,{focus:false})){
     s.step=1;
     renderCapvoOnboardingWizard();
-    showMiniToast('Βάλε βασικό budget για να ολοκληρώσεις.','error');
     return;
   }
 
-  if(spendingLimit>0 && spendingLimit>salaryAmount){
-    s.step=1;
+  if(!capvoWizardValidateFixedStep(s,{focus:false})){
+    s.step=2;
     renderCapvoOnboardingWizard();
-    showMiniToast('Το όριο δεν μπορεί να ξεπερνά το ποσό κύκλου.','error');
     return;
   }
 
@@ -3823,6 +3908,10 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
   if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
 
   try{
+    if(typeof ensureDefaultGeneralSavingsGoal==='function'){
+      try{await ensureDefaultGeneralSavingsGoal();}catch(e){console.warn('[CAPVO] default savings bootstrap skipped',e);}
+    }
+
     await capvoUpsertUserPreferencePatch({
       budget_cycle_type:s.cycleType||'fixed_day',
       budget_cycle_start_day:capvoClampCycleDay(s.cycleDay||1),

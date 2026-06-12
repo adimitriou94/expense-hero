@@ -1,5 +1,5 @@
 // ===== CAPVO ADVISOR MODULE =====
-// v1.8.6.6 production-wise rewrite.
+// v1.8.6.9 production-wise advisor with orphan-plan-safe card intelligence.
 // The advisor is now based on the same budget-impact model as Dashboard,
 // Cards, Savings and Transactions. It does not treat every raw movement as
 // a cash expense.
@@ -49,7 +49,163 @@ function capvoAdvisorCardDebt(){
 
 function capvoAdvisorCardLimit(){
   const cards=Array.isArray(D?.creditCards)?D.creditCards:[];
-  return capvoMoney(cards.reduce((sum,c)=>sum+(Number(c?.limitAmount||c?.limit_amount)||0),0));
+  return capvoMoney(cards.reduce((sum,c)=>sum+(Number(c?.limit||c?.limitAmount||c?.limit_amount)||0),0));
+}
+
+function capvoAdvisorFloorToStep(value,step=5){
+  const v=Number(value)||0;
+  if(v<=0)return 0;
+  return capvoMoney(Math.floor(v/step)*step);
+}
+
+function capvoAdvisorCardBaseDebtTotal(){
+  const cards=Array.isArray(D?.creditCards)?D.creditCards:[];
+  return capvoMoney(cards.reduce((sum,c)=>{
+    if(!c || c.isActive===false || c.is_active===false)return sum;
+    if(String(c.accountType||c.account_type||'credit_card')==='loan')return sum;
+    if(typeof cardBaseDebt==='function')return sum+(Number(cardBaseDebt(c))||0);
+    return sum+(Number(c.balance)||0);
+  },0));
+}
+
+function capvoAdvisorActiveCardIdSet(){
+  const cards=Array.isArray(D?.creditCards)?D.creditCards:[];
+  return new Set(cards
+    .filter(c=>c && !(c.isActive===false||c.is_active===false))
+    .map(c=>String(c.id||c.cardId||c.card_id||''))
+    .filter(Boolean));
+}
+
+function capvoAdvisorActiveCardPlans(){
+  const plans=Array.isArray(D?.creditCardInstallmentPlans)?D.creditCardInstallmentPlans:[];
+  const activeCardIds=capvoAdvisorActiveCardIdSet();
+  if(activeCardIds.size<=0)return [];
+  return plans.filter(p=>{
+    if(String(p?.status||'active')!=='active')return false;
+    const cardId=String(p?.cardId||p?.card_id||'');
+    if(!cardId)return false;
+    return activeCardIds.has(cardId);
+  });
+}
+
+function capvoAdvisorPlanRemaining(plan){
+  if(typeof capvoPlanRemainingAmount==='function')return capvoMoney(capvoPlanRemainingAmount(plan));
+  const total=Number(plan?.totalAmount||plan?.total_amount)||0;
+  const paid=Number(plan?.paidAmount||plan?.paid_amount)||0;
+  return capvoMoney(Math.max(0,total-paid));
+}
+
+function capvoAdvisorCardMinPaymentTotal(){
+  const cards=Array.isArray(D?.creditCards)?D.creditCards:[];
+  return capvoMoney(cards.reduce((sum,c)=>{
+    if(!c || c.isActive===false || c.is_active===false)return sum;
+    const debt=typeof cardDisplayDebt==='function'?Number(cardDisplayDebt(c))||0:Number(c.balance)||0;
+    if(debt<=0)return sum;
+    if(typeof effectiveCardMinPay==='function')return sum+(Number(effectiveCardMinPay(c))||0);
+    return sum+(Number(c.minPay||c.min_pay)||0);
+  },0));
+}
+
+function capvoAdvisorBuildCardAdvice(baseModel){
+  const income=Number(baseModel?.income)||0;
+  const balance=Number(baseModel?.balance)||0;
+  const remainingDays=Math.max(1,Number(baseModel?.remainingDays)||1);
+  const totalDays=Math.max(1,Number(baseModel?.totalDays)||30);
+  const dailyAllowance=Number(baseModel?.dailyAllowance)||0;
+  const cardDebt=Number(baseModel?.cardDebt)||0;
+  const cardLimit=Number(baseModel?.cardLimit)||0;
+  const cardUsagePct=Number(baseModel?.cardUsagePct)||0;
+
+  const plans=capvoAdvisorActiveCardPlans();
+  const activePlans=plans.filter(p=>capvoAdvisorPlanRemaining(p)>0);
+  const installmentRemaining=capvoMoney(activePlans.reduce((sum,p)=>sum+capvoAdvisorPlanRemaining(p),0));
+  const monthlyInstallments=capvoMoney(activePlans.reduce((sum,p)=>{
+    const total=Number(p?.totalAmount||p?.total_amount)||0;
+    const count=Math.max(1,Number(p?.installmentCount||p?.installment_count)||1);
+    const amount=Number(p?.installmentAmount||p?.installment_amount)||total/count;
+    return sum+(Number(amount)||0);
+  },0));
+  const baseDebt=capvoAdvisorCardBaseDebtTotal();
+  const minPayment=capvoAdvisorCardMinPaymentTotal();
+  const installmentRatio=capvoAdvisorPercent(monthlyInstallments,income);
+  const debtRatio=capvoAdvisorPercent(cardDebt,income);
+
+  const averageDailyBudget=income>0?income/totalDays:0;
+  const safeDailyFloor=capvoMoney(Math.min(25,Math.max(10,averageDailyBudget*.50)));
+  const minimumDailyFloor=capvoMoney(Math.min(15,Math.max(7,averageDailyBudget*.25)));
+  const safeCapacity=capvoMoney(Math.max(0,balance-(safeDailyFloor*remainingDays)));
+  const stretchCapacity=capvoMoney(Math.max(0,balance-(minimumDailyFloor*remainingDays)));
+  const safePayment=capvoAdvisorFloorToStep(Math.min(cardDebt,safeCapacity),5);
+  const maxWithoutPressure=capvoAdvisorFloorToStep(Math.min(cardDebt,stretchCapacity),5);
+  let recommendedPayment=0;
+  if(cardDebt>0 && safePayment>0){
+    if(minPayment>0 && minPayment<=safePayment){
+      recommendedPayment=capvoAdvisorFloorToStep(Math.min(safePayment,Math.max(minPayment,safePayment*.40)),5);
+    }else{
+      recommendedPayment=capvoAdvisorFloorToStep(Math.min(safePayment,safePayment*.35),5);
+    }
+    if(recommendedPayment<=0 && safePayment>0)recommendedPayment=Math.min(safePayment,cardDebt);
+  }
+  const afterSafeDaily=safePayment>0?capvoMoney((balance-safePayment)/remainingDays):dailyAllowance;
+  const afterRecommendedDaily=recommendedPayment>0?capvoMoney((balance-recommendedPayment)/remainingDays):dailyAllowance;
+
+  const cardsWithDebt=(Array.isArray(D?.creditCards)?D.creditCards:[])
+    .filter(c=>c && !(c.isActive===false||c.is_active===false))
+    .filter(c=>{
+      const debt=typeof cardDisplayDebt==='function'?Number(cardDisplayDebt(c))||0:Number(c.balance)||0;
+      return debt>0;
+    }).length;
+
+  const insights=[];
+  if(cardDebt<=0){
+    insights.push({type:'success',icon:'✅',title:'Δεν υπάρχει ενεργό χρέος καρτών',text:'Οι κάρτες δεν πιέζουν τον τρέχοντα κύκλο.'});
+  }else{
+    if(safePayment>0){
+      insights.push({type:'success',icon:'💳',title:'Υπάρχει ασφαλής χώρος πληρωμής',text:`Μπορείς να πληρώσεις έως ${fmt(safePayment)} κρατώντας περίπου ${fmt(afterSafeDaily)} ανά ημέρα.`});
+    }else{
+      insights.push({type:'warning',icon:'⏳',title:'Όχι άλλη πληρωμή κάρτας τώρα',text:`Με το τρέχον υπόλοιπο, προτεραιότητα είναι να κρατήσεις το budget μέχρι την πληρωμή.`});
+    }
+
+    if(minPayment>0 && safePayment>0 && minPayment>safePayment){
+      insights.push({type:'danger',icon:'⚠️',title:'Η ελάχιστη πληρωμή πιέζει',text:`Η εκτίμηση ελάχιστης πληρωμής είναι ${fmt(minPayment)}, πάνω από τον ασφαλή χώρο ${fmt(safePayment)}.`});
+    }
+
+    if(cardUsagePct>=80){
+      insights.push({type:'danger',icon:'📉',title:'Υψηλή χρήση ορίου',text:`Η χρήση πιστωτικού ορίου είναι περίπου ${cardUsagePct}%. Απόφυγε νέες αγορές με κάρτα.`});
+    }else if(cardUsagePct>=60){
+      insights.push({type:'warning',icon:'📉',title:'Μέτρια προς υψηλή χρήση ορίου',text:`Η χρήση ορίου είναι ${cardUsagePct}%. Κράτα τις νέες αγορές χαμηλά.`});
+    }
+
+    if(installmentRatio>=12){
+      insights.push({type:'warning',icon:'🧾',title:'Οι δόσεις πιέζουν τον κύκλο',text:`Οι ενεργές δόσεις είναι περίπου ${fmt(monthlyInstallments)} / κύκλο (${installmentRatio}% του budget).`});
+    }else if(activePlans.length>0){
+      insights.push({type:'info',icon:'🧾',title:'Υπάρχουν ενεργά πλάνα δόσεων',text:`Έχεις ${activePlans.length} ενεργό${activePlans.length===1?' πλάνο':'ά πλάνα'} με υπόλοιπο ${fmt(installmentRemaining)}.`});
+    }
+
+    if(debtRatio>=60){
+      insights.push({type:'danger',icon:'🔥',title:'Μεγάλο χρέος σε σχέση με budget',text:`Το χρέος καρτών είναι ${debtRatio}% του budget κύκλου. Θέλει σταδιακή μείωση.`});
+    }
+  }
+
+  return {
+    cardsWithDebt,
+    baseDebt,
+    installmentRemaining,
+    activePlanCount:activePlans.length,
+    monthlyInstallments,
+    installmentRatio,
+    minPayment,
+    safeDailyFloor,
+    minimumDailyFloor,
+    safePayment,
+    maxWithoutPressure,
+    recommendedPayment,
+    afterSafeDaily,
+    afterRecommendedDaily,
+    debtRatio,
+    cardUsagePct,
+    insights:insights.slice(0,5)
+  };
 }
 
 function capvoAdvisorTopCategory(rows){
@@ -64,6 +220,172 @@ function capvoAdvisorTopCategory(rows){
     .map(([category,total])=>({category,total:capvoMoney(total)}))
     .sort((a,b)=>b.total-a.total);
   return sorted[0]||{category:'—',total:0};
+}
+
+function capvoAdvisorDateKeyFromDate(date){
+  const d=date instanceof Date?date:new Date(date);
+  if(Number.isNaN(d.getTime()))return typeof todayISO==='function'?todayISO():new Date().toISOString().slice(0,10);
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function capvoAdvisorLastDateKeys(count){
+  const days=Math.max(1,Number(count)||1);
+  const base=capvoAdvisorToday();
+  const out=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(base);
+    d.setDate(base.getDate()-i);
+    out.push(capvoAdvisorDateKeyFromDate(d));
+  }
+  return out;
+}
+
+function capvoAdvisorMovementDateKey(row){
+  if(typeof capvoMovementDate==='function')return capvoMovementDate(row);
+  return normalizeDateValue(row?.date||row?.transactionDate||row?.transaction_date||row?.createdAt||row?.created_at)||todayISO();
+}
+
+function capvoAdvisorIsFixedMovement(row){
+  return row?.isFixedExpense || String(row?.movementType||'')==='fixed_expense' || String(row?.paymentAccountType||'')==='fixed_expense';
+}
+
+function capvoAdvisorPositiveBudgetImpact(row){
+  const amount=Number(capvoAdvisorMovementAmount(row))||0;
+  return amount>0?amount:0;
+}
+
+function capvoAdvisorRecentAverage(allMovements,days=7){
+  const keys=capvoAdvisorLastDateKeys(days);
+  const totals=Object.fromEntries(keys.map(k=>[k,0]));
+  (allMovements||[]).forEach(row=>{
+    if(capvoAdvisorIsFixedMovement(row))return;
+    const key=capvoAdvisorMovementDateKey(row);
+    if(!Object.prototype.hasOwnProperty.call(totals,key))return;
+    totals[key]+=capvoAdvisorPositiveBudgetImpact(row);
+  });
+  const values=keys.map(k=>capvoMoney(totals[k]||0));
+  const total=values.reduce((s,n)=>s+n,0);
+  return {
+    days:keys.length,
+    total:capvoMoney(total),
+    average:capvoMoney(total/Math.max(1,keys.length)),
+    values,
+    keys
+  };
+}
+
+function capvoAdvisorTodayNetImpact(allMovements){
+  const today=typeof todayISO==='function'?todayISO():capvoAdvisorDateKeyFromDate(new Date());
+  return capvoMoney((allMovements||[]).reduce((sum,row)=>{
+    if(capvoAdvisorMovementDateKey(row)!==today)return sum;
+    return sum+(Number(capvoAdvisorMovementAmount(row))||0);
+  },0));
+}
+
+function capvoAdvisorBuildPracticalPlan(ctx){
+  const income=Number(ctx?.income)||0;
+  const balance=Number(ctx?.balance)||0;
+  const remainingDays=Math.max(1,Number(ctx?.remainingDays)||1);
+  const totalDays=Math.max(1,Number(ctx?.totalDays)||30);
+  const allMovements=Array.isArray(ctx?.allMovements)?ctx.allMovements:[];
+  const safePerDay=capvoMoney(balance/remainingDays);
+  const safeToday=capvoAdvisorFloorToStep(Math.max(0,safePerDay),1);
+  const comfortToday=capvoAdvisorFloorToStep(Math.max(0,safePerDay*.80),1);
+  const stretchToday=capvoAdvisorFloorToStep(Math.max(0,safePerDay*1.20),1);
+  const todayNet=capvoAdvisorTodayNetImpact(allMovements);
+  const todayOutflow=capvoMoney((allMovements||[]).reduce((sum,row)=>{
+    const key=capvoAdvisorMovementDateKey(row);
+    const today=typeof todayISO==='function'?todayISO():capvoAdvisorDateKeyFromDate(new Date());
+    if(key!==today || capvoAdvisorIsFixedMovement(row))return sum;
+    return sum+capvoAdvisorPositiveBudgetImpact(row);
+  },0));
+  const recent=capvoAdvisorRecentAverage(allMovements,7);
+  const recentAvg=Number(recent.average)||0;
+  const safeForecast=capvoMoney(balance-(safeToday*remainingDays));
+  const currentPaceForecast=capvoMoney(balance-(recentAvg*remainingDays));
+  const conservativeForecast=capvoMoney(balance-((recentAvg>0?recentAvg*.70:safeToday*.70)*remainingDays));
+  const overspendPerDay=currentPaceForecast<0?capvoMoney(Math.abs(currentPaceForecast)/remainingDays):0;
+
+  let tone='good';
+  let label='Σε καλό ρυθμό';
+  let headline=`Μπορείς να κινηθείς γύρω στα ${fmt(Math.max(0,safeToday))} σήμερα.`;
+  let action='Κράτα τις νέες κινήσεις κοντά στο ασφαλές ημερήσιο όριο και συνέχισε έτσι μέχρι την πληρωμή.';
+
+  if(income<=0){
+    tone='setup';
+    label='Χρειάζεται setup';
+    headline='Πρόσθεσε πρώτα budget για να βγει πρακτική πρόταση.';
+    action='Πρόσθεσε Μισθό / Budget κύκλου.';
+  }else if(balance<0){
+    tone='bad';
+    label='Χρειάζεται άμεση διόρθωση';
+    headline=`Υπάρχει υπέρβαση ${fmt(Math.abs(balance))}.`;
+    action='Πάγωσε μη απαραίτητες κινήσεις και διόρθωσε πρώτα την υπέρβαση.';
+  }else if(safeToday<10){
+    tone='bad';
+    label='Πολύ πιεσμένο';
+    headline=`Το ασφαλές περιθώριο είναι μόνο ${fmt(safeToday)} / ημέρα.`;
+    action='Κράτα μόνο απαραίτητα έξοδα μέχρι την επόμενη πληρωμή.';
+  }else if(currentPaceForecast<0){
+    tone='warn';
+    label='Ο ρυθμός σε οδηγεί σε πίεση';
+    headline=`Με τον ρυθμό 7 ημερών προβλέπεται έλλειμμα ${fmt(Math.abs(currentPaceForecast))}.`;
+    action=`Μείωσε τις ημερήσιες κινήσεις περίπου κατά ${fmt(overspendPerDay)} ή κράτα τες κάτω από ${fmt(safeToday)}.`;
+  }else if(recentAvg>safeToday*1.25 && recentAvg>0){
+    tone='warn';
+    label='Πρόσεχε τον ρυθμό';
+    headline=`Τις τελευταίες 7 ημέρες κινείσαι με περίπου ${fmt(recentAvg)} / ημέρα.`;
+    action=`Ρίξε τον ρυθμό κοντά στα ${fmt(safeToday)} / ημέρα για να κρατήσεις τον κύκλο ασφαλή.`;
+  }else if(balance>income*.10 && safeToday>=20){
+    tone='good';
+    label='Υπάρχει άνεση';
+    headline=`Έχεις ασφαλές ημερήσιο περιθώριο περίπου ${fmt(safeToday)}.`;
+    action='Μπορείς να κρατήσεις αυτό το όριο ή να μεταφέρεις μικρό μέρος σε αποταμίευση αν δεν έχεις άμεσες ανάγκες.';
+  }
+
+  const scenarios=[
+    {
+      label:'Αν κρατήσεις το ασφαλές όριο',
+      value:capvoMoney(safeForecast),
+      subtitle:`${fmt(safeToday)} / ημέρα μέχρι πληρωμή`,
+      tone:safeForecast>=0?'good':'warn'
+    },
+    {
+      label:'Με ρυθμό τελευταίων 7 ημερών',
+      value:capvoMoney(currentPaceForecast),
+      subtitle:recentAvg>0?`${fmt(recentAvg)} / ημέρα`:'δεν υπάρχουν αρκετές κινήσεις',
+      tone:currentPaceForecast>=0?'good':'bad'
+    },
+    {
+      label:'Με πιο συντηρητικό ρυθμό',
+      value:capvoMoney(conservativeForecast),
+      subtitle:recentAvg>0?`${fmt(recentAvg*.70)} / ημέρα`:`${fmt(safeToday*.70)} / ημέρα`,
+      tone:conservativeForecast>=0?'good':'warn'
+    }
+  ];
+
+  return {
+    tone,
+    label,
+    headline,
+    action,
+    safeToday,
+    comfortToday,
+    stretchToday,
+    todayNet,
+    todayOutflow,
+    recentAvg:capvoMoney(recentAvg),
+    recentTotal:recent.total,
+    recentDays:recent.days,
+    currentPaceForecast,
+    conservativeForecast,
+    safeForecast,
+    overspendPerDay,
+    scenarios
+  };
 }
 
 function capvoAdvisorBuildModel(){
@@ -137,6 +459,24 @@ function capvoAdvisorBuildModel(){
   const debtRatio=capvoAdvisorPercent(debtPayments,income);
   const savingsRate=capvoAdvisorPercent(actualSavings,income);
   const balanceRate=capvoAdvisorPercent(balance,income);
+  const cardAdvice=capvoAdvisorBuildCardAdvice({
+    income,
+    balance,
+    remainingDays,
+    totalDays,
+    dailyAllowance,
+    cardDebt,
+    cardLimit,
+    cardUsagePct
+  });
+  const practical=capvoAdvisorBuildPracticalPlan({
+    income,
+    balance,
+    remainingDays,
+    totalDays,
+    dailyAllowance,
+    allMovements
+  });
 
   const health=capvoAdvisorHealthScore({
     income,
@@ -173,7 +513,9 @@ function capvoAdvisorBuildModel(){
     topCategory,
     paceDiff,
     pacePct,
-    health
+    health,
+    cardAdvice,
+    practical
   });
 
   return {
@@ -209,6 +551,8 @@ function capvoAdvisorBuildModel(){
     debtRatio,
     savingsRate,
     balanceRate,
+    cardAdvice,
+    practical,
     health,
     suggestions,
     allMovements,
@@ -305,6 +649,16 @@ function capvoAdvisorSuggestions(ctx){
     }
   }
 
+  if(ctx.practical){
+    const p=ctx.practical;
+    list.push({
+      type:p.tone==='bad'?'danger':p.tone==='warn'?'warning':'info',
+      icon:p.tone==='bad'?'🚨':p.tone==='warn'?'⚠️':'🧭',
+      title:'Πρακτικό πλάνο σήμερα',
+      text:p.action
+    });
+  }
+
   if(ctx.fixedRatio>55){
     list.push({type:'warning',icon:'🏠',title:'Πολλά σταθερά έξοδα',text:`Τα πάγια είναι ${ctx.fixedRatio}% του budget. Αν αυτό μείνει έτσι, το καθημερινό περιθώριο θα είναι πάντα πιεσμένο.`});
   }
@@ -315,6 +669,14 @@ function capvoAdvisorSuggestions(ctx){
 
   if(ctx.cardDebt>0 && ctx.cardUsagePct>=70){
     list.push({type:'warning',icon:'📉',title:'Υψηλή χρήση κάρτας',text:`Το υπόλοιπο καρτών είναι ${fmt(ctx.cardDebt)} και η χρήση ορίου περίπου ${ctx.cardUsagePct}%.`});
+  }
+
+  if(ctx.cardDebt>0 && ctx.cardAdvice){
+    if(ctx.cardAdvice.safePayment>0){
+      list.push({type:'info',icon:'💳',title:'Ασφαλής πληρωμή κάρτας',text:`Ο Advisor βλέπει ασφαλή χώρο έως ${fmt(ctx.cardAdvice.safePayment)} χωρίς να πέσεις κάτω από το όριο ημέρας.`});
+    }else{
+      list.push({type:'warning',icon:'💳',title:'Περίμενε με τις κάρτες',text:'Δεν υπάρχει άνετος χώρος για έξτρα πληρωμή κάρτας στον τρέχοντα κύκλο.'});
+    }
   }
 
   if(ctx.savingsRate<5 && ctx.balance>ctx.income*.10){
@@ -332,19 +694,25 @@ function capvoAdvisorSuggestions(ctx){
 
 function capvoAdvisorBestNextStep(model){
   if(model.income<=0)return 'Πρόσθεσε πρώτα Μισθό / Budget κύκλου για να μπορέσει ο Σύμβουλος να κάνει σωστούς υπολογισμούς.';
+  if(model.practical?.action && model.practical?.tone==='bad')return model.practical.action;
   if(model.balance<0)return `Κάλυψε πρώτα την υπέρβαση ${fmt(Math.abs(model.balance))}. Μην προσθέσεις νέα αποταμίευση ή μη απαραίτητα έξοδα πριν ισορροπήσει ο κύκλος.`;
   if(model.dailyAllowance<10 && model.remainingDays>0)return 'Κράτα μόνο απαραίτητες κινήσεις μέχρι την επόμενη πληρωμή και απόφυγε νέες αγορές με κάρτα.';
+  if(model.cardDebt>0 && model.cardAdvice?.recommendedPayment>0 && model.cardAdvice?.cardUsagePct>=60)return `Πλήρωσε περίπου ${fmt(model.cardAdvice.recommendedPayment)} στην κάρτα. Μειώνεις χρέος και κρατάς περίπου ${fmt(model.cardAdvice.afterRecommendedDaily)} ανά ημέρα.`;
+  if(model.cardDebt>0 && model.cardAdvice?.safePayment<=0)return 'Μην κάνεις έξτρα πληρωμή κάρτας τώρα. Κράτα το budget για τις ημέρες μέχρι την πληρωμή.';
   if(model.debtRatio>20)return 'Δες τις πληρωμές καρτών/χρεών και φτιάξε μικρό πλάνο μείωσης για τον επόμενο κύκλο.';
   if(model.savingsRate<10 && model.balance>model.income*.10)return 'Μετέφερε ένα μικρό μέρος του θετικού υπολοίπου στη Γενική αποταμίευση, χωρίς να ρίξεις πολύ το ημερήσιο όριο.';
+  if(model.practical?.action)return model.practical.action;
   return 'Συνέχισε με το ίδιο όριο ανά ημέρα και κράτα τις νέες κινήσεις κάτω από το ασφαλές ημερήσιο budget.';
 }
 
 function capvoAdvisorDashboardStatus(model){
-  if(!model || model.income<=0)return {label:'Setup',tone:'amber',icon:'💡'};
-  if(model.balance<0 || model.health.score<38)return {label:'Κίνδυνος',tone:'red',icon:'🚨'};
-  if(model.health.score<58 || model.dailyAllowance<10)return {label:'Προσοχή',tone:'amber',icon:'⚠️'};
-  if(model.health.score>=78 && model.balance>0)return {label:'Καλό',tone:'teal',icon:'✅'};
-  return {label:'OK',tone:'teal',icon:'✅'};
+  const daily=model?.practical?.safeToday ?? model?.dailyAllowance ?? 0;
+  const summary=(model && model.income>0) ? `Advisor · ${fmt(Math.max(0,daily))}/ημ.` : 'Advisor';
+  if(!model || model.income<=0)return {label:'Setup',tone:'amber',icon:'💡',summary:'Advisor'};
+  if(model.balance<0 || model.health.score<38)return {label:'Κίνδυνος',tone:'red',icon:'🚨',summary};
+  if(model.health.score<58 || model.dailyAllowance<10 || model.practical?.tone==='warn')return {label:'Προσοχή',tone:'amber',icon:'⚠️',summary};
+  if(model.health.score>=78 && model.balance>0)return {label:'Καλό',tone:'teal',icon:'✅',summary};
+  return {label:'OK',tone:'teal',icon:'✅',summary};
 }
 
 function capvoAdvisorBreakdownRow(label,value,tone,sub){
@@ -364,6 +732,138 @@ function capvoAdvisorSignal(label,value,sub,tone){
       <small>${esc(sub||'')}</small>
     </article>
   `;
+}
+
+function capvoAdvisorMoneySignal(label,value,sub,tone){
+  return capvoAdvisorSignal(label,fmt(value),sub,tone);
+}
+
+
+function capvoAdvisorPracticalSection(model){
+  const p=model?.practical;
+  if(!p)return '';
+  const tone=p.tone==='bad'?'bad':p.tone==='warn'?'warn':p.tone==='setup'?'warn':'good';
+  const todayLabel=p.safeToday>0?fmt(p.safeToday):'Μόνο απαραίτητα';
+  const forecastText=p.currentPaceForecast>=0
+    ? `Με τον ρυθμό των τελευταίων 7 ημερών προβλέπεται να μείνουν ${fmt(p.currentPaceForecast)}.`
+    : `Με τον ρυθμό των τελευταίων 7 ημερών προβλέπεται έλλειμμα ${fmt(Math.abs(p.currentPaceForecast))}.`;
+
+  return `
+    <section class="advisor-card advisor-practical-card advisor-practical-${tone}">
+      <div class="advisor-section-head">
+        <div>
+          <span class="advisor-kicker">Practical Advisor</span>
+          <h3>Τι να κάνεις σήμερα</h3>
+        </div>
+        <span class="advisor-pill">${esc(model.cycleLabel)}</span>
+      </div>
+
+      <div class="advisor-practical-hero">
+        <div class="advisor-practical-orb">🧭</div>
+        <div>
+          <span>${esc(p.label)}</span>
+          <strong>${esc(todayLabel)}</strong>
+          <p>${esc(p.headline)}</p>
+        </div>
+      </div>
+
+      <div class="advisor-signal-grid advisor-practical-grid">
+        ${capvoAdvisorMoneySignal('Άνετο όριο σήμερα',p.comfortToday,'πιο συντηρητική κίνηση',p.comfortToday>0?'good':'warn')}
+        ${capvoAdvisorMoneySignal('Ασφαλές / ημέρα',p.safeToday,`${model.remainingDays} ημέρες μέχρι πληρωμή`,tone==='bad'?'bad':tone)}
+        ${capvoAdvisorMoneySignal('Ήδη σήμερα',p.todayOutflow,'budget κινήσεις σήμερα',p.todayOutflow>p.safeToday&&p.safeToday>0?'warn':'neutral')}
+        ${capvoAdvisorMoneySignal('Ρυθμός 7 ημερών',p.recentAvg,forecastText,p.currentPaceForecast>=0?'good':'bad')}
+      </div>
+
+      <div class="advisor-forecast-list">
+        ${p.scenarios.map(sc=>`
+          <article class="advisor-forecast-item advisor-forecast-${sc.tone}">
+            <div>
+              <strong>${esc(sc.label)}</strong>
+              <span>${esc(sc.subtitle)}</span>
+            </div>
+            <b>${fmt(sc.value)}</b>
+          </article>
+        `).join('')}
+      </div>
+
+      <div class="advisor-practical-action">
+        <span>Καλύτερη επόμενη κίνηση</span>
+        <p>${esc(p.action)}</p>
+      </div>
+    </section>`;
+}
+
+function capvoAdvisorCardIntelSection(model){
+  const a=model?.cardAdvice;
+  if(!a)return '';
+
+  if((Number(model.cardDebt)||0)<=0){
+    return `
+      <section class="advisor-card advisor-card-intel-card">
+        <div class="advisor-section-head">
+          <div>
+            <span class="advisor-kicker">Cards intelligence</span>
+            <h3>Έξυπνη διαχείριση καρτών</h3>
+          </div>
+          <span class="advisor-pill">Καθαρό</span>
+        </div>
+        <div class="advisor-card-empty-intel">
+          <strong>Δεν υπάρχει ενεργό χρέος καρτών.</strong>
+          <p>Ο Advisor δεν βλέπει πίεση από πιστωτικές ή πλάνα δόσεων στον τρέχοντα κύκλο.</p>
+        </div>
+      </section>`;
+  }
+
+  const safeTone=a.safePayment>0?'good':'warn';
+  const stretchTone=a.maxWithoutPressure>0?'good':'warn';
+  const planTone=a.installmentRatio>=12?'bad':a.installmentRatio>=7?'warn':'good';
+  const usageTone=a.cardUsagePct>=80?'bad':a.cardUsagePct>=60?'warn':'good';
+  const recommendedText=a.recommendedPayment>0
+    ? `Προτεινόμενη πληρωμή τώρα: ${fmt(a.recommendedPayment)}. Μετά από αυτήν μένεις περίπου με ${fmt(a.afterRecommendedDaily)} / ημέρα.`
+    : 'Δεν προτείνεται έξτρα πληρωμή κάρτας τώρα. Κράτα το διαθέσιμο budget για τις υπόλοιπες ημέρες.';
+
+  return `
+    <section class="advisor-card advisor-card-intel-card">
+      <div class="advisor-section-head">
+        <div>
+          <span class="advisor-kicker">Cards intelligence</span>
+          <h3>Έξυπνη διαχείριση καρτών</h3>
+        </div>
+        <span class="advisor-pill">${a.cardsWithDebt} με υπόλοιπο</span>
+      </div>
+
+      <div class="advisor-signal-grid advisor-card-signal-grid">
+        ${capvoAdvisorMoneySignal('Ασφαλής πληρωμή τώρα',a.safePayment,a.safePayment>0?`κρατάς ~${fmt(a.afterSafeDaily)} / ημέρα`:'όχι άνετος χώρος',safeTone)}
+        ${capvoAdvisorMoneySignal('Μέγιστη χωρίς μεγάλη πίεση',a.maxWithoutPressure,`κρατάς τουλάχιστον ~${fmt(a.minimumDailyFloor)} / ημέρα`,stretchTone)}
+        ${capvoAdvisorMoneySignal('Δόσεις / κύκλο',a.monthlyInstallments,`${a.activePlanCount} ενεργό${a.activePlanCount===1?' πλάνο':'ά πλάνα'}`,planTone)}
+        ${capvoAdvisorSignal('Χρήση ορίου',`${a.cardUsagePct}%`,model.cardLimit>0?`${fmt(model.cardDebt)} / ${fmt(model.cardLimit)}`:'χωρίς όριο',usageTone)}
+      </div>
+
+      <div class="advisor-card-payment-plan">
+        <div class="advisor-card-payment-main">
+          <span>Πρόταση πληρωμής</span>
+          <strong>${a.recommendedPayment>0?fmt(a.recommendedPayment):'Περίμενε'}</strong>
+          <small>${esc(recommendedText)}</small>
+        </div>
+        <div class="advisor-card-debt-split">
+          <div><span>Κανονικό χρέος</span><b>${fmt(a.baseDebt)}</b></div>
+          <div><span>Υπόλοιπο δόσεων</span><b>${fmt(a.installmentRemaining)}</b></div>
+          <div><span>Ελάχιστη εκτίμηση</span><b>${fmt(a.minPayment)}</b></div>
+        </div>
+      </div>
+
+      <div class="advisor-card-insights">
+        ${a.insights.map(it=>`
+          <article class="advisor-card-insight advisor-card-insight-${it.type}">
+            <span>${esc(it.icon)}</span>
+            <div>
+              <strong>${esc(it.title)}</strong>
+              <p>${esc(it.text)}</p>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    </section>`;
 }
 
 function rAdv(){
@@ -434,6 +934,8 @@ function rAdv(){
       </article>
     </section>
 
+    ${capvoAdvisorPracticalSection(model)}
+
     <section class="advisor-card advisor-cycle-card">
       <div class="advisor-section-head">
         <div>
@@ -465,6 +967,8 @@ function rAdv(){
         ${capvoAdvisorSignal('Αποταμίευση κύκλου',fmt(model.actualSavings),`${model.savingsRate}% του budget`,model.savingsRate>=10?'good':'warn')}
       </div>
     </section>
+
+    ${capvoAdvisorCardIntelSection(model)}
 
     <section class="advisor-card advisor-rule-main">
       <div class="advisor-section-head">

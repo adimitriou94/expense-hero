@@ -16529,3 +16529,312 @@ body.capvo-dashboard-to-wizard-transition #vDash{
     align-items:flex-start;
   }
 }
+
+/* ===== CAPVO v1.8.6.7 Advisor phase 2 - cards intelligence ===== */
+#vAdvisor .advisor-card-intel-card{
+  position:relative;
+  overflow:hidden;
+}
+
+#vAdvisor .advisor-card-intel-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:86px;
+  pointer-events:none;
+  background:radial-gradient(circle at 85% 0%,rgba(101,71,246,.14),transparent 42%);
+}
+
+#vAdvisor .advisor-card-intel-card > *{
+  position:relative;
+  z-index:1;
+}
+
+#vAdvisor .advisor-card-signal-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+#vAdvisor .advisor-card-payment-plan{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+
+#vAdvisor .advisor-card-payment-main{
+  display:grid;
+  gap:6px;
+  padding:15px;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(101,71,246,.10),rgba(59,130,246,.08));
+  border:1px solid rgba(101,71,246,.14);
+}
+
+#vAdvisor .advisor-card-payment-main span{
+  color:#64748b;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+#vAdvisor .advisor-card-payment-main strong{
+  color:#111827;
+  font-size:24px;
+  font-weight:950;
+  letter-spacing:-.07em;
+}
+
+#vAdvisor .advisor-card-payment-main small{
+  color:#64748b;
+  font-size:12px;
+  line-height:1.38;
+  font-weight:780;
+}
+
+#vAdvisor .advisor-card-debt-split{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+
+#vAdvisor .advisor-card-debt-split div{
+  min-width:0;
+  display:grid;
+  gap:4px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(248,250,255,.9);
+  border:1px solid rgba(120,132,170,.12);
+}
+
+#vAdvisor .advisor-card-debt-split span{
+  color:#7c88a1;
+  font-size:10px;
+  line-height:1.18;
+  font-weight:950;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+#vAdvisor .advisor-card-debt-split b{
+  color:#111827;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+
+#vAdvisor .advisor-card-insights{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+
+#vAdvisor .advisor-card-insight{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  gap:11px;
+  align-items:center;
+  padding:12px;
+  border-radius:20px;
+  background:#fff;
+  border:1px solid rgba(120,132,170,.10);
+  box-shadow:0 10px 24px rgba(30,40,90,.04);
+}
+
+#vAdvisor .advisor-card-insight > span{
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef4ff;
+  font-size:18px;
+}
+
+#vAdvisor .advisor-card-insight-success > span{background:#e7fbf2;}
+#vAdvisor .advisor-card-insight-warning > span{background:#fff4df;}
+#vAdvisor .advisor-card-insight-danger > span{background:#fff0f3;}
+
+#vAdvisor .advisor-card-insight strong{
+  display:block;
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:-.03em;
+}
+
+#vAdvisor .advisor-card-insight p{
+  margin:4px 0 0;
+  color:#72809a;
+  font-size:12px;
+  line-height:1.34;
+  font-weight:740;
+}
+
+#vAdvisor .advisor-card-empty-intel{
+  display:grid;
+  gap:6px;
+  padding:15px;
+  border-radius:22px;
+  background:#f8fffb;
+  border:1px solid rgba(16,185,129,.14);
+}
+
+#vAdvisor .advisor-card-empty-intel strong{
+  color:#0f766e;
+  font-size:15px;
+  font-weight:950;
+}
+
+#vAdvisor .advisor-card-empty-intel p{
+  margin:0;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.38;
+  font-weight:760;
+}
+
+@media (max-width:720px){
+  #vAdvisor .advisor-card-signal-grid,
+  #vAdvisor .advisor-card-debt-split{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media (max-width:430px){
+  #vAdvisor .advisor-card-signal-grid,
+  #vAdvisor .advisor-card-debt-split{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== CAPVO v1.8.6.8 — Practical Advisor Phase 1 ===== */
+#vAdvisor .advisor-practical-card{
+  border:1px solid rgba(101,71,246,.13);
+  background:
+    radial-gradient(circle at 18% 0%,rgba(101,71,246,.12),transparent 34%),
+    linear-gradient(180deg,#fff,#fbfcff);
+}
+#vAdvisor .advisor-practical-hero{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:14px;
+  align-items:center;
+  padding:14px;
+  border:1px solid rgba(119,132,170,.12);
+  border-radius:22px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 12px 30px rgba(30,40,90,.055);
+  margin-top:12px;
+}
+#vAdvisor .advisor-practical-orb{
+  width:56px;
+  height:56px;
+  border-radius:20px;
+  display:grid;
+  place-items:center;
+  font-size:24px;
+  background:linear-gradient(135deg,rgba(101,71,246,.16),rgba(34,201,133,.12));
+}
+#vAdvisor .advisor-practical-hero span{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--advisor-purple);
+}
+#vAdvisor .advisor-practical-hero strong{
+  display:block;
+  margin-top:2px;
+  font-size:25px;
+  line-height:1.05;
+  color:var(--advisor-ink);
+}
+#vAdvisor .advisor-practical-hero p{
+  margin:6px 0 0;
+  color:var(--advisor-muted);
+  font-weight:800;
+  font-size:13px;
+  line-height:1.35;
+}
+#vAdvisor .advisor-practical-grid{
+  margin-top:12px;
+}
+#vAdvisor .advisor-forecast-list{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+#vAdvisor .advisor-forecast-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 14px;
+  border-radius:18px;
+  background:#fff;
+  border:1px solid rgba(119,132,170,.12);
+}
+#vAdvisor .advisor-forecast-item strong{
+  display:block;
+  color:var(--advisor-ink);
+  font-size:13px;
+  font-weight:1000;
+}
+#vAdvisor .advisor-forecast-item span{
+  display:block;
+  margin-top:3px;
+  color:var(--advisor-muted);
+  font-size:11px;
+  font-weight:800;
+}
+#vAdvisor .advisor-forecast-item b{
+  font-size:15px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+#vAdvisor .advisor-forecast-good b{color:var(--advisor-green);}
+#vAdvisor .advisor-forecast-warn b{color:var(--advisor-orange);}
+#vAdvisor .advisor-forecast-bad b{color:var(--advisor-red);}
+#vAdvisor .advisor-practical-action{
+  margin-top:14px;
+  padding:14px;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(17,24,39,.96),rgba(47,38,115,.94));
+  color:#fff;
+  box-shadow:0 16px 34px rgba(30,40,90,.16);
+}
+#vAdvisor .advisor-practical-action span{
+  display:block;
+  color:rgba(255,255,255,.68);
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+#vAdvisor .advisor-practical-action p{
+  margin:0;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:900;
+}
+#vAdvisor .advisor-practical-bad .advisor-practical-orb{background:rgba(255,62,103,.12);}
+#vAdvisor .advisor-practical-warn .advisor-practical-orb{background:rgba(245,158,11,.14);}
+
+@media(max-width:390px){
+  #vAdvisor .advisor-practical-hero{
+    grid-template-columns:48px 1fr;
+    padding:12px;
+  }
+  #vAdvisor .advisor-practical-orb{
+    width:48px;
+    height:48px;
+    border-radius:17px;
+  }
+  #vAdvisor .advisor-practical-hero strong{
+    font-size:22px;
+  }
+}

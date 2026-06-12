@@ -242,7 +242,48 @@ function capvoParseDateKey(value){
 }
 function capvoClampCycleDay(value){
   const n=Math.round(Number(value)||1);
-  return Math.min(28,Math.max(1,n));
+  return Math.min(31,Math.max(1,n));
+}
+
+function capvoDaysInMonth(year,monthIndex){
+  return new Date(Number(year),Number(monthIndex)+1,0).getDate();
+}
+
+function capvoCycleDayDate(year,monthIndex,day){
+  const safeDay=Math.min(capvoClampCycleDay(day),capvoDaysInMonth(year,monthIndex));
+  return new Date(Number(year),Number(monthIndex),safeDay,12);
+}
+
+function capvoCleanCycleDayInputValue(value){
+  const digits=String(value ?? '').replace(/\D/g,'').slice(0,2);
+  if(!digits)return '';
+  const n=Number(digits);
+  if(n>31)return '31';
+  return digits;
+}
+
+function handleBudgetCycleDayInput(input){
+  const el=typeof input==='string'?document.getElementById(input):input;
+  if(!el)return '';
+  const cleaned=capvoCleanCycleDayInputValue(el.value);
+  if(el.value!==cleaned)el.value=cleaned;
+  return cleaned;
+}
+
+function finalizeBudgetCycleDayInput(input,fallback){
+  const el=typeof input==='string'?document.getElementById(input):input;
+  const raw=String(el?.value ?? '').trim();
+  const base=raw==='' ? (fallback ?? D?.preferences?.budgetCycleStartDay ?? 1) : raw;
+  const day=capvoClampCycleDay(base);
+  if(el)el.value=String(day);
+  return day;
+}
+
+function readBudgetCycleDayInput(input,fallback){
+  const el=typeof input==='string'?document.getElementById(input):input;
+  const raw=String(el?.value ?? '').trim();
+  if(raw==='')return null;
+  return capvoClampCycleDay(raw || fallback || 1);
 }
 
 // CAPVO v1.1.7.11 compatibility helper.
@@ -545,11 +586,11 @@ function getStandardBudgetCycle(refDate=new Date()){
       nextStart=capvoLastWorkingDayOfMonth(today.getFullYear(),today.getMonth()+1);
     }
   }else{
-    start=new Date(today.getFullYear(),today.getMonth(),day,12);
+    start=capvoCycleDayDate(today.getFullYear(),today.getMonth(),day);
     if(today<start){
-      start=new Date(today.getFullYear(),today.getMonth()-1,day,12);
+      start=capvoCycleDayDate(today.getFullYear(),today.getMonth()-1,day);
     }
-    nextStart=new Date(start.getFullYear(),start.getMonth()+1,day,12);
+    nextStart=capvoCycleDayDate(start.getFullYear(),start.getMonth()+1,day);
   }
 
   const end=new Date(nextStart);
