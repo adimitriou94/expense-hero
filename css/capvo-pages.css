@@ -16887,3 +16887,29 @@ body.capvo-dashboard-to-wizard-transition #vDash{
   #capvoOnboardingOverlay .ob-pro-stepper-six{padding:0 8px !important;}
   #capvoOnboardingOverlay .ob-pro-fixed-meta{grid-template-columns:1fr 104px !important;}
 }
+
+
+/* ============================================================
+   CAPVO v1.8.6.17 — onboarding first-step mobile polish
+   - Hide decorative illustration on mobile so the first card does not look broken.
+   - Keep the wizard card compact and readable on small PWA screens.
+   ============================================================ */
+@media (max-width:520px){
+  #capvoOnboardingOverlay .ob-pro-card.hero{
+    gap:12px !important;
+    padding:16px !important;
+  }
+  #capvoOnboardingOverlay .ob-pro-card-head{
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+  #capvoOnboardingOverlay .ob-pro-hero-icon{
+    display:none !important;
+  }
+  #capvoOnboardingOverlay .ob-pro-card-head h3{
+    font-size:23px !important;
+  }
+  #capvoOnboardingOverlay .ob-pro-benefits{
+    gap:8px !important;
+  }
+}

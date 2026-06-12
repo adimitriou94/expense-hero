@@ -6521,3 +6521,25 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
     line-height:1.32 !important;
   }
 }
+
+
+
+/* ============================================================
+   CAPVO v1.8.6.19 — keep splash logo/progress, no loading copy
+   ============================================================ */
+.auth-screen.capvo-auth-screen.capvo-auth-loading::before,
+.auth-screen.capvo-auth-screen.capvo-auth-loading::after{
+  content:none !important;
+  display:none !important;
+}
+
+.auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+
+.auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-card{
+  display:none !important;
+}

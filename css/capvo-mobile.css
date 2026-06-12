@@ -9882,3 +9882,53 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     height:50px !important;
   }
 }
+
+
+/* ============================================================
+   CAPVO v1.8.6.19 — restore first-open logo loader
+   Keep the large CAPVO splash/progress, remove only loading text overlays.
+   ============================================================ */
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading{
+  background:
+    radial-gradient(circle at 18% 12%,rgba(101,71,246,.08),transparent 34%),
+    radial-gradient(circle at 88% 16%,rgba(34,201,133,.09),transparent 32%),
+    linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%) !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading::before,
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading::after{
+  content:none !important;
+  display:none !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash-mark,
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash-word,
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash-line{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash-word{
+  display:block !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-splash-line::before{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-card{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}

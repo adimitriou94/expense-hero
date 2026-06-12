@@ -3516,11 +3516,14 @@ width:28px !important;height:28px !important;min-width:28px !important;border-ra
       #capvoOnboardingOverlay.capvo-onboarding-overlay{padding:22px !important;background:rgba(15,23,42,.55) !important;}
       #capvoOnboardingOverlay .ob-stepper-pro{height:min(840px,calc(100dvh - 44px)) !important;border-radius:34px !important;border:1px solid #e8eaf3 !important;box-shadow:0 24px 70px rgba(15,23,42,.22) !important;}
     }
+    @media (max-width:520px){
+      #capvoOnboardingOverlay .ob-pro-card.hero{gap:12px !important;}
+      #capvoOnboardingOverlay .ob-pro-card-head{grid-template-columns:1fr !important;}
+      #capvoOnboardingOverlay .ob-pro-hero-icon{display:none !important;}
+    }
     @media (max-width:400px){
       #capvoOnboardingOverlay .ob-stepper-pro{padding:14px 14px calc(16px + env(safe-area-inset-bottom)) !important;gap:12px !important;}
       #capvoOnboardingOverlay .ob-pro-copy h2{font-size:26px !important;}
-      #capvoOnboardingOverlay .ob-pro-card-head{grid-template-columns:1fr !important;}
-      #capvoOnboardingOverlay .ob-pro-hero-icon{display:none !important;}
       #capvoOnboardingOverlay .ob-pro-pill-grid.two,#capvoOnboardingOverlay .ob-pro-inline-two{grid-template-columns:1fr !important;}
       #capvoOnboardingOverlay .ob-pro-step small{display:none !important;}
       #capvoOnboardingOverlay .ob-pro-fixed-row{grid-template-columns:34px 1fr !important;}
