@@ -112,10 +112,18 @@ async function saveSyncedExpenses(newExpenseRows){
   }
 }
 
+function syncPaymentSources(){
+  // Telegram sync is for simple cash / Ticket / Voucher expenses. Credit-card
+  // purchases need card debt/installment side effects, so keep them in the app
+  // card flow until the sync pipeline shares the same transaction engine.
+  return (D.incomeSources||[])
+    .filter(i=>typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(i):(i.restriction && i.restriction!=='none'));
+}
+
 function detectPaymentSourceFromText(text){
   const t=(text||'').toLowerCase();
 
-  const sources=(D.incomeSources||[])
+  const sources=typeof syncPaymentSources==='function'?syncPaymentSources():(D.incomeSources||[])
     .filter(i=>typeof isRestrictedPaymentSource==='function'?isRestrictedPaymentSource(i):(i.restriction && i.restriction!=='none'));
 
   if(sources.length===0)return null;
@@ -173,12 +181,12 @@ function parseExpense(text){
   if(name.length>0)name=name.charAt(0).toUpperCase()+name.slice(1);
   else name=category;
 
-  let date=new Date().toISOString().split('T')[0];
+  let date=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 
   if(t.includes('χθες')){
     const y=new Date();
     y.setDate(y.getDate()-1);
-    date=y.toISOString().split('T')[0];
+    date=typeof capvoLocalDateKey==='function'?capvoLocalDateKey(y):y.toLocaleDateString('en-CA');
   }
 
   const paymentSource=detectPaymentSourceFromText(normalized);
@@ -448,7 +456,7 @@ function openSyncPreview(items){
       name:'',
       amount:'',
       category:'Άλλο',
-      date:new Date().toISOString().split('T')[0],
+      date:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'),
       paymentSourceId:'',
       paymentSourceName:'',
       paymentSourceType:''
@@ -505,7 +513,7 @@ function openSyncPreview(items){
             <span>Πληρωμή</span>
             ${buildSyncPicker(`sPay${idx}`, [
                 {value:'',label:'Κανονικό budget',icon:'💳',desc:'Χωρίς Ticket / Voucher'},
-                ...availablePaymentSources().map(src=>({
+                ...(typeof syncPaymentSources==='function'?syncPaymentSources():availablePaymentSources()).map(src=>({
                   value:src.id,
                   label:src.name,
                   icon:'🎫',
@@ -624,24 +632,43 @@ async function confirmSync(...messageIds){
   const rows=document.querySelectorAll('.sync-row');
   const chatId=getCurrentChatId();
   const dataOwnerId=getCurrentDataOwnerId();
+  const statusEl=$('syncStatus');
 
   const importedIds=[];
   const skippedIds=[];
   const newExpenseRows=[];
+  const pendingExpenses=[];
+  const sourceUsage={};
 
   let added=0;
   let skipped=0;
   let maxId=parseInt(localStorage.getItem(getSyncKey())||'0');
 
-  rows.forEach((_,idx)=>{
-    const msgId=ids[idx];
+  const failBeforeSave=(message,idx=null)=>{
+    if(idx!==null){
+      const row=$('syncRow'+idx);
+      if(row){
+        row.dataset.invalid='true';
+        row.classList.add('skipped');
+      }
+    }
+    if(statusEl){
+      statusEl.style.display='block';
+      statusEl.className='sync-status error';
+      statusEl.textContent='❌ '+message;
+    }
+    if(typeof showMiniToast==='function')showMiniToast(message,'error');
+    return false;
+  };
 
+  for(let idx=0;idx<rows.length;idx++){
+    const msgId=ids[idx];
     if(msgId>maxId)maxId=msgId;
 
-    if($('sSkip'+idx).checked){
+    if($('sSkip'+idx)?.checked){
       skippedIds.push(msgId);
       skipped++;
-      return;
+      continue;
     }
 
     const id=telegramExpenseId(chatId,msgId);
@@ -649,25 +676,27 @@ async function confirmSync(...messageIds){
     if(expenseExistsById(id)){
       importedIds.push(msgId);
       skipped++;
-      return;
+      continue;
     }
 
-    const name=$('sName'+idx).value.trim();
-    const amount=parseFloat($('sAmt'+idx).value);
-    const cat=$('sCat'+idx).value;
-    const date=$('sDate'+idx).value;
+    const name=String($('sName'+idx)?.value||'').trim();
+    const amount=parseFloat($('sAmt'+idx)?.value);
+    const cat=$('sCat'+idx)?.value||'Άλλο';
+    const date=typeof normalizeDateValue==='function'
+      ? normalizeDateValue($('sDate'+idx)?.value)
+      : String($('sDate'+idx)?.value||'').slice(0,10);
     const paymentSourceId=$('sPay'+idx)?.value||'';
     const paymentSource=paymentSourceById(paymentSourceId);
 
     if(!name||!amount||amount<=0){
-      skippedIds.push(msgId);
-      skipped++;
-      return;
+      return failBeforeSave('Υπάρχει Telegram κίνηση χωρίς σωστή περιγραφή ή ποσό. Διόρθωσέ τη ή επίλεξε παράλειψη.',idx);
     }
-
-    const monthKey=date.substring(0,7);
-
-    ensM(monthKey);
+    if(!date){
+      return failBeforeSave('Υπάρχει Telegram κίνηση χωρίς σωστή ημερομηνία. Διόρθωσέ τη ή επίλεξε παράλειψη.',idx);
+    }
+    if(paymentSource && typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(paymentSource)){
+      return failBeforeSave('Οι αγορές με πιστωτική από Telegram Sync δεν υποστηρίζονται ακόμα. Καταχώρησέ τη από την ενότητα Κάρτες για να ενημερωθεί σωστά το χρέος.',idx);
+    }
 
     const expense={
       id,
@@ -677,30 +706,58 @@ async function confirmSync(...messageIds){
       date,
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
-      paymentSourceType:paymentSource?.incomeType||''
+      paymentSourceType:paymentSource?.incomeType||'',
+      paymentAccountType:paymentSourceId?'benefit':'cash',
+      affectsCashBudget:!paymentSourceId
     };
+
+    if(paymentSourceId){
+      const catCheck=typeof validateRestrictedSourceCategory==='function'
+        ? validateRestrictedSourceCategory(expense)
+        : {ok:true,source:paymentSource,allowed:[]};
+      if(!catCheck.ok){
+        return failBeforeSave(`Η πηγή ${catCheck.source?.name||'πληρωμής'} χρησιμοποιείται μόνο για: ${catCheck.allowed.join(', ')}.`,idx);
+      }
+
+      const available=typeof paymentSourceRemaining==='function'
+        ? paymentSourceRemaining(paymentSource)
+        : Number(paymentSource.amount)||0;
+      const already=sourceUsage[paymentSourceId]||0;
+      if(available-already-amount<0){
+        return failBeforeSave(`Το υπόλοιπο ${paymentSource.name||'της πηγής'} δεν επαρκεί. Διαθέσιμο: ${typeof fmt==='function'?fmt(Math.max(0,available-already)):`€${Math.max(0,available-already)}`}.`,idx);
+      }
+      sourceUsage[paymentSourceId]=already+amount;
+    }
+
+    pendingExpenses.push({msgId,expense,paymentSource});
+  }
+
+  pendingExpenses.forEach(({msgId,expense,paymentSource})=>{
+    const monthKey=expense.date.substring(0,7);
+    ensM(monthKey);
     D.months[monthKey].daily.push(expense);
 
     newExpenseRows.push({
-      id,
+      id:expense.id,
       user_id:dataOwnerId,
       user_chat_id:chatId || null,
-      name,
-      amount,
-      category:cat,
-      date,
+      name:expense.name,
+      amount:expense.amount,
+      category:expense.category,
+      date:expense.date,
       type:'daily',
       month_key:monthKey,
-      payment_source_id:paymentSourceId||null,
+      payment_source_id:expense.paymentSourceId||null,
       payment_source_name:paymentSource?.name||null,
-      payment_source_type:paymentSource?.incomeType||null
+      payment_source_type:paymentSource?.incomeType||null,
+      payment_account_type:expense.paymentAccountType||'cash',
+      affects_cash_budget:expense.affectsCashBudget!==false,
+      is_credit_card_purchase:false
     });
 
     importedIds.push(msgId);
     added++;
   });
-
-  const statusEl=$('syncStatus');
 
   try{
     statusEl.style.display='block';
@@ -709,13 +766,8 @@ async function confirmSync(...messageIds){
 
     if(newExpenseRows.length>0){
       await saveSyncedExpenses(newExpenseRows);
-
-      // Keep dashboard/reports/advisor canonical after Telegram sync.
-      // We save to Supabase first, then reload all data so the local state
-      // uses the exact same structure/calculations as a normal page refresh.
       localStorage.setItem('needs_data_reload','1');
     }
-
 
     statusEl.textContent='Ενημέρωση Telegram messages...';
 
@@ -729,8 +781,6 @@ async function confirmSync(...messageIds){
 
     localStorage.setItem(getSyncKey(),maxId.toString());
 
-    // Re-fetch after successful Telegram import so dashboard balance,
-    // category totals, reports and advisor all include the synced rows.
     if(newExpenseRows.length>0 && chatId){
       try{
         await fetchAllData(dataOwnerId);

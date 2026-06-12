@@ -987,20 +987,44 @@ function esc(s){const d=document.createElement('div');d.textContent=s??'';return
 function $(id){return document.getElementById(id)}
 function capvoLocalDateKey(date=new Date()){
   const d=date instanceof Date?date:new Date(date);
-  if(Number.isNaN(d.getTime()))return new Date().toISOString().slice(0,10);
+  if(Number.isNaN(d.getTime())){
+    const now=new Date();
+    const y=now.getFullYear();
+    const m=String(now.getMonth()+1).padStart(2,'0');
+    const day=String(now.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,'0');
   const day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
 function todayISO(){return capvoLocalDateKey(new Date())}
+function capvoDateKeyFromParts(year,monthIndex,day){
+  return capvoLocalDateKey(new Date(Number(year)||new Date().getFullYear(),Number(monthIndex)||0,Number(day)||1,12));
+}
+function capvoAddDaysKey(value,days){
+  const base=capvoParseDateKey(value)||new Date();
+  const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+Number(days||0),12);
+  return capvoLocalDateKey(d);
+}
+function capvoAddMonthsKey(value,months){
+  const base=capvoParseDateKey(value)||new Date();
+  const d=new Date(base.getFullYear(),base.getMonth()+Number(months||0),base.getDate(),12);
+  return capvoLocalDateKey(d);
+}
 function normalizeDateValue(value){
   if(!value)return '';
-  const raw=String(value);
+  const raw=String(value).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
+  if(/^\d{4}-\d{2}-\d{2}T/.test(raw)){
+    const d=new Date(raw);
+    return Number.isNaN(d.getTime())?'':capvoLocalDateKey(d);
+  }
   if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
   const d=new Date(raw);
   if(Number.isNaN(d.getTime()))return '';
-  return d.toISOString().slice(0,10);
+  return capvoLocalDateKey(d);
 }
 function fixedExpenseCreatedAt(e){
   return e?.createdAt || e?.created_at || '';

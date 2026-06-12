@@ -675,7 +675,7 @@ async function saveCardPayment(){
   c.balance=capvoMoney(Math.max(0,oldBalance-basePayment));
   // Actual payment should not overwrite the planner's chosen monthly payment.
   c.chosenPay=oldChosenPay;
-  c.lastPaymentDate=new Date().toISOString().split('T')[0];
+  c.lastPaymentDate=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 
   const userId=getDataOwnerId?.();
   const tx={

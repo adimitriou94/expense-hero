@@ -219,7 +219,7 @@ function mobileTransactionMatchesFilter(e){
   const dateStr=String(e.date||'');
   if(!dateStr) return true;
 
-  const todayKey=typeof todayISO==='function'?todayISO():new Date().toISOString().slice(0,10);
+  const todayKey=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
   const today=new Date(todayKey+'T12:00:00');
   const itemDate=new Date(dateStr+'T12:00:00');
 

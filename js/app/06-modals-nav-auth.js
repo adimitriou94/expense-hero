@@ -82,7 +82,7 @@ function openModal(t){
     $('mDailyTitle').innerHTML='Νέο ημερήσιο έξοδο<button class="modal-close" onclick="closeM()">×</button>';
     $('fDN').value='';
     $('fDA').value='';
-    $('fDD').value=new Date().toISOString().split('T')[0];
+    $('fDD').value=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
     $('fDID').value='';
     $('btnDaily').textContent='Αποθήκευση';
 
@@ -481,7 +481,7 @@ function applyCreditCardPurchaseBalance(expense,oldExpense=null){
 function capvoAddMonths(dateStr,months){
   const d=dateStr?new Date(dateStr+'T00:00:00'):new Date();
   d.setMonth(d.getMonth()+months);
-  return d.toISOString().split('T')[0];
+  return typeof capvoLocalDateKey==='function'?capvoLocalDateKey(d):d.toLocaleDateString('en-CA');
 }
 
 async function persistCreditCardBalanceForPurchase(userId,expense){
@@ -570,7 +570,7 @@ async function saveCreditCardPurchaseSideEffects(userId,expense){
     if(dueDay>=1 && dueDay<=31){
       const d=new Date(firstDue+'T00:00:00');
       d.setDate(Math.min(dueDay,28));
-      firstDue=d.toISOString().split('T')[0];
+      firstDue=typeof capvoLocalDateKey==='function'?capvoLocalDateKey(d):d.toLocaleDateString('en-CA');
     }
 
     const plan={
@@ -805,7 +805,7 @@ async function saveDaily(){
   const n=$('fDN').value.trim();
   const a=parseFloat($('fDA').value);
   const id=$('fDID').value;
-  const date=$('fDD').value||new Date().toISOString().split('T')[0];
+  const date=$('fDD').value||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'));
   const category=$('fDC').value;
   const payEl=$('fDPay');
   let paymentSourceId=payEl?.value||'';
@@ -1033,7 +1033,7 @@ async function saveFixed(){
       name:n,
       amount:a,
       category,
-      createdAt:typeof todayISO==='function'?todayISO():new Date().toISOString().split('T')[0]
+      createdAt:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')
     };
 
     D.fixedExpenses.push(expense);
@@ -1570,7 +1570,7 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
         name:parsed.name || 'Έξοδο',
         amount:Number(parsed.amount)||0,
         category:parsed.category || 'Άλλο',
-        date:parsed.date||new Date().toISOString().split('T')[0],
+        date:parsed.date||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')),
         paymentSourceId:parsed.paymentSourceId||'',
         paymentSourceName:parsed.paymentSourceName||'',
         paymentSourceType:parsed.paymentSourceType||''
@@ -1580,7 +1580,7 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
         name:parsed.name || 'Έξοδο',
         amount:Number(parsed.amount)||0,
         category:parsed.category || 'Άλλο',
-        date:parsed.date||new Date().toISOString().split('T')[0],
+        date:parsed.date||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')),
         paymentSourceId:parsed.paymentSourceId||'',
         paymentSourceName:parsed.paymentSourceName||'',
         paymentSourceType:parsed.paymentSourceType||''
@@ -1626,7 +1626,7 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
   }
 }
 
-function doExport(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='expense_tracker_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(a.href)}
+function doExport(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='expense_tracker_'+(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'))+'.json';a.click();URL.revokeObjectURL(a.href)}
 
 function doImport(ev){
   const f=ev.target.files[0];
@@ -2881,13 +2881,38 @@ function capvoWizardDefaultState(){
     ticketAmount:'',
     voucherAmount:'',
     fixed:[
-      {name:'Ενοίκιο / Δάνειο',amount:'',category:'Σπίτι'},
+      {name:'Ενοίκιο / Δάνειο',amount:'',category:'Στέγαση'},
       {name:'Internet / Τηλέφωνο',amount:'',category:'Λογαριασμοί'},
       {name:'Συνδρομές',amount:'',category:'Συνδρομές'}
     ],
     savingsName:general.name||'Γενική αποταμίευση',
     savingsIcon:general.icon||'💰'
   };
+}
+
+
+const CAPVO_WIZARD_FIXED_CATEGORIES=['Στέγαση','Λογαριασμοί','Συνδρομές','Μεταφορά','Δάνεια','Υγεία','Τρόφιμα','Φαγητό έξω','Αποταμίευση','Άλλο'];
+
+function capvoWizardNormalizeFixedCategory(value){
+  const raw=String(value||'').trim();
+  const legacy={
+    'Σπίτι':'Στέγαση',
+    'Πάγια':'Άλλο',
+    'Λογαριασμός':'Λογαριασμοί',
+    'Συνδρομή':'Συνδρομές',
+    'Δάνειο':'Δάνεια',
+    'Φαγητό':'Φαγητό έξω'
+  };
+  const normalized=legacy[raw]||raw;
+  return CAPVO_WIZARD_FIXED_CATEGORIES.includes(normalized) ? normalized : 'Άλλο';
+}
+
+function capvoWizardFixedCategoryOptions(selected){
+  const current=capvoWizardNormalizeFixedCategory(selected||'Άλλο');
+  return CAPVO_WIZARD_FIXED_CATEGORIES.map(cat=>{
+    const icon=(typeof CEMO==='object' && CEMO && CEMO[cat]) ? CEMO[cat] : '📌';
+    return `<option value="${esc(cat)}" ${cat===current?'selected':''}>${icon} ${esc(cat)}</option>`;
+  }).join('');
 }
 
 function openCapvoOnboardingWizard(step){
@@ -3002,7 +3027,7 @@ function capvoOnboardingUpdateFromInputs(){
     s.fixed=(s.fixed||[]).map((row,idx)=>({
       name:(get(`obFixed${idx}Name`)?.value||row.name||'Πάγιο').trim(),
       amount:get(`obFixed${idx}Amount`)?.value||'',
-      category:row.category||'Πάγια'
+      category:capvoWizardNormalizeFixedCategory(get(`obFixed${idx}Category`)?.value||row.category||'Άλλο')
     }));
   }
   if(get('obSavingsName')){
@@ -3205,9 +3230,13 @@ function capvoOnboardingStepHtml(s){
   if(step===2){
     const rows=(s.fixed||[]).map((row,idx)=>{
       const iconClass=idx===0?'home':idx===1?'wifi':'repeat';
-      return `<label class="ob-pro-fixed-row">
+      const category=capvoWizardNormalizeFixedCategory(row.category||'Άλλο');
+      return `<label class="ob-pro-fixed-row ob-pro-fixed-row-with-category">
         <i class="premium-mini-icon ${iconClass}"></i>
-        <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Πάγιο">
+        <span class="ob-pro-fixed-main">
+          <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Πάγιο">
+          <select id="obFixed${idx}Category" class="ob-pro-fixed-category" aria-label="Κατηγορία παγίου">${capvoWizardFixedCategoryOptions(category)}</select>
+        </span>
         <input id="obFixed${idx}Amount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(row.amount||'')}" placeholder="0,00">
       </label>`;
     }).join('');
@@ -3358,6 +3387,9 @@ width:28px !important;height:28px !important;min-width:28px !important;border-ra
     #capvoOnboardingOverlay .ob-pro-inline-input span,#capvoOnboardingOverlay .ob-pro-inline-two small{font-size:11.5px !important;font-weight:850 !important;color:#6b7280 !important;}
     #capvoOnboardingOverlay input{font-family:inherit !important;}
     #capvoOnboardingOverlay .ob-pro-inline-input input,#capvoOnboardingOverlay .ob-pro-inline-two input,#capvoOnboardingOverlay .ob-pro-fixed-row input{width:100% !important;min-height:46px !important;border-radius:16px !important;border:1px solid #e7e8f0 !important;background:#fff !important;padding:0 13px !important;color:#111827 !important;font-size:14px !important;font-weight:850 !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-main{display:grid !important;gap:8px !important;min-width:0 !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-category{width:100% !important;min-height:38px !important;border-radius:14px !important;border:1px solid #e7e8f0 !important;background:#f8fafc !important;padding:0 11px !important;color:#374151 !important;font-size:12px !important;font-weight:850 !important;outline:none !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-category:focus{border-color:#1d4ed8 !important;box-shadow:0 0 0 3px rgba(37,99,235,.10) !important;background:#fff !important;}
     #capvoOnboardingOverlay .ob-pro-toggle-panel,#capvoOnboardingOverlay .ob-pro-optional-card{position:relative !important;border:1px solid #eceef6 !important;background:#f9faff !important;border-radius:18px !important;padding:14px !important;display:grid !important;gap:5px !important;}
     #capvoOnboardingOverlay .ob-pro-toggle-panel strong,#capvoOnboardingOverlay .ob-pro-optional-card > span{font-size:13px !important;color:#111827 !important;font-weight:900 !important;}
     #capvoOnboardingOverlay .ob-pro-toggle-panel small{font-size:12px !important;color:#6b7280 !important;font-weight:700 !important;padding-right:48px !important;}
@@ -3916,10 +3948,8 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     await capvoUpsertUserPreferencePatch({
       budget_cycle_type:s.cycleType||'fixed_day',
       budget_cycle_start_day:capvoClampCycleDay(s.cycleDay||1),
-      onboarding_completed:true,
-      onboarding_completed_at:new Date().toISOString(),
       onboarding_dismissed:false,
-      onboarding_step:'completed'
+      onboarding_step:String(Math.max(0,Math.min(5,Number(s.step)||0)))
     });
 
     const salaryObj={
@@ -3979,15 +4009,14 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
 
     for(const row of (s.fixed||[])){
       const amount=Number(String(row.amount||'').replace(',','.'))||0;
-      if(amount>0 && row.name){
-        const legacyOwner=String((typeof getLegacyOwnerId==='function' ? getLegacyOwnerId() : '') || ownerUserId).trim();
-        await supabaseClient.from('fixed_expenses').insert({
+      const name=String(row.name||'').trim();
+      if(amount>0 && name){
+        await saveFixedExpenseRow(ownerUserId,{
           id:gid(),
-          user_id:ownerUserId,
-          user_chat_id:legacyOwner,
-          name:row.name,
+          name,
           amount,
-          category:row.category||'Πάγια'
+          category:capvoWizardNormalizeFixedCategory(row.category||'Άλλο'),
+          createdAt:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')
         });
       }
     }
@@ -4010,6 +4039,15 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
       }).eq('user_id',ownerUserId).eq('id',general.id);
     }
 
+    await capvoUpsertUserPreferencePatch({
+      budget_cycle_type:s.cycleType||'fixed_day',
+      budget_cycle_start_day:capvoClampCycleDay(s.cycleDay||1),
+      onboarding_completed:true,
+      onboarding_completed_at:new Date().toISOString(),
+      onboarding_dismissed:false,
+      onboarding_step:'completed'
+    });
+
     await fetchAllData(ownerUserId);
     curM=curMK();
     ensM(curM);
@@ -4026,7 +4064,7 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
 
   }catch(e){
     console.error('finish onboarding failed',e);
-    showMiniToast('Δεν ολοκληρώθηκε η ρύθμιση. Έλεγξε το SQL του v1.1.7.','error');
+    showMiniToast('Δεν ολοκληρώθηκε η ρύθμιση. Δοκίμασε ξανά σε λίγο.','error');
     if(btn){btn.disabled=false;btn.textContent='Ολοκλήρωση';}
   }
 }

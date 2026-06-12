@@ -4,7 +4,7 @@
 
 // ===== ADD CENTER V1 — Quick / Αναλυτικό tabs =====
 function addCenterToday(){
-  return new Date().toISOString().split('T')[0];
+  return typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 }
 
 function fillAddCenterPaymentSources(selectedId=''){
@@ -441,7 +441,7 @@ let txCompleteDetailState = null;
 let addCenterEditState = null;
 
 function txCompleteTodayISO(){
-  return typeof todayISO==='function'?todayISO():new Date().toISOString().slice(0,10);
+  return typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 }
 
 function txCompleteDateLabel(dateStr){
@@ -450,7 +450,7 @@ function txCompleteDateLabel(dateStr){
   const today=txCompleteTodayISO();
   const y=new Date();
   y.setDate(y.getDate()-1);
-  const yesterday=y.toISOString().split('T')[0];
+  const yesterday=typeof capvoLocalDateKey==='function'?capvoLocalDateKey(y):y.toLocaleDateString('en-CA');
 
   if(dateStr===today)return 'Σήμερα';
   if(dateStr===yesterday)return 'Χθες';
@@ -1016,7 +1016,7 @@ async function saveAddCenterManualExpense(){
     const icon=(typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌';
     const amount=(typeof fmt==='function') ? fmt(parsed.amount) : `€${Number(parsed.amount||0).toFixed(2)}`;
     const payment=parsed.paymentSourceName || 'Κανονικό budget';
-    const today=typeof addCenterToday==='function' ? addCenterToday() : new Date().toISOString().split('T')[0];
+    const today=typeof addCenterToday==='function' ? addCenterToday() : (typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'));
 
     el.classList.add('visible','is-visible');
     el.classList.remove('invalid');
