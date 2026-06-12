@@ -270,20 +270,37 @@ function handleBudgetCycleDayInput(input){
   return cleaned;
 }
 
-function finalizeBudgetCycleDayInput(input,fallback){
+function capvoParseCycleDayInput(input){
   const el=typeof input==='string'?document.getElementById(input):input;
   const raw=String(el?.value ?? '').trim();
-  const base=raw==='' ? (fallback ?? D?.preferences?.budgetCycleStartDay ?? 1) : raw;
-  const day=capvoClampCycleDay(base);
+  if(raw==='')return null;
+  if(!/^\d{1,2}$/.test(raw))return null;
+  const n=Number(raw);
+  if(!Number.isFinite(n) || n<1 || n>31)return null;
+  return Math.round(n);
+}
+
+function capvoMarkCycleDayInputValidity(input,isValid){
+  const el=typeof input==='string'?document.getElementById(input):input;
+  if(!el)return;
+  el.classList.toggle('is-invalid',!isValid);
+  el.setAttribute('aria-invalid',isValid?'false':'true');
+}
+
+function finalizeBudgetCycleDayInput(input,fallback){
+  const el=typeof input==='string'?document.getElementById(input):input;
+  const day=capvoParseCycleDayInput(el);
+  if(day===null){
+    capvoMarkCycleDayInputValidity(el,false);
+    return null;
+  }
   if(el)el.value=String(day);
+  capvoMarkCycleDayInputValidity(el,true);
   return day;
 }
 
 function readBudgetCycleDayInput(input,fallback){
-  const el=typeof input==='string'?document.getElementById(input):input;
-  const raw=String(el?.value ?? '').trim();
-  if(raw==='')return null;
-  return capvoClampCycleDay(raw || fallback || 1);
+  return capvoParseCycleDayInput(input);
 }
 
 // CAPVO v1.1.7.11 compatibility helper.

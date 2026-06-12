@@ -3816,12 +3816,13 @@ function capvoOnboardingNext(){
 
   if(s.step===0 && s.cycleType==='fixed_day'){
     const dayInput=document.getElementById('obCycleDay');
-    if(dayInput && String(dayInput.value||'').trim()===''){
+    const parsedDay=finalizeBudgetCycleDayInput(dayInput,s.cycleDay||1);
+    if(parsedDay===null){
       showMiniToast('Βάλε ημέρα πληρωμής από 1 έως 31.','error');
-      dayInput.focus();
+      dayInput?.focus?.();
       return;
     }
-    s.cycleDay=finalizeBudgetCycleDayInput(dayInput,s.cycleDay||1);
+    s.cycleDay=parsedDay;
   }
 
   if(s.step===1){

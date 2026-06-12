@@ -689,14 +689,19 @@ function syncBudgetCycleTypeControls(type=getBudgetCycleType()){
 async function saveBudgetCyclePreference(inputId='settingsBudgetCycleDay'){
   const ownerUserId=getFinanceUserId();
   const input=$(inputId)||$('settingsBudgetCycleDay')||$('cycleManagerBudgetCycleDay');
-  const raw=input?String(input.value||'').trim():'1';
+  const raw=input?String(input.value||'').trim():'';
   const type=getSelectedBudgetCycleType();
-  if(type==='fixed_day' && raw===''){
-    showMiniToast('Βάλε ημέρα πληρωμής από 1 έως 31.','error');
-    input?.focus?.();
-    return;
+  let day=capvoClampCycleDay(D?.preferences?.budgetCycleStartDay || 1);
+  if(type==='fixed_day'){
+    day=finalizeBudgetCycleDayInput(input,D?.preferences?.budgetCycleStartDay || 1);
+    if(day===null){
+      showMiniToast('Βάλε ημέρα πληρωμής από 1 έως 31.','error');
+      input?.focus?.();
+      return;
+    }
+  }else if(raw!==''){
+    day=finalizeBudgetCycleDayInput(input,D?.preferences?.budgetCycleStartDay || 1) || day;
   }
-  const day=finalizeBudgetCycleDayInput(input,D?.preferences?.budgetCycleStartDay || 1);
   if(!ownerUserId){
     showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');
     return;
