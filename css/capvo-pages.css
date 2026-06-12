@@ -16838,3 +16838,52 @@ body.capvo-dashboard-to-wizard-transition #vDash{
     font-size:22px;
   }
 }
+
+/* ============================================================
+   CAPVO v1.8.6.16 — onboarding wizard mobile polish
+   ============================================================ */
+#capvoOnboardingOverlay .ob-pro-step-status{
+  margin:-5px 0 0 !important;
+  text-align:center !important;
+  color:#6d4df7 !important;
+  font-size:11.5px !important;
+  font-weight:950 !important;
+  letter-spacing:.01em !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row.ob-pro-fixed-row-with-category{
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) !important;
+  gap:10px !important;
+  align-items:start !important;
+  padding:10px !important;
+  border:1px solid rgba(226,232,240,.84) !important;
+  border-radius:20px !important;
+  background:rgba(255,255,255,.78) !important;
+  box-shadow:0 10px 22px rgba(15,23,42,.035) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-main{
+  display:grid !important;
+  gap:9px !important;
+  min-width:0 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-meta{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(88px,.72fr) !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+#capvoOnboardingOverlay .ob-pro-add-fixed{
+  border:1px dashed rgba(101,71,246,.35) !important;
+  background:rgba(101,71,246,.06) !important;
+  color:#6547f6 !important;
+  min-height:46px !important;
+  border-radius:16px !important;
+  font-family:inherit !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+@media (max-width:420px){
+  #capvoOnboardingOverlay .ob-pro-step small{display:none !important;}
+  #capvoOnboardingOverlay .ob-pro-stepper-six{padding:0 8px !important;}
+  #capvoOnboardingOverlay .ob-pro-fixed-meta{grid-template-columns:1fr 104px !important;}
+}

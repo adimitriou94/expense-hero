@@ -2951,8 +2951,53 @@ function capvoWizardEffectiveBudgetLimit(s){
   return salary;
 }
 
+function capvoWizardFixedAmountRaw(row){
+  return String(row?.amount ?? '').trim();
+}
+
+function capvoWizardFixedAmountValue(row){
+  const raw=capvoWizardFixedAmountRaw(row);
+  if(!raw)return 0;
+  return capvoWizardMoney(raw);
+}
+
+function capvoWizardFixedRowHasUserInput(row){
+  const rawAmount=capvoWizardFixedAmountRaw(row);
+  const rawName=String(row?.name ?? '').trim();
+  const rawCategory=String(row?.category ?? '').trim();
+  return !!rawAmount || !!rawName || !!rawCategory;
+}
+
+function capvoWizardFixedRowsForSave(s){
+  return (Array.isArray(s?.fixed)?s.fixed:[])
+    .map((row,idx)=>({
+      idx,
+      name:String(row?.name||'').trim(),
+      amountRaw:capvoWizardFixedAmountRaw(row),
+      amount:capvoWizardFixedAmountValue(row),
+      category:capvoWizardNormalizeFixedCategory(row?.category||'Άλλο')
+    }))
+    .filter(row=>row.amountRaw || row.amount>0 || row.name);
+}
+
 function capvoWizardFixedTotal(s){
-  return (Array.isArray(s?.fixed)?s.fixed:[]).reduce((sum,row)=>sum+capvoWizardMoney(row?.amount),0);
+  return capvoWizardFixedRowsForSave(s)
+    .filter(row=>row.amount>0)
+    .reduce((sum,row)=>sum+row.amount,0);
+}
+
+function capvoWizardMarkFixedRow(idx,field='amount'){
+  try{
+    const amount=document.getElementById(`obFixed${idx}Amount`);
+    const name=document.getElementById(`obFixed${idx}Name`);
+    const category=document.getElementById(`obFixed${idx}Category`);
+    [amount,name,category].forEach(el=>{ if(el)el.style.borderColor=''; });
+    const target=field==='name'?name:(field==='category'?category:amount);
+    if(target){
+      target.style.borderColor='var(--red)';
+      target.focus?.();
+    }
+  }catch(e){}
 }
 
 function capvoWizardValidateBudgetStep(s,{focus=true}={}){
@@ -2972,6 +3017,43 @@ function capvoWizardValidateBudgetStep(s,{focus=true}={}){
 }
 
 function capvoWizardValidateFixedStep(s,{focus=true}={}){
+  const rows=capvoWizardFixedRowsForSave(s);
+
+  for(const row of rows){
+    const original=(Array.isArray(s?.fixed)?s.fixed:[])[row.idx]||{};
+    const hasExplicitAmount=!!row.amountRaw;
+    const nameEdited=String(original?.name||'').trim();
+
+    if(!hasExplicitAmount && !nameEdited){
+      continue;
+    }
+
+    if(hasExplicitAmount){
+      const raw=String(row.amountRaw).replace(',','.');
+      const parsed=Number(raw);
+      if(!Number.isFinite(parsed)){
+        showMiniToast('Βάλε έγκυρο ποσό για το πάγιο ή άφησέ το κενό.','error');
+        if(focus)capvoWizardMarkFixedRow(row.idx,'amount');
+        return false;
+      }
+      if(parsed<=0){
+        showMiniToast('Το ποσό παγίου πρέπει να είναι μεγαλύτερο από 0 ή να μείνει κενό.','error');
+        if(focus)capvoWizardMarkFixedRow(row.idx,'amount');
+        return false;
+      }
+      if(parsed>999999){
+        showMiniToast('Το ποσό παγίου φαίνεται υπερβολικά μεγάλο. Έλεγξε την τιμή.','error');
+        if(focus)capvoWizardMarkFixedRow(row.idx,'amount');
+        return false;
+      }
+      if(!row.name){
+        showMiniToast('Βάλε όνομα για το πάγιο που έχει ποσό.','error');
+        if(focus)capvoWizardMarkFixedRow(row.idx,'name');
+        return false;
+      }
+    }
+  }
+
   const base=capvoWizardEffectiveBudgetLimit(s);
   const fixed=capvoWizardFixedTotal(s);
   if(base>0 && fixed>base){
@@ -2979,9 +3061,8 @@ function capvoWizardValidateFixedStep(s,{focus=true}={}){
     const fixedLabel=typeof fmt==='function'?fmt(fixed):`€${fixed.toFixed(2)}`;
     showMiniToast(`Τα πάγια (${fixedLabel}) ξεπερνούν το διαθέσιμο budget (${availableLabel}).`,'error');
     if(focus){
-      const rows=Array.isArray(s?.fixed)?s.fixed:[];
-      const idx=rows.findIndex(row=>capvoWizardMoney(row?.amount)>0);
-      document.getElementById(`obFixed${Math.max(0,idx)}Amount`)?.focus();
+      const firstPositive=rows.find(row=>row.amount>0);
+      capvoWizardMarkFixedRow(firstPositive?.idx ?? 0,'amount');
     }
     return false;
   }
@@ -3036,6 +3117,19 @@ function capvoOnboardingUpdateFromInputs(){
   }
   window.__capvoOnboarding=s;
   return s;
+}
+
+
+function capvoOnboardingAddFixedRow(){
+  const s=capvoOnboardingUpdateFromInputs();
+  s.fixed=Array.isArray(s.fixed)?s.fixed:[];
+  s.fixed.push({name:'',amount:'',category:'Άλλο'});
+  window.__capvoOnboarding=s;
+  renderCapvoOnboardingWizard();
+  setTimeout(()=>{
+    const idx=Math.max(0,s.fixed.length-1);
+    document.getElementById(`obFixed${idx}Name`)?.focus?.();
+  },40);
 }
 
 function capvoPersistOnboardingStep(step){
@@ -3131,6 +3225,7 @@ function capvoOnboardingStepHtml(s){
       <button type="button" class="ob-pro-skip ${step===5?'is-hidden':''}" onclick="skipCapvoOnboarding()">Παράλειψη</button>
     </div>
     ${stepper()}
+    <div class="ob-pro-step-status">Βήμα ${step+1} από ${steps.length} · ${esc(steps[step]?.label||'')}</div>
     <div class="ob-pro-copy">
       <h2>${title}</h2>
       <p>${subtitle}</p>
@@ -3231,14 +3326,16 @@ function capvoOnboardingStepHtml(s){
     const rows=(s.fixed||[]).map((row,idx)=>{
       const iconClass=idx===0?'home':idx===1?'wifi':'repeat';
       const category=capvoWizardNormalizeFixedCategory(row.category||'Άλλο');
-      return `<label class="ob-pro-fixed-row ob-pro-fixed-row-with-category">
-        <i class="premium-mini-icon ${iconClass}"></i>
-        <span class="ob-pro-fixed-main">
-          <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Πάγιο">
-          <select id="obFixed${idx}Category" class="ob-pro-fixed-category" aria-label="Κατηγορία παγίου">${capvoWizardFixedCategoryOptions(category)}</select>
-        </span>
-        <input id="obFixed${idx}Amount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(row.amount||'')}" placeholder="0,00">
-      </label>`;
+      return `<div class="ob-pro-fixed-row ob-pro-fixed-row-with-category">
+        <i class="premium-mini-icon ${iconClass}" aria-hidden="true"></i>
+        <div class="ob-pro-fixed-main">
+          <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Όνομα παγίου">
+          <div class="ob-pro-fixed-meta">
+            <select id="obFixed${idx}Category" class="ob-pro-fixed-category" aria-label="Κατηγορία παγίου">${capvoWizardFixedCategoryOptions(category)}</select>
+            <input id="obFixed${idx}Amount" class="ob-pro-fixed-amount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(row.amount||'')}" placeholder="Ποσό">
+          </div>
+        </div>
+      </div>`;
     }).join('');
     return shell(
       'Σταθερές δαπάνες',
@@ -3247,6 +3344,7 @@ function capvoOnboardingStepHtml(s){
       <div class="ob-pro-card fixed">
         <div class="ob-pro-tip">Πρόταση: ξεκίνα με 1–2 βασικές υποχρεώσεις και συμπλήρωσε τα υπόλοιπα αργότερα.</div>
         <div class="ob-pro-fixed-stack">${rows}</div>
+        <button type="button" class="ob-pro-add-fixed" onclick="capvoOnboardingAddFixedRow()">+ Προσθήκη άλλου παγίου</button>
       </div>`,
       triActions('Συνέχεια','capvoOnboardingNext()')
     );
@@ -3396,9 +3494,14 @@ width:28px !important;height:28px !important;min-width:28px !important;border-ra
     #capvoOnboardingOverlay .ob-pro-toggle-on{position:absolute !important;right:14px !important;top:16px !important;width:38px !important;height:22px !important;border-radius:999px !important;background:linear-gradient(135deg,#6547f6,#7c3aed) !important;box-shadow:0 8px 18px rgba(101,71,246,.22) !important;}
     #capvoOnboardingOverlay .ob-pro-toggle-on::after{content:'' !important;position:absolute !important;right:3px !important;top:3px !important;width:16px !important;height:16px !important;border-radius:999px !important;background:#fff !important;}
     #capvoOnboardingOverlay .ob-pro-inline-two label{display:grid !important;gap:6px !important;}
-    #capvoOnboardingOverlay .ob-pro-fixed-stack{display:grid !important;gap:10px !important;}
-    #capvoOnboardingOverlay .ob-pro-fixed-row{display:grid !important;grid-template-columns:34px 1fr 105px !important;gap:10px !important;align-items:center !important;}
-    #capvoOnboardingOverlay .ob-pro-fixed-row i{width:34px !important;height:34px !important;border-radius:12px !important;display:grid !important;place-items:center !important;background:#f4f5fb !important;font-style:normal !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-stack{display:grid !important;gap:12px !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-row{display:grid !important;grid-template-columns:34px minmax(0,1fr) !important;gap:10px !important;align-items:start !important;padding:10px !important;border:1px solid rgba(226,232,240,.84) !important;border-radius:20px !important;background:rgba(255,255,255,.78) !important;box-shadow:0 10px 22px rgba(15,23,42,.035) !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-row i{width:34px !important;height:34px !important;border-radius:12px !important;display:grid !important;place-items:center !important;background:#f4f5fb !important;font-style:normal !important;margin-top:5px !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-main{display:grid !important;gap:9px !important;min-width:0 !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-meta{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(88px,.72fr) !important;gap:8px !important;align-items:center !important;}
+    #capvoOnboardingOverlay .ob-pro-fixed-amount{text-align:left !important;}
+    #capvoOnboardingOverlay .ob-pro-add-fixed{border:1px dashed rgba(101,71,246,.35) !important;background:rgba(101,71,246,.06) !important;color:#6547f6 !important;min-height:46px !important;border-radius:16px !important;font-family:inherit !important;font-size:13px !important;font-weight:950 !important;}
+    #capvoOnboardingOverlay .ob-pro-step-status{margin:-5px 0 0 !important;text-align:center !important;color:#6d4df7 !important;font-size:11.5px !important;font-weight:950 !important;letter-spacing:.01em !important;}
     #capvoOnboardingOverlay .ob-pro-telegram-orb{width:86px !important;height:86px !important;margin:2px auto 6px !important;border-radius:999px !important;display:grid !important;place-items:center !important;background:linear-gradient(180deg,#f7f3ff,#ffffff) !important;color:#6d4df7 !important;font-size:42px !important;box-shadow:0 18px 40px rgba(101,71,246,.14) !important;}
     #capvoOnboardingOverlay .ob-pro-actions{display:grid !important;gap:10px !important;align-items:center !important;}
     #capvoOnboardingOverlay .ob-pro-actions.single,#capvoOnboardingOverlay .ob-pro-actions.telegram{grid-template-columns:1fr !important;}
@@ -3419,8 +3522,10 @@ width:28px !important;height:28px !important;min-width:28px !important;border-ra
       #capvoOnboardingOverlay .ob-pro-card-head{grid-template-columns:1fr !important;}
       #capvoOnboardingOverlay .ob-pro-hero-icon{display:none !important;}
       #capvoOnboardingOverlay .ob-pro-pill-grid.two,#capvoOnboardingOverlay .ob-pro-inline-two{grid-template-columns:1fr !important;}
+      #capvoOnboardingOverlay .ob-pro-step small{display:none !important;}
       #capvoOnboardingOverlay .ob-pro-fixed-row{grid-template-columns:34px 1fr !important;}
-      #capvoOnboardingOverlay .ob-pro-fixed-row input:last-of-type{grid-column:1/-1 !important;}
+      #capvoOnboardingOverlay .ob-pro-fixed-meta{grid-template-columns:1fr 104px !important;}
+      #capvoOnboardingOverlay .ob-pro-fixed-row input:last-of-type{grid-column:auto !important;}
       #capvoOnboardingOverlay .ob-pro-actions.three{grid-template-columns:1fr 1fr !important;}
       #capvoOnboardingOverlay .ob-pro-actions.three .ob-pro-link{grid-column:1/-1 !important;order:3 !important;}
     }
@@ -4007,15 +4112,13 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
       });
     }
 
-    for(const row of (s.fixed||[])){
-      const amount=Number(String(row.amount||'').replace(',','.'))||0;
-      const name=String(row.name||'').trim();
-      if(amount>0 && name){
+    for(const row of capvoWizardFixedRowsForSave(s)){
+      if(row.amount>0 && row.name){
         await saveFixedExpenseRow(ownerUserId,{
           id:gid(),
-          name,
-          amount,
-          category:capvoWizardNormalizeFixedCategory(row.category||'Άλλο'),
+          name:row.name,
+          amount:row.amount,
+          category:row.category,
           createdAt:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')
         });
       }
