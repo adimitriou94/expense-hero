@@ -31,14 +31,35 @@ function reportsItemFromExpense(e,type='daily'){
   };
 }
 
-function reportsFixedItems(){
-  return (D.fixedExpenses||[]).map(e=>({
-    name:e.name||'Πάγιο',
-    category:e.category||'Πάγια',
-    amount:Number(e.amount)||0,
-    type:'fixed',
-    date:''
-  }));
+function reportsFixedItems(monthKey){
+  // v1.9.6.2: paid scheduled fixed expenses are real report items.
+  // Filter out reversed rows and keep historical month/cycle filtering safe.
+  const range=monthKey?reportsMonthRange(monthKey):null;
+  const startKey=range?capvoDateKey(range.start):'';
+  const endKey=range?capvoDateKey(range.end):'';
+
+  return (Array.isArray(D.fixedExpensePayments)?D.fixedExpensePayments:[])
+    .filter(p=>String(p.status||'paid')!=='reversed')
+    .map(p=>{
+      const fx=typeof capvoFixedExpenseById==='function'
+        ? capvoFixedExpenseById(p.fixedExpenseId||p.fixed_expense_id)
+        : (D.fixedExpenses||[]).find(e=>String(e.id)===String(p.fixedExpenseId||p.fixed_expense_id));
+      const date=normalizeDateValue(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||'');
+      if(!date)return null;
+      if(startKey && date<startKey)return null;
+      if(endKey && date>endKey)return null;
+      return {
+        id:p.id||'',
+        name:fx?.name||'Πληρωμή παγίου',
+        category:fx?.category||'Πάγια',
+        amount:Number(p.amount)||0,
+        type:'fixed',
+        date,
+        paymentSourceName:(typeof capvoWalletById==='function'?capvoWalletById(p.walletId||p.wallet_id)?.name:'')||'Wallet',
+        affectsCashBudget:true
+      };
+    })
+    .filter(Boolean);
 }
 
 function reportsActualCardPaymentsInRange(start,end){
@@ -73,8 +94,13 @@ function reportsCurrentCycleBudgetItems(includeFixed=true){
     ? getCurrentCycleBudgetMovements()
     : (typeof getCurrentCycleBudgetExpenses==='function' ? getCurrentCycleBudgetExpenses() : getCurrentCycleDailyExpenses());
 
-  const daily=(movements||[]).map(e=>reportsItemFromExpense(e,e.isCardPayment?'card_payment':'daily'));
-  return [...(includeFixed?reportsFixedItems():[]),...daily].filter(e=>Number(e.amount)!==0);
+  const items=(movements||[])
+    .filter(e=>includeFixed || !(e.isFixedExpense || e.isFixedExpensePayment))
+    .map(e=>reportsItemFromExpense(
+      e,
+      e.isFixedExpensePayment?'fixed':(e.isCardPayment?'card_payment':'daily')
+    ));
+  return items.filter(e=>Number(e.amount)!==0);
 }
 
 function reportsMonthBudgetItems(monthKey,includeFixed=true){
@@ -86,7 +112,7 @@ function reportsMonthBudgetItems(monthKey,includeFixed=true){
     .map(e=>reportsItemFromExpense(e,'daily'));
 
   const cardPayments=range?reportsActualCardPaymentsInRange(range.start,range.end):[];
-  return [...(includeFixed?reportsFixedItems():[]),...cardPayments,...daily].filter(e=>Number(e.amount)!==0);
+  return [...(includeFixed?reportsFixedItems(monthKey):[]),...cardPayments,...daily].filter(e=>Number(e.amount)!==0);
 }
 
 function reportsAllMonthlyItems(monthKey){
@@ -97,7 +123,9 @@ function reportsAllMonthlyItems(monthKey){
 }
 
 function reportsCurrentMovementItems(){
-  return reportsCurrentCycleBudgetItems(false);
+  // v1.9.6.2: fixed items are now actual payments, so they belong in the
+  // daily movement chart as real budget-impact movements.
+  return reportsCurrentCycleBudgetItems(true);
 }
 
 function reportsMonthDailyTotal(monthKey){

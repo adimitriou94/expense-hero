@@ -424,17 +424,17 @@ function capvoAdvisorBuildModel(){
   const cardDebt=capvoAdvisorCardDebt();
   const cardLimit=capvoAdvisorCardLimit();
   const cardUsagePct=capvoAdvisorPercent(cardDebt,cardLimit);
-  const debtFixed=(D?.fixedExpenses||[])
+  const debtFixed=(fixedRows||[])
     .filter(e=>String(e.category||'')==='Δάνεια')
     .reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const debtPayments=capvoMoney(cardPayments+debtFixed);
 
   const needsCats=['Τρόφιμα','Μεταφορά','Στέγαση','Λογαριασμοί','Υγεία'];
   const wantsCats=['Καφέδες','Ψυχαγωγία','Φαγητό έξω','Ρούχα','Συνδρομές','Άλλο'];
-  const fixedNeeds=(D?.fixedExpenses||[])
+  const fixedNeeds=(fixedRows||[])
     .filter(e=>needsCats.includes(e.category))
     .reduce((sum,e)=>sum+(Number(e.amount)||0),0);
-  const fixedWants=(D?.fixedExpenses||[])
+  const fixedWants=(fixedRows||[])
     .filter(e=>wantsCats.includes(e.category))
     .reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const variableNeeds=(typeof getCurrentCycleBudgetExpenses==='function'?getCurrentCycleBudgetExpenses():[])

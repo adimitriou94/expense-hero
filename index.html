@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.8.6.19">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.9.8.3">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.8.6.19">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.8.6.19">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.8.6.19">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.8.6.19">
-  <link rel="manifest" href="manifest.webmanifest?v=1.8.6.19">
-  <!-- <link rel="stylesheet" href="style.css?v=1.8.6.19"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.9.8.3">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.9.8.3">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.9.8.3">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.9.8.3">
+  <link rel="manifest" href="manifest.webmanifest?v=1.9.8.3">
+  <!-- <link rel="stylesheet" href="style.css?v=1.9.8.3"> -->
 </head>
 
 <body class="auth-pending">
@@ -60,7 +60,7 @@
       <div class="capvo-feature-stack capvo-feature-stack-premium" aria-label="Βασικά χαρακτηριστικά">
         <div class="capvo-feature-line">
           <span class="capvo-feature-icon" aria-hidden="true">↻</span>
-          <span>Οικονομικός κύκλος μέχρι την πληρωμή</span>
+          <span>Μηνιαία περίοδος μέχρι την πληρωμή</span>
         </div>
         <div class="capvo-feature-line">
           <span class="capvo-feature-icon" aria-hidden="true">✎</span>
@@ -203,6 +203,11 @@
       <span>Έσοδα</span>
     </button>
 
+    <button class="desktop-nav-btn nav-btn" data-v="vWallets" onclick="go('vWallets',this)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h2"/><path d="M2 10h20"/></svg>
+      <span>Λογαριασμοί</span>
+    </button>
+
     <button class="desktop-nav-btn nav-btn" data-v="vCards" onclick="go('vCards',this)">
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       <span>Κάρτες & Οφειλές</span>
@@ -270,6 +275,11 @@
           <div class="hero-glow"></div>
           <div class="modern-hero-pattern"></div>
 
+          <button type="button" class="capvo-action-center-btn" id="capvoActionCenterBtn" onclick="openCapvoActionCenter()" aria-label="Κέντρο ενεργειών" style="position:absolute !important; top:18px !important; right:18px !important; left:auto !important; bottom:auto !important; width:42px !important; height:42px !important; border-radius:16px !important;">
+            <span class="capvo-action-center-icon">🔔</span>
+            <span class="capvo-action-center-badge" id="capvoActionCenterBadge" style="display:none">0</span>
+          </button>
+
           <div class="modern-hero-header">
             <div>
               <div class="eyebrow">Υπόλοιπο μήνα</div>
@@ -304,24 +314,52 @@
           </div>
         </div>
 
-        <section class="dashboard-cycle-summary-card" id="dashboardCycleSummaryCard" aria-label="Οικονομικός κύκλος">
-          <div class="dashboard-cycle-summary-main">
-            <span class="dashboard-cycle-kicker">Οικονομικός κύκλος</span>
-            <strong id="dashboardCycleLabel">—</strong>
-            <p id="dashboardCycleMeta">—</p>
+        <section class="dashboard-cycle-summary-card salary-state-upcoming" id="dashboardCycleSummaryCard" aria-label="Μηνιαία περίοδος">
+          <div class="dashboard-cycle-summary-head">
+            <div class="dashboard-cycle-summary-main">
+              <span class="dashboard-cycle-kicker">Μηνιαία περίοδος</span>
+              <strong id="dashboardCycleLabel">—</strong>
+              <p id="dashboardCycleMeta">—</p>
+            </div>
+            <span class="dashboard-salary-badge" id="dashboardSalaryBadge">ΕΠΟΜΕΝΟΣ</span>
           </div>
+
+          <div class="dashboard-salary-status-card" id="dashboardSalaryStatusCard">
+            <div class="dashboard-salary-status-icon" id="dashboardSalaryIcon" aria-hidden="true">🕒</div>
+            <div class="dashboard-salary-status-copy">
+              <strong id="dashboardSalaryTitle">Επόμενος μισθός</strong>
+              <p id="dashboardSalarySubtitle">—</p>
+            </div>
+          </div>
+
           <div class="dashboard-cycle-summary-actions">
-            <button type="button" class="dashboard-cycle-paid-btn" id="dashboardPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
-            <button type="button" class="dashboard-cycle-manage-btn" onclick="openBudgetCycleManager()">Διαχείριση</button>
+            <button type="button" class="dashboard-cycle-paid-btn" id="dashboardPaidTodayBtn" onclick="createPaidTodayCycle()">Καταχώρηση μισθού</button>
+            <button type="button" class="dashboard-cycle-manage-btn" id="dashboardCycleManageBtn" onclick="openBudgetCycleManager()">Διαχείριση</button>
+          </div>
+        </section>
+
+        <!-- WALLET CARDS -->
+        <section class="capvo-wallets-section" id="dashWalletsSection" aria-label="Χρήματα και λογαριασμοί">
+          <div class="capvo-wallets-header">
+            <div>
+              <h3>Τα χρήματά μου</h3>
+              <p id="dashWalletsTotalLabel">Πηγές, restricted και κάρτες</p>
+            </div>
+            <button type="button" class="capvo-wallets-manage-btn" onclick="openWalletsPage()">
+              Διαχείριση
+            </button>
+          </div>
+          <div class="capvo-wallet-cards-scroll" id="dashWalletCards">
+            <!-- rendered by renderWalletCards() -->
           </div>
         </section>
 
         <!-- MOBILE DASHBOARD INSIGHTS -->
-        <section class="mobile-dashboard-insights" aria-label="Κατηγορίες κύκλου">
+        <section class="mobile-dashboard-insights" aria-label="Κατηγορίες μήνα">
           <div class="mobile-insights-head">
             <div>
-              <h3>Κατηγορίες (Κύκλος)</h3>
-              <p>Πού πήγαν τα ημερήσια έξοδα.</p>
+              <h3>Κατηγορίες μήνα</h3>
+              <p>Πού πήγαν τα έξοδα της μηνιαίας περιόδου.</p>
             </div>
             <button type="button" onclick="go('vStats',document.querySelector('[data-v=vStats]'))">
               Βλέπε περισσότερα ›
@@ -421,11 +459,6 @@
             <span class="stat-chevron" aria-hidden="true">›</span>
           </button>
         </div>
-
-        <section class="bento-card payment-sources-widget modern-payment-widget">
-          <div class="section-title">🎫 Voucher / Ticket</div>
-          <div id="paymentSourcesSummary" class="payment-sources-grid"></div>
-        </section>
       </aside>
 
       <!-- DASHBOARD PREVIEW -->
@@ -436,7 +469,7 @@
               <div class="section-dot teal-dot"></div>
               <div>
                 <div class="section-title">Τελευταίες κινήσεις</div>
-                <div class="section-subtitle">Οι 5 πιο πρόσφατες κινήσεις του οικονομικού κύκλου</div>
+                <div class="section-subtitle">Οι 5 πιο πρόσφατες κινήσεις του μηνιαίας περιόδου</div>
               </div>
             </div>
 
@@ -459,7 +492,7 @@
         <div>
           <div class="eyebrow">Transactions</div>
           <h2>Κινήσεις</h2>
-          <p>Όλες οι κινήσεις του οικονομικού κύκλου, με καθαρή επίδραση στο budget.</p>
+          <p>Όλες οι κινήσεις του μηνιαίας περιόδου, με καθαρή επίδραση στο budget.</p>
         </div>
 
         <button type="button" class="transactions-add-btn" onclick="(window.openAddCenterSheet?openAddCenterSheet('manual'):openModal('daily'))">
@@ -510,7 +543,7 @@
         <div>
           <div class="eyebrow">Recurring</div>
           <h2>Πάγια & Υποχρεώσεις</h2>
-          <p>Σταθερά έξοδα, συνδρομές και μηνιαίες υποχρεώσεις σε ξεχωριστό σημείο.</p>
+          <p>Ημερολόγιο πληρωμών για πάγια, συνδρομές και υποχρεώσεις που έρχονται.</p>
         </div>
 
       </div>
@@ -520,9 +553,9 @@
           <div class="section-title-wrap">
             <div class="section-dot red-dot"></div>
             <div>
-              <div class="section-title">Σταθερές υποχρεώσεις</div>
+              <div class="section-title">Ημερολόγιο υποχρεώσεων</div>
               <div class="section-subtitle">
-                <span class="global-badge">🔒 Επαναλαμβανόμενα</span>
+                <span class="global-badge">🗓️ Calendar view</span>
                 <span id="cFixed"></span>
               </div>
             </div>
@@ -536,8 +569,8 @@
 
       <section class="bento-card recurring-info-card">
         <span>Tip</span>
-        <strong>Οι ημερήσιες κινήσεις μένουν καθαρές.</strong>
-        <p>Τα πάγια υπολογίζονται κανονικά στο budget και στο υπόλοιπο του μήνα, αλλά εμφανίζονται εδώ για να μην μπερδεύονται με τις καθημερινές αγορές.</p>
+        <strong>Το ημερολόγιο είναι μόνο προβολή.</strong>
+        <p>Τα πάγια δεν αφαιρούν χρήματα επειδή υπάρχουν. Το wallet μειώνεται μόνο όταν πατήσεις Πληρώθηκε και καταγραφεί actual πληρωμή.</p>
       </section>
 
     </section>
@@ -550,8 +583,8 @@
     <div class="page-hero bento-card capvo-branded-hero capvo-hero-income">
       <div>
         <div class="eyebrow">INCOME</div>
-        <h2>Έσοδα & Πηγές εισοδήματος</h2>
-        <p>Δες από πού έρχεται το εισόδημά σου και ποιο ποσό μπαίνει πραγματικά στο μηνιαίο budget.</p>
+        <h2>Έξτρα έσοδα</h2>
+        <p>Ο βασικός μισθός ορίζεται στον primary λογαριασμό. Εδώ βάζεις bonus, δώρα, ενοίκια, μερίσματα και άλλα ποσά που μπαίνουν σε συγκεκριμένο wallet.</p>
       </div>
 
       <button class="section-add primary-add" onclick="openModal('incomeSource')">
@@ -561,17 +594,17 @@
 
     <div class="income-summary-grid">
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Συνολικό εισόδημα</div>
+        <div class="stat-label">Σύνολο έξτρα εσόδων</div>
         <div class="stat-value teal" id="incomeTotalBox">€0</div>
       </div>
 
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Διαθέσιμο budget</div>
+        <div class="stat-label">Τρέχον budget wallets</div>
         <div class="stat-value blue" id="incomeBudgetBox">€0</div>
       </div>
 
       <div class="bento-card income-summary-card">
-        <div class="stat-label">Εκτός χρήσης</div>
+        <div class="stat-label">Προς εκτός budget</div>
         <div class="stat-value amber" id="incomeSavingsBox">€0</div>
       </div>
 
@@ -582,8 +615,8 @@
     </div>
 
     <div class="chart-container">
-      <div class="chart-title">Κατανομή εισοδήματος</div>
-      <p class="income-chart-subtitle">Δες τι μπαίνει στο budget και τι είναι περιορισμένης χρήσης.</p>
+      <div class="chart-title">Κατανομή έξτρα εσόδων</div>
+      <p class="income-chart-subtitle">Τα έσοδα καταλήγουν σε wallet. Το αν επηρεάζουν budget εξαρτάται από τον προορισμό.</p>
 
       <div class="donut-layout">
         <div class="donut-chart" id="incomeDonut">
@@ -613,7 +646,7 @@
         <div class="section-title-wrap">
           <div class="section-dot teal-dot"></div>
           <div>
-            <div class="section-title">Πηγές εισοδήματος</div>
+            <div class="section-title">Έξτρα εισοδήματα</div>
             <div class="section-subtitle" id="incomeCount">0 εγγραφές</div>
           </div>
         </div>
@@ -675,7 +708,7 @@
       <section class="reports-card reports-snapshot-card">
         <div class="reports-section-head">
           <span class="reports-section-index">1.</span>
-          <h3>Εικόνα κύκλου</h3>
+          <h3>Εικόνα μήνα</h3>
         </div>
 
         <div class="reports-kpi-grid">
@@ -761,7 +794,7 @@
         <div>
           <div class="eyebrow">HISTORY</div>
           <h2>Αρχείο κύκλων</h2>
-          <p>Δες οικονομικούς κύκλους, πρόωρες πληρωμές και μηνιαίο ιστορικό.</p>
+          <p>Δες οικονομικούς μήνας, πρόωρες πληρωμές και μηνιαίο ιστορικό.</p>
         </div>
       </div>
 
@@ -811,7 +844,7 @@
         <div class="settings-card-head">
           <div class="settings-card-icon">🗓️</div>
           <div>
-            <span class="settings-kicker">Οικονομικός κύκλος</span>
+            <span class="settings-kicker">Μηνιαία περίοδος</span>
             <h3>Κύκλος budget & μισθοδοσία</h3>
             <p>Δες τον τρέχοντα κύκλο, την ημέρα πληρωμής, το βασικό budget και την πρόωρη πληρωμή από μία καθαρή οθόνη.</p>
           </div>
@@ -819,7 +852,7 @@
 
         <div class="settings-info-list compact">
           <div class="settings-info-row">
-            <span>Τρέχων κύκλος</span>
+            <span>Τρέχουσα περίοδος</span>
             <strong id="settingsBudgetCycleLabel">—</strong>
           </div>
           <div class="settings-info-row">
@@ -827,7 +860,7 @@
             <strong id="settingsBudgetCycleRuleLabel">—</strong>
           </div>
           <div class="settings-info-row">
-            <span>Βασικό budget</span>
+            <span>Primary wallet / μισθός</span>
             <strong id="settingsPrimaryIncomeLabel">—</strong>
           </div>
           <div class="settings-info-row">
@@ -836,7 +869,7 @@
           </div>
         </div>
 
-        <button type="button" class="settings-primary-action settings-cycle-open-manager" onclick="openBudgetCycleManager()">Διαχείριση οικονομικού κύκλου</button>
+        <button type="button" class="settings-primary-action settings-cycle-open-manager" onclick="openBudgetCycleManager()">Διαχείριση μηνιαίας περιόδου</button>
       </section>
 
       <section class="settings-section-card settings-telegram-card">
@@ -980,6 +1013,101 @@
 
 
   <!-- SAVINGS / GOALS -->
+  <!-- WALLETS PAGE -->
+  <main class="view" id="vWallets">
+    <section class="page-grid wallets-page wallets-page-v2">
+
+      <div class="page-hero bento-card capvo-branded-hero capvo-hero-wallets compact-wallets-hero wallets-hero-v2">
+        <div>
+          <div class="eyebrow">ΛΟΓΑΡΙΑΣΜΟΙ</div>
+          <h2>Οι λογαριασμοί μου</h2>
+          <p>Τράπεζα, μετρητά και prepaid — όλα σε μία καθαρή εικόνα.</p>
+        </div>
+        <button type="button" class="section-add primary-add" onclick="openAddWalletSheet()">
+          + Νέος
+        </button>
+      </div>
+
+      <div class="wallets-summary-grid">
+        <div class="bento-card income-summary-card wallets-total-card" id="walletsTotalCard">
+          <div class="wallets-summary-icon">💳</div>
+          <div class="stat-label">Συνολικό διαθέσιμο</div>
+          <div class="stat-value teal wallets-total-amount" id="walletsTotalAmount">€0,00</div>
+          <div class="wallets-total-sub" id="walletsTotalSub">—</div>
+        </div>
+
+        <div class="bento-card income-summary-card wallets-mini-stat">
+          <div class="wallets-summary-icon blue">🏦</div>
+          <div class="stat-label">Λογαριασμοί</div>
+          <div class="stat-value blue" id="walletsCountAmount">0</div>
+          <div class="wallets-total-sub" id="walletsCountSub">ενεργοί</div>
+        </div>
+
+        <div class="bento-card income-summary-card wallets-mini-stat">
+          <div class="wallets-summary-icon amber">💵</div>
+          <div class="stat-label">Budget sources</div>
+          <div class="stat-value amber" id="walletsBudgetAmount">€0,00</div>
+          <div class="wallets-total-sub">στο διαθέσιμο</div>
+        </div>
+
+        <div class="bento-card income-summary-card wallets-mini-stat">
+          <div class="wallets-summary-icon green">✅</div>
+          <div class="stat-label">Default</div>
+          <div class="stat-value green" id="walletsDefaultName">—</div>
+          <div class="wallets-total-sub">προεπιλογή</div>
+        </div>
+      </div>
+
+      <section class="income-savings-shortcut bento-card wallets-info-card" onclick="openAddWalletSheet()">
+        <div>
+          <span class="income-savings-shortcut-icon">🏦</span>
+        </div>
+        <div>
+          <strong>Πηγές budget & πορτοφόλια</strong>
+          <small>Κράτα ξεχωριστά τράπεζα, μετρητά και ψηφιακά πορτοφόλια ώστε το dashboard να δείχνει καθαρά τα διαθέσιμα.</small>
+        </div>
+        <em>Νέος ›</em>
+      </section>
+
+      <section class="bento-card list-widget wallets-list-card">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-dot teal-dot"></div>
+            <div>
+              <div class="section-title">Λογαριασμοί</div>
+              <div class="section-subtitle" id="walletsListCount">0 εγγραφές</div>
+            </div>
+          </div>
+
+          <button class="section-add" onclick="openAddWalletSheet()">+ Προσθήκη</button>
+        </div>
+
+        <div id="walletsListContainer">
+          <!-- rendered by renderWalletsPage() -->
+        </div>
+      </section>
+
+      <section class="bento-card list-widget wallets-transfer-card" id="walletsTransferSection">
+        <div class="section-header wallets-transfer-header">
+          <div class="section-title-wrap">
+            <div class="section-dot blue-dot"></div>
+            <div>
+              <div class="section-title">Μεταφορές</div>
+              <div class="section-subtitle">Μεταξύ λογαριασμών σου</div>
+            </div>
+          </div>
+
+          <button class="section-add" onclick="openWalletTransferSheet()">+ Μεταφορά</button>
+        </div>
+
+        <div id="walletsTransferHistory">
+          <!-- rendered by renderWalletTransferHistory() -->
+        </div>
+      </section>
+
+    </section>
+  </main>
+
   <main class="view" id="vSavings">
     <section class="page-grid savings-page">
       <div class="page-hero bento-card capvo-branded-hero capvo-hero-savings">
@@ -1017,6 +1145,12 @@
         <button class="more-menu-item" onclick="go('vCards',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">💳</span>
           <span><strong>Κάρτες & Οφειλές</strong><small>Πιστωτικές, δάνεια και πλάνα δόσεων</small></span>
+          <em>›</em>
+        </button>
+
+        <button class="more-menu-item" onclick="openWalletsPage()">
+          <span class="more-menu-icon">🏦</span>
+          <span><strong>Λογαριασμοί</strong><small>Τράπεζα, μετρητά, prepaid — όλα τα υπόλοιπά σου</small></span>
           <em>›</em>
         </button>
 
@@ -1403,7 +1537,7 @@
 <div class="modal-overlay" id="mFixed">
   <div class="modal">
     <h2 id="mFixedTitle">🔒 Πάγιο έξοδο<button class="modal-close" onclick="closeM()">×</button></h2>
-    <p class="modal-note">Ισχύει σε <strong>κάθε μήνα</strong> αυτόματα.</p>
+    <p class="modal-note">Προγραμματισμένη υποχρέωση. Μειώνει wallet μόνο όταν πατήσεις <strong>Πληρώθηκε</strong>.</p>
 
     <div class="form-group">
       <label>Περιγραφή</label>
@@ -1427,8 +1561,63 @@
       </div>
     </div>
 
+    <div class="fixed-schedule-panel">
+      <div class="fixed-schedule-head">
+        <strong>Πρόγραμμα πληρωμής</strong>
+        <span>Το πάγιο δεν αφαιρείται αυτόματα. Θα μειώνει wallet όταν πατάς “Πληρώθηκε”.</span>
+      </div>
+
+      <div class="form-row fixed-recurring-row" id="fixedRecurringRow">
+        <div class="form-group">
+          <label>Συχνότητα</label>
+          <select id="fFSchedule" onchange="capvoSyncFixedScheduleUI({fromSchedule:true})">
+            <option value="monthly">Μηνιαία</option>
+            <option value="weekly">Εβδομαδιαία</option>
+            <option value="yearly">Ετήσια</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="fixedDueDayGroup">
+          <label id="fixedDueDayLabel">Ημέρα μήνα</label>
+          <input type="number" id="fFDueDay" placeholder="π.χ. 17" min="1" max="31" step="1" oninput="capvoSyncFixedScheduleUI({fromDueDay:true})" onchange="capvoSyncFixedScheduleUI({fromDueDay:true})">
+          <small class="fixed-field-help" id="fixedDueDayHelp">π.χ. 17 → εμφανίζεται κάθε μήνα στις 17.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="fixedNextDueLabel">Επόμενη προγραμματισμένη εμφάνιση</label>
+        <input type="text" id="fFNextDueDate" inputmode="numeric" placeholder="π.χ. 19/6/2026" onblur="capvoNormalizeFixedNextDueDateInput({syncDueDay:true})">
+        <small class="fixed-field-help" id="fixedNextDueHelp">Ελληνική μορφή ημερομηνίας. Αν αλλάξεις την ημερομηνία, συγχρονίζεται και η ημέρα μήνα.</small>
+      </div>
+
+      <div class="form-group">
+        <label>Προεπιλεγμένο wallet πληρωμής</label>
+        <select id="fFWallet"></select>
+        <small class="fixed-field-help">Θα προεπιλέγεται όταν πατήσεις “Πληρώθηκε”, αλλά μπορείς να αλλάξεις wallet εκείνη τη στιγμή.</small>
+      </div>
+
+      <label class="fixed-autopay-row">
+        <input type="checkbox" id="fFAutoPay" disabled>
+        <span>
+          <strong>Auto-pay αργότερα</strong>
+          <small>Για τώρα η πληρωμή γίνεται χειροκίνητα από το κουμπί “Πληρώθηκε”.</small>
+        </span>
+      </label>
+    </div>
+
     <input type="hidden" id="fFID">
+
+    <div class="fixed-edit-history-notice" id="fixedEditHistoryNotice" hidden>
+      <strong>Προσοχή στις αλλαγές</strong>
+      <span>Οι αλλαγές επηρεάζουν μόνο τις επόμενες προγραμματισμένες πληρωμές. Οι ήδη πληρωμένες κινήσεις δεν αλλάζουν.</span>
+    </div>
+
     <button class="btn btn-primary btn-block" id="btnFixed" onclick="saveFixed()">Αποθήκευση</button>
+
+    <div class="fixed-edit-danger-zone" id="fixedEditDangerZone" hidden>
+      <button type="button" class="fixed-delete-action" onclick="capvoConfirmDeleteFixedExpenseFromModal()">Διαγραφή παγίου</button>
+      <small>Διαγράφει το πάγιο μόνο από τις μελλοντικές υποχρεώσεις. Το ιστορικό πληρωμών μένει.</small>
+    </div>
 
     <div class="fixed-category-popover" id="fixedCategoryPopover" aria-hidden="true">
       <div class="fixed-category-popover-head">
@@ -1468,6 +1657,20 @@
 
     <div class="debt-context-note" id="ccContextNote">
       Οι αγορές με πιστωτική και οι άτοκες δόσεις καταχωρούνται από την Προσθήκη εξόδου, επιλέγοντας την κάρτα ως τρόπο πληρωμής.
+    </div>
+
+    <div class="debt-edit-preview" id="ccEditPreview" aria-live="polite">
+      <div class="debt-edit-preview-copy">
+        <span id="ccPreviewType">Πιστωτική κάρτα</span>
+        <strong id="ccPreviewName">Νέα κάρτα</strong>
+        <small id="ccPreviewMeta">Χρέος €0,00 · Όριο €0,00</small>
+      </div>
+      <div class="debt-edit-preview-amount">
+        <em>Οφειλή</em>
+        <strong id="ccPreviewDebt">€0,00</strong>
+        <small id="ccPreviewAvailable">Διαθέσιμο €0,00</small>
+      </div>
+      <div class="debt-edit-preview-progress"><i id="ccPreviewProgress"></i></div>
     </div>
 
     <div class="debt-modal-form-card">
@@ -1562,33 +1765,43 @@
     <div class="income-modal-hero income-wizard-hero">
       <div class="income-modal-icon" id="incomeWizardIcon">💰</div>
       <div class="income-modal-heading">
-        <div class="income-modal-kicker" id="incomeModalKicker">Πηγή εισοδήματος</div>
-        <h2 id="mIncomeSourceTitle">Βασικό budget κύκλου</h2>
-        <p id="incomeModalIntro">Βάλε το ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.</p>
+        <div class="income-modal-kicker" id="incomeModalKicker">Έξτρα εισόδημα</div>
+        <h2 id="mIncomeSourceTitle">Προσθήκη έξτρα εσόδου</h2>
+        <p id="incomeModalIntro">Ο μισθός ορίζεται στον primary λογαριασμό. Εδώ καταχωρείς bonus, δώρα, ενοίκια, μερίσματα και άλλα έξτρα έσοδα.</p>
       </div>
     </div>
 
     <div class="income-modal-quick-presets income-wizard-presets" id="incomeQuickPresets" aria-label="Γρήγορες επιλογές εισοδήματος">
-      <button type="button" data-income-preset="salary" onclick="applyIncomePreset('salary')">💼 Budget κύκλου</button>
-      <button type="button" data-income-preset="other" onclick="applyIncomePreset('other')">🏠 Άλλο εισόδημα</button>
+      <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">🎁 Bonus / έκτακτο</button>
+      <button type="button" data-income-preset="rent" onclick="applyIncomePreset('rent')">🏠 Ενοίκιο</button>
+      <button type="button" data-income-preset="dividends" onclick="applyIncomePreset('dividends')">📈 Μερίσματα</button>
       <button type="button" data-income-preset="benefit" onclick="applyIncomePreset('benefit')">🎫 Ticket / Voucher</button>
-      <button type="button" data-income-preset="extra" onclick="applyIncomePreset('extra')">✨ Έκτακτο ποσό</button>
     </div>
 
     <div class="income-wizard-summary" id="incomeWizardSummary">
-      <strong>Budget κύκλου</strong>
-      <span>Το βασικό ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.</span>
+      <strong>Έξτρα εισόδημα</strong>
+      <span>Διάλεξε ποσό και wallet προορισμού. Το αν μετράει στο budget βγαίνει από το wallet.</span>
     </div>
 
     <div class="income-modal-feedback hidden" id="incomeModalFeedback" role="status"></div>
 
     <div class="income-modal-amount-card income-wizard-card income-wizard-amount-card">
-      <label for="fISAmount" id="incomeAmountLabel">Ποσό κύκλου</label>
+      <label for="fISAmount" id="incomeAmountLabel">Ποσό εσόδου</label>
       <div class="income-modal-amount-input">
         <span>€</span>
         <input type="number" id="fISAmount" placeholder="0,00" step="0.01" min="0" inputmode="decimal">
       </div>
-      <p class="income-wizard-field-hint" id="incomeAmountHint">Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο.</p>
+      <p class="income-wizard-field-hint" id="incomeAmountHint">Το ποσό θα προστεθεί στο wallet προορισμού που θα επιλέξεις.</p>
+    </div>
+
+    <div class="income-modal-form-card income-wizard-card income-destination-card" id="incomeDestinationCard">
+      <div class="form-group income-full-row">
+        <label for="fISDestinationWallet">Προορισμός χρημάτων</label>
+        <select id="fISDestinationWallet" onchange="updateIncomeDestinationHelp()">
+          <option value="">Επίλεξε wallet...</option>
+        </select>
+        <p class="income-wizard-field-hint" id="incomeDestinationHint">Το αν μετράει στο budget βγαίνει από τον προορισμό.</p>
+      </div>
     </div>
 
     <div class="income-modal-form-card income-wizard-card income-spending-limit-card" id="incomeSpendingLimitCard">
@@ -1607,7 +1820,7 @@
     <div class="income-modal-form-card income-wizard-card income-basic-card">
       <div class="form-group income-full-row">
         <label for="fISName" id="incomeNameLabel">Πώς να το ονομάσουμε;</label>
-        <input type="text" id="fISName" placeholder="π.χ. Μισθός / Budget, Ενοίκιο ακινήτου, Ticket">
+        <input type="text" id="fISName" placeholder="π.χ. Bonus, Ενοίκιο, Μερίσματα, Επιστροφή">
       </div>
     </div>
 
@@ -1639,18 +1852,20 @@
           <div class="form-group">
             <label>Κατηγορία</label>
             <select id="fISCategory">
-              <option value="Μισθός">Μισθός</option>
-              <option value="Bonus">Bonus</option>
-              <option value="Ενοίκιο">Ενοίκιο</option>
-              <option value="Ticket Restaurant">Ticket Restaurant</option>
-              <option value="Άυλη κάρτα">Άυλη κάρτα</option>
+              <option value="Bonus">Bonus / έκτακτο</option>
+              <option value="Δώρο Πάσχα">Δώρο Πάσχα</option>
+              <option value="Δώρο Χριστουγέννων">Δώρο Χριστουγέννων</option>
+              <option value="Δώρο αδείας">Δώρο αδείας</option>
+              <option value="Ενοίκιο">Ενοίκιο που εισπράττω</option>
               <option value="Μερίσματα">Μερίσματα</option>
               <option value="Freelance">Freelance</option>
               <option value="Δεύτερη δουλειά">Δεύτερη δουλειά</option>
               <option value="Επίδομα">Επίδομα</option>
               <option value="Επιστροφή χρημάτων">Επιστροφή χρημάτων</option>
-              <option value="Δώρο">Δώρο</option>
-              <option value="Αποταμίευση">Αποταμίευση</option>
+              <option value="Πώληση αντικειμένου">Πώληση αντικειμένου</option>
+              <option value="Οικονομική βοήθεια">Οικονομική βοήθεια</option>
+              <option value="Ticket Restaurant">Ticket Restaurant</option>
+              <option value="Άυλη κάρτα">Άυλη κάρτα</option>
               <option value="Άλλο">Άλλο</option>
             </select>
           </div>
@@ -1714,7 +1929,7 @@
           <span class="income-option-icon">⭐</span>
           <span class="income-option-copy">
             <strong>Χρήση ως βασικό budget</strong>
-            <small>Το CAPVO θα χρησιμοποιεί αυτή την πηγή όταν πατάς “Πληρώθηκα σήμερα”.</small>
+            <small>Το CAPVO θα χρησιμοποιεί αυτή την πηγή όταν πατάς “Καταχώρηση μισθού”.</small>
           </span>
         </label>
       </div>
@@ -1731,13 +1946,29 @@
 
     <div class="income-modal-actions income-wizard-actions">
       <button class="btn btn-primary btn-block income-save-btn" id="btnIncomeSource" onclick="saveIncomeSource()">
-        Αποθήκευση budget
+        Αποθήκευση εσόδου
       </button>
     </div>
   </div>
 </div>
 
 <!-- CONFIRM MODAL -->
+
+<div class="capvo-action-center-overlay" id="capvoActionCenterOverlay" aria-hidden="true">
+  <section class="capvo-action-center-sheet" role="dialog" aria-modal="true" aria-label="Κέντρο ενεργειών">
+    <div class="capvo-action-center-handle"></div>
+    <div class="capvo-action-center-head">
+      <div>
+        <span>Action Center</span>
+        <h3>Κέντρο ενεργειών</h3>
+        <p id="capvoActionCenterMeta">Όλα όσα χρειάζονται προσοχή.</p>
+      </div>
+      <button type="button" class="capvo-action-center-close" onclick="closeCapvoActionCenter()" aria-label="Κλείσιμο">×</button>
+    </div>
+    <div class="capvo-action-center-list" id="capvoActionCenterList"></div>
+  </section>
+</div>
+
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-modal">
     <div class="confirm-icon">⚠️</div>
@@ -1760,25 +1991,27 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.8.6.19"></script>
+<script src="js/app-version.js?v=1.9.8.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.8.6.19"></script>
+<script src="js/config.js?v=1.9.8.3"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.8.6.19"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.8.6.19"></script>
-<script src="js/app/02-supabase-data.js?v=1.8.6.19"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.8.6.19"></script>
-<script src="js/app/04-reports-archive.js?v=1.8.6.19"></script>
-<script src="js/app/05-income-pickers.js?v=1.8.6.19"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.8.6.19"></script>
-<script src="js/app/07-add-center.js?v=1.8.6.19"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.8.6.19"></script>
+<script src="js/app/00-core-state.js?v=1.9.8.3"></script>
+  <script src="js/app/09-wallet-financial-engine.js?v=1.9.8.3"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.9.8.3"></script>
+<script src="js/app/02-supabase-data.js?v=1.9.8.3"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.9.8.3"></script>
+<script src="js/app/04-reports-archive.js?v=1.9.8.3"></script>
+<script src="js/app/05-income-pickers.js?v=1.9.8.3"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.9.8.3"></script>
+<script src="js/app/07-add-center.js?v=1.9.8.3"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.9.8.3"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.8.6.19"></script>
-<script src="js/sync.js?v=1.8.6.19"></script>
-<script src="js/advisor.js?v=1.8.6.19"></script>
+<script src="js/cards.js?v=1.9.8.3"></script>
+<script src="js/sync.js?v=1.9.8.3"></script>
+<script src="js/advisor.js?v=1.9.8.3"></script>
+<script src="js/wallets.js?v=1.9.8.3"></script>
 
 
 
@@ -1792,13 +2025,13 @@
       <div class="budget-cycle-icon">🗓️</div>
       <div>
         <div class="income-modal-kicker budget-cycle-kicker-label">Ρυθμίσεις budget</div>
-        <h2>Οικονομικός κύκλος</h2>
-        <p>Διαχειρίσου πότε ξεκινάει το budget σου και τι γίνεται αν πληρώθηκες νωρίτερα.</p>
+        <h2>Μηνιαία περίοδος</h2>
+        <p>Δες τη μηνιαία περίοδο και καταχώρησε τον μισθό σου στο primary wallet.</p>
       </div>
     </div>
 
     <section class="budget-cycle-current-card">
-      <span>Τρέχων κύκλος</span>
+      <span>Τρέχουσα περίοδος</span>
       <strong id="cycleManagerCurrentLabel">—</strong>
       <p id="cycleManagerCurrentMeta">—</p>
       <div class="budget-cycle-current-badge" id="cycleManagerSourceBadge">—</div>
@@ -1830,36 +2063,36 @@
       </div>
 
       <div class="settings-cycle-input-row budget-cycle-rule-row">
-        <input id="cycleManagerBudgetCycleDay" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" min="1" max="31" value="1" aria-label="Ημέρα έναρξης οικονομικού κύκλου" oninput="handleBudgetCycleDayInput(this); syncBudgetCycleTypeControls(getSelectedBudgetCycleType())" onblur="finalizeBudgetCycleDayInput(this, D?.preferences?.budgetCycleStartDay || 1); syncBudgetCycleTypeControls(getSelectedBudgetCycleType())">
+        <input id="cycleManagerBudgetCycleDay" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" min="1" max="31" value="1" aria-label="Ημέρα μισθού" oninput="handleBudgetCycleDayInput(this); syncBudgetCycleTypeControls(getSelectedBudgetCycleType())" onblur="finalizeBudgetCycleDayInput(this, D?.preferences?.budgetCycleStartDay || 1); syncBudgetCycleTypeControls(getSelectedBudgetCycleType())">
         <span>του μήνα</span>
         <button type="button" class="settings-primary-action" onclick="saveBudgetCyclePreference('cycleManagerBudgetCycleDay')">Αποθήκευση αλλαγών</button>
       </div>
-      <small id="cycleManagerRuleHelp">Για την “τελευταία εργάσιμη”, το CAPVO υπολογίζει Σαββατοκύριακα και επίσημες ελληνικές αργίες. Η ημέρα πληρωμής ξεκινά τον επόμενο κύκλο.</small>
+      <small id="cycleManagerRuleHelp">Για την “τελευταία εργάσιμη”, το CAPVO υπολογίζει Σαββατοκύριακα και επίσημες ελληνικές αργίες. Η ημέρα πληρωμής χρησιμοποιείται ως υπενθύμιση μισθού, όχι ως όριο reports.</small>
     </section>
 
     <section class="budget-cycle-panel">
       <div class="budget-cycle-panel-head">
         <div>
-          <span>Βασικό budget</span>
+          <span>Primary wallet / μισθός</span>
           <strong id="cycleManagerPrimaryIncomeLabel">—</strong>
         </div>
-        <button type="button" class="settings-secondary-action compact" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'));closeM();">Ορισμός από Έσοδα</button>
+        <button type="button" class="settings-secondary-action compact" onclick="go('vWallets',document.querySelector('[data-v=vWallets]'));closeM();">Ορισμός από Λογαριασμούς</button>
       </div>
-      <p class="budget-cycle-help" id="cycleManagerPrimaryIncomeHelp">Αυτό είναι το ποσό που θα χρησιμοποιηθεί όταν πατήσεις “Πληρώθηκα σήμερα”. Ορίζεται από τα Έσοδα με την επιλογή “Χρήση ως βασικό budget”.</p>
+      <p class="budget-cycle-help" id="cycleManagerPrimaryIncomeHelp">Αυτό είναι το primary wallet και ο μισθός/ποσό μήνα που θα καταχωρηθεί όταν πατήσεις “Καταχώρηση μισθού”.</p>
     </section>
 
     <section class="budget-cycle-panel budget-cycle-paid-panel">
       <div class="budget-cycle-panel-head">
         <div>
-          <span>Πρόωρη πληρωμή</span>
-          <strong>Πληρώθηκα σήμερα</strong>
+          <span>Μισθός περιόδου</span>
+          <strong>Καταχώρηση μισθού</strong>
         </div>
       </div>
-      <p class="budget-cycle-help">Αν ο μισθός μπήκε νωρίτερα, ξεκίνα νέο κύκλο από σήμερα χωρίς να αλλάξεις τη μόνιμη ημέρα πληρωμής.</p>
+      <p class="budget-cycle-help">Καταχώρησε τον μισθό σου στο primary wallet για την τρέχουσα μηνιαία περίοδο.</p>
       <div class="settings-paid-notice" id="cycleManagerPaidTodayNotice" style="display:none"></div>
       <div class="settings-cycle-actions">
-        <button type="button" class="settings-primary-action" id="cycleManagerPaidTodayBtn" onclick="createPaidTodayCycle()">Πληρώθηκα σήμερα</button>
-        <button type="button" class="settings-secondary-action" id="cycleManagerUndoPaidTodayBtn" onclick="undoCurrentPaidTodayCycle()" style="display:none">Αναίρεση πρόωρης πληρωμής</button>
+        <button type="button" class="settings-primary-action" id="cycleManagerPaidTodayBtn" onclick="createPaidTodayCycle()">Καταχώρηση μισθού</button>
+        <button type="button" class="settings-secondary-action" id="cycleManagerUndoPaidTodayBtn" onclick="undoCurrentPaidTodayCycle()" style="display:none">Αναίρεση μισθού</button>
       </div>
     </section>
 
@@ -1867,7 +2100,7 @@
       <div class="budget-cycle-panel-head">
         <div>
           <span>Ιστορικό</span>
-          <strong>Τελευταίοι κύκλοι</strong>
+          <strong>Τελευταίοι μισθοί</strong>
         </div>
       </div>
       <div id="cycleManagerHistory" class="budget-cycle-history-list"></div>

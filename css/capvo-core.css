@@ -836,216 +836,6 @@ a {
 .stat-value.amber  { color: var(--amber); }
 .stat-value.teal   { color: var(--teal); }
 
-/* ===== PAYMENT SOURCES WIDGET ===== */
-
-.payment-sources-widget {
-  /* full width on mobile — handled by flex column */
-}
-
-.payment-sources-grid {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
-}
-
-.payment-sources-grid:not(.payment-sources-carousel) {
-  flex-direction: column;
-}
-
-.payment-source-mini-card {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-}
-
-.payment-sources-carousel {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-  padding: 2px 4px 8px;
-  margin-left: -4px;
-  margin-right: -4px;
-}
-
-.payment-sources-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.payment-sources-carousel.is-single {
-  overflow: visible;
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.payment-source-wallet-card {
-  position: relative;
-  flex: 0 0 176px;
-  min-height: 116px;
-  flex-direction: column;
-  gap: 10px;
-  scroll-snap-align: start;
-  border-radius: 20px;
-  background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,245,249,.88));
-  box-shadow: 0 14px 34px rgba(15,23,42,.07);
-}
-
-.payment-sources-carousel.is-single .payment-source-wallet-card {
-  flex: 1 1 auto;
-  width: 100%;
-}
-
-.payment-source-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.payment-source-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 42px;
-  height: 24px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(16,185,129,.11);
-  color: var(--teal);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.payment-source-wallet-card.is-low .payment-source-chip {
-  background: rgba(245,158,11,.13);
-  color: var(--amber);
-}
-
-.payment-source-wallet-card.is-empty .payment-source-chip {
-  background: rgba(239,68,68,.12);
-  color: var(--red);
-}
-
-.payment-source-view-all {
-  flex: 0 0 138px;
-  min-height: 116px;
-  border: 0;
-  border-radius: 20px;
-  padding: 14px 12px;
-  scroll-snap-align: start;
-  background: #111827;
-  color: #fff;
-  font-family: inherit;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  box-shadow: 0 16px 34px rgba(17,24,39,.22);
-  cursor: pointer;
-}
-
-.payment-source-view-all span {
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.payment-source-view-all strong {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.payment-source-view-all small {
-  font-size: 10px;
-  opacity: .72;
-  font-weight: 800;
-}
-
-.payment-source-mini-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.payment-source-name {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.payment-source-meta {
-  margin-top: 2px;
-  font-size: 12px;
-  opacity: .75;
-}
-
-.payment-source-usage {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--teal);
-}
-
-.payment-mini-meta {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--text2);
-  font-weight: 600;
-}
-
-.payment-mini-bar {
-  width: 100%;
-  height: 5px;
-  margin-top: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--border);
-  overflow: hidden;
-}
-
-.payment-mini-fill {
-  height: 100%;
-  border-radius: var(--radius-pill);
-  background: var(--teal);
-}
-
-.payment-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 6px;
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  background: rgba(16,185,129,.12);
-  color: var(--teal);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.payment-badge.deleted {
-  background: rgba(239,68,68,.12);
-  color: var(--red);
-}
-
-.payment-sources-summary {
-  margin-top: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.payment-source-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-}
-
 /* ============================================================
    EXPENSE LISTS
    ============================================================ */
@@ -2024,19 +1814,7 @@ a {
   .daily-list-widget {
     grid-column: span 7;
   }
-
-  .payment-sources-widget {
-    grid-column: 1 / -1;
-  }
-
-  .payment-sources-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-    flex-direction: unset;
-  }
-
-  /* ===== STAT WIDGETS ===== */
+/* ===== STAT WIDGETS ===== */
 
   .stat-widget {
     min-height: 150px;
@@ -2535,21 +2313,7 @@ a {
   .modern-stat-card .widget-icon{width:42px !important;height:42px !important;border-radius:15px !important;}
   .modern-stat-card .stat-label{font-size:11px !important;font-weight:900 !important;letter-spacing:.08em !important;}
   .modern-stat-card .stat-value{font-size:21px !important;letter-spacing:-.04em !important;}
-
-  .modern-payment-widget{
-    margin:14px 0 0 !important;
-    padding:18px !important;
-    border-radius:26px !important;
-    background:rgba(255,255,255,.82) !important;
-  }
-
-  .modern-payment-widget .section-title{
-    font-size:18px !important;
-    font-weight:900 !important;
-    letter-spacing:-.03em !important;
-  }
-
-  /* Recent preview */
+/* Recent preview */
   .modern-dashboard-preview{padding:0 var(--mobile-pad) !important;margin-top:16px !important;}
   .dashboard-preview-widget{
     margin:0 !important;
@@ -2712,6 +2476,7 @@ a {
 /* Make sure hero text can use the full width again. */
 #vIncome .page-hero.capvo-branded-hero > div,
 #vCards .page-hero.capvo-branded-hero > div,
+#vWallets .page-hero.capvo-branded-hero > div,
 #vAdvisor .advisor-page-hero.capvo-branded-hero > div,
 #vStats .reports-hero.capvo-branded-hero > div,
 #vArchive .page-hero.capvo-branded-hero > div,
@@ -2724,6 +2489,7 @@ a {
    The previous branding layer hid them, which made heroes look empty. */
 #vIncome .page-hero.capvo-branded-hero::after,
 #vCards .page-hero.capvo-branded-hero::after,
+#vWallets .page-hero.capvo-branded-hero::after,
 #vAdvisor .advisor-page-hero.capvo-branded-hero::after,
 #vStats .reports-hero.capvo-branded-hero::after,
 #vArchive .page-hero.capvo-branded-hero::after,

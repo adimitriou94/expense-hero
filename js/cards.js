@@ -340,15 +340,17 @@ function refreshDashboardAfterCardPaymentChange(){
     const dPct=$('dPct');if(dPct)dPct.textContent=pct+'%';
     const dSpent=$('dSpent');if(dSpent)dSpent.textContent=fmt(spent)+' / '+fmt(D.income);
 
-    const sFixed=$('sFixed');if(sFixed)sFixed.textContent=fmt(fxS);
-    const sCC=$('sCC');if(sCC)sCC.textContent=fmt(ccS);
-    const sDaily=$('sDaily');if(sDaily)sDaily.textContent=fmt(dlS);
+    const snapshotTotals=typeof capvoDashboardSnapshotTotals==='function'
+      ? capvoDashboardSnapshotTotals()
+      : {fixed:fxS,cards:ccS,daily:cashDaily};
+    const sFixed=$('sFixed');if(sFixed)sFixed.textContent=fmt(snapshotTotals.fixed);
+    const sCC=$('sCC');if(sCC)sCC.textContent=fmt(snapshotTotals.cards);
+    const sDaily=$('sDaily');if(sDaily)sDaily.textContent=fmt(snapshotTotals.daily);
 
     if(typeof renderDashboardAllowanceCards==='function')renderDashboardAllowanceCards(bal);
     if(typeof renderDashboardAdvisorSnapshot==='function')renderDashboardAdvisorSnapshot(pct,bal);
     if(typeof renderDashboardPreview==='function')renderDashboardPreview();
     if(typeof renderMobileCategoryInsights==='function')renderMobileCategoryInsights();
-    if(typeof renderPaymentSourcesSummary==='function')renderPaymentSourcesSummary();
     if(typeof rStats==='function')rStats();
     if(typeof rArch==='function')rArch();
     if(typeof rAdv==='function')rAdv();
@@ -659,6 +661,8 @@ async function saveCardPayment(){
     return;
   }
 
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Καταχωρείται πληρωμή κάρτας...', 'Ενημερώνω χρέος, δόσεις και budget.'))return;
+
   if(submit){
     submit.disabled=true;
     submit.dataset.saving='1';
@@ -722,6 +726,7 @@ async function saveCardPayment(){
     closeCardTransactionsSheet?.();
     closeCardPlansSheet?.();
     render();
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η πληρωμή κάρτας καταχωρήθηκε.');
     showMiniToast?.('✅ Η πληρωμή κάρτας καταχωρήθηκε');
 
   }catch(e){
@@ -736,9 +741,11 @@ async function saveCardPayment(){
       try{await supabaseClient.from('credit_card_transactions').delete().eq('id',tx.id).eq('user_id',userId);}catch(_e){}
     }
 
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω την πληρωμή κάρτας.');
     if(err)err.textContent='Δεν μπόρεσα να αποθηκεύσω την πληρωμή.';
     showMiniToast?.('❌ Σφάλμα πληρωμής κάρτας','error');
   }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
     if(submit){
       submit.disabled=false;
       submit.dataset.saving='0';
@@ -941,6 +948,8 @@ function resetCCFormUI(activePreset='credit_card'){
     if(el)el.classList.remove('field-error');
   });
   applyCCPreset(activePreset,{preserveValues:true});
+  if(typeof syncCCEditModeLabels==='function')syncCCEditModeLabels();
+  if(typeof syncCCPreview==='function')syncCCPreview();
 }
 
 function ccError(message,fieldId){
@@ -1012,7 +1021,83 @@ function applyCCPreset(type,opts={}){
       if(typeof setLoanPurpose==='function')setLoanPurpose('other');
     }
   }
+
+  if(typeof syncCCEditModeLabels==='function')syncCCEditModeLabels();
+  if(typeof syncCCPreview==='function')syncCCPreview();
 }
+
+
+function ccCurrentModeLabel(type){
+  type=type||($('fCCType')?.value||'credit_card');
+  return type==='loan'?'δάνειο':'πιστωτική';
+}
+
+function syncCCEditModeLabels(){
+  const type=$('fCCType')?.value||'credit_card';
+  const isEdit=!!($('fCCID')?.value||'');
+  const modal=$('mCC');
+  if(modal)modal.classList.toggle('cc-edit-mode',isEdit);
+
+  const title=$('mCCTitle');
+  const intro=$('ccModalIntro');
+  const button=$('btnCC');
+  const context=$('ccContextNote');
+
+  if(type==='loan'){
+    if(title)title.textContent=isEdit?'Επεξεργασία δανείου':'Νέο δάνειο';
+    if(intro)intro.textContent=isEdit
+      ? 'Ενημέρωσε υπόλοιπο, μηνιαία δόση και ημέρα πληρωμής χωρίς να αλλάξεις τις παλιές κινήσεις.'
+      : 'Δήλωσε οφειλή με μηνιαία δόση. Στο budget μετράει μόνο η πραγματική πληρωμή/δόση.';
+    if(button)button.textContent=isEdit?'Αποθήκευση αλλαγών':'Αποθήκευση δανείου';
+    if(context)context.textContent='Τα δάνεια εμφανίζονται στις Κάρτες / Οφειλές και βοηθούν τον Advisor να υπολογίζει τις επόμενες πληρωμές.';
+  }else{
+    if(title)title.textContent=isEdit?'Επεξεργασία πιστωτικής':'Νέα πιστωτική κάρτα';
+    if(intro)intro.textContent=isEdit
+      ? 'Ενημέρωσε όριο, τρέχον χρέος και ημέρα πληρωμής. Οι αγορές/πληρωμές της κάρτας κρατούνται ξεχωριστά.'
+      : 'Δήλωσε την πιστωτική σου. Οι αγορές και οι άτοκες δόσεις μπαίνουν μετά από την Προσθήκη εξόδου.';
+    if(button)button.textContent=isEdit?'Αποθήκευση αλλαγών':'Αποθήκευση πιστωτικής';
+    if(context)context.textContent='Οι αγορές με πιστωτική δεν μειώνουν άμεσα το cash budget. Μόνο οι πληρωμές κάρτας αφαιρούνται από το budget.';
+  }
+}
+
+function syncCCPreview(){
+  const type=$('fCCType')?.value||'credit_card';
+  const name=($('fCCN')?.value||'').trim() || (type==='loan'?'Νέο δάνειο':'Νέα κάρτα');
+  const balance=parseFloat($('fCCB')?.value||'0')||0;
+  const limit=type==='credit_card'?(parseFloat($('fCCL')?.value||'0')||0):0;
+  const minPay=parseFloat($('fCCM')?.value||'0')||0;
+  const dueDay=parseInt($('fCCDueDay')?.value||'',10);
+  const bank=($('fCCBank')?.value||'').trim();
+  const available=Math.max(0,limit-balance);
+  const usage=type==='credit_card' && limit>0 ? Math.min(100,Math.max(0,(balance/limit)*100)) : (balance>0?100:0);
+
+  const setText=(id,text)=>{const el=$(id);if(el)el.textContent=text};
+  setText('ccPreviewType',type==='loan'?'Δάνειο / Οφειλή':'Πιστωτική κάρτα');
+  setText('ccPreviewName',name);
+  if(type==='loan'){
+    const parts=['Υπόλοιπο '+fmt(balance)];
+    if(minPay>0)parts.push('Δόση '+fmt(minPay));
+    if(dueDay)parts.push('Πληρωμή '+dueDay);
+    setText('ccPreviewMeta',parts.join(' · '));
+    setText('ccPreviewAvailable',minPay>0?'Μηνιαία δόση '+fmt(minPay):'Χωρίς δόση');
+  }else{
+    const parts=['Χρέος '+fmt(balance),'Όριο '+fmt(limit)];
+    if(bank)parts.push(bank);
+    if(dueDay)parts.push('Πληρωμή '+dueDay);
+    setText('ccPreviewMeta',parts.join(' · '));
+    setText('ccPreviewAvailable','Διαθέσιμο '+fmt(available));
+  }
+  setText('ccPreviewDebt',fmt(balance));
+  const bar=$('ccPreviewProgress');
+  if(bar)bar.style.width=usage+'%';
+}
+
+document.addEventListener('input',function(e){
+  if(!e.target || !$('mCC')?.classList.contains('active'))return;
+  if(['fCCN','fCCB','fCCR','fCCM','fCCL','fCCBank','fCCDueDay'].includes(e.target.id)){
+    if(typeof syncCCPreview==='function')syncCCPreview();
+  }
+},true);
 
 function editCC(id){
   capvoSuppressAutoFocus?.(900);
@@ -1033,6 +1118,8 @@ function editCC(id){
   if($('fCCLoanPurpose'))$('fCCLoanPurpose').value=c.loanPurpose||'other';
   if(typeof setLoanPurpose==='function')setLoanPurpose(c.loanPurpose||'other');
   resetCCFormUI(c.accountType||'credit_card');
+  if(typeof syncCCEditModeLabels==='function')syncCCEditModeLabels();
+  if(typeof syncCCPreview==='function')syncCCPreview();
   // autofocus disabled: user taps the field when ready;
 }
 

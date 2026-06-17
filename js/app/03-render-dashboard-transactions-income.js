@@ -25,7 +25,7 @@ function renderDashboardGreeting(){
   if(title)title.textContent=name==='σου'?'Γεια σου 👋':`Γεια σου, ${name} 👋`;
   if(sub){
     const cycle=getCurrentBudgetCycle();
-    sub.textContent=`Ο κύκλος ${cycle.label} είναι ενημερωμένος.`;
+    sub.textContent=`Η μηνιαία περίοδος ${cycle.label} είναι ενημερωμένη.`;
   }
 }
 
@@ -46,29 +46,36 @@ function render(){
 
   $('mLabel').textContent=cycle.label;
   const eyebrow=document.querySelector('.modern-hero-card .eyebrow');
-  if(eyebrow)eyebrow.textContent='Υπόλοιπο κύκλου';
+  if(eyebrow)eyebrow.textContent='Υπόλοιπο μήνα';
   const heroCaption=document.querySelector('.modern-hero-caption');
-  if(heroCaption)heroCaption.textContent=`Τρέχων οικονομικός κύκλος: ${cycle.label}.`;
+  if(heroCaption)heroCaption.textContent=`Τρέχουσα μηνιαία περίοδος: ${cycle.label}.`;
   renderDashboardGreeting();
   $('dIncome').textContent=fmt(D.income);
   $('dBalance').textContent=fmt(bal);
   $('dBalance').style.color=bal<0?'#fca5a5':'#ffffff';
   $('dBar').style.width=pct+'%';
   $('dPct').textContent=pct+'%';
+  const heroCard=document.querySelector('.modern-hero-card');
+  if(heroCard)heroCard.style.setProperty('--capvo-hero-pct', pct+'%');
   $('dSpent').textContent=fmt(tot)+' / '+fmt(D.income);
   renderDashboardAllowanceCards(bal);
   renderFirstUseBudgetPrompt();
 
-  $('sFixed').textContent=fmt(fxS);
-  $('sCC').textContent=fmt(ccS);
-  $('sDaily').textContent=fmt(cashDaily);
+  const snapshotTotals=typeof capvoDashboardSnapshotTotals==='function'
+    ? capvoDashboardSnapshotTotals()
+    : {fixed:fxS,cards:ccS,daily:cashDaily};
+  $('sFixed').textContent=fmt(snapshotTotals.fixed);
+  $('sCC').textContent=fmt(snapshotTotals.cards);
+  $('sDaily').textContent=fmt(snapshotTotals.daily);
   renderDashboardAdvisorSnapshot(pct,bal);
 
   renderFixedList();
+  renderCapvoActionCenterBadge();
   renderDailyList();
   renderDashboardPreview();
   renderMobileCategoryInsights();
   if(typeof renderQuickRepeatChips==='function') renderQuickRepeatChips();
+  if(typeof renderWalletCards==='function') renderWalletCards();
   if($('incomeList')) renderIncomePage();
 
   rStats();
@@ -77,8 +84,6 @@ function render(){
   if(typeof rCC==='function') rCC();
   if(typeof renderSavingsPage==='function') renderSavingsPage();
   if(typeof rAdv==='function') rAdv();
-
-  renderPaymentSourcesSummary();
   renderSettingsPage();
 }
 
@@ -135,10 +140,778 @@ function renderDashboardAdvisorSnapshot(pct,bal){
   if(iconEl)iconEl.textContent=icon;
 }
 
+
+function capvoActionCenterDaysUntil(dateKey){
+  const today=capvoParseDateKey(todayISO());
+  const target=capvoParseDateKey(dateKey);
+  if(!today || !target)return 9999;
+  return Math.round((target-today)/(1000*60*60*24));
+}
+
+function capvoActionCenterFixedItems({includeUpcoming=false}={}){
+  return (D.fixedExpenses||[])
+    .map(expense=>{
+      const status=typeof capvoFixedExpenseStatus==='function'
+        ? capvoFixedExpenseStatus(expense)
+        : {state:'upcoming',label:'Προσεχώς',tone:'slate',nextDueDate:expense.nextDueDate||''};
+      const days=capvoActionCenterDaysUntil(status.nextDueDate);
+      const wallet=expense.sourceWalletId && typeof capvoWalletById==='function'
+        ? capvoWalletById(expense.sourceWalletId)
+        : null;
+      return {type:'fixed',expense,status,days,wallet};
+    })
+    .filter(row=>{
+      if(!row.expense || !row.status?.nextDueDate)return false;
+      if(row.status.state==='overdue' || row.status.state==='due')return true;
+      return includeUpcoming && row.status.state==='upcoming' && row.days>=0 && row.days<=7;
+    })
+    .sort((a,b)=>{
+      const priority={overdue:0,due:1,upcoming:2,paid:9};
+      return (priority[a.status.state]??5)-(priority[b.status.state]??5) ||
+        String(a.status.nextDueDate).localeCompare(String(b.status.nextDueDate)) ||
+        String(a.expense.name||'').localeCompare(String(b.expense.name||''));
+    });
+}
+
+function capvoActionCenterUrgentCount(){
+  return capvoActionCenterFixedItems({includeUpcoming:false}).length;
+}
+
+function renderCapvoActionCenterBadge(){
+  const btn=$('capvoActionCenterBtn');
+  const badge=$('capvoActionCenterBadge');
+  if(!btn || !badge)return;
+
+  // v1.9.6.9: hard-lock the bell position because older CSS/cache rules
+  // have repeatedly overridden the placement. Keep it top-right inside the hero.
+  btn.style.setProperty('position','absolute','important');
+  btn.style.setProperty('top','18px','important');
+  btn.style.setProperty('right','18px','important');
+  btn.style.setProperty('left','auto','important');
+  btn.style.setProperty('bottom','auto','important');
+  btn.style.setProperty('width','42px','important');
+  btn.style.setProperty('height','42px','important');
+  btn.style.setProperty('border-radius','16px','important');
+
+  const count=capvoActionCenterUrgentCount();
+  btn.classList.toggle('has-alerts',count>0);
+  badge.textContent=String(Math.min(count,99));
+  badge.style.display=count>0?'':'none';
+  btn.title=count>0
+    ? `${count} εκκρεμείς ενέργειες`
+    : 'Κέντρο ενεργειών';
+}
+
+function openCapvoActionCenter(){
+  renderCapvoActionCenterSheet();
+  const overlay=$('capvoActionCenterOverlay');
+  if(!overlay)return;
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden','false');
+  document.body.classList.add('sheet-open');
+}
+
+function closeCapvoActionCenter(){
+  const overlay=$('capvoActionCenterOverlay');
+  if(!overlay)return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.classList.remove('sheet-open');
+}
+
+function renderCapvoActionCenterSheet(){
+  const list=$('capvoActionCenterList');
+  const meta=$('capvoActionCenterMeta');
+  if(!list || !meta)return;
+
+  const urgent=capvoActionCenterFixedItems({includeUpcoming:false});
+  const upcoming=capvoActionCenterFixedItems({includeUpcoming:true})
+    .filter(row=>row.status.state==='upcoming')
+    .slice(0,3);
+
+  const totalUrgent=capvoMoney(urgent.reduce((s,row)=>s+(Number(row.expense.amount)||0),0));
+  meta.textContent=urgent.length
+    ? `${urgent.length} εκκρεμείς πληρωμές · ${fmt(totalUrgent)}`
+    : upcoming.length
+      ? `${upcoming.length} επερχόμενες πληρωμές`
+      : 'Δεν έχεις εκκρεμείς πληρωμές αυτή τη στιγμή.';
+
+  if(urgent.length===0 && upcoming.length===0){
+    list.innerHTML=`
+      <div class="capvo-action-center-empty">
+        <div>✅</div>
+        <strong>Όλα καλά</strong>
+        <p>Δεν υπάρχουν πάγια που χρειάζονται άμεση ενέργεια.</p>
+      </div>`;
+    return;
+  }
+
+  const section=(title,rows,kind)=>rows.length?`
+    <div class="capvo-action-center-section ${kind}">
+      <h4>${esc(title)}</h4>
+      ${rows.map(row=>capvoActionCenterFixedRow(row)).join('')}
+    </div>`:'';
+
+  list.innerHTML=[
+    section('Χρειάζονται ενέργεια',urgent,'urgent'),
+    section('Έρχονται σύντομα',upcoming,'upcoming')
+  ].join('');
+}
+
+function capvoActionCenterFixedRow(row){
+  const {expense,status,days,wallet}=row;
+  const state=status.state;
+  const isPayable=state==='overdue' || state==='due';
+  const dateLabel=formatGreekFullDate(status.nextDueDate);
+  const whenLabel=state==='overdue'
+    ? `Έπρεπε ${dateLabel}`
+    : state==='due'
+      ? 'Σήμερα'
+      : days===1
+        ? 'Αύριο'
+        : `Σε ${days} ημέρες`;
+
+  return `
+    <article class="capvo-action-item ${esc(state)}">
+      <div class="capvo-action-item-icon">${state==='overdue'?'⚠️':state==='due'?'📌':'🗓️'}</div>
+      <div class="capvo-action-item-copy">
+        <strong>${esc(expense.name||'Πάγιο')}</strong>
+        <span>${esc(whenLabel)} · ${esc(expense.category||'Άλλο')}${wallet?` · ${esc(wallet.name)}`:''}</span>
+      </div>
+      <div class="capvo-action-item-side">
+        <strong>${fmt(expense.amount)}</strong>
+        ${isPayable?`
+          <button type="button" onclick="capvoActionCenterPayFixed('${expense.id}')">
+            Πληρώθηκε
+          </button>`:''}
+      </div>
+    </article>`;
+}
+
+async function capvoActionCenterPayFixed(fixedExpenseId){
+  await capvoPayFixedExpense(fixedExpenseId);
+  renderCapvoActionCenterBadge();
+  renderCapvoActionCenterSheet();
+}
+
+document.addEventListener('click',event=>{
+  const overlay=$('capvoActionCenterOverlay');
+  if(overlay && event.target===overlay)closeCapvoActionCenter();
+});
+
+
+
+let capvoFixedCalendarMonthKey='';
+let capvoFixedCalendarSelectedDateKey='';
+let capvoFixedAllExpanded=false;
+
+function capvoFixedCalendarJs(value){
+  return String(value??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+function capvoFixedCalendarMonthDate(monthKey){
+  const today=capvoParseDateKey(todayISO())||new Date();
+  const raw=String(monthKey||'').slice(0,7);
+  if(/^\d{4}-\d{2}$/.test(raw)){
+    const [y,m]=raw.split('-').map(Number);
+    return new Date(y,m-1,1,12);
+  }
+  return new Date(today.getFullYear(),today.getMonth(),1,12);
+}
+
+function capvoFixedCalendarMonthKeyFromDate(date){
+  const d=date instanceof Date && !Number.isNaN(date.getTime())?date:capvoFixedCalendarMonthDate('');
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function capvoFixedCalendarMonthLabel(monthKey){
+  const d=capvoFixedCalendarMonthDate(monthKey);
+  return `${MG[d.getMonth()]||''} ${d.getFullYear()}`;
+}
+
+function capvoFixedCalendarSelectedLabel(dateKey){
+  const d=capvoParseDateKey(dateKey);
+  if(!d)return 'Επιλεγμένη ημέρα';
+  const today=todayISO();
+  if(dateKey===today)return `Σήμερα, ${formatGreekDayMonth(dateKey)}`;
+  return `${DG[d.getDay()]||''}, ${formatGreekDayMonth(dateKey)}`;
+}
+
+function capvoFixedCalendarEnsureState(rows=[]){
+  const today=todayISO();
+  const todayMonth=today.slice(0,7);
+  if(!capvoFixedCalendarMonthKey)capvoFixedCalendarMonthKey=todayMonth;
+  const selected=String(capvoFixedCalendarSelectedDateKey||'').slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(selected) || selected.slice(0,7)!==capvoFixedCalendarMonthKey){
+    const firstDue=(rows||[]).map(r=>r.dueDate).filter(Boolean).sort()[0];
+    capvoFixedCalendarSelectedDateKey=capvoFixedCalendarMonthKey===todayMonth
+      ? today
+      : (firstDue || `${capvoFixedCalendarMonthKey}-01`);
+  }
+}
+
+function capvoFixedCalendarChangeMonth(delta){
+  const base=capvoFixedCalendarMonthDate(capvoFixedCalendarMonthKey);
+  const next=new Date(base.getFullYear(),base.getMonth()+Number(delta||0),1,12);
+  capvoFixedCalendarMonthKey=capvoFixedCalendarMonthKeyFromDate(next);
+  capvoFixedCalendarSelectedDateKey='';
+  renderFixedList();
+}
+
+function capvoFixedCalendarToday(){
+  capvoFixedCalendarMonthKey=todayISO().slice(0,7);
+  capvoFixedCalendarSelectedDateKey=todayISO();
+  renderFixedList();
+}
+
+function capvoFixedCalendarSelect(dateKey){
+  const key=String(dateKey||'').slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(key))return;
+  capvoFixedCalendarMonthKey=key.slice(0,7);
+  capvoFixedCalendarSelectedDateKey=key;
+  renderFixedList();
+}
+
+function capvoFixedCalendarStatusForDueDate(expense,dueDate){
+  const payment=typeof capvoFixedExpensePaymentForDueDate==='function'
+    ? capvoFixedExpensePaymentForDueDate(expense?.id,dueDate)
+    : null;
+  if(payment)return {state:'paid',label:'Πληρώθηκε',tone:'green',nextDueDate:dueDate,payment};
+  const today=todayISO();
+  if(String(dueDate)<today)return {state:'overdue',label:'Εκκρεμεί',tone:'orange',nextDueDate:dueDate,payment:null};
+  if(String(dueDate)===today)return {state:'due',label:'Σήμερα',tone:'purple',nextDueDate:dueDate,payment:null};
+  return {state:'upcoming',label:'Προσεχώς',tone:'slate',nextDueDate:dueDate,payment:null};
+}
+
+function capvoFixedCalendarExpenseActiveOn(expense,dateKey){
+  const effective=String(expense?.effectiveFromDate||expense?.effective_from_date||'').slice(0,10);
+  if(effective && String(dateKey)<effective)return false;
+  return true;
+}
+
+function capvoFixedCalendarOccurrenceDates(expense,monthDate){
+  const year=monthDate.getFullYear();
+  const month=monthDate.getMonth();
+  const start=new Date(year,month,1,12);
+  const end=new Date(year,month,capvoDaysInMonth(year,month),12);
+  const type=typeof capvoFixedExpenseScheduleType==='function'?capvoFixedExpenseScheduleType(expense):(expense?.scheduleType||'monthly');
+  const dueDay=typeof capvoFixedExpenseDueDay==='function'?capvoFixedExpenseDueDay(expense):(Number(expense?.dueDay)||1);
+  const nextDue=String(expense?.nextDueDate||expense?.next_due_date||'').slice(0,10);
+  const dates=[];
+
+  if(type==='weekly'){
+    let base=capvoParseDateKey(nextDue)||new Date(year,month,Math.min(dueDay,capvoDaysInMonth(year,month)),12);
+    while(base>end)base=new Date(base.getFullYear(),base.getMonth(),base.getDate()-7,12);
+    while(base<start)base=new Date(base.getFullYear(),base.getMonth(),base.getDate()+7,12);
+    while(base<=end){
+      const key=capvoLocalDateKey(base);
+      if(capvoFixedCalendarExpenseActiveOn(expense,key))dates.push(key);
+      base=new Date(base.getFullYear(),base.getMonth(),base.getDate()+7,12);
+    }
+    return dates;
+  }
+
+  if(type==='yearly'){
+    if(nextDue){
+      const d=capvoParseDateKey(nextDue);
+      if(d && d.getMonth()===month){
+        const key=capvoDateKeyFromParts(year,month,Math.min(d.getDate(),capvoDaysInMonth(year,month)));
+        if(capvoFixedCalendarExpenseActiveOn(expense,key))dates.push(key);
+      }
+      return dates;
+    }
+  }
+
+  if(type==='custom'){
+    if(nextDue && nextDue.slice(0,7)===capvoFixedCalendarMonthKeyFromDate(monthDate) && capvoFixedCalendarExpenseActiveOn(expense,nextDue))dates.push(nextDue);
+    return dates;
+  }
+
+  const key=capvoDateKeyFromParts(year,month,Math.min(dueDay,capvoDaysInMonth(year,month)));
+  if(capvoFixedCalendarExpenseActiveOn(expense,key))dates.push(key);
+  return dates;
+}
+
+function capvoFixedCalendarRowsForMonth(monthKey){
+  const monthDate=capvoFixedCalendarMonthDate(monthKey);
+  return (D.fixedExpenses||[])
+    .flatMap(expense=>capvoFixedCalendarOccurrenceDates(expense,monthDate).map(dueDate=>{
+      const status=capvoFixedCalendarStatusForDueDate(expense,dueDate);
+      const wallet=expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null;
+      return {expense,dueDate,status,wallet,payment:status.payment||null};
+    }))
+    .sort(capvoFixedCalendarSortRows);
+}
+
+function capvoFixedCalendarCurrentRows(){
+  return (D.fixedExpenses||[])
+    .map(expense=>{
+      const rawStatus=typeof capvoFixedExpenseStatus==='function'?capvoFixedExpenseStatus(expense):null;
+      const dueDate=rawStatus?.nextDueDate||capvoFixedExpenseNextDueDate?.(expense)||expense.nextDueDate||todayISO();
+      const status=capvoFixedCalendarStatusForDueDate(expense,dueDate);
+      const wallet=expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null;
+      return {expense,dueDate,status,wallet,payment:status.payment||null};
+    })
+    .filter(row=>row.dueDate)
+    .sort(capvoFixedCalendarSortRows);
+}
+
+function capvoFixedCalendarRecentPayments(limit=5){
+  return (D.fixedExpensePayments||[])
+    .filter(p=>String(p.status||'paid')!=='reversed')
+    .map(payment=>{
+      const expense=typeof capvoFixedExpenseById==='function'
+        ? capvoFixedExpenseById(payment.fixedExpenseId||payment.fixed_expense_id)
+        : (D.fixedExpenses||[]).find(e=>String(e.id)===String(payment.fixedExpenseId||payment.fixed_expense_id));
+      const wallet=payment.walletId && typeof capvoWalletById==='function'?capvoWalletById(payment.walletId):null;
+      return {payment,expense,wallet,dueDate:String(payment.paidForDate||payment.paid_for_date||payment.paidAt||payment.paid_at||'').slice(0,10)};
+    })
+    .sort((a,b)=>String(b.payment.paidAt||b.payment.paid_at||b.payment.createdAt||b.payment.created_at||'').localeCompare(String(a.payment.paidAt||a.payment.paid_at||a.payment.createdAt||a.payment.created_at||'')))
+    .slice(0,limit);
+}
+
+function capvoFixedCalendarSortRows(a,b){
+  const priority={overdue:0,due:1,upcoming:2,paid:3};
+  return String(a.dueDate||'9999-12-31').localeCompare(String(b.dueDate||'9999-12-31')) ||
+    (priority[a.status?.state]??5)-(priority[b.status?.state]??5) ||
+    String(a.expense?.name||'').localeCompare(String(b.expense?.name||''));
+}
+
+function capvoFixedCalendarGroupByDate(rows){
+  return (rows||[]).reduce((acc,row)=>{
+    if(!acc[row.dueDate])acc[row.dueDate]=[];
+    acc[row.dueDate].push(row);
+    return acc;
+  },{});
+}
+
+function capvoFixedCalendarDayTone(rows){
+  if(rows.some(r=>r.status?.state==='overdue'))return 'overdue';
+  if(rows.some(r=>r.status?.state==='due'))return 'due';
+  if(rows.every(r=>r.status?.state==='paid'))return 'paid';
+  return 'upcoming';
+}
+
+function capvoRenderFixedCalendar(rows){
+  const monthDate=capvoFixedCalendarMonthDate(capvoFixedCalendarMonthKey);
+  const year=monthDate.getFullYear();
+  const month=monthDate.getMonth();
+  const days=capvoDaysInMonth(year,month);
+  const first=new Date(year,month,1,12);
+  const leading=(first.getDay()+6)%7; // Monday-first calendar.
+  const byDate=capvoFixedCalendarGroupByDate(rows);
+  const today=todayISO();
+  const selected=capvoFixedCalendarSelectedDateKey;
+  const weekdays=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
+  let cells='';
+
+  for(let i=0;i<leading;i++)cells+='<div class="fixed-calendar-day is-empty"></div>';
+  for(let day=1;day<=days;day++){
+    const key=capvoDateKeyFromParts(year,month,day);
+    const dayRows=byDate[key]||[];
+    const tone=dayRows.length?capvoFixedCalendarDayTone(dayRows):'';
+    const total=capvoMoney(dayRows.reduce((s,row)=>s+(Number(row.expense?.amount)||0),0));
+    cells+=`
+      <button type="button" class="fixed-calendar-day ${dayRows.length?'has-items':''} ${key===today?'is-today':''} ${key===selected?'is-selected':''} ${tone?`tone-${tone}`:''}" onclick="capvoFixedCalendarSelect('${key}')">
+        <span class="fixed-calendar-date">${day}</span>
+        ${dayRows.length?`
+          <span class="fixed-calendar-dots">${dayRows.slice(0,3).map(row=>`<i class="tone-${esc(row.status?.state||'upcoming')}"></i>`).join('')}</span>
+          <span class="fixed-calendar-day-meta">${dayRows.length>1?`${dayRows.length} πάγια`:fmt(total)}</span>
+        `:''}
+      </button>`;
+  }
+
+  return `
+    <section class="fixed-calendar-card">
+      <div class="fixed-calendar-topbar">
+        <button type="button" class="fixed-calendar-nav" onclick="capvoFixedCalendarChangeMonth(-1)" aria-label="Προηγούμενος μήνας">‹</button>
+        <div class="fixed-calendar-title-wrap">
+          <strong>${esc(capvoFixedCalendarMonthLabel(capvoFixedCalendarMonthKey))}</strong>
+          <button type="button" onclick="capvoFixedCalendarToday()">Σήμερα</button>
+        </div>
+        <button type="button" class="fixed-calendar-nav" onclick="capvoFixedCalendarChangeMonth(1)" aria-label="Επόμενος μήνας">›</button>
+      </div>
+      <div class="fixed-calendar-weekdays">${weekdays.map(d=>`<span>${d}</span>`).join('')}</div>
+      <div class="fixed-calendar-grid">${cells}</div>
+    </section>`;
+}
+
+function capvoFixedRelativeText(row){
+  const today=todayISO();
+  const due=row.dueDate;
+  if(row.status?.state==='paid')return `Πληρώθηκε ${formatGreekDayMonth(row.payment?.paidAt||row.payment?.paid_at||row.dueDate)}`;
+  const todayDate=capvoParseDateKey(today);
+  const dueDate=capvoParseDateKey(due);
+  if(!todayDate || !dueDate)return 'Προγραμματισμένο';
+  const diff=Math.round((dueDate-todayDate)/(1000*60*60*24));
+  if(diff<0)return `Έπρεπε ${formatGreekDayMonth(due)}`;
+  if(diff===0)return 'Λήγει σήμερα';
+  if(diff===1)return 'Αύριο';
+  return `Σε ${diff} ημέρες`;
+}
+
+function capvoRenderFixedObligationCard(row,{compact=false,showUndo=true,showEdit=true,showDelete=false}={}){
+  const expense=row.expense||{};
+  const status=row.status||{};
+  const payment=row.payment||status.payment||null;
+  const wallet=row.wallet || (expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null);
+  const category=expense.category||'Άλλο';
+  const icon=CEMO[category]||'📌';
+  const canUndo=showUndo && payment?.id;
+  const canPay=!canUndo && ['overdue','due'].includes(status.state);
+  const id=capvoFixedCalendarJs(expense.id||'');
+  const paymentId=capvoFixedCalendarJs(payment?.id||'');
+
+  return `
+    <article class="fixed-obligation-card ${compact?'compact':''} state-${esc(status.state||'upcoming')}">
+      <button type="button" class="fixed-obligation-main" onclick="editExp('fixed','${id}')">
+        <span class="fixed-obligation-icon">${icon}</span>
+        <span class="fixed-obligation-copy">
+          <strong>${esc(expense.name||'Πάγιο')}</strong>
+          <small>${esc(category)} · ${esc(capvoFixedRelativeText(row))}${wallet?` · ${esc(wallet.name)}`:''}</small>
+          <em>Επόμενη: ${esc(formatGreekFullDate(row.dueDate))}</em>
+        </span>
+      </button>
+      <div class="fixed-obligation-side">
+        <strong>${fmt(expense.amount)}</strong>
+        <span class="fixed-due-pill ${esc(status.tone||'slate')}">${esc(status.label||'Προσεχώς')}</span>
+        <div class="fixed-obligation-actions">
+          ${canPay?`<button type="button" class="fixed-pay-btn" onclick="capvoPayFixedExpense('${id}')">Πληρώθηκε</button>`:''}
+          ${canUndo?`<button type="button" class="fixed-pay-btn undo" onclick="capvoUndoFixedExpensePayment('${paymentId}')">Αναίρεση</button>`:''}
+          ${showEdit?`<button type="button" class="fixed-edit-btn" onclick="editExp('fixed','${id}')">Edit</button>`:''}
+          ${showDelete?`<button type="button" class="fixed-delete-btn" onclick="capvoConfirmDeleteFixedExpense('${id}')">Διαγραφή</button>`:''}
+        </div>
+      </div>
+    </article>`;
+}
+
+
+let capvoFixedPaymentPreviewExpenseId='';
+let capvoFixedPaymentPreviewResolve=null;
+let capvoFixedPaymentPreviewSelectedWalletId='';
+
+function capvoFixedPaymentIsSavingsWallet(wallet){
+  if(!wallet)return false;
+  const role=typeof capvoWalletBudgetRole==='function'?String(capvoWalletBudgetRole(wallet)||''):String(wallet.budgetRole||wallet.budget_role||'');
+  return !!(wallet.isSavings || wallet.is_savings || String(wallet.type||'')==='savings' || role==='savings');
+}
+
+function capvoFixedPaymentEligibleWallets(){
+  const wallets=typeof capvoActiveWallets==='function'
+    ? capvoActiveWallets()
+    : (Array.isArray(D.wallets)?D.wallets.filter(w=>w&&w.isActive!==false&&w.is_active!==false):[]);
+  return wallets.filter(w=>w && w.isActive!==false && w.is_active!==false && !capvoFixedPaymentIsSavingsWallet(w));
+}
+
+function capvoFixedPaymentPickWallet(expense,selectedWalletId=''){
+  const wallets=capvoFixedPaymentEligibleWallets();
+  const find=id=>id?wallets.find(w=>String(w.id)===String(id)):null;
+  return find(selectedWalletId)
+    || find(expense?.sourceWalletId||expense?.source_wallet_id)
+    || find(typeof capvoDefaultWallet==='function'?capvoDefaultWallet()?.id:'')
+    || wallets[0]
+    || null;
+}
+
+function capvoFixedPaymentPreviewData(fixedExpenseId,selectedWalletId=''){
+  const expense=(D.fixedExpenses||[]).find(x=>String(x.id)===String(fixedExpenseId));
+  if(!expense)return null;
+  const dueDate=typeof capvoFixedExpenseNextDueDate==='function'?capvoFixedExpenseNextDueDate(expense):todayISO();
+  const payment=typeof capvoFixedExpensePaymentForDueDate==='function'
+    ? capvoFixedExpensePaymentForDueDate(expense.id,dueDate)
+    : null;
+  const eligibleWallets=capvoFixedPaymentEligibleWallets();
+  const wallet=capvoFixedPaymentPickWallet(expense,selectedWalletId);
+  const amount=capvoMoney(Number(expense.amount)||0);
+  const before=capvoMoney(Number(wallet?.currentBalance)||0);
+  const after=capvoMoney(before-amount);
+  return {expense,dueDate,payment,wallet,eligibleWallets,amount,before,after};
+}
+
+function capvoEnsureFixedPaymentPreviewSheet(){
+  let overlay=$('capvoFixedPaymentPreviewOverlay');
+  if(overlay)return overlay;
+  overlay=document.createElement('div');
+  overlay.id='capvoFixedPaymentPreviewOverlay';
+  overlay.className='fixed-payment-preview-overlay';
+  overlay.innerHTML=`
+    <div class="fixed-payment-preview-sheet" role="dialog" aria-modal="true" aria-labelledby="fixedPaymentPreviewTitle" onclick="event.stopPropagation()">
+      <div class="fixed-payment-preview-handle"></div>
+      <div class="fixed-payment-preview-head">
+        <div>
+          <span>Επιβεβαίωση</span>
+          <h3 id="fixedPaymentPreviewTitle">Πληρωμή παγίου</h3>
+          <p id="fixedPaymentPreviewSubtitle">Διάλεξε wallet και έλεγξε τι θα αφαιρεθεί πριν συνεχίσεις.</p>
+        </div>
+        <button type="button" class="fixed-payment-preview-close" onclick="capvoCloseFixedPaymentPreview(false)" aria-label="Κλείσιμο">×</button>
+      </div>
+      <div id="fixedPaymentPreviewBody" class="fixed-payment-preview-body"></div>
+      <div class="fixed-payment-preview-actions">
+        <button type="button" class="fixed-payment-preview-secondary" onclick="capvoCloseFixedPaymentPreview(false)">Άκυρο</button>
+        <button type="button" id="fixedPaymentPreviewConfirm" class="fixed-payment-preview-primary" onclick="capvoConfirmFixedPaymentPreview()">Πληρώθηκε</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click',event=>{
+    if(event.target===overlay)capvoCloseFixedPaymentPreview(false);
+  });
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function capvoRenderFixedPaymentPreviewBody(data){
+  const {expense,dueDate,payment,wallet,eligibleWallets=[],amount,before,after}=data;
+  const category=expense.category||'Άλλο';
+  const icon=CEMO[category]||'📌';
+  if(payment){
+    return `
+      <div class="fixed-payment-preview-alert soft">
+        <strong>Έχει ήδη πληρωθεί</strong>
+        <span>Το πάγιο φαίνεται πληρωμένο για ${esc(formatGreekFullDate(dueDate))}.</span>
+      </div>`;
+  }
+  if(!eligibleWallets.length){
+    return `
+      <div class="fixed-payment-preview-alert danger">
+        <strong>Δεν υπάρχει διαθέσιμο wallet πληρωμής</strong>
+        <span>Δεν μπορεί να πληρωθεί πάγιο από αποταμιευτικό wallet. Δημιούργησε ή ενεργοποίησε ένα wallet τύπου κύριος λογαριασμός, μετρητά ή Revolut.</span>
+      </div>`;
+  }
+  if(!wallet){
+    return `
+      <div class="fixed-payment-preview-alert danger">
+        <strong>Δεν βρέθηκε wallet</strong>
+        <span>Διάλεξε wallet πληρωμής για αυτό το πάγιο πριν συνεχίσεις.</span>
+      </div>`;
+  }
+  const walletOptions=eligibleWallets.map(w=>{
+    const selected=String(w.id)===String(wallet.id)?' selected':'';
+    const label=`${w.icon||'💳'} ${w.name||'Wallet'} · ${fmt(Number(w.currentBalance)||0)}`;
+    return `<option value="${esc(w.id)}"${selected}>${esc(label)}</option>`;
+  }).join('');
+  const isInsufficient=after<0;
+  const missingAmount=Math.abs(after);
+  return `
+    <div class="fixed-payment-preview-hero">
+      <span class="fixed-payment-preview-icon">${icon}</span>
+      <div>
+        <strong>${esc(expense.name||'Πάγιο')}</strong>
+        <small>${esc(category)} · ${esc(formatGreekFullDate(dueDate))}</small>
+      </div>
+      <em>${fmt(amount)}</em>
+    </div>
+
+    <label class="fixed-payment-preview-wallet-picker" for="fixedPaymentPreviewWalletSelect">
+      <span>Πλήρωσε από wallet</span>
+      <select id="fixedPaymentPreviewWalletSelect" class="fixed-payment-preview-wallet-select" onchange="capvoChangeFixedPaymentPreviewWallet(this.value)">
+        ${walletOptions}
+      </select>
+      <small>Τα αποταμιευτικά wallets δεν εμφανίζονται για πληρωμή παγίων.</small>
+    </label>
+
+    <div class="fixed-payment-preview-balance-grid">
+      <div>
+        <span>Πριν</span>
+        <strong>${fmt(before)}</strong>
+      </div>
+      <div>
+        <span>Πληρωμή</span>
+        <strong>-${fmt(amount)}</strong>
+      </div>
+      <div class="${after<0?'is-negative':''}">
+        <span>Μετά</span>
+        <strong>${fmt(after)}</strong>
+      </div>
+    </div>
+
+    ${isInsufficient?`
+      <div class="fixed-payment-preview-alert danger">
+        <strong>Ανεπαρκές υπόλοιπο</strong>
+        <span>Το wallet "${esc(wallet.name||'Wallet')}" δεν έχει αρκετά χρήματα για αυτή την πληρωμή. Λείπουν ${fmt(missingAmount)}. Διάλεξε άλλο wallet ή μετέφερε χρήματα πριν συνεχίσεις.</span>
+      </div>`:`
+      <div class="fixed-payment-preview-alert soft">
+        <strong>Τι θα γίνει</strong>
+        <span>Θα μειωθεί μόνο το wallet "${esc(wallet.name||'Wallet')}" και θα καταχωρηθεί actual πληρωμή παγίου στα movements/reports.</span>
+      </div>`}
+  `;
+}
+
+function capvoOpenFixedPaymentPreview(fixedExpenseId){
+  return new Promise(resolve=>{
+    const data=capvoFixedPaymentPreviewData(fixedExpenseId);
+    if(!data){showMiniToast('Δεν βρέθηκε το πάγιο.','error');resolve(false);return;}
+
+    capvoFixedPaymentPreviewExpenseId=String(fixedExpenseId||'');
+    capvoFixedPaymentPreviewSelectedWalletId=String(data.wallet?.id||'');
+    capvoFixedPaymentPreviewResolve=resolve;
+    const overlay=capvoEnsureFixedPaymentPreviewSheet();
+    capvoRefreshFixedPaymentPreview(data);
+    overlay.classList.add('active');
+    document.body.classList.add('fixed-payment-preview-open');
+  });
+}
+
+function capvoRefreshFixedPaymentPreview(data=null){
+  const nextData=data || capvoFixedPaymentPreviewData(capvoFixedPaymentPreviewExpenseId,capvoFixedPaymentPreviewSelectedWalletId);
+  const body=$('fixedPaymentPreviewBody');
+  const confirm=$('fixedPaymentPreviewConfirm');
+  if(!nextData){
+    if(body)body.innerHTML=`<div class="fixed-payment-preview-alert danger"><strong>Δεν βρέθηκε το πάγιο</strong><span>Κλείσε το παράθυρο και δοκίμασε ξανά.</span></div>`;
+    if(confirm)confirm.disabled=true;
+    return;
+  }
+  capvoFixedPaymentPreviewSelectedWalletId=String(nextData.wallet?.id||'');
+  if(body)body.innerHTML=capvoRenderFixedPaymentPreviewBody(nextData);
+  if(confirm){
+    const isInsufficient=Number(nextData.after)<0;
+    confirm.disabled=!!nextData.payment || !nextData.wallet || !nextData.eligibleWallets?.length || isInsufficient;
+    confirm.textContent=nextData.payment?'Ήδη πληρωμένο':(isInsufficient?'Ανεπαρκές υπόλοιπο':'Πληρώθηκε');
+  }
+}
+
+function capvoChangeFixedPaymentPreviewWallet(walletId){
+  capvoFixedPaymentPreviewSelectedWalletId=String(walletId||'');
+  capvoRefreshFixedPaymentPreview();
+}
+
+function capvoCloseFixedPaymentPreview(result=false){
+  const overlay=$('capvoFixedPaymentPreviewOverlay');
+  if(overlay)overlay.classList.remove('active','is-busy');
+  document.body.classList.remove('fixed-payment-preview-open');
+  const confirm=$('fixedPaymentPreviewConfirm');
+  if(confirm){confirm.disabled=false;confirm.textContent='Πληρώθηκε';}
+  capvoFixedPaymentPreviewExpenseId='';
+  capvoFixedPaymentPreviewSelectedWalletId='';
+  const resolve=capvoFixedPaymentPreviewResolve;
+  capvoFixedPaymentPreviewResolve=null;
+  if(typeof resolve==='function')resolve(!!result);
+}
+
+async function capvoConfirmFixedPaymentPreview(){
+  const fixedExpenseId=capvoFixedPaymentPreviewExpenseId;
+  if(!fixedExpenseId)return;
+  const overlay=$('capvoFixedPaymentPreviewOverlay');
+  const confirm=$('fixedPaymentPreviewConfirm');
+  if(overlay)overlay.classList.add('is-busy');
+  if(confirm){confirm.disabled=true;confirm.textContent='Καταχώρηση...';}
+  try{
+    await capvoPayFixedExpense(fixedExpenseId,{skipPreview:true,skipLegacyConfirm:true,walletId:capvoFixedPaymentPreviewSelectedWalletId});
+    capvoCloseFixedPaymentPreview(true);
+  }catch(e){
+    console.error('capvoConfirmFixedPaymentPreview failed:',e);
+    if(overlay)overlay.classList.remove('is-busy');
+    if(confirm){confirm.disabled=false;confirm.textContent='Πληρώθηκε';}
+  }
+}
+
+function capvoRenderFixedSection(title,subtitle,rows,emptyText,extraClass=''){
+  return `
+    <section class="fixed-obligation-section ${esc(extraClass)}">
+      <div class="fixed-obligation-section-head">
+        <div>
+          <h3>${esc(title)}</h3>
+          ${subtitle?`<p>${esc(subtitle)}</p>`:''}
+        </div>
+        <span>${rows.length}</span>
+      </div>
+      <div class="fixed-obligation-section-list">
+        ${rows.length?rows.map(row=>capvoRenderFixedObligationCard(row,{compact:true})).join(''):`<div class="fixed-section-empty">${esc(emptyText)}</div>`}
+      </div>
+    </section>`;
+}
+
+function capvoToggleFixedAllExpanded(){
+  capvoFixedAllExpanded=!capvoFixedAllExpanded;
+  renderFixedList();
+}
+
+function capvoRenderFixedAllSection(rows,paidMonthTotal){
+  const safeRows=Array.isArray(rows)?rows:[];
+  const limit=10;
+  const total=safeRows.length;
+  const visibleRows=capvoFixedAllExpanded?safeRows:safeRows.slice(0,limit);
+  const remaining=Math.max(0,total-visibleRows.length);
+  const hasMore=total>limit;
+  const subtitle=hasMore && !capvoFixedAllExpanded
+    ? `Εμφάνιση ${visibleRows.length} από ${total} · πληρωμένα στον μήνα ${fmt(paidMonthTotal)}.`
+    : `Επόμενες προγραμματισμένες πληρωμές · πληρωμένα στον μήνα ${fmt(paidMonthTotal)}.`;
+
+  return `
+    <section class="fixed-obligation-section all compact-all">
+      <div class="fixed-obligation-section-head">
+        <div>
+          <h3>Όλα τα πάγια</h3>
+          <p>${esc(subtitle)}</p>
+        </div>
+        <span>${total}</span>
+      </div>
+      <div class="fixed-obligation-section-list">
+        ${visibleRows.length?visibleRows.map(row=>capvoRenderFixedObligationCard(row,{compact:true,showDelete:true})).join(''):`<div class="fixed-section-empty">Δεν υπάρχουν ενεργά πάγια.</div>`}
+      </div>
+      ${hasMore?`
+        <div class="fixed-obligation-section-actions">
+          <button type="button" class="fixed-all-toggle-btn" onclick="capvoToggleFixedAllExpanded()">
+            ${capvoFixedAllExpanded?'Δες μόνο τα πρώτα 10':`Φόρτωσε άλλα ${Math.min(limit,remaining)}`}
+          </button>
+        </div>
+      `:''}
+    </section>`;
+}
+
+function capvoRenderFixedPaymentHistoryCard(row){
+  const payment=row.payment||{};
+  const expense=row.expense||{};
+  const wallet=row.wallet;
+  const category=expense.category||'Πάγια';
+  const icon=CEMO[category]||'📌';
+  const paymentId=capvoFixedCalendarJs(payment.id||'');
+  const paidAt=String(payment.paidAt||payment.paid_at||payment.createdAt||payment.created_at||'').slice(0,10);
+  const paidFor=String(payment.paidForDate||payment.paid_for_date||row.dueDate||'').slice(0,10);
+  const deleted=!!expense.deletedAt;
+
+  return `
+    <article class="fixed-obligation-card compact state-paid fixed-payment-history-card ${deleted?'is-deleted-schedule':''}">
+      <div class="fixed-obligation-main fixed-history-main">
+        <span class="fixed-obligation-icon">${icon}</span>
+        <span class="fixed-obligation-copy">
+          <strong>${esc(expense.name||'Πάγιο')}</strong>
+          <small>${esc(category)} · Πληρώθηκε${wallet?` · ${esc(wallet.name)}`:''}${deleted?' · Διαγραμμένο πάγιο':''}</small>
+          <em>Πληρώθηκε: ${esc(formatGreekFullDate(paidAt||paidFor))} · Αφορούσε: ${esc(formatGreekFullDate(paidFor||paidAt))}</em>
+        </span>
+      </div>
+      <div class="fixed-obligation-side">
+        <strong>${fmt(Number(payment.amount)||0)}</strong>
+        <span class="fixed-due-pill green">Πληρώθηκε</span>
+        <div class="fixed-obligation-actions">
+          ${paymentId?`<button type="button" class="fixed-pay-btn undo" onclick="capvoUndoFixedExpensePayment('${paymentId}')">Αναίρεση</button>`:''}
+        </div>
+      </div>
+    </article>`;
+}
+
+function capvoRenderRecentFixedPayments(rows){
+  return `
+    <section class="fixed-obligation-section paid-recent">
+      <div class="fixed-obligation-section-head">
+        <div>
+          <h3>Πληρωμένα πρόσφατα</h3>
+          <p>Οι τελευταίες actual πληρωμές παγίων.</p>
+        </div>
+        <span>${rows.length}</span>
+      </div>
+      <div class="fixed-obligation-section-list">
+        ${rows.length?rows.map(row=>capvoRenderFixedPaymentHistoryCard(row)).join(''):`<div class="fixed-section-empty">Δεν υπάρχουν πρόσφατες πληρωμές.</div>`}
+      </div>
+    </section>`;
+}
+
 function renderFixedList(){
   const fixedItems=(D.fixedExpenses||[])
     .slice()
-    .sort((a,b)=>fixedExpenseSortTime(b)-fixedExpenseSortTime(a))
+    .sort((a,b)=>{
+      const sa=typeof capvoFixedExpenseStatus==='function'?capvoFixedExpenseStatus(a):{nextDueDate:a.nextDueDate||''};
+      const sb=typeof capvoFixedExpenseStatus==='function'?capvoFixedExpenseStatus(b):{nextDueDate:b.nextDueDate||''};
+      return String(sa.nextDueDate||'9999-12-31').localeCompare(String(sb.nextDueDate||'9999-12-31'));
+    })
     .map(e=>({kind:'fixed',data:e}));
 
   const count=fixedItems.length;
@@ -146,8 +919,17 @@ function renderFixedList(){
   const listEl=$('lFixed');
   if(!countEl || !listEl)return;
 
+  const currentRows=capvoFixedCalendarCurrentRows();
+  const urgentRows=currentRows.filter(row=>row.status?.state==='overdue');
+  const todayRows=currentRows.filter(row=>row.dueDate===todayISO() && row.status?.state!=='paid');
+  const upcomingRows=currentRows.filter(row=>{
+    if(row.status?.state!=='upcoming')return false;
+    const diff=(capvoParseDateKey(row.dueDate)-capvoParseDateKey(todayISO()))/(1000*60*60*24);
+    return diff>0 && diff<=7;
+  });
+
   countEl.innerHTML=`
-    ${count} εγγραφές
+    ${count} πάγια · ${urgentRows.length+todayRows.length} ενέργειες
     <button class="mini-action" onclick="toggleSelectMode('fixed')">${selectionMode.fixed?'Άκυρο':'Επιλογή'}</button>
     ${selectionMode.fixed?`
       <button class="mini-action" onclick="selectAllVisible('fixed')">Όλα</button>
@@ -169,25 +951,47 @@ function renderFixedList(){
     return;
   }
 
-  const isMobile=window.innerWidth<=768;
-  const visibleLimit=isMobile && !txMobileFixedExpanded ? 5 : fixedItems.length;
-  const visibleItems=fixedItems.slice(0,visibleLimit);
-
-  let html='';
-
-  visibleItems.forEach(item=>{
-    html+=eRow(item.data,'fixed');
-  });
-
-  if(isMobile && fixedItems.length>5){
-    html+=`
-      <button type="button" class="tx-v25-more-btn tx-v25-fixed-more" onclick="toggleTxMobileFixedExpanded()">
-        ${txMobileFixedExpanded?'Λιγότερα':'Προβολή όλων των πάγιων'}
-        <span>${txMobileFixedExpanded?'⌃':'⌄'}</span>
-      </button>`;
+  if(selectionMode.fixed){
+    listEl.innerHTML=fixedItems.map(item=>eRow(item.data,'fixed')).join('');
+    return;
   }
 
-  listEl.innerHTML=html;
+  const monthRows=capvoFixedCalendarRowsForMonth(capvoFixedCalendarMonthKey);
+  capvoFixedCalendarEnsureState(monthRows);
+  const selectedRows=monthRows.filter(row=>row.dueDate===capvoFixedCalendarSelectedDateKey);
+  const recentPayments=capvoFixedCalendarRecentPayments(5);
+  const monthTotal=capvoMoney(monthRows.reduce((s,row)=>s+(Number(row.expense?.amount)||0),0));
+  const paidMonthTotal=capvoMoney(monthRows.filter(row=>row.status?.state==='paid').reduce((s,row)=>s+(Number(row.expense?.amount)||0),0));
+
+  listEl.innerHTML=`
+    <div class="fixed-calendar-dashboard">
+      <div class="fixed-summary-chip action"><span>Ενέργειες</span><strong>${urgentRows.length+todayRows.length}</strong></div>
+      <div class="fixed-summary-chip today"><span>Σήμερα</span><strong>${todayRows.length}</strong></div>
+      <div class="fixed-summary-chip upcoming"><span>7 ημέρες</span><strong>${upcomingRows.length}</strong></div>
+      <div class="fixed-summary-chip total"><span>Μήνας</span><strong>${fmt(monthTotal)}</strong></div>
+    </div>
+
+    ${capvoRenderFixedCalendar(monthRows)}
+
+    <section class="fixed-selected-day-card">
+      <div class="fixed-selected-day-head">
+        <div>
+          <h3>${esc(capvoFixedCalendarSelectedLabel(capvoFixedCalendarSelectedDateKey))}</h3>
+          <p>${selectedRows.length?`${selectedRows.length} υποχρεώσεις · ${fmt(selectedRows.reduce((s,row)=>s+(Number(row.expense?.amount)||0),0))}`:'Καμία πληρωμή σε αυτή την ημέρα.'}</p>
+        </div>
+        <span>${selectedRows.length?fmt(selectedRows.reduce((s,row)=>s+(Number(row.expense?.amount)||0),0)):fmt(0)}</span>
+      </div>
+      <div class="fixed-selected-day-list">
+        ${selectedRows.length?selectedRows.map(row=>capvoRenderFixedObligationCard(row)).join(''):`<div class="fixed-section-empty">Δεν έχεις πάγιο προγραμματισμένο για αυτή την ημέρα.</div>`}
+      </div>
+    </section>
+
+    ${capvoRenderFixedSection('Χρειάζονται ενέργεια','Πάγια που έχουν περάσει και δεν φαίνονται ως πληρωμένα.',urgentRows,'Δεν έχεις καθυστερημένες υποχρεώσεις.','needs-action')}
+    ${capvoRenderFixedSection('Σήμερα','Όσα λήγουν σήμερα και θέλουν άμεση απόφαση.',todayRows,'Δεν λήγει κάποιο πάγιο σήμερα.','today')}
+    ${capvoRenderFixedSection('Έρχονται σύντομα','Επόμενες υποχρεώσεις μέσα στις 7 ημέρες.',upcomingRows,'Δεν έχεις πάγια στις επόμενες 7 ημέρες.','upcoming')}
+    ${capvoRenderFixedAllSection(currentRows,paidMonthTotal)}
+    ${capvoRenderRecentFixedPayments(recentPayments)}
+  `;
 }
 
 function toggleTxMobileFixedExpanded(){
@@ -336,10 +1140,16 @@ function closeMobileTransactionDetail(){
 }
 
 function renderDailyList(){
+  // Use the full unified ledger so fixed expenses, card payments, and savings
+  // all appear in the Κινήσεις page — not just daily expense rows.
+  const allMovements=typeof getCurrentCycleAllMovements==='function'
+    ? getCurrentCycleAllMovements()
+    : getCurrentCycleDailyExpenses();
+  // Keep daily-only count for the selection/bulk-delete toolbar (only real expenses are editable).
   const m={daily:getCurrentCycleDailyExpenses()};
 
   $('cDaily').innerHTML=`
-    ${m.daily.length} εγγραφές κύκλου
+    ${allMovements.length} κινήσεις μήνα
     <button class="mini-action" onclick="toggleSelectMode('daily')">${selectionMode.daily?'Άκυρο':'Επιλογή'}</button>
     ${selectionMode.daily?`
       <button class="mini-action" onclick="selectAllVisible('daily')">Όλα</button>
@@ -348,7 +1158,7 @@ function renderDailyList(){
     `:''}
   `;
 
-  if(m.daily.length===0){
+  if(allMovements.length===0){
     $('lDaily').innerHTML=`
       <div class="empty">
         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -357,16 +1167,20 @@ function renderDailyList(){
           <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        Κανένα ημερήσιο έξοδο ακόμα
+        Δεν υπάρχουν κινήσεις για αυτόν τον κύκλο
       </div>`;
     return;
   }
 
   const grouped={};
 
-  [...m.daily]
+  [...allMovements]
     .filter(e=>mobileTransactionMatchesSearch(e) && mobileTransactionMatchesFilter(e))
-    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id||'').localeCompare(String(a.id||'')))
+    .sort((a,b)=>
+      String(b.date||'').localeCompare(String(a.date||'')) ||
+      String(b.createdAt||b.created_at||'').localeCompare(String(a.createdAt||a.created_at||'')) ||
+      String(b.id||'').localeCompare(String(a.id||''))
+    )
     .forEach(e=>{
       if(!grouped[e.date]) grouped[e.date]=[];
       grouped[e.date].push(e);
@@ -390,12 +1204,18 @@ function renderDailyList(){
 
   Object.keys(grouped).sort().reverse().forEach(dt=>{
     const d=new Date(dt+'T12:00:00');
-    const dayTotal=grouped[dt].reduce((s,e)=>s+e.amount,0);
+    // Show budget impact total per day (excludes credit card purchases, restricted sources etc.)
+    const dayBudgetImpact=grouped[dt].reduce((s,e)=>{
+      const impact=typeof capvoMovementBudgetImpact==='function'
+        ? capvoMovementBudgetImpact(e)
+        : (e.affectsBudget!==false ? (Number(e.budgetImpactAmount)||Number(e.amount)||0) : 0);
+      return s+impact;
+    },0);
 
     html+=`
       <div class="day-header">
         <span>${DG[d.getDay()]}, ${d.getDate()} ${MG[d.getMonth()]}</span>
-        <span class="day-total">${fmt(dayTotal)}</span>
+        <span class="day-total" title="Επίδραση budget">${fmt(dayBudgetImpact)}</span>
       </div>`;
 
     grouped[dt].forEach(e=>html+=eRow(e,'daily'));
@@ -419,7 +1239,11 @@ function renderMobileCategoryInsights(){
 
   (dailyRows || []).forEach(e=>{
     const cat = e.category || 'Άλλο';
-    totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
+    const value=typeof capvoMovementBudgetImpact==='function'
+      ? Math.abs(capvoMovementBudgetImpact(e))
+      : Math.abs(Number(e.amount)||0);
+    if(value<=0)return;
+    totals[cat] = (totals[cat] || 0) + value;
   });
 
   const rows = Object.entries(totals)
@@ -819,7 +1643,7 @@ function renderFirstUseBudgetPrompt(){
       <strong>${hasAnyData?'Οργάνωσε το budget σου':'Ξεκίνα με budget'}</strong>
     </div>
     <div class="dashboard-budget-start-actions">
-      <button type="button" class="dashboard-budget-start-primary" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'));setTimeout(()=>openModal('incomeSource'),120);">Προσθήκη budget</button>
+      <button type="button" class="dashboard-budget-start-primary" onclick="go('vWallets',document.querySelector('[data-v=vWallets]'));">Ορισμός βασικού λογαριασμού</button>
       <button type="button" class="dashboard-budget-start-secondary" onclick="localStorage.setItem('capvo_budget_start_dismissed_at',String(Date.now()));localStorage.removeItem('capvo_budget_start_dismissed');document.getElementById('dashboardBudgetStartCard')?.remove();">Αργότερα</button>
     </div>
   `;
@@ -910,7 +1734,7 @@ function openBudgetLimitInfoSheet(){
         </div>
 
         <div class="budget-limit-metrics">
-          <div><span>Συνολικό ποσό κύκλου</span><strong id="budgetLimitTotalAmount">—</strong></div>
+          <div><span>Συνολικό ποσό μήνα</span><strong id="budgetLimitTotalAmount">—</strong></div>
           <div><span>Όριο για έξοδα</span><strong id="budgetLimitSpendingAmount">—</strong></div>
           <div><span>Υπόλοιπο τώρα</span><strong id="budgetLimitRemainingAmount">—</strong></div>
           <div><span>Εκτός budget</span><strong id="budgetLimitReservedAmount">—</strong></div>
@@ -966,9 +1790,20 @@ function eRow(e,t){
   const showSelect=selectionMode[t];
   const isNonBudgetDaily=t==='daily' && typeof expenseAffectsCashBudget==='function' && !expenseAffectsCashBudget(e);
   const isCreditCardDaily=isNonBudgetDaily && (e.isCreditCardPurchase || e.paymentAccountType==='credit_card' || e.creditCardId || e.installmentPlanId);
+  const fixedStatus=t==='fixed' && typeof capvoFixedExpenseStatus==='function'?capvoFixedExpenseStatus(e):null;
+  const fixedWallet=t==='fixed' && e.sourceWalletId ? capvoWalletById(e.sourceWalletId) : null;
+  const fixedDueLabel=fixedStatus?.nextDueDate ? formatGreekFullDate(fixedStatus.nextDueDate) : '';
+  const fixedPaid=!!fixedStatus && fixedStatus.state==='paid';
+  const latestFixedPayment=t==='fixed' && typeof capvoLatestFixedExpensePaymentForCurrentCycle==='function'
+    ? capvoLatestFixedExpensePaymentForCurrentCycle(e.id)
+    : null;
+  const fixedCanUndo=t==='fixed' && !!latestFixedPayment && !showSelect;
+  const fixedCanPay=t==='fixed' && !fixedCanUndo && !fixedPaid && !showSelect && ['due','overdue'].includes(fixedStatus?.state);
+  const rowDetailType=t==='daily' && (e.readOnly || e.isFixedExpensePayment || e.isCardPayment || e.isSavingsMovement) ? 'movement' : t;
+  const isFixedPaymentDaily=t==='daily' && (e.isFixedExpensePayment || String(e.movementType||'')==='fixed_expense_payment');
 
   return `
-    <div class="expense-item fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${t}','${e.id}')`:''}">
+    <div class="expense-item fadeIn ${isSelected?'selected-row':''} ${t==='fixed'?'scheduled-fixed-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${rowDetailType}','${e.id}')`:''}">
       ${showSelect?`
         <label class="select-box" onclick="event.stopPropagation()">
           <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelectExpense('${t}','${e.id}',this.checked)">
@@ -977,18 +1812,25 @@ function eRow(e,t){
       <div class="expense-icon ${c}">${em}</div>
 
       <div class="expense-info">
-        <div class="expense-name">${esc(e.name)}</div>
+        <div class="expense-name">
+          ${esc(e.name)}
+          ${fixedStatus?`<span class="fixed-due-pill ${fixedStatus.tone}">${esc(fixedStatus.label)}</span>`:''}
+        </div>
         <div class="expense-cat">
           ${esc(category)}
-          ${t==='fixed' && fixedExpenseCreatedAt(e)
-            ? ` · Καταχώρηση ${esc(formatShortDate(fixedExpenseCreatedAt(e)))}`
+          ${t==='fixed'
+            ? latestFixedPayment
+              ? ` · Πληρώθηκε ${esc(formatGreekFullDate(latestFixedPayment.paidAt||latestFixedPayment.paidForDate||''))}${fixedWallet?` · ${esc(fixedWallet.name)}`:''}`
+              : ` · ${fixedDueLabel?`Πληρωμή ${esc(fixedDueLabel)}`:'Προγραμματισμένο'}${fixedWallet?` · ${esc(fixedWallet.name)}`:''}`
             : ''
           }
-          ${t==='daily' && e.paymentSourceName
-            ? ` <span class="payment-badge ${paymentSourceExists(e.paymentSourceId)?'':'deleted'} ${isCreditCardDaily?'credit-card':''}">
-                  💳 ${esc(e.paymentSourceName)}${paymentSourceExists(e.paymentSourceId)?'':' (διαγραμμένο)'}
-                </span>`
-            : ''
+          ${isFixedPaymentDaily
+            ? ` <span class="payment-badge fixed-payment">🔁 ${esc(e.sourceLabel||'Πληρωμή παγίου')}</span>`
+            : (t==='daily' && e.paymentSourceName && !e.isCardPayment && !e.isSavingsMovement
+              ? ` <span class="payment-badge ${paymentSourceExists(e.paymentSourceId)?'':'deleted'} ${isCreditCardDaily?'credit-card':''}">
+                    💳 ${esc(e.paymentSourceName)}${paymentSourceExists(e.paymentSourceId)?'':' (διαγραμμένο)'}
+                  </span>`
+              : '')
           }
           ${isNonBudgetDaily
             ? ` <span class="payment-badge no-budget">Δεν επηρεάζει budget</span>`
@@ -997,7 +1839,16 @@ function eRow(e,t){
         </div>
       </div>
 
-      <div class="expense-amount ${t==='fixed'?'is-fixed':'is-daily'} ${isNonBudgetDaily?'is-neutral':''}">${t==='fixed'?fmt(e.amount):'-'+fmt(e.amount)}</div>
+      <div class="expense-right ${t==='fixed'?'fixed-schedule-right':''}">
+        <div class="expense-amount ${t==='fixed'?'is-fixed':'is-daily'} ${isNonBudgetDaily?'is-neutral':''}">${t==='fixed'?fmt(e.amount):'-'+fmt(e.amount)}</div>
+        ${fixedCanUndo?`
+          <button type="button" class="fixed-pay-btn undo" onclick="event.stopPropagation();capvoUndoFixedExpensePayment('${latestFixedPayment.id}')">
+            Αναίρεση
+          </button>`:fixedCanPay?`
+          <button type="button" class="fixed-pay-btn" onclick="event.stopPropagation();capvoPayFixedExpense('${e.id}')">
+            Πληρώθηκε
+          </button>`:''}
+      </div>
     </div>`;
 }
 
@@ -1014,19 +1865,24 @@ const INCOME_COLORS={
 };
 
 const INCOME_ICONS={
-  'Μισθός':'💼',
   'Bonus':'🎁',
+  'Δώρο Πάσχα':'🐣',
+  'Δώρο Χριστουγέννων':'🎄',
+  'Δώρο αδείας':'🏖️',
   'Ενοίκιο':'🏠',
-  'Ticket Restaurant':'🍽️',
-  'Άυλη κάρτα':'💳',
   'Μερίσματα':'📈',
   'Freelance':'🧑‍💻',
-  'Δώρο':'🎉',
+  'Δεύτερη δουλειά':'💼',
+  'Επιστροφή χρημάτων':'↩️',
+  'Πώληση αντικειμένου':'🏷️',
+  'Οικονομική βοήθεια':'🤝',
+  'Ticket Restaurant':'🍽️',
+  'Άυλη κάρτα':'💳',
   'Άλλο':'💰'
 };
 
 function renderIncomePage(){
-  const sources=D.incomeSources||[];
+  const sources=(D.incomeSources||[]).filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true);
 
   const total=incomeSourcesTotal();
   const budget=budgetIncomeTotal();
@@ -1039,14 +1895,14 @@ function renderIncomePage(){
   $('incomeBudgetBox').textContent=fmt(budget);
   $('incomeSavingsBox').textContent=fmt(savings);
   $('incomeRestrictedBox').textContent= fmt(restrictedRemaining)+' / '+fmt(restricted);
-  $('incomeCount').textContent=sources.length+' εγγραφές';
+  $('incomeCount').textContent=sources.length+' έξτρα εγγραφές';
 
   renderIncomeDonut();
   renderIncomeList();
 }
 
 function renderIncomeDonut(){
-  const sources=D.incomeSources||[];
+  const sources=(D.incomeSources||[]).filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true);
   const byCat={};
 
   sources.forEach(i=>{
@@ -1097,7 +1953,7 @@ function renderIncomeDonut(){
 }
 
 function renderIncomeList(){
-  const sources=D.incomeSources||[];
+  const sources=(D.incomeSources||[]).filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true);
 
   if(sources.length===0){
     $('incomeList').innerHTML=`
@@ -1116,16 +1972,14 @@ function renderIncomeList(){
 
         <div class="income-source-info">
           <div class="income-source-name">${esc(i.name)}</div>
-          <div class="income-source-meta">${esc(i.category)} · ${esc(i.incomeType)} · ${i.isRecurring?'Μηνιαίο':'One-time'}</div>
+          <div class="income-source-meta">${esc(i.category)} · ${esc(i.incomeType)} · ${i.isRecurring?'Επαναλαμβανόμενο':'One-time'}${i.destinationWalletId?' · προς '+esc(capvoWalletById(i.destinationWalletId)?.name||'wallet'):''}</div>
 
           <div class="income-badges">
-            ${i.isPrimaryIncome?'<span class="income-badge budget">Βασικό budget</span>':''}
-            ${Number(i.spendingLimit)>0 && Number(i.spendingLimit)<Number(i.amount)
-              ? `<span class="income-badge budget">Όριο ${fmt(i.spendingLimit)}</span>`
+            ${i.destinationWalletId
+              ? `<span class="income-badge budget">Προορισμός: ${esc(capvoWalletById(i.destinationWalletId)?.name||'Wallet')}</span>`
               : ''
             }
-            ${i.includeInBudget?'<span class="income-badge budget">Στο budget</span>':'<span class="income-badge savings">Εκτός budget</span>'}
-            ${i.isSavings?'<span class="income-badge savings">Αποταμίευση</span>':''}
+            ${i.walletDepositApplied?'<span class="income-badge budget">Περάστηκε στο wallet</span>':''}
             ${i.restriction&&i.restriction!=='none'
               ?`<span class="income-badge restricted">
                   Διαθέσιμο ${fmt(paymentSourceRemaining(i))} / ${fmt(i.amount)}
@@ -1175,6 +2029,7 @@ function editIncomeSource(id){
   $('fISSavings').checked=!!i.isSavings;
   $('fISRecurring').checked=!!i.isRecurring;
   if($('fISPrimary'))$('fISPrimary').checked=!!i.isPrimaryIncome;
+  if($('fISDestinationWallet'))fillIncomeDestinationWalletSelect(i.destinationWalletId||'');
   $('fISNotes').value=i.notes||'';
   $('fISID').value=id;
 
@@ -1188,34 +2043,82 @@ function editIncomeSource(id){
 }
 
 
+function capvoDailyExpenseIsSavingsWallet(wallet){
+  if(!wallet)return false;
+  const role=typeof capvoWalletBudgetRole==='function'?String(capvoWalletBudgetRole(wallet)||''):String(wallet.budgetRole||wallet.budget_role||'');
+  return !!(wallet.isSavings || wallet.is_savings || String(wallet.type||'')==='savings' || role==='savings');
+}
+
+function capvoDailyExpenseEligibleWallets(){
+  const wallets=typeof capvoActiveWallets==='function'
+    ? capvoActiveWallets()
+    : (Array.isArray(D.wallets)?D.wallets.filter(w=>w&&w.isActive!==false&&w.is_active!==false):[]);
+  // User-facing rule for expenses: every active wallet can pay except savings wallets.
+  return wallets.filter(w=>w && w.isActive!==false && w.is_active!==false && !capvoDailyExpenseIsSavingsWallet(w));
+}
+
+function capvoIsWalletPaymentSource(source){
+  return !!(source && (source.sourceKind==='wallet' || source.type==='wallet' || source.accountType==='wallet' || (source.id && typeof capvoWalletById==='function' && capvoWalletById(source.id))));
+}
+
 function availablePaymentSources(){
+  const wallets=(typeof capvoDailyExpenseEligibleWallets==='function'?capvoDailyExpenseEligibleWallets():[])
+    .map(w=>({
+      ...w,
+      id:w.id,
+      name:w.name,
+      type:'wallet',
+      sourceKind:'wallet',
+      accountType:'wallet',
+      incomeType:'wallet',
+      currentBalance:Number(w.currentBalance ?? w.current_balance)||0,
+      icon:w.icon||'🏦'
+    }));
+
   const benefits=(D.incomeSources||[])
     .filter(i=>(typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(i):(i.restriction && i.restriction!=='none')))
     .map(i=>({
+      ...i,
       id:i.id,
       name:i.name,
       type:i.incomeType||'voucher',
+      sourceKind:'benefit',
       incomeType:i.incomeType||'voucher'
     }));
 
   const cards=(D.creditCards||[])
     .filter(c=>c.isActive!==false)
     .map(c=>({
+      ...c,
       id:c.id,
       name:c.name,
       type:'credit_card',
+      sourceKind:'credit_card',
       incomeType:'card',
       accountType:c.accountType||'credit_card',
       balance:Number(c.balance)||0
     }));
 
-  return benefits.concat(cards);
+  return wallets.concat(benefits, cards);
 }
 
 function paymentSourceById(id){
   if(!id)return null;
-  return (D.incomeSources||[]).find(i=>String(i.id)===String(id))
-    || (D.creditCards||[]).find(c=>String(c.id)===String(id))
+  const key=String(id);
+  const wallet=typeof capvoWalletById==='function'?capvoWalletById(key):null;
+  if(wallet)return {
+    ...wallet,
+    id:wallet.id,
+    name:wallet.name,
+    type:'wallet',
+    sourceKind:'wallet',
+    accountType:'wallet',
+    incomeType:'wallet',
+    currentBalance:Number(wallet.currentBalance ?? wallet.current_balance)||0,
+    icon:wallet.icon||'🏦'
+  };
+  return (D.incomeSources||[]).find(i=>String(i.id)===key)
+    || (D.creditCards||[]).find(c=>String(c.id)===key)
     || null;
 }
 
@@ -1234,50 +2137,154 @@ function fillPaymentSourceSelect(selectedId='',opts={}){
   }
 
   el.disabled=false;
+  const hasWalletModel=typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel();
+  const defaultWalletId=hasWalletModel && !selectedId && !opts.preserveBlank ? (typeof capvoDefaultWallet==='function'?capvoDefaultWallet()?.id:'') : '';
+  const effectiveSelected=selectedId || defaultWalletId || '';
+  const optionRows=sources.map(s=>{
+    const isWallet=typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(s);
+    const isCard=s.type==='credit_card' || s.accountType==='credit_card';
+    const balance=isWallet ? ` · ${fmt(Number(s.currentBalance)||0)}` : '';
+    const icon=isCard?'💳 ':(isWallet?`${esc(s.icon||'🏦')} `:'🎫 ');
+    return `
+      <option value="${esc(s.id)}" ${String(s.id)===String(effectiveSelected)?'selected':''}>
+        ${icon}${esc(s.name)}${balance}
+      </option>`;
+  }).join('');
   el.innerHTML=`
-    <option value="">Κανονικό budget</option>
-    ${sources.map(s=>`
-      <option value="${s.id}" ${String(s.id)===String(selectedId)?'selected':''}>
-        ${s.type==='credit_card'?'💳 ':''}${esc(s.name)}
-      </option>
-    `).join('')}
+    ${hasWalletModel?'':`<option value="" ${!effectiveSelected?'selected':''}>Κανονικό budget</option>`}
+    ${optionRows}
   `;
+  if(effectiveSelected)el.value=effectiveSelected;
 }
 
 
+
+function fillIncomeDestinationWalletSelect(selectedId=''){
+  const el=$('fISDestinationWallet');
+  if(!el)return;
+
+  const wallets=typeof capvoActiveWallets==='function'?capvoActiveWallets():[];
+  const options=wallets.map(w=>{
+    const role=typeof capvoWalletCountsInBudget==='function' && capvoWalletCountsInBudget(w) ? 'budget' : 'εκτός budget';
+    return `<option value="${esc(w.id)}" ${String(w.id)===String(selectedId||'')?'selected':''}>${esc(w.icon||'🏦')} ${esc(w.name)} · ${role}</option>`;
+  }).join('');
+
+  el.innerHTML=`<option value="">Επίλεξε προορισμό...</option>${options}`;
+  if(selectedId)el.value=selectedId;
+}
+
+function incomeDestinationWallet(){
+  const id=$('fISDestinationWallet')?.value||'';
+  return id?capvoWalletById(id):null;
+}
+
+function updateIncomeDestinationHelp(){
+  const help=$('incomeDestinationHint');
+  const wallet=incomeDestinationWallet();
+  if(!help)return;
+  if(!wallet){
+    help.textContent='Το έσοδο θα κατατεθεί στο wallet που θα επιλέξεις. Ο ρόλος budget βγαίνει από το wallet.';
+    return;
+  }
+  const counts=typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(wallet):!wallet.isSavings;
+  help.textContent=counts
+    ? 'Ο προορισμός μετράει στο budget, άρα το διαθέσιμο budget θα αυξηθεί.'
+    : 'Ο προορισμός είναι εκτός budget, άρα θα αυξηθεί μόνο το συνολικό υπόλοιπο.';
+}
+
+async function capvoApplyExtraIncomeWalletEffect(userId,obj,previous){
+  if(!obj || obj.isRestricted || obj.sourceType==='benefit')return {applied:false,reason:'restricted'};
+  if(!obj.destinationWalletId)return {applied:false,reason:'no_wallet'};
+
+  const previousApplied=previous && previous.walletDepositApplied && previous.destinationWalletId && (Number(previous.walletBalanceEffectAmount)||0)>0;
+  if(previousApplied){
+    const oldWallet=capvoWalletById(previous.destinationWalletId);
+    if(oldWallet){
+      await capvoUpdateWalletBalance(oldWallet.id,capvoMoney((Number(oldWallet.currentBalance)||0)-(Number(previous.walletBalanceEffectAmount)||0)));
+    }
+  }
+
+  const wallet=capvoWalletById(obj.destinationWalletId);
+  if(!wallet)return {applied:false,reason:'wallet_missing'};
+
+  const amount=Number(obj.amount)||0;
+  if(amount<=0)return {applied:false,reason:'invalid_amount'};
+
+  const before=Number(wallet.currentBalance)||0;
+  const after=capvoMoney(before+amount);
+  await capvoUpdateWalletBalance(wallet.id,after);
+
+  obj.walletDepositApplied=true;
+  obj.walletDepositAppliedAt=new Date().toISOString();
+  obj.walletBalanceEffectAmount=amount;
+  obj.includeInBudget=typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(wallet):!wallet.isSavings;
+  obj.isSavings=!obj.includeInBudget;
+  obj.allocationTarget=obj.includeInBudget?'spending_budget':'outside_budget';
+
+  return {applied:true,wallet,amount,before,after};
+}
+
+async function capvoReverseExtraIncomeWalletEffect(previous){
+  if(!previous || !previous.walletDepositApplied || !previous.destinationWalletId)return;
+  const amount=Number(previous.walletBalanceEffectAmount)||Number(previous.amount)||0;
+  if(amount<=0)return;
+  const wallet=capvoWalletById(previous.destinationWalletId);
+  if(!wallet)return;
+  await capvoUpdateWalletBalance(wallet.id,capvoMoney((Number(wallet.currentBalance)||0)-amount));
+}
+
 async function saveIncomeSourceRow(userId,item){
   const ownerUserId=String(userId || getDataOwnerId() || '').trim();
-  const legacyOwner=String((typeof getLegacyOwnerId==='function' ? getLegacyOwnerId() : '') || ownerUserId).trim();
 
   if(!ownerUserId)throw new Error('Missing authenticated user id.');
 
-  const {error}=await supabaseClient
+  const payload={
+    id:item.id,
+    user_id:ownerUserId,
+    user_chat_id:null, // legacy field — nullable after DB migration 2026-06-14
+    name:item.name,
+    amount:item.amount,
+    category:item.category,
+    income_type:item.incomeType,
+    include_in_budget:item.includeInBudget,
+    is_savings:item.isSavings,
+    is_recurring:item.isRecurring,
+    restriction:item.restriction,
+    restricted_category:item.restrictedCategory||null,
+    notes:item.notes||null,
+    spending_limit:Number(item.spendingLimit)||null,
+    source_type:item.sourceType||'income',
+    source_category:item.sourceCategory||null,
+    restriction_type:item.restrictionType||null,
+    is_restricted:!!item.isRestricted,
+    allocation_target:item.allocationTarget||null,
+    is_primary_income:false,
+    destination_wallet_id:item.destinationWalletId||null,
+    wallet_deposit_applied:!!item.walletDepositApplied,
+    wallet_deposit_applied_at:item.walletDepositAppliedAt||null,
+    wallet_balance_effect_amount:Number(item.walletBalanceEffectAmount)||0,
+    updated_at:new Date().toISOString()
+  };
+
+  let {error}=await supabaseClient
     .from('income_sources')
-    .upsert({
-      id:item.id,
-      user_id:ownerUserId,
-      user_chat_id:legacyOwner,
-      name:item.name,
-      amount:item.amount,
-      category:item.category,
-      income_type:item.incomeType,
-      include_in_budget:item.includeInBudget,
-      is_savings:item.isSavings,
-      is_recurring:item.isRecurring,
-      restriction:item.restriction,
-      restricted_category:item.restrictedCategory||null,
-      notes:item.notes||null,
-      spending_limit:Number(item.spendingLimit)||null,
-      source_type:item.sourceType||'income',
-      source_category:item.sourceCategory||null,
-      restriction_type:item.restrictionType||null,
-      is_restricted:!!item.isRestricted,
-      allocation_target:item.allocationTarget||null,
-      is_primary_income:!!item.isPrimaryIncome,
-      updated_at:new Date().toISOString()
-    },{onConflict:'id'});
+    .upsert(payload,{onConflict:'id'});
+
+  if(error && /destination_wallet_id|wallet_deposit_applied|wallet_deposit_applied_at|wallet_balance_effect_amount/i.test(String(error.message||error.details||''))){
+    const legacyPayload={...payload};
+    delete legacyPayload.destination_wallet_id;
+    delete legacyPayload.wallet_deposit_applied;
+    delete legacyPayload.wallet_deposit_applied_at;
+    delete legacyPayload.wallet_balance_effect_amount;
+    const retry=await supabaseClient
+      .from('income_sources')
+      .upsert(legacyPayload,{onConflict:'id'});
+    error=retry.error;
+    if(!error)return {legacy:true};
+  }
 
   if(error)throw error;
+  return {legacy:false};
 }
 
 async function deleteIncomeSourceRow(id){
@@ -1304,7 +2311,7 @@ function setIncomeModalFeedback(message,type='error'){
 }
 
 function clearIncomeValidation(){
-  ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+  ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory','fISDestinationWallet'].forEach(id=>{
     const el=$(id);
     if(el)el.classList.remove('income-field-error');
   });
@@ -1337,37 +2344,37 @@ function getIncomePresetConfig(type){
   const configs={
     salary:{
       icon:'💼',
-      kicker:'Budget κύκλου',
-      title:'Budget κύκλου',
+      kicker:'Budget μήνα',
+      title:'Budget μήνα',
       intro:'Το βασικό ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.',
-      summaryTitle:'Budget κύκλου',
+      summaryTitle:'Budget μήνα',
       summaryText:'Για μισθό, σύνταξη ή βασικό μηνιαίο budget. Προαιρετικά βάλε όριο εξόδων.',
-      amountLabel:'Ποσό κύκλου',
+      amountLabel:'Ποσό μήνα',
       amountHint:'Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο για έξοδα.',
       spendingLimitHint:'Αν θέλεις να κρατήσεις μέρος του ποσού εκτός budget, βάλε εδώ πόσα θες να ξοδεύεις.',
       nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
       restrictedHint:'Το βασικό budget συνήθως δεν χρειάζεται περιορισμό.',
       saveText:'Αποθήκευση budget',
-      successText:'✅ Το budget κύκλου αποθηκεύτηκε',
+      successText:'✅ Το budget μήνα αποθηκεύτηκε',
       showRestricted:false,
       advancedHint:'Προαιρετικά'
     },
     budget:{
       icon:'💼',
-      kicker:'Budget κύκλου',
-      title:'Budget κύκλου',
+      kicker:'Budget μήνα',
+      title:'Budget μήνα',
       intro:'Το βασικό ποσό με το οποίο πορεύεσαι μέχρι την επόμενη πληρωμή.',
-      summaryTitle:'Budget κύκλου',
+      summaryTitle:'Budget μήνα',
       summaryText:'Για μισθό, σύνταξη ή βασικό μηνιαίο budget. Προαιρετικά βάλε όριο εξόδων.',
-      amountLabel:'Ποσό κύκλου',
+      amountLabel:'Ποσό μήνα',
       amountHint:'Αν δεν βάλεις όριο, όλο το ποσό θα θεωρηθεί διαθέσιμο για έξοδα.',
       spendingLimitHint:'Αν θέλεις να κρατήσεις μέρος του ποσού εκτός budget, βάλε εδώ πόσα θες να ξοδεύεις.',
       nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
       restrictedHint:'Το βασικό budget συνήθως δεν χρειάζεται περιορισμό.',
       saveText:'Αποθήκευση budget',
-      successText:'✅ Το budget κύκλου αποθηκεύτηκε',
+      successText:'✅ Το budget μήνα αποθηκεύτηκε',
       showRestricted:false,
       advancedHint:'Προαιρετικά'
     },
@@ -1375,17 +2382,17 @@ function getIncomePresetConfig(type){
       icon:'🏠',
       kicker:'Άλλο εισόδημα',
       title:'Άλλο εισόδημα',
-      intro:'Για χρήματα που λαμβάνεις πέρα από το βασικό budget σου.',
+      intro:'Για έξτρα χρήματα εκτός βασικού μισθού.',
       summaryTitle:'Άλλο εισόδημα',
       summaryText:'Freelance, ενοίκιο που εισπράττεις, επίδομα, bonus ή δεύτερη δουλειά.',
       amountLabel:'Ποσό εισοδήματος',
-      amountHint:'Μετράει στο διαθέσιμο budget, εκτός αν το βγάλεις από τις προχωρημένες ρυθμίσεις.',
-      spendingLimitHint:'Το όριο εξόδων εφαρμόζεται μόνο στο Budget κύκλου.',
+      amountHint:'Θα προστεθεί στο wallet προορισμού. Το budget impact βγαίνει από το wallet.',
+      spendingLimitHint:'Το όριο εξόδων εφαρμόζεται μόνο στο Budget μήνα.',
       nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
       restrictedHint:'Συνήθως δεν χρειάζεται περιορισμό. Αν πληρώνεις ενοίκιο, καταχώρησέ το στα Πάγια.',
-      saveText:'Αποθήκευση εισοδήματος',
-      successText:'✅ Το εισόδημα προστέθηκε',
+      saveText:'Αποθήκευση εσόδου',
+      successText:'✅ Το έσοδο προστέθηκε',
       showRestricted:false,
       advancedHint:'Budget / επανάληψη'
     },
@@ -1452,7 +2459,7 @@ function getIncomePresetConfig(type){
       summaryText:'Δώρο, επιστροφή χρημάτων, πώληση αντικειμένου ή one-time bonus.',
       amountLabel:'Ποσό',
       amountHint:'Από προεπιλογή μετράει στο budget. Μπορείς να το βγάλεις από τις προχωρημένες ρυθμίσεις.',
-      spendingLimitHint:'Το όριο εξόδων εφαρμόζεται μόνο στο Budget κύκλου.',
+      spendingLimitHint:'Το όριο εξόδων εφαρμόζεται μόνο στο Budget μήνα.',
       nameLabel:'Πώς να εμφανίζεται;',
       restrictedLabel:'Πού χρησιμοποιείται;',
       restrictedHint:'Συνήθως δεν χρειάζεται περιορισμό.',
@@ -1462,7 +2469,11 @@ function getIncomePresetConfig(type){
       advancedHint:'Budget / επανάληψη'
     }
   };
-  return configs[type]||configs.salary;
+  // v1.9.3.0: salary/basic budget is configured from the primary wallet,
+  // not from the Extra income page. If old buttons/links ask for salary,
+  // redirect the modal to an extra-income flow.
+  if(type==='salary'||type==='budget')type='extra';
+  return configs[type]||configs.extra||configs.other;
 }
 
 function setIncomeWizardMode(type,opts={}){
@@ -1490,6 +2501,10 @@ function setIncomeWizardMode(type,opts={}){
   if($('incomeWizardSummary')){
     $('incomeWizardSummary').innerHTML=`<strong>${esc(cfg.summaryTitle)}</strong><span>${esc(cfg.summaryText)}</span>`;
   }
+
+  if($('incomeDestinationCard'))$('incomeDestinationCard').style.display=cfg.showRestricted?'none':'block';
+  fillIncomeDestinationWalletSelect?.($('fISDestinationWallet')?.value||'');
+  updateIncomeDestinationHelp?.();
 
   document.querySelectorAll('#incomeQuickPresets button').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.incomePreset===type);
@@ -1525,6 +2540,7 @@ function toggleIncomeAdvanced(force){
 
 function applyIncomePreset(type){
   clearIncomeValidation();
+  if(type==='salary'||type==='budget')type='extra';
 
   const presets={
     salary:{
@@ -1630,7 +2646,7 @@ function applyIncomePreset(type){
       allocationTarget:'restricted_balance'
     },
     extra:{
-      name:'Έκτακτο ποσό',
+      name:'Bonus / έκτακτο',
       category:'Bonus',
       incomeType:'bank',
       restriction:'none',
@@ -1641,14 +2657,48 @@ function applyIncomePreset(type){
       notes:'',
       isPrimaryIncome:false,
       sourceType:'one_time',
-      sourceCategory:'one_time',
+      sourceCategory:'bonus',
+      restrictionType:null,
+      isRestricted:false,
+      allocationTarget:'spending_budget'
+    },
+    rent:{
+      name:'Ενοίκιο που εισπράττω',
+      category:'Ενοίκιο',
+      incomeType:'bank',
+      restriction:'none',
+      restrictedCategory:'',
+      includeInBudget:true,
+      isSavings:false,
+      isRecurring:true,
+      notes:'',
+      isPrimaryIncome:false,
+      sourceType:'income',
+      sourceCategory:'rent_income',
+      restrictionType:null,
+      isRestricted:false,
+      allocationTarget:'spending_budget'
+    },
+    dividends:{
+      name:'Μερίσματα',
+      category:'Μερίσματα',
+      incomeType:'bank',
+      restriction:'none',
+      restrictedCategory:'',
+      includeInBudget:true,
+      isSavings:false,
+      isRecurring:false,
+      notes:'',
+      isPrimaryIncome:false,
+      sourceType:'one_time',
+      sourceCategory:'dividends',
       restrictionType:null,
       isRestricted:false,
       allocationTarget:'spending_budget'
     }
   };
 
-  const preset=presets[type]||presets.salary;
+  const preset=presets[type]||presets.extra||presets.other;
   setIncomeWizardMode(type);
 
   const currentAmount=$('fISAmount')?.value || '';
@@ -1665,6 +2715,8 @@ function applyIncomePreset(type){
   if($('fISPrimary'))$('fISPrimary').checked=!!preset.isPrimaryIncome;
   $('fISNotes').value=preset.notes||'';
 
+  fillIncomeDestinationWalletSelect?.($('fISDestinationWallet')?.value||'');
+  updateIncomeDestinationHelp?.();
   refreshIncomeCustomPickers?.();
 
   // Do not auto-focus amount after preset; keep keyboard closed until user taps a field.
@@ -1676,78 +2728,76 @@ function validateIncomeSourceForm(){
   const name=$('fISName').value.trim();
   const rawAmount=$('fISAmount').value;
   const amount=parseIncomeAmountValue(rawAmount);
-  const rawSpendingLimit=$('fISSpendingLimit')?.value||'';
-  const spendingLimit=String(rawSpendingLimit||'').trim()===''?0:parseIncomeAmountValue(rawSpendingLimit);
   const mode=getCurrentIncomeWizardMode();
 
   if(!name){
-    setIncomeModalFeedback('Συμπλήρωσε όνομα πηγής, π.χ. Μισθός / Budget.','error');
+    setIncomeModalFeedback('Συμπλήρωσε όνομα, π.χ. Bonus, Ενοίκιο, Μερίσματα.','error');
     showMiniToast('Συμπλήρωσε όνομα πηγής','error');
     markIncomeFieldError('fISName');
     return null;
   }
 
   if(String(rawAmount||'').trim()===''){
-    setIncomeModalFeedback('Συμπλήρωσε ποσό για το budget / εισόδημα.','error');
+    setIncomeModalFeedback('Συμπλήρωσε ποσό εισοδήματος.','error');
     showMiniToast('Συμπλήρωσε ποσό','error');
     markIncomeFieldError('fISAmount');
     return null;
   }
 
-  if(!Number.isFinite(amount)){
-    setIncomeModalFeedback('Το ποσό δεν είναι έγκυρο. Γράψε π.χ. 1200 ή 1200,50.','error');
+  if(!Number.isFinite(amount) || amount<=0){
+    setIncomeModalFeedback('Το ποσό πρέπει να είναι μεγαλύτερο από 0.','error');
     showMiniToast('Το ποσό δεν είναι έγκυρο','error');
     markIncomeFieldError('fISAmount');
     return null;
   }
 
-  if(amount<=0){
-    setIncomeModalFeedback('Το ποσό πρέπει να είναι μεγαλύτερο από 0.','error');
-    showMiniToast('Το ποσό πρέπει να είναι μεγαλύτερο από 0','error');
-    markIncomeFieldError('fISAmount');
-    return null;
-  }
-
-  if(String(rawSpendingLimit||'').trim()!=='' && !Number.isFinite(spendingLimit)){
-    setIncomeModalFeedback('Το όριο δεν είναι έγκυρο. Γράψε π.χ. 900 ή άφησέ το κενό.','error');
-    showMiniToast('Το όριο δεν είναι έγκυρο','error');
-    markIncomeFieldError('fISSpendingLimit');
-    return null;
-  }
-
-  if(spendingLimit<0){
-    setIncomeModalFeedback('Το όριο δεν μπορεί να είναι αρνητικό.','error');
-    showMiniToast('Το όριο δεν μπορεί να είναι αρνητικό','error');
-    markIncomeFieldError('fISSpendingLimit');
-    return null;
-  }
-
-  if(spendingLimit>0 && spendingLimit>amount){
-    setIncomeModalFeedback('Το όριο εξόδων δεν μπορεί να είναι μεγαλύτερο από το ποσό κύκλου.','error');
-    showMiniToast('Το όριο δεν μπορεί να ξεπερνά το ποσό','error');
-    markIncomeFieldError('fISSpendingLimit');
-    return null;
-  }
-
   const incomeType=$('fISType').value;
   const restriction=$('fISRestriction').value;
-  const includeInBudget=$('fISIncludeBudget').checked;
-  const isSavings=$('fISSavings').checked;
+  const category=$('fISCategory').value;
+  const isBenefit=mode==='benefit'||mode==='ticket'||mode==='voucher'||category==='Ticket Restaurant'||category==='Άυλη κάρτα';
+  const destinationWalletId=$('fISDestinationWallet')?.value||'';
+  const destinationWallet=destinationWalletId?capvoWalletById(destinationWalletId):null;
 
-  if((restriction==='locked' || restriction==='investment') && includeInBudget && !isSavings){
-    setIncomeModalFeedback('Αν η πηγή είναι locked/επένδυση, βάλε την εκτός ελεύθερου budget ή ως αποταμίευση.','error');
-    showMiniToast('Έλεγξε τον περιορισμό της πηγής','error');
-    markIncomeFieldError('fISRestriction');
+  if(!isBenefit && !destinationWalletId){
+    setIncomeModalFeedback('Επίλεξε σε ποιο wallet μπήκαν αυτά τα χρήματα.','error');
+    showMiniToast('Επίλεξε προορισμό','error');
+    markIncomeFieldError('fISDestinationWallet');
     return null;
   }
 
-  const sourceType=mode==='salary'||mode==='budget'?'budget_cycle':mode==='benefit'||mode==='ticket'||mode==='voucher'?'benefit':mode==='extra'?'one_time':'income';
-  const sourceCategory=sourceType==='budget_cycle'?'primary_budget':sourceType==='benefit'?($('fISCategory').value==='Ticket Restaurant'?'ticket':$('fISCategory').value==='Άυλη κάρτα'?'voucher':'benefit'):sourceType==='one_time'?'one_time':($('fISCategory').value==='Ενοίκιο'?'rent_income':$('fISCategory').value==='Freelance'?'freelance':'other_income');
-  const isRestricted=sourceType==='benefit' || (restriction&&restriction!=='none');
-  const restrictionType=sourceType==='benefit'?($('fISCategory').value==='Ticket Restaurant'?'ticket':$('fISCategory').value==='Άυλη κάρτα'?'voucher':'benefit'):null;
-  const allocationTarget=sourceType==='benefit'?'restricted_balance':includeInBudget?'spending_budget':isSavings?'savings':'outside_budget';
+  const sourceType=isBenefit?'benefit':(mode==='extra'||!$('fISRecurring')?.checked?'one_time':'income');
+  const sourceCategory=isBenefit
+    ? (category==='Ticket Restaurant'?'ticket':category==='Άυλη κάρτα'?'voucher':'benefit')
+    : category==='Ενοίκιο'?'rent_income'
+      : category==='Μερίσματα'?'dividends'
+      : category==='Freelance'?'freelance'
+      : category.includes('Δώρο')?'bonus'
+      : category==='Bonus'?'bonus'
+      : category==='Επιστροφή χρημάτων'?'refund'
+      : category==='Πώληση αντικειμένου'?'sale'
+      : 'other_income';
 
-  return {name,amount,spendingLimit:sourceType==='budget_cycle'?capvoMoney(spendingLimit):0,incomeType,restriction,includeInBudget:sourceType==='benefit'?false:includeInBudget,isSavings,isPrimaryIncome:sourceType==='budget_cycle'?!!$('fISPrimary')?.checked:false,sourceType,sourceCategory,restrictionType,isRestricted,allocationTarget};
+  const isRestricted=isBenefit || (restriction&&restriction!=='none');
+  const restrictionType=isBenefit?(category==='Ticket Restaurant'?'ticket':category==='Άυλη κάρτα'?'voucher':'benefit'):null;
+  const includeInBudget=!isBenefit && destinationWallet ? (typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(destinationWallet):!destinationWallet.isSavings) : false;
+  const isSavings=!isBenefit && !includeInBudget;
+
+  return {
+    name,
+    amount,
+    spendingLimit:0,
+    incomeType,
+    restriction:isBenefit?restriction:'none',
+    includeInBudget,
+    isSavings,
+    isPrimaryIncome:false,
+    sourceType,
+    sourceCategory,
+    restrictionType,
+    isRestricted,
+    allocationTarget:isBenefit?'restricted_balance':includeInBudget?'spending_budget':'outside_budget',
+    destinationWalletId:isBenefit?null:destinationWalletId
+  };
 }
 
 async function saveIncomeSource(){
@@ -1759,54 +2809,55 @@ async function saveIncomeSource(){
   const btn=$('btnIncomeSource');
 
   if(!userId){
-    showMiniToast(
-      '❌ Δεν υπάρχει ενεργή σύνδεση Google',
-      'error'
-    );
+    showMiniToast('❌ Δεν υπάρχει ενεργή σύνδεση Google','error');
     return;
   }
 
+  const previous=id?(D.incomeSources||[]).find(x=>String(x.id)===String(id)):null;
   const obj={
     id:id||gid(),
     name:validation.name,
     amount:validation.amount,
-    spendingLimit:validation.spendingLimit||0,
+    spendingLimit:0,
     category:$('fISCategory').value,
     incomeType:validation.incomeType,
     includeInBudget:validation.includeInBudget,
     isSavings:validation.isSavings,
-    isRecurring:$('fISRecurring').checked,
+    isRecurring:$('fISRecurring')?.checked!==false,
     restriction:validation.restriction,
     restrictedCategory:$('fISRestrictedCategory').value,
     notes:$('fISNotes').value.trim(),
-    isPrimaryIncome:!!validation.isPrimaryIncome,
+    isPrimaryIncome:false,
     sourceType:validation.sourceType,
     sourceCategory:validation.sourceCategory,
     restrictionType:validation.restrictionType,
     isRestricted:validation.isRestricted,
-    allocationTarget:validation.allocationTarget
+    allocationTarget:validation.allocationTarget,
+    destinationWalletId:validation.destinationWalletId,
+    walletDepositApplied:false,
+    walletDepositAppliedAt:null,
+    walletBalanceEffectAmount:0
   };
 
-  try{
-    if(obj.isPrimaryIncome){
-      // Keep one primary budget source per user in local state; DB unique index enforces this too.
-      (D.incomeSources||[]).forEach(src=>{ if(src.id!==obj.id)src.isPrimaryIncome=false; });
-      await supabaseClient.from('income_sources').update({is_primary_income:false}).eq('user_id',userId).neq('id',obj.id);
-    }
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation(id?'Ενημερώνεται έσοδο...':'Αποθηκεύεται έσοδο...', 'Περνάω την κίνηση στο σωστό wallet.'))return;
 
+  try{
     if(btn){
       btn.disabled=true;
       btn.textContent=id?'Ενημέρωση...':'Αποθήκευση...';
     }
 
-    await saveIncomeSourceRow(userId,obj);
+    if(obj.isRestricted && previous?.walletDepositApplied){
+      await capvoReverseExtraIncomeWalletEffect(previous);
+    }
 
-    if(obj.includeInBudget && obj.isPrimaryIncome && typeof capvoUpsertUserPreferencePatch==='function'){
-      // Manual primary budget completes the required setup path enough to remove setup prompts.
-      await capvoUpsertUserPreferencePatch({
-        onboarding_dismissed:true,
-        onboarding_step:'budget_manual_done'
-      });
+    const initialSave=await saveIncomeSourceRow(userId,obj);
+    let applyResult={applied:false,reason:'restricted'};
+    if(!obj.isRestricted && initialSave?.legacy!==true){
+      applyResult=await capvoApplyExtraIncomeWalletEffect(userId,obj,previous);
+      await saveIncomeSourceRow(userId,obj);
+    }else if(!obj.isRestricted && initialSave?.legacy===true){
+      showMiniToast('Το έσοδο αποθηκεύτηκε, αλλά χρειάζεται SQL migration για να περαστεί στο wallet.','error');
     }
 
     if(id){
@@ -1819,25 +2870,27 @@ async function saveIncomeSource(){
 
     if(typeof fetchAllData==='function')await fetchAllData(userId);
     else refreshComputedIncome();
+
     closeM();
     render();
     if(typeof updateCapvoDashboardSetupPrompt==='function')updateCapvoDashboardSetupPrompt();
 
-    const cfg=getIncomePresetConfig(getCurrentIncomeWizardMode());
-    showMiniToast(id?'✅ Η πηγή ενημερώθηκε':cfg.successText);
+    const suffix=applyResult.applied && applyResult.wallet ? ` · μπήκε στο ${applyResult.wallet.name}` : '';
+    const successMsg=id?`✅ Το έσοδο ενημερώθηκε${suffix}`:`✅ Το έσοδο προστέθηκε${suffix}`;
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε',successMsg);
+    showMiniToast(successMsg);
 
   }catch(e){
     console.error('saveIncomeSource failed:',e);
-    setIncomeModalFeedback('Δεν μπόρεσα να αποθηκεύσω την πηγή. Δοκίμασε ξανά.','error');
-    showMiniToast(
-      '❌ Αποτυχία αποθήκευσης',
-      'error'
-    );
+    setIncomeModalFeedback('Δεν μπόρεσα να αποθηκεύσω το έσοδο. Δοκίμασε ξανά.','error');
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω το έσοδο.');
+    showMiniToast('❌ Αποτυχία αποθήκευσης','error');
 
   }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
     if(btn){
       btn.disabled=false;
-      btn.textContent=id?'Ενημέρωση πηγής':getIncomePresetConfig(getCurrentIncomeWizardMode()).saveText;
+      btn.textContent=id?'Ενημέρωση εσόδου':getIncomePresetConfig(getCurrentIncomeWizardMode()).saveText;
     }
   }
 }
@@ -1852,7 +2905,11 @@ async function deleteIncomeSource(id){
 
   if(!confirmed)return;
 
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Διαγράφεται έσοδο...', 'Ενημερώνω το wallet και τα στοιχεία σου.'))return;
+
   try{
+    const previous=(D.incomeSources||[]).find(i=>String(i.id)===String(id));
+    await capvoReverseExtraIncomeWalletEffect(previous);
     await deleteIncomeSourceRow(id);
 
     D.incomeSources=(D.incomeSources||[]).filter(i=>i.id!==id);
@@ -1860,22 +2917,26 @@ async function deleteIncomeSource(id){
     refreshComputedIncome();
     render();
 
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Το έσοδο διαγράφηκε.');
     showMiniToast('✅ Η πηγή εισοδήματος διαγράφηκε');
 
   }catch(e){
     console.error('deleteIncomeSource failed:',e);
 
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να διαγράψω το έσοδο.');
     showMiniToast(
       '❌ Σφάλμα διαγραφής',
       'error'
     );
+  }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
   }
 }
 
 // v1.0.11 — clear inline validation while user edits Add Income/Budget fields
 (function setupIncomeSourceValidationCleanup(){
   function bind(){
-    ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory'].forEach(id=>{
+    ['fISName','fISAmount','fISSpendingLimit','fISCategory','fISType','fISRestriction','fISRestrictedCategory','fISDestinationWallet'].forEach(id=>{
       const el=$(id);
       if(!el || el.dataset.incomeValidationCleanup==='1')return;
       el.dataset.incomeValidationCleanup='1';
@@ -2456,7 +3517,7 @@ function savingsSourceChoiceMarkup(goal,mode){
         <input type="radio" name="savingsTxDestinationChoice" value="budget" checked>
         <span>
           <strong>Στο διαθέσιμο budget</strong>
-          <small>Θα αυξήσει το υπόλοιπο κύκλου</small>
+          <small>Θα αυξήσει το υπόλοιπο μήνα</small>
         </span>
       </label>
       ${generalDestination}

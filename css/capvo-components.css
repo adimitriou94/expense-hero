@@ -6543,3 +6543,3181 @@ body.add-center-manual-active .add-center-v4 .add-center-panel.active{
 .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-card{
   display:none !important;
 }
+
+/* ============================================================
+   CAPVO WALLETS — Phase 2
+   Premium wallet cards, sheets, transfer UI
+   ============================================================ */
+
+/* ── Dashboard wallet section ─────────────────────────────── */
+.capvo-wallets-section {
+  padding: 0 0 4px;
+  font-family: var(--font);
+}
+
+.capvo-wallets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 10px;
+  gap: 8px;
+}
+
+.capvo-wallets-header h3 {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 1px;
+  font-family: var(--font);
+  letter-spacing: -.01em;
+}
+
+.capvo-wallets-header p {
+  font-size: .72rem;
+  color: var(--text2);
+  margin: 0;
+  font-family: var(--font);
+}
+
+.capvo-wallets-manage-btn {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  white-space: nowrap;
+  font-family: var(--font);
+  flex-shrink: 0;
+}
+
+/* ── Horizontal scroll cards ──────────────────────────────── */
+.capvo-wallet-cards-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.capvo-wallet-cards-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Individual wallet card ───────────────────────────────── */
+.capvo-wallet-card {
+  flex: 0 0 148px;
+  min-height: 108px;
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 90%, black 10%) 0%,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 70%, black 30%) 100%);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--t-normal), transform var(--t-spring),
+              box-shadow var(--t-fast), scale var(--t-fast);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--wallet-color, #6547f6) 40%, transparent);
+}
+
+.capvo-wallet-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, rgba(255,255,255,0) 60%);
+  pointer-events: none;
+}
+
+.capvo-wallet-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.capvo-wallet-card:hover,
+.capvo-wallet-card:focus-visible {
+  scale: 1.03;
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--wallet-color, #6547f6) 50%, transparent);
+  outline: none;
+}
+
+.capvo-wallet-card:active { scale: .98; }
+
+.capvo-wallet-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.capvo-wallet-icon { font-size: 1.3rem; }
+
+.capvo-wallet-type-badge {
+  font-size: .65rem;
+  font-weight: 600;
+  background: rgba(255,255,255,.2);
+  padding: 2px 6px;
+  border-radius: 99px;
+  letter-spacing: .02em;
+}
+
+.capvo-wallet-card-balance {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+
+.capvo-wallet-card-name {
+  font-size: .75rem;
+  opacity: .85;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Add wallet card ──────────────────────────────────────── */
+.capvo-wallet-card-add {
+  background: var(--bg3) !important;
+  color: var(--text2) !important;
+  box-shadow: none !important;
+  border: 2px dashed var(--border2) !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: .8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.capvo-wallet-card-add::before { display: none; }
+.capvo-wallet-add-icon { font-size: 1.6rem; color: var(--accent); display: block; }
+
+
+
+/* ── Dashboard money overview v2: Option 1 + Option 5 ───────── */
+.capvo-wallet-cards-scroll.capvo-wallet-dashboard-v2{
+  display:block;
+  overflow:visible;
+  padding:0;
+  scroll-snap-type:none;
+  scrollbar-width:auto;
+  -ms-overflow-style:auto;
+}
+
+.capvo-wallet-dashboard-v2::-webkit-scrollbar{display:none;}
+
+.capvo-money-overview-card{
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:22px;
+  background:linear-gradient(135deg,#ffffff 0%,#fbfcff 60%,#f4f2ff 100%);
+  box-shadow:0 12px 34px rgba(15,23,42,.055);
+  padding:16px 16px;
+  margin:2px 0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  cursor:pointer;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity var(--t-normal),transform var(--t-spring),box-shadow var(--t-fast),border-color var(--t-fast);
+}
+
+.capvo-money-overview-card.is-visible{opacity:1;transform:translateY(0);}
+.capvo-money-overview-card:hover,
+.capvo-money-overview-card:focus-visible{
+  border-color:rgba(101,71,246,.25);
+  box-shadow:0 16px 42px rgba(15,23,42,.08);
+  outline:none;
+}
+
+.capvo-money-overview-card span{
+  display:block;
+  color:#75809a;
+  font-size:.68rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:5px;
+}
+
+.capvo-money-overview-card strong{
+  display:block;
+  color:#101935;
+  font-size:1.42rem;
+  font-weight:850;
+  letter-spacing:-.035em;
+  line-height:1;
+}
+
+.capvo-money-overview-card small{
+  display:block;
+  margin-top:6px;
+  color:#7d879e;
+  font-size:.78rem;
+  font-weight:600;
+}
+
+.capvo-money-overview-icon{
+  width:52px;
+  height:52px;
+  flex:0 0 52px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,rgba(101,71,246,.12),rgba(101,71,246,.05));
+  color:#6547f6;
+  font-size:1.45rem;
+  box-shadow:inset 0 0 0 1px rgba(101,71,246,.08);
+}
+
+.capvo-money-groups{display:grid;gap:12px;}
+
+.capvo-money-group{
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:22px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 10px 30px rgba(15,23,42,.045);
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity var(--t-normal),transform var(--t-spring),box-shadow var(--t-fast),border-color var(--t-fast);
+}
+
+.capvo-money-group.is-visible{opacity:1;transform:translateY(0);}
+.capvo-money-group[open]{box-shadow:0 14px 36px rgba(15,23,42,.06);}
+
+.capvo-money-group summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:15px 16px;
+  cursor:pointer;
+  user-select:none;
+}
+.capvo-money-group summary::-webkit-details-marker{display:none;}
+
+.capvo-money-group summary span{min-width:0;display:block;}
+.capvo-money-group summary strong{
+  display:block;
+  color:#101935;
+  font-size:.98rem;
+  font-weight:850;
+  letter-spacing:-.02em;
+  line-height:1.1;
+}
+.capvo-money-group summary small{
+  display:block;
+  margin-top:4px;
+  color:#7a849c;
+  font-size:.72rem;
+  font-weight:600;
+  line-height:1.2;
+}
+.capvo-money-group summary b{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#101935;
+  font-size:.92rem;
+  font-weight:850;
+  white-space:nowrap;
+  letter-spacing:-.02em;
+}
+.capvo-money-group summary b::after{
+  content:'⌄';
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  color:#7c67ff;
+  background:rgba(101,71,246,.08);
+  font-size:.9rem;
+  transition:transform var(--t-fast);
+}
+.capvo-money-group:not([open]) summary b::after{transform:rotate(-90deg);}
+
+.capvo-money-rows{
+  display:grid;
+  gap:0;
+  padding:0 10px 10px;
+}
+
+.capvo-money-row{
+  width:100%;
+  border:1px solid rgba(226,232,240,.86);
+  background:#fff;
+  border-radius:16px;
+  min-height:66px;
+  padding:10px 10px;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto 14px;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  cursor:pointer;
+  font-family:var(--font);
+  color:#101935;
+  transition:background var(--t-fast),border-color var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);
+}
+.capvo-money-row + .capvo-money-row{margin-top:8px;}
+.capvo-money-row:hover,
+.capvo-money-row:focus-visible{
+  background:#fbfcff;
+  border-color:rgba(101,71,246,.22);
+  box-shadow:0 10px 24px rgba(15,23,42,.055);
+  outline:none;
+}
+.capvo-money-row:active{transform:scale(.992);}
+
+.capvo-money-row-icon{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:color-mix(in srgb,var(--row-color,#6547f6) 12%,#fff 88%);
+  color:var(--row-color,#6547f6);
+  font-size:1.12rem;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--row-color,#6547f6) 16%,transparent);
+}
+
+.capvo-money-row-main{min-width:0;display:block;}
+.capvo-money-row-main strong{
+  display:block;
+  color:#101935;
+  font-size:.92rem;
+  font-weight:800;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  letter-spacing:-.015em;
+}
+.capvo-money-row-main small{
+  display:block;
+  margin-top:3px;
+  color:#7d879d;
+  font-size:.72rem;
+  font-weight:600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.capvo-money-row-side{
+  display:block;
+  text-align:right;
+  min-width:82px;
+}
+.capvo-money-row-side strong{
+  display:block;
+  color:#101935;
+  font-size:.96rem;
+  font-weight:850;
+  letter-spacing:-.025em;
+  white-space:nowrap;
+}
+.capvo-money-row-side strong.is-negative,
+.capvo-money-row-side strong.is-debt{color:#c24141;}
+.capvo-money-row-side strong.is-zero{color:#8b95aa;}
+.capvo-money-row-side small{
+  display:block;
+  margin-top:3px;
+  color:#9aa4b7;
+  font-size:.64rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.capvo-money-row-chevron{
+  color:#a0a8bb;
+  font-size:1.1rem;
+  font-weight:900;
+  line-height:1;
+}
+
+.capvo-money-add-row{
+  border:1.5px dashed rgba(101,71,246,.34);
+  background:linear-gradient(135deg,rgba(101,71,246,.035),rgba(255,255,255,.92));
+  grid-template-columns:44px minmax(0,1fr);
+  color:#6547f6;
+}
+.capvo-money-add-row .capvo-money-add-plus{
+  width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+  background:rgba(101,71,246,.1);font-size:1.35rem;font-weight:850;
+}
+.capvo-money-add-row small{color:#7d6cff;}
+
+.capvo-money-empty-row{
+  padding:14px;
+  border:1px dashed rgba(148,163,184,.4);
+  border-radius:16px;
+  color:#8791a6;
+  font-size:.82rem;
+  font-weight:600;
+}
+
+.capvo-card-limit-line{
+  display:block;
+  width:100%;
+  height:4px;
+  border-radius:999px;
+  background:#e9edf5;
+  margin-top:8px;
+  overflow:hidden;
+}
+.capvo-card-limit-line i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#6547f6,#9b8cff);
+}
+
+@media (max-width:430px){
+  .capvo-money-overview-card{padding:15px 14px;border-radius:20px;}
+  .capvo-money-overview-card strong{font-size:1.32rem;}
+  .capvo-money-group{border-radius:20px;}
+  .capvo-money-group summary{padding:14px 14px;}
+  .capvo-money-row{grid-template-columns:40px minmax(0,1fr) auto 12px;gap:9px;padding:9px;min-height:62px;}
+  .capvo-money-row-icon{width:39px;height:39px;border-radius:13px;font-size:1rem;}
+  .capvo-money-row-side{min-width:72px;}
+  .capvo-money-row-side strong{font-size:.9rem;}
+}
+
+/* ── Wallets page ─────────────────────────────────────────── */
+.wallets-page { gap: 16px; }
+
+.wallets-total-card {
+  text-align: center;
+  padding: 24px 20px;
+}
+
+.wallets-total-label {
+  font-size: .8rem;
+  color: var(--text2);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.wallets-total-amount {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+
+.wallets-total-sub {
+  font-size: .8rem;
+  color: var(--text2);
+  margin-top: 6px;
+}
+
+.wallets-group-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text3);
+  padding: 12px 0 4px;
+}
+
+/* ── Wallets page card overrides ─────────────────────────── */
+.wallets-list-card {
+  padding: 16px 16px !important;
+}
+
+.wallets-transfer-card {
+  padding: 16px 16px !important;
+}
+
+/* ── Wallet row ───────────────────────────────────────────── */
+.wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  margin-bottom: 8px;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.wallet-row:last-child { margin-bottom: 0; }
+
+.wallet-row:hover {
+  border-color: rgba(101,71,246,.2);
+  box-shadow: 0 2px 12px rgba(101,71,246,.06);
+}
+
+.wallet-row-icon {
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.wallet-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wallet-row-info strong {
+  display: block;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font);
+}
+
+.wallet-row-info small {
+  font-size: .73rem;
+  color: var(--text2);
+  font-family: var(--font);
+}
+
+.wallet-row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.wallet-row-balance {
+  font-size: .96rem;
+  font-weight: 800;
+  color: var(--text);
+  font-family: var(--font);
+  letter-spacing: -.02em;
+}
+
+.wallet-row-balance.is-negative { color: var(--red); }
+.wallet-row-balance.is-zero { color: var(--text3); }
+
+.wallet-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.wallet-action-btn {
+  width: 30px; height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg3);
+  cursor: pointer;
+  font-size: .82rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  color: var(--text2);
+}
+
+.wallet-action-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wallets-add-inline-btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px;
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--accent);
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+  font-family: var(--font);
+}
+
+.wallets-add-inline-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+
+.wallets-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text2);
+}
+
+.wallets-empty-icon { font-size: 2.8rem; margin-bottom: 14px; display: block; }
+.wallets-empty p { font-size: .84rem; margin: 4px 0; font-family: var(--font); line-height: 1.5; }
+
+/* ── Transfer card ────────────────────────────────────────── */
+.wallets-transfer-card { padding: 16px 20px; }
+
+.wallets-transfer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wallets-transfer-header span { font-size: 1.4rem; }
+
+.wallets-transfer-header strong {
+  display: block;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.wallets-transfer-header small { font-size: .75rem; color: var(--text2); }
+
+.wallet-transfer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.wallet-transfer-row:last-child { border-bottom: none; }
+
+.wallet-transfer-icon { font-size: 1rem; color: var(--text3); }
+
+.wallet-transfer-info { flex: 1; min-width: 0; }
+
+.wallet-transfer-info strong {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.wallet-transfer-info small { font-size: .72rem; color: var(--text2); }
+
+.wallet-transfer-amount {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.wallets-transfer-empty {
+  text-align: center;
+  color: var(--text3);
+  font-size: .82rem;
+  padding: 12px 0;
+}
+
+/* ── Wallet Sheet V4 (premium, matches add-center) ────────── */
+.capvo-wallet-v4 {
+  height: min(90vh, 800px) !important;
+}
+
+/* Fix topbar: shorter title needs less space */
+.capvo-wallet-v4 .add-center-topbar {
+  grid-template-columns: 44px minmax(0,1fr) 44px !important;
+  padding: 16px 16px 10px !important;
+}
+
+.capvo-wallet-v4 .add-center-kicker {
+  font-size: 9px !important;
+  letter-spacing: .12em !important;
+}
+
+.capvo-wallet-v4 .add-center-title-wrap h2 {
+  font-size: 15px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.wsheet-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 18px calc(32px + env(safe-area-inset-bottom));
+}
+
+/* Preview card */
+.wsheet-preview-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 20px;
+}
+
+.wsheet-preview-card {
+  width: 220px;
+  height: 124px;
+  border-radius: 20px;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 88%, black 12%) 0%,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 65%, black 35%) 100%);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--wallet-color, #6547f6) 38%, transparent),
+              0 2px 8px rgba(0,0,0,.12);
+  transition: background var(--t-normal), box-shadow var(--t-normal);
+}
+
+.wsheet-preview-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 55%);
+}
+
+.wsheet-preview-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; right: -20px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+}
+
+.wsheet-preview-card-inner {
+  position: relative;
+  z-index: 1;
+  padding: 14px 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.wsheet-preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wsheet-preview-icon { font-size: 1.4rem; }
+
+.wsheet-preview-type {
+  font-size: .65rem;
+  font-weight: 700;
+  background: rgba(255,255,255,.22);
+  padding: 3px 8px;
+  border-radius: 99px;
+  color: #fff;
+  letter-spacing: .02em;
+}
+
+.wsheet-preview-balance {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+
+.wsheet-preview-name {
+  font-size: .75rem;
+  color: rgba(255,255,255,.82);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fields */
+.wsheet-field {
+  margin-bottom: 18px;
+}
+
+.wsheet-label {
+  display: block;
+  font-size: .7rem;
+  font-weight: 800;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+}
+
+.wsheet-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .94rem;
+  font-family: var(--font);
+  background: var(--bg2);
+  color: var(--text);
+  box-sizing: border-box;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  -webkit-appearance: none;
+}
+
+.wsheet-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.wsheet-amount-row {
+  display: flex;
+  align-items: center;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.wsheet-amount-row:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.wsheet-currency {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-right: 6px;
+}
+
+.wsheet-amount-input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 12px 0 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  background: transparent !important;
+  flex: 1;
+}
+
+.wsheet-icon-input {
+  text-align: center;
+  font-size: 1.5rem !important;
+  letter-spacing: .08em;
+}
+
+/* Type grid */
+.wsheet-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.wsheet-type-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  font-size: .78rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  line-height: 1.2;
+}
+
+.wsheet-type-pill span { font-size: 1.3rem; }
+
+.wsheet-type-pill.is-selected {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Colors */
+.wsheet-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.wsheet-color-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+.wsheet-color-dot:hover { transform: scale(1.12); }
+
+.wsheet-color-dot.is-selected {
+  border-color: var(--text);
+  transform: scale(1.18);
+  box-shadow: 0 4px 12px rgba(0,0,0,.22);
+}
+
+/* Toggles */
+.wsheet-toggles {
+  margin-bottom: 20px;
+  background: var(--bg3);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.wsheet-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.wsheet-toggle:last-child { border-bottom: none; }
+
+.wsheet-toggle strong {
+  display: block;
+  font-size: .86rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wsheet-toggle small {
+  font-size: .72rem;
+  color: var(--text2);
+  display: block;
+  margin-top: 1px;
+}
+
+.wsheet-toggle input[type=checkbox] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Error */
+.wsheet-error {
+  background: var(--red-light);
+  color: var(--red-dark);
+  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  font-size: .82rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+/* Actions */
+.wsheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wsheet-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #6547f6, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: .94rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--font);
+  letter-spacing: -.01em;
+  transition: opacity var(--t-fast), scale var(--t-fast);
+  box-shadow: 0 8px 24px rgba(101,71,246,.3);
+}
+
+.wsheet-btn-primary:hover { opacity: .92; }
+.wsheet-btn-primary:active { scale: .98; }
+.wsheet-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wsheet-btn-danger {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--red);
+  border: 1.5px solid var(--red-light);
+  border-radius: var(--radius-sm);
+  font-size: .86rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background var(--t-fast);
+}
+
+.wsheet-btn-danger:hover { background: var(--red-light); }
+
+.wallet-sheet-preview {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 16px;
+}
+
+.wallet-preview-card {
+  width: 200px;
+  height: 110px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 90%, black 10%) 0%,
+    color-mix(in srgb, var(--wallet-color, #6547f6) 70%, black 30%) 100%);
+  color: #fff;
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--wallet-color, #6547f6) 40%, transparent);
+  transition: background var(--t-normal), box-shadow var(--t-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.wallet-preview-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
+}
+
+.wallet-preview-icon { font-size: 1.4rem; }
+.wallet-preview-name { font-size: .78rem; opacity: .9; font-weight: 500; }
+.wallet-preview-balance { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; }
+
+.wallet-field-group {
+  margin-bottom: 16px;
+}
+
+.wallet-field-group label {
+  display: block;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.wallet-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .92rem;
+  font-family: var(--font);
+  background: var(--bg2);
+  color: var(--text);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  box-sizing: border-box;
+}
+
+.wallet-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.wallet-icon-input { text-align: center; font-size: 1.4rem; letter-spacing: .1em; }
+
+/* ── Type pills ───────────────────────────────────────────── */
+.wallet-type-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wallet-type-pill {
+  padding: 7px 12px;
+  border-radius: 99px;
+  font-size: .8rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.wallet-type-pill.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Color swatches ───────────────────────────────────────── */
+.wallet-color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wallet-color-swatch {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform var(--t-fast), border-color var(--t-fast);
+}
+
+.wallet-color-swatch.is-selected {
+  border-color: var(--text);
+  transform: scale(1.15);
+}
+
+/* ── Toggles ──────────────────────────────────────────────── */
+.wallet-field-toggles { margin-bottom: 20px; }
+
+.wallet-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: .88rem;
+  color: var(--text);
+}
+
+.wallet-toggle-row:last-child { border-bottom: none; }
+
+/* ── Sheet actions ────────────────────────────────────────── */
+.wallet-sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.wallet-btn-primary {
+  flex: 1;
+  padding: 13px;
+  background: linear-gradient(135deg, #6547f6, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--t-fast), scale var(--t-fast);
+  font-family: var(--font);
+}
+
+.wallet-btn-primary:hover { opacity: .92; }
+.wallet-btn-primary:active { scale: .98; }
+.wallet-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wallet-btn-danger {
+  padding: 13px 16px;
+  background: var(--red-light);
+  color: var(--red-dark);
+  border: 1.5px solid var(--red-light);
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background var(--t-fast);
+  white-space: nowrap;
+}
+
+.wallet-btn-danger:hover { background: #fecaca; }
+
+.wallet-sheet-error {
+  background: var(--red-light);
+  color: var(--red-dark);
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  font-size: .82rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* ── Transfer sheet ───────────────────────────────────────── */
+.capvo-transfer-sheet { max-height: 80dvh !important; }
+
+.transfer-sheet-body {
+  padding: 4px 0 24px;
+  overflow-y: auto;
+}
+
+.transfer-field-group { margin-bottom: 14px; }
+
+.transfer-field-group label {
+  display: block;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 6px;
+}
+
+.transfer-arrows {
+  text-align: center;
+  font-size: 1.4rem;
+  color: var(--text3);
+  margin: 4px 0;
+}
+
+.transfer-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transfer-currency {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.transfer-amount-input { flex: 1; font-size: 1.1rem; font-weight: 700; }
+
+.transfer-available-hint {
+  display: block;
+  font-size: .75rem;
+  color: var(--teal);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.transfer-submit-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ── Hero for wallets page ────────────────────────────────── */
+#vWallets .compact-wallets-hero {
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px;
+  border-radius: 26px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 16%, rgba(101,71,246,.18), transparent 38%),
+    radial-gradient(circle at 10% 88%, rgba(16,185,129,.10), transparent 34%),
+    rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.88);
+  box-shadow: 0 14px 40px rgba(25,33,80,.07);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+}
+
+#vWallets .compact-wallets-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .25;
+  background-image:
+    linear-gradient(rgba(92,103,145,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92,103,145,.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+}
+
+#vWallets .compact-wallets-hero > * { position: relative; z-index: 1; }
+
+#vWallets .compact-wallets-hero .eyebrow {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+#vWallets .compact-wallets-hero h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.5px;
+  margin: 0;
+}
+
+#vWallets .compact-wallets-hero p {
+  font-size: 12px;
+  color: var(--text2);
+  margin: 4px 0 0;
+}
+
+#vWallets .compact-wallets-hero .primary-add {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: opacity var(--t-fast);
+  white-space: nowrap;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+#vWallets .compact-wallets-hero .primary-add:hover { opacity: .88; }
+
+/* ============================================================
+   CAPVO v1.8.6.39 — Wallet insert/edit sheet premium alignment
+   Matches the newer add/insert card rhythm: left title, compact
+   scrollable content, no artificial empty bottom space.
+   ============================================================ */
+.add-center-v4.capvo-wallet-sheet-v5,
+.capvo-wallet-sheet-v5{
+  width:calc(100% - 24px) !important;
+  max-width:430px !important;
+  height:auto !important;
+  max-height:calc(100dvh - 14px - env(safe-area-inset-top)) !important;
+  min-height:0 !important;
+  align-self:flex-end !important;
+  justify-content:flex-start !important;
+  margin-bottom:0 !important;
+  border-radius:30px 30px 0 0 !important;
+  background:
+    radial-gradient(circle at 12% -8%,rgba(124,92,255,.22),transparent 34%),
+    radial-gradient(circle at 88% 8%,rgba(34,211,238,.13),transparent 32%),
+    linear-gradient(180deg,#fbfcff 0%,#f4f7ff 100%) !important;
+  box-shadow:0 -24px 70px rgba(15,23,42,.24) !important;
+  border:1px solid rgba(255,255,255,.84) !important;
+}
+
+.capvo-wallet-sheet-v5::before{
+  content:'' !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  border-radius:inherit !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,0) 34%) !important;
+  z-index:-1 !important;
+}
+
+.capvo-wallet-sheet-v5 .add-center-topbar{display:none !important;}
+
+.wsheet-premium-topbar{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+  padding:18px 18px 10px;
+  padding-top:calc(18px + env(safe-area-inset-top));
+}
+
+.wsheet-close-btn{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(241,245,249,.94);
+  color:#667085;
+  font-size:20px;
+  font-weight:900;
+  box-shadow:0 10px 24px rgba(30,40,90,.08);
+  cursor:pointer;
+  transition:transform .18s ease, background .18s ease, color .18s ease;
+}
+.wsheet-close-btn:active{transform:scale(.94);background:#ede9fe;color:#5b4fff;}
+
+.wsheet-title-block{text-align:left;min-width:0;padding-top:1px;}
+.wsheet-kicker{
+  color:#6b5cff;
+  font-size:10px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.wsheet-title-block h2{
+  margin:0;
+  font-size:19px;
+  line-height:1.06;
+  font-weight:950;
+  color:#121a33;
+  letter-spacing:-.045em;
+}
+.wsheet-title-block p{
+  margin:6px 0 0;
+  color:#77829a;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:650;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-body{
+  flex:0 1 auto !important;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:0 18px 8px !important;
+  max-height:calc(100dvh - 176px - env(safe-area-inset-top));
+  min-height:0 !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-preview-wrap{
+  padding:4px 0 14px !important;
+  justify-content:stretch !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-preview-card{
+  width:100% !important;
+  height:132px !important;
+  border-radius:24px !important;
+  box-shadow:
+    0 18px 36px color-mix(in srgb, var(--wallet-color, #6547f6) 22%, transparent),
+    0 10px 28px rgba(15,23,42,.10) !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-preview-card::before{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.22),transparent 52%),
+    radial-gradient(circle at 82% 22%,rgba(255,255,255,.18),transparent 26%) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-card::after{
+  width:118px !important;
+  height:118px !important;
+  right:-32px !important;
+  bottom:-34px !important;
+  background:rgba(255,255,255,.08) !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-preview-card-inner{
+  padding:16px 18px !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-main{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-label{
+  color:rgba(255,255,255,.66);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-balance{
+  font-size:1.42rem !important;
+  letter-spacing:-.045em !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-name{
+  font-size:.84rem !important;
+  font-weight:750 !important;
+  margin-top:4px;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-icon{
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-type{
+  min-height:26px;
+  display:inline-flex;
+  align-items:center;
+  font-size:.68rem !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-preview-orb{
+  width:74px;
+  height:48px;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.07));
+  transform:rotate(-10deg);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+  flex:0 0 auto;
+}
+
+.wsheet-section-card{
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(218,225,240,.86);
+  box-shadow:0 12px 30px rgba(15,23,42,.055);
+  border-radius:22px;
+  padding:14px;
+  margin:0 0 12px;
+}
+.wsheet-section-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+.wsheet-section-icon{
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:13px;
+  background:linear-gradient(135deg,#ede9fe,#eff6ff);
+  color:#6b5cff;
+  font-size:14px;
+  font-weight:900;
+  flex:0 0 auto;
+}
+.wsheet-section-head strong{
+  display:block;
+  color:#152039;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:-.025em;
+}
+.wsheet-section-head small{
+  display:block;
+  color:#7a849c;
+  font-size:11px;
+  font-weight:650;
+  line-height:1.25;
+  margin-top:2px;
+}
+.capvo-wallet-sheet-v5 .wsheet-field{margin-bottom:12px !important;}
+.capvo-wallet-sheet-v5 .wsheet-field.is-last{margin-bottom:0 !important;}
+.capvo-wallet-sheet-v5 .wsheet-label{
+  font-size:10px !important;
+  letter-spacing:.13em !important;
+  color:#7a849c !important;
+  margin-bottom:7px !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-input,
+.capvo-wallet-sheet-v5 .wsheet-amount-row{
+  min-height:48px;
+  border-radius:16px !important;
+  background:#fff !important;
+  border:1px solid rgba(218,225,240,.96) !important;
+  box-shadow:0 4px 14px rgba(15,23,42,.035) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-input:focus,
+.capvo-wallet-sheet-v5 .wsheet-amount-row:focus-within{
+  border-color:#705cff !important;
+  box-shadow:0 0 0 4px rgba(112,92,255,.13),0 6px 18px rgba(15,23,42,.06) !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-type-grid{
+  grid-template-columns:repeat(2,1fr) !important;
+  gap:10px !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-type-pill{
+  flex-direction:row !important;
+  justify-content:flex-start !important;
+  text-align:left !important;
+  gap:9px !important;
+  min-height:48px;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+  background:#fff !important;
+  border:1px solid rgba(218,225,240,.96) !important;
+  color:#46516a !important;
+  box-shadow:0 5px 16px rgba(15,23,42,.035);
+}
+.capvo-wallet-sheet-v5 .wsheet-type-pill span{
+  width:30px;
+  height:30px;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3f5fb;
+  font-size:1rem !important;
+  flex:0 0 auto;
+}
+.capvo-wallet-sheet-v5 .wsheet-type-pill.is-selected{
+  color:#5b4fff !important;
+  border-color:rgba(101,71,246,.62) !important;
+  background:linear-gradient(180deg,#fff,#f7f5ff) !important;
+  box-shadow:0 0 0 4px rgba(101,71,246,.10),0 10px 22px rgba(101,71,246,.08) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-type-pill.is-selected span{background:#ede9fe;}
+
+.capvo-wallet-sheet-v5 .wsheet-colors{
+  gap:8px !important;
+  padding:2px 0 4px !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-color-dot{
+  width:31px !important;
+  height:31px !important;
+  border:3px solid #fff !important;
+  box-shadow:0 5px 14px rgba(15,23,42,.16) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-color-dot.is-selected{
+  border-color:#fff !important;
+  transform:scale(1.08) !important;
+  box-shadow:0 0 0 3px rgba(101,71,246,.24),0 8px 16px rgba(15,23,42,.18) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-icon-input{
+  max-width:96px;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-toggles{
+  background:transparent !important;
+  border-radius:0 !important;
+  margin-bottom:0 !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-toggle{
+  padding:12px 0 !important;
+  border-bottom:1px solid rgba(218,225,240,.82) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-toggle:last-child{border-bottom:0 !important;padding-bottom:0 !important;}
+.capvo-wallet-sheet-v5 .wsheet-toggle strong{font-size:.86rem !important;}
+.capvo-wallet-sheet-v5 .wsheet-toggle small{font-size:.72rem !important;}
+
+.wsheet-sticky-actions{
+  flex:0 0 auto;
+  display:grid;
+  gap:10px;
+  padding:10px 18px max(10px, env(safe-area-inset-bottom));
+  border-top:1px solid rgba(218,225,240,.74);
+  background:linear-gradient(180deg,rgba(246,248,255,.80),rgba(255,255,255,.96));
+  box-shadow:0 -14px 28px rgba(15,23,42,.055);
+}
+.capvo-wallet-sheet-v5 .wsheet-btn-primary{
+  min-height:50px !important;
+  border-radius:17px !important;
+  box-shadow:0 12px 26px rgba(101,71,246,.26) !important;
+}
+.capvo-wallet-sheet-v5 .wsheet-btn-danger{
+  min-height:46px !important;
+  border-radius:16px !important;
+  background:#fff !important;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-sticky-actions{
+  margin:0 !important;
+  border-bottom-left-radius:inherit;
+  border-bottom-right-radius:inherit;
+}
+
+.capvo-wallet-sheet-v5 .wsheet-sticky-actions > *:last-child{margin-bottom:0 !important;}
+
+@media(max-width:430px){
+  .capvo-wallet-sheet-v5{
+    width:100% !important;
+    max-width:none !important;
+    border-radius:28px 28px 0 0 !important;
+  }
+  .wsheet-premium-topbar{padding-left:16px;padding-right:16px;}
+  .capvo-wallet-sheet-v5 .wsheet-body{padding-left:16px !important;padding-right:16px !important;}
+  .wsheet-sticky-actions{padding-left:16px;padding-right:16px;}
+}
+
+
+/* v1.8.6.41 — Wallet edit sheet should size to its visible content, like Quick Add. */
+#capvoWalletSheetOverlay .add-center-v4.capvo-wallet-sheet-v5{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:calc(100dvh - 14px - env(safe-area-inset-top)) !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-body{
+  flex:0 1 auto !important;
+  padding-bottom:6px !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-sticky-actions{
+  flex:0 0 auto !important;
+  padding-top:8px !important;
+  padding-bottom:max(10px, env(safe-area-inset-bottom)) !important;
+  margin-bottom:0 !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-btn-primary,
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-btn-danger{
+  margin-bottom:0 !important;
+}
+
+@media(max-width:430px){
+  #capvoWalletSheetOverlay .add-center-v4.capvo-wallet-sheet-v5{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:calc(100dvh - 12px - env(safe-area-inset-top)) !important;
+  }
+}
+
+body.theme-dark .capvo-wallet-sheet-v5,
+body.dark .capvo-wallet-sheet-v5,
+html[data-theme="dark"] .capvo-wallet-sheet-v5{
+  background:
+    radial-gradient(circle at 12% -8%,rgba(124,92,255,.28),transparent 34%),
+    radial-gradient(circle at 88% 8%,rgba(34,211,238,.10),transparent 32%),
+    linear-gradient(180deg,#101832 0%,#0c1226 100%) !important;
+  border-color:rgba(148,163,184,.18) !important;
+}
+body.theme-dark .wsheet-title-block h2,
+body.dark .wsheet-title-block h2,
+html[data-theme="dark"] .wsheet-title-block h2,
+body.theme-dark .wsheet-section-head strong,
+body.dark .wsheet-section-head strong,
+html[data-theme="dark"] .wsheet-section-head strong{color:#f8fafc !important;}
+body.theme-dark .wsheet-title-block p,
+body.dark .wsheet-title-block p,
+html[data-theme="dark"] .wsheet-title-block p,
+body.theme-dark .wsheet-section-head small,
+body.dark .wsheet-section-head small,
+html[data-theme="dark"] .wsheet-section-head small{color:#a8b3cf !important;}
+body.theme-dark .wsheet-section-card,
+body.dark .wsheet-section-card,
+html[data-theme="dark"] .wsheet-section-card{
+  background:rgba(15,23,42,.66) !important;
+  border-color:rgba(148,163,184,.16) !important;
+  box-shadow:0 18px 38px rgba(0,0,0,.18) !important;
+}
+body.theme-dark .capvo-wallet-sheet-v5 .wsheet-input,
+body.theme-dark .capvo-wallet-sheet-v5 .wsheet-amount-row,
+body.theme-dark .capvo-wallet-sheet-v5 .wsheet-type-pill,
+body.dark .capvo-wallet-sheet-v5 .wsheet-input,
+body.dark .capvo-wallet-sheet-v5 .wsheet-amount-row,
+body.dark .capvo-wallet-sheet-v5 .wsheet-type-pill,
+html[data-theme="dark"] .capvo-wallet-sheet-v5 .wsheet-input,
+html[data-theme="dark"] .capvo-wallet-sheet-v5 .wsheet-amount-row,
+html[data-theme="dark"] .capvo-wallet-sheet-v5 .wsheet-type-pill{
+  background:rgba(15,23,42,.72) !important;
+  border-color:rgba(148,163,184,.18) !important;
+}
+body.theme-dark .wsheet-sticky-actions,
+body.dark .wsheet-sticky-actions,
+html[data-theme="dark"] .wsheet-sticky-actions{
+  background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(8,13,28,.96)) !important;
+  border-color:rgba(148,163,184,.15) !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.43 — Wallets page premium redesign
+   Scope: #vWallets only. Matches Income/Dashboard visual language.
+   ============================================================ */
+
+#vWallets,
+#vWallets *{
+  box-sizing:border-box;
+}
+
+#vWallets{
+  background:
+    radial-gradient(circle at 14% 0%,rgba(101,71,246,.10),transparent 34%),
+    linear-gradient(180deg,#fbfcff 0%,#f3f6ff 44%,#edf2ff 100%) !important;
+  min-height:100dvh !important;
+  height:auto !important;
+  overflow-y:visible !important;
+  -webkit-overflow-scrolling:touch;
+}
+
+#vWallets .wallets-page-v2{
+  gap:18px !important;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom)) !important;
+}
+
+#vWallets .wallets-hero-v2{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:180px !important;
+  padding:26px !important;
+  border:1px solid rgba(147,132,255,.18) !important;
+  border-radius:32px !important;
+  background:
+    radial-gradient(circle at 88% 28%,rgba(122,92,255,.16),transparent 30%),
+    radial-gradient(circle at 0% 100%,rgba(34,201,133,.12),transparent 36%),
+    linear-gradient(135deg,rgba(255,255,255,.95),rgba(246,243,255,.92)) !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:18px !important;
+}
+
+#vWallets .wallets-hero-v2::before{
+  content:'' !important;
+  position:absolute !important;
+  inset:0 !important;
+  opacity:.42 !important;
+  background-image:
+    linear-gradient(rgba(101,71,246,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101,71,246,.08) 1px, transparent 1px) !important;
+  background-size:34px 34px !important;
+  pointer-events:none !important;
+  mask-image:linear-gradient(90deg,black 0%,black 76%,transparent 100%) !important;
+}
+
+#vWallets .wallets-hero-v2::after{
+  content:'👛' !important;
+  position:absolute !important;
+  right:26px !important;
+  top:48px !important;
+  width:118px !important;
+  height:118px !important;
+  border-radius:38px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:52px !important;
+  background:linear-gradient(135deg,#7c5cff,#4d36d9) !important;
+  color:#fff !important;
+  box-shadow:0 22px 44px rgba(101,71,246,.26), inset 0 1px 0 rgba(255,255,255,.26) !important;
+  transform:rotate(-8deg) !important;
+}
+
+#vWallets .wallets-hero-v2 > *{
+  position:relative !important;
+  z-index:1 !important;
+}
+
+#vWallets .wallets-hero-v2 > div{
+  max-width:66% !important;
+}
+
+#vWallets .wallets-hero-v2 .eyebrow{
+  color:#6547f6 !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:.16em !important;
+  text-transform:uppercase !important;
+  margin-bottom:7px !important;
+}
+
+#vWallets .wallets-hero-v2 h2{
+  color:#111827 !important;
+  font-size:24px !important;
+  line-height:1.02 !important;
+  font-weight:950 !important;
+  letter-spacing:-.055em !important;
+  margin:0 !important;
+}
+
+#vWallets .wallets-hero-v2 p{
+  color:#6f7b94 !important;
+  font-size:12.5px !important;
+  line-height:1.38 !important;
+  font-weight:650 !important;
+  margin:7px 0 0 !important;
+}
+
+#vWallets .wallets-hero-v2 .primary-add{
+  position:absolute !important;
+  left:24px !important;
+  bottom:22px !important;
+  z-index:2 !important;
+  border:0 !important;
+  border-radius:16px !important;
+  padding:11px 16px !important;
+  background:linear-gradient(135deg,#6547f6,#7c5cff) !important;
+  color:#fff !important;
+  box-shadow:0 12px 28px rgba(101,71,246,.28) !important;
+  font-size:.82rem !important;
+  font-weight:900 !important;
+}
+
+#vWallets .wallets-summary-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+}
+
+#vWallets .wallets-summary-grid .income-summary-card,
+#vWallets .wallets-info-card,
+#vWallets .wallets-list-card,
+#vWallets .wallets-transfer-card{
+  border-radius:24px !important;
+  background:rgba(255,255,255,.86) !important;
+  border:1px solid rgba(255,255,255,.88) !important;
+  box-shadow:0 18px 46px rgba(30,40,90,.075) !important;
+}
+
+#vWallets .wallets-summary-grid .income-summary-card{
+  min-height:122px !important;
+  padding:18px 16px !important;
+  text-align:center !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:5px !important;
+}
+
+#vWallets .wallets-summary-icon{
+  width:32px !important;
+  height:32px !important;
+  border-radius:14px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  margin-bottom:4px !important;
+  background:linear-gradient(135deg,#e9fff5,#eff6ff) !important;
+  color:#16a36a !important;
+  font-size:16px !important;
+}
+#vWallets .wallets-summary-icon.blue{background:linear-gradient(135deg,#eff6ff,#eef2ff) !important;color:#3b66ff !important;}
+#vWallets .wallets-summary-icon.amber{background:linear-gradient(135deg,#fff7ed,#fff1f2) !important;color:#fb8c22 !important;}
+#vWallets .wallets-summary-icon.green{background:linear-gradient(135deg,#ecfdf5,#f0fdf4) !important;color:#22c985 !important;}
+
+#vWallets .wallets-summary-grid .stat-label,
+#vWallets .wallets-total-label{
+  color:#8290a8 !important;
+  font-size:10px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+  margin:0 !important;
+}
+
+#vWallets .wallets-summary-grid .stat-value,
+#vWallets .wallets-total-amount{
+  font-size:1.35rem !important;
+  line-height:1.05 !important;
+  font-weight:950 !important;
+  letter-spacing:-.05em !important;
+  color:#111827 !important;
+  margin:0 !important;
+}
+
+#vWallets .wallets-summary-grid .stat-value.teal{color:#10b981 !important;}
+#vWallets .wallets-summary-grid .stat-value.blue{color:#3b66ff !important;}
+#vWallets .wallets-summary-grid .stat-value.amber{color:#fb8c22 !important;}
+#vWallets .wallets-summary-grid .stat-value.green{color:#16a36a !important;}
+
+#vWallets .wallets-total-sub{
+  color:#7b879d !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:700 !important;
+  margin:0 !important;
+}
+
+#vWallets .wallets-info-card{
+  display:grid !important;
+  grid-template-columns:44px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:16px !important;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(34,201,133,.12),transparent 40%),
+    linear-gradient(135deg,rgba(255,255,255,.92),rgba(239,255,250,.82)) !important;
+}
+
+#vWallets .wallets-info-card strong{
+  display:block !important;
+  color:#111827 !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  letter-spacing:-.035em !important;
+}
+
+#vWallets .wallets-info-card small{
+  display:block !important;
+  color:#5f6f88 !important;
+  font-size:11.5px !important;
+  line-height:1.35 !important;
+  font-weight:650 !important;
+  margin-top:3px !important;
+}
+
+#vWallets .wallets-info-card em{
+  color:#10b981 !important;
+  font-style:normal !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  white-space:nowrap !important;
+}
+
+#vWallets .wallets-list-card,
+#vWallets .wallets-transfer-card{
+  padding:16px 14px !important;
+}
+
+#vWallets .wallets-list-card .section-header,
+#vWallets .wallets-transfer-card .section-header{
+  margin-bottom:14px !important;
+}
+
+#vWallets .wallets-group-label{
+  color:#8793aa !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase !important;
+  padding:8px 2px 8px !important;
+}
+
+#vWallets .wallet-row.wallets-row-v2{
+  display:grid !important;
+  grid-template-columns:46px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:11px !important;
+  min-height:66px !important;
+  padding:11px 12px !important;
+  margin:0 0 9px !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg,#ffffff,#fbfcff) !important;
+  border:1px solid rgba(218,225,240,.96) !important;
+  box-shadow:0 7px 18px rgba(15,23,42,.035) !important;
+}
+
+#vWallets .wallet-row-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:16px !important;
+  font-size:1.08rem !important;
+}
+
+#vWallets .wallet-row-info strong{
+  color:#111827 !important;
+  font-size:.93rem !important;
+  font-weight:950 !important;
+  letter-spacing:-.025em !important;
+}
+
+#vWallets .wallet-row-info small{
+  color:#7b879d !important;
+  font-size:.72rem !important;
+  font-weight:700 !important;
+}
+
+#vWallets .wallet-row-right{
+  align-items:flex-end !important;
+  gap:7px !important;
+}
+
+#vWallets .wallet-row-balance{
+  color:#111827 !important;
+  font-size:.94rem !important;
+  font-weight:950 !important;
+}
+
+#vWallets .wallet-row-balance.is-zero{color:#9aa6bb !important;}
+#vWallets .wallet-row-balance.is-negative{color:#ef4444 !important;}
+
+#vWallets .wallet-row-actions{
+  display:flex !important;
+  gap:6px !important;
+}
+
+#vWallets .wallet-action-btn{
+  width:30px !important;
+  height:30px !important;
+  border-radius:12px !important;
+  border:0 !important;
+  background:#f2f5fb !important;
+  color:#667085 !important;
+  font-weight:900 !important;
+}
+
+#vWallets .wallet-action-btn:active{
+  transform:scale(.94) !important;
+  background:#ede9fe !important;
+  color:#6547f6 !important;
+}
+
+#vWallets .wallets-add-inline-btn{
+  display:none !important;
+}
+
+#vWallets .wallet-transfer-row{
+  display:grid !important;
+  grid-template-columns:38px minmax(0,1fr) auto !important;
+  gap:10px !important;
+  align-items:center !important;
+  padding:11px 0 !important;
+  border-bottom:1px solid rgba(218,225,240,.82) !important;
+}
+
+#vWallets .wallet-transfer-icon{
+  width:38px !important;
+  height:38px !important;
+  border-radius:14px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#eef2ff !important;
+  color:#6547f6 !important;
+}
+
+#vWallets .wallet-transfer-info strong{
+  color:#111827 !important;
+  font-size:.84rem !important;
+  font-weight:900 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+#vWallets .wallet-transfer-info small{
+  color:#7b879d !important;
+  font-size:.72rem !important;
+  font-weight:650 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+#vWallets .wallet-transfer-amount{
+  color:#111827 !important;
+  font-size:.86rem !important;
+  font-weight:950 !important;
+}
+
+#vWallets .wallets-transfer-empty{
+  background:#f7f9ff !important;
+  border:1px dashed rgba(130,140,190,.22) !important;
+  border-radius:18px !important;
+  padding:16px !important;
+  color:#8a95aa !important;
+  font-weight:750 !important;
+}
+
+body.theme-dark #vWallets,
+body.dark #vWallets,
+html[data-theme="dark"] #vWallets{
+  background:
+    radial-gradient(circle at 16% 0%,rgba(101,71,246,.18),transparent 34%),
+    linear-gradient(180deg,#050b1c 0%,#081225 55%,#0a1020 100%) !important;
+}
+
+body.theme-dark #vWallets .wallets-summary-grid .income-summary-card,
+body.theme-dark #vWallets .wallets-info-card,
+body.theme-dark #vWallets .wallets-list-card,
+body.theme-dark #vWallets .wallets-transfer-card,
+body.dark #vWallets .wallets-summary-grid .income-summary-card,
+body.dark #vWallets .wallets-info-card,
+body.dark #vWallets .wallets-list-card,
+body.dark #vWallets .wallets-transfer-card,
+html[data-theme="dark"] #vWallets .wallets-summary-grid .income-summary-card,
+html[data-theme="dark"] #vWallets .wallets-info-card,
+html[data-theme="dark"] #vWallets .wallets-list-card,
+html[data-theme="dark"] #vWallets .wallets-transfer-card{
+  background:rgba(10,18,38,.82) !important;
+  border-color:rgba(148,163,184,.16) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.25) !important;
+}
+
+body.theme-dark #vWallets .wallet-row.wallets-row-v2,
+body.theme-dark #vWallets .wallet-transfer-row,
+body.dark #vWallets .wallet-row.wallets-row-v2,
+body.dark #vWallets .wallet-transfer-row,
+html[data-theme="dark"] #vWallets .wallet-row.wallets-row-v2,
+html[data-theme="dark"] #vWallets .wallet-transfer-row{
+  background:rgba(15,23,42,.78) !important;
+  border-color:rgba(148,163,184,.15) !important;
+}
+
+body.theme-dark #vWallets .wallets-hero-v2 h2,
+body.theme-dark #vWallets .wallet-row-info strong,
+body.theme-dark #vWallets .wallet-row-balance,
+body.theme-dark #vWallets .wallet-transfer-info strong,
+body.theme-dark #vWallets .wallet-transfer-amount,
+body.dark #vWallets .wallets-hero-v2 h2,
+body.dark #vWallets .wallet-row-info strong,
+body.dark #vWallets .wallet-row-balance,
+body.dark #vWallets .wallet-transfer-info strong,
+body.dark #vWallets .wallet-transfer-amount,
+html[data-theme="dark"] #vWallets .wallets-hero-v2 h2,
+html[data-theme="dark"] #vWallets .wallet-row-info strong,
+html[data-theme="dark"] #vWallets .wallet-row-balance,
+html[data-theme="dark"] #vWallets .wallet-transfer-info strong,
+html[data-theme="dark"] #vWallets .wallet-transfer-amount{
+  color:#f8fafc !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.44 — Wallets page / transfer sheet polish
+   Fixes hero visual, +Νέος overlap, premium transfer sheet,
+   and rounded bottom ending for wallet insert/edit sheet.
+   ============================================================ */
+
+/* Wallets hero: remove oversized emoji image and use subtle abstract wallet mark */
+#vWallets .wallets-hero-v2{
+  min-height:178px !important;
+}
+
+#vWallets .wallets-hero-v2 > div{
+  max-width:62% !important;
+  padding-bottom:46px !important;
+}
+
+#vWallets .wallets-hero-v2::after{
+  content:'' !important;
+  right:24px !important;
+  top:52px !important;
+  width:88px !important;
+  height:88px !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(circle at 34% 28%,rgba(255,255,255,.42),transparent 18%),
+    linear-gradient(135deg,#8b5cf6 0%,#6547f6 54%,#4c35d6 100%) !important;
+  box-shadow:0 20px 38px rgba(101,71,246,.22), inset 0 1px 0 rgba(255,255,255,.34) !important;
+  transform:rotate(-8deg) !important;
+}
+
+#vWallets .wallets-hero-v2 .primary-add{
+  bottom:20px !important;
+  left:24px !important;
+  z-index:3 !important;
+}
+
+/* Add a small pseudo-wallet inside the abstract mark */
+#vWallets .wallets-hero-v2 .primary-add::after{
+  content:none !important;
+}
+
+/* Transfer sheet premium */
+#capvoTransferSheetOverlay.capvo-transfer-overlay-v2,
+#capvoTransferSheetOverlay.capvo-transfer-overlay-v2.active{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:18000 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  padding:0 !important;
+  background:rgba(10,15,35,.46) !important;
+  backdrop-filter:blur(14px) saturate(1.1) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.1) !important;
+}
+
+#capvoTransferSheetOverlay .capvo-transfer-sheet-v2{
+  width:calc(100% - 24px) !important;
+  max-width:430px !important;
+  height:auto !important;
+  max-height:calc(100dvh - 14px - env(safe-area-inset-top)) !important;
+  min-height:0 !important;
+  margin:0 0 max(10px, env(safe-area-inset-bottom)) !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(circle at 12% -8%,rgba(124,92,255,.18),transparent 34%),
+    radial-gradient(circle at 88% 8%,rgba(34,211,238,.11),transparent 32%),
+    linear-gradient(180deg,#fbfcff 0%,#f4f7ff 100%) !important;
+  border:1px solid rgba(255,255,255,.84) !important;
+  box-shadow:0 26px 70px rgba(15,23,42,.24) !important;
+  transform:translateY(22px) scale(.985) !important;
+  opacity:0 !important;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .22s ease !important;
+}
+
+#capvoTransferSheetOverlay.active .capvo-transfer-sheet-v2{
+  transform:translateY(0) scale(1) !important;
+  opacity:1 !important;
+}
+
+.transfer-premium-handle{
+  width:40px;
+  height:4px;
+  border-radius:999px;
+  background:rgba(148,163,184,.42);
+  margin:10px auto 2px;
+}
+
+.transfer-premium-header{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 42px;
+  gap:12px;
+  align-items:start;
+  padding:14px 16px 10px;
+}
+
+.transfer-premium-title{min-width:0;text-align:left;}
+.transfer-premium-kicker{
+  display:block;
+  color:#6b5cff;
+  font-size:10px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.transfer-premium-title strong{
+  display:block;
+  color:#121a33;
+  font-size:20px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.045em;
+}
+.transfer-premium-title small{
+  display:block;
+  color:#77829a;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:650;
+  margin-top:6px;
+}
+.transfer-premium-close{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:16px;
+  background:#eef2f8;
+  color:#64748b;
+  font-size:22px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 20px rgba(30,40,90,.07);
+}
+.transfer-premium-card{
+  margin:0 16px 12px;
+  padding:14px;
+  border-radius:22px;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  color:#fff;
+  background:
+    radial-gradient(circle at 90% 20%,rgba(255,255,255,.25),transparent 30%),
+    linear-gradient(135deg,#20145f 0%,#6547f6 52%,#21c7b7 120%);
+  box-shadow:0 16px 34px rgba(101,71,246,.20);
+}
+.transfer-premium-icon{
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.17);
+  font-size:20px;
+  font-weight:900;
+}
+.transfer-premium-card span{
+  display:block;
+  color:rgba(255,255,255,.62);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.transfer-premium-card strong{
+  display:block;
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.transfer-premium-card em{
+  color:rgba(255,255,255,.72);
+  font-style:normal;
+  font-size:11px;
+  font-weight:800;
+}
+.transfer-sheet-body-v2{
+  padding:0 16px 10px !important;
+  max-height:calc(100dvh - 292px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y:auto;
+}
+.transfer-field-card{
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(218,225,240,.86);
+  border-radius:18px;
+  padding:12px;
+  margin-bottom:10px;
+  box-shadow:0 8px 20px rgba(15,23,42,.045);
+}
+.transfer-field-card label{
+  display:block;
+  color:#7a849c;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:7px;
+}
+.transfer-field-card .wallet-input,
+.transfer-field-card select.wallet-input{
+  min-height:46px !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  border:1px solid rgba(218,225,240,.96) !important;
+  box-shadow:0 4px 14px rgba(15,23,42,.035) !important;
+}
+.transfer-premium-actions{
+  padding:10px 16px max(10px, env(safe-area-inset-bottom)) !important;
+  background:linear-gradient(180deg,rgba(246,248,255,.80),rgba(255,255,255,.96));
+  border-top:1px solid rgba(218,225,240,.74);
+}
+.transfer-premium-actions .transfer-submit-btn{
+  width:100% !important;
+  min-height:50px !important;
+  border-radius:17px !important;
+  box-shadow:0 12px 26px rgba(101,71,246,.26) !important;
+}
+
+/* Wallet insert/edit sheet must have a visible rounded ending */
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+  border-radius:28px !important;
+  margin-bottom:max(10px, env(safe-area-inset-bottom)) !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-sticky-actions{
+  border-bottom-left-radius:28px !important;
+  border-bottom-right-radius:28px !important;
+  overflow:hidden !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.45 — Wallets page final visual touch
+   - Adds a real hero icon inside the abstract account tile.
+   - Keeps wallet insert/edit sheet slightly lower/less full-screen.
+   ============================================================ */
+
+#vWallets .wallets-hero-v2::after{
+  content:'💳' !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:31px !important;
+  line-height:1 !important;
+  text-indent:0 !important;
+  color:#fff !important;
+  text-shadow:0 3px 12px rgba(20,12,70,.22) !important;
+  background:
+    radial-gradient(circle at 34% 28%,rgba(255,255,255,.38),transparent 18%),
+    radial-gradient(circle at 70% 76%,rgba(255,255,255,.18),transparent 24%),
+    linear-gradient(135deg,#8b5cf6 0%,#6547f6 54%,#4c35d6 100%) !important;
+}
+
+/* Long wallet forms should feel like a bottom sheet, not a full-screen page. */
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+  max-height:min(88dvh,760px) !important;
+  margin-bottom:max(12px, env(safe-area-inset-bottom)) !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-body{
+  max-height:calc(88dvh - 224px - env(safe-area-inset-bottom)) !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.1.0 — Transfer budget impact chip
+   ============================================================ */
+.transfer-budget-impact{
+  margin:0 16px 12px;
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(248,250,252,.88);
+  border:1px solid rgba(218,225,240,.82);
+  color:#64748b;
+  font-size:12px;
+  line-height:1.25;
+  font-weight:800;
+  text-align:center;
+  box-shadow:0 8px 18px rgba(15,23,42,.04);
+}
+
+.transfer-budget-impact.is-negative{
+  background:linear-gradient(135deg,#fff7ed,#fff1f2);
+  border-color:rgba(251,146,60,.26);
+  color:#c2410c;
+}
+
+.transfer-budget-impact.is-positive{
+  background:linear-gradient(135deg,#ecfdf5,#eff6ff);
+  border-color:rgba(34,197,94,.25);
+  color:#047857;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.1.1 — Wallet / transfer amount row overflow fix
+   Prevent nested-looking duplicate fields inside flex amount rows.
+   ============================================================ */
+.wsheet-amount-row,
+.transfer-amount-row{
+  overflow:hidden;
+}
+
+.wsheet-amount-input,
+.transfer-amount-input{
+  width:auto !important;
+  min-width:0 !important;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+
+.transfer-amount-row{
+  background:#fff;
+  border:1px solid rgba(218,225,240,.96);
+  border-radius:15px;
+  padding:0 12px;
+  box-shadow:0 4px 14px rgba(15,23,42,.035);
+}
+
+.transfer-amount-row .transfer-amount-input{
+  border:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  padding-left:0 !important;
+}
+
+.transfer-amount-row .transfer-currency,
+.wsheet-amount-row .wsheet-currency{
+  flex:0 0 auto;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.1.2 — Hard fix for nested-looking amount inputs
+   The generic .capvo-wallet-sheet-v5 .wsheet-input:focus rule was
+   still applying a focus ring to the inner amount input.
+   Keep the ring only on the outer amount row.
+   ============================================================ */
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row{
+  display:flex !important;
+  align-items:center !important;
+  overflow:hidden !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input,
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input:focus,
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row input.wsheet-amount-input,
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row input.wsheet-amount-input:focus{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  width:100% !important;
+  height:48px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-width:0 !important;
+  border-color:transparent !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  border-radius:0 !important;
+  appearance:textfield !important;
+  -webkit-appearance:none !important;
+  -moz-appearance:textfield !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input::-webkit-outer-spin-button,
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input::-webkit-inner-spin-button{
+  -webkit-appearance:none !important;
+  margin:0 !important;
+}
+
+#capvoTransferSheetOverlay .transfer-amount-row .wallet-input.transfer-amount-input,
+#capvoTransferSheetOverlay .transfer-amount-row .wallet-input.transfer-amount-input:focus{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  width:100% !important;
+  height:46px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-width:0 !important;
+  border-color:transparent !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  border-radius:0 !important;
+  appearance:textfield !important;
+  -webkit-appearance:none !important;
+  -moz-appearance:textfield !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.1.3 — Sheet save feedback + faster nav return
+   Success/error status is shown inside the open sheet before close,
+   so users do not think the action disappeared without confirmation.
+   ============================================================ */
+
+.wsheet-error.is-success,
+.wallet-sheet-error.is-success{
+  display:block !important;
+  background:linear-gradient(135deg,#ecfdf5,#f0fdf4) !important;
+  border:1px solid rgba(34,197,94,.28) !important;
+  color:#047857 !important;
+  font-weight:900 !important;
+  text-align:center !important;
+}
+
+.wsheet-error.is-error,
+.wallet-sheet-error.is-error{
+  display:block !important;
+  background:linear-gradient(135deg,#fff1f2,#fff7ed) !important;
+  border:1px solid rgba(239,68,68,.24) !important;
+  color:#dc2626 !important;
+  font-weight:900 !important;
+  text-align:center !important;
+}
+
+.wsheet-error.is-info,
+.wallet-sheet-error.is-info{
+  display:block !important;
+  background:linear-gradient(135deg,#eff6ff,#eef2ff) !important;
+  border:1px solid rgba(99,102,241,.22) !important;
+  color:#4f46e5 !important;
+  font-weight:900 !important;
+  text-align:center !important;
+}
+
+#capvoWalletSheetOverlay[style*="pointer-events: none"],
+#capvoTransferSheetOverlay[style*="pointer-events: none"]{
+  touch-action:none !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.2.0 — Wallet budget settings UI
+   Shows explicit budget/primary account behavior in wallet sheet.
+   ============================================================ */
+#capvoWalletSheetOverlay .wsheet-toggle.is-disabled{
+  opacity:.58;
+}
+
+#capvoWalletSheetOverlay .wsheet-toggle.is-disabled strong,
+#capvoWalletSheetOverlay .wsheet-toggle.is-disabled small{
+  color:#8a95aa !important;
+}
+
+#capvoWalletSheetOverlay .wsheet-toggle input:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+#capvoWalletSheetOverlay .wsheet-toggle input{
+  accent-color:#6547f6;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.3.0 — Primary wallet salary + extra income UI
+   ============================================================ */
+#capvoWalletSheetOverlay .capvo-cycle-income-field{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px dashed rgba(148,163,184,.28);
+}
+
+#capvoWalletSheetOverlay .wsheet-inline-help{
+  display:block;
+  margin-top:7px;
+  color:#64748b;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.income-destination-card select{
+  width:100%;
+}
+
+.income-source-modal .income-primary-option,
+.income-source-modal .income-option-card:has(#fISIncludeBudget),
+.income-source-modal .income-option-card:has(#fISSavings){
+  display:none !important;
+}
+
+.income-source-modal .income-option-card:has(#fISRecurring){
+  border-radius:18px;
+}
+
+.income-source-item .income-source-meta{
+  line-height:1.35;
+}
+
+
+/* ============================================================
+   CAPVO v1.9.3.2 — Global operation lock overlay
+   ============================================================ */
+.capvo-global-operation-overlay{
+  position:fixed;
+  inset:0;
+  z-index:2147483000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  opacity:0;
+  pointer-events:none;
+  background:rgba(15,23,42,.28);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  transition:opacity .16s ease;
+}
+
+.capvo-global-operation-overlay.is-active{
+  opacity:1;
+  pointer-events:all;
+}
+
+.capvo-global-operation-card{
+  width:min(330px,calc(100vw - 44px));
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px 17px;
+  border-radius:24px;
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 24px 70px rgba(15,23,42,.22);
+  color:#111827;
+}
+
+.capvo-global-operation-spinner{
+  width:32px;
+  height:32px;
+  flex:0 0 32px;
+  border-radius:50%;
+  border:3px solid rgba(99,102,241,.18);
+  border-top-color:#6d5dfc;
+  animation:capvoOperationSpin .8s linear infinite;
+}
+
+.capvo-global-operation-copy{
+  display:grid;
+  gap:3px;
+}
+
+.capvo-global-operation-copy strong{
+  font-size:14px;
+  letter-spacing:-.01em;
+}
+
+.capvo-global-operation-copy span{
+  font-size:12px;
+  color:#64748b;
+  font-weight:700;
+  line-height:1.35;
+}
+
+.capvo-global-operation-overlay.is-success .capvo-global-operation-spinner{
+  border-color:rgba(16,185,129,.18);
+  border-top-color:#10b981;
+  animation:none;
+  position:relative;
+}
+
+.capvo-global-operation-overlay.is-error .capvo-global-operation-spinner{
+  border-color:rgba(239,68,68,.18);
+  border-top-color:#ef4444;
+  animation:none;
+}
+
+body.capvo-operation-locked{
+  cursor:progress;
+}
+
+@keyframes capvoOperationSpin{
+  to{transform:rotate(360deg);}
+}
+
+
+/* ============================================================
+   CAPVO v1.9.3.3 — Paid today preview / carryover explanation
+   ============================================================ */
+.capvo-paid-preview-overlay{
+  position:fixed;
+  inset:0;
+  z-index:2147482500;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:18px;
+  background:rgba(15,23,42,.34);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+}
+
+.capvo-paid-preview-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.capvo-paid-preview-sheet{
+  width:min(430px,100%);
+  max-height:min(88vh,760px);
+  overflow:auto;
+  border-radius:34px;
+  padding:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));
+  border:1px solid rgba(255,255,255,.78);
+  box-shadow:0 30px 90px rgba(15,23,42,.26);
+  transform:translateY(18px) scale(.985);
+  transition:transform .2s ease;
+  position:relative;
+}
+
+.capvo-paid-preview-overlay.active .capvo-paid-preview-sheet{
+  transform:translateY(0) scale(1);
+}
+
+.capvo-paid-preview-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:999px;
+  background:rgba(15,23,42,.06);
+  color:#0f172a;
+  font-weight:900;
+}
+
+.capvo-paid-preview-hero{
+  display:flex;
+  gap:13px;
+  align-items:center;
+  padding-right:38px;
+  margin-bottom:16px;
+}
+
+.capvo-paid-preview-icon{
+  width:54px;
+  height:54px;
+  border-radius:20px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#7c5cff,#b49cff);
+  color:white;
+  box-shadow:0 18px 35px rgba(124,92,255,.28);
+  font-size:24px;
+}
+
+.capvo-paid-preview-hero span,
+.capvo-paid-preview-total span{
+  display:block;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#7c5cff;
+}
+
+.capvo-paid-preview-hero h3{
+  margin:3px 0 3px;
+  font-size:20px;
+  line-height:1.06;
+  color:#111827;
+  letter-spacing:-.04em;
+}
+
+.capvo-paid-preview-hero p{
+  margin:0;
+  color:#64748b;
+  font-weight:800;
+  font-size:12px;
+}
+
+.capvo-paid-preview-total{
+  padding:18px;
+  border-radius:26px;
+  color:white;
+  background:
+    radial-gradient(circle at 92% 12%,rgba(255,255,255,.36),transparent 34%),
+    linear-gradient(135deg,#6d5dfc,#9f8cff);
+  box-shadow:0 20px 55px rgba(109,93,252,.28);
+}
+
+.capvo-paid-preview-total span{color:rgba(255,255,255,.78);}
+.capvo-paid-preview-total strong{
+  display:block;
+  margin-top:5px;
+  font-size:38px;
+  letter-spacing:-.07em;
+  line-height:.98;
+}
+.capvo-paid-preview-total small{
+  display:block;
+  margin-top:8px;
+  color:rgba(255,255,255,.78);
+  font-size:11px;
+  line-height:1.35;
+  font-weight:750;
+}
+
+.capvo-paid-preview-steps{
+  display:grid;
+  gap:9px;
+  margin-top:14px;
+}
+
+.capvo-paid-preview-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 14px;
+  border-radius:19px;
+  background:white;
+  border:1px solid rgba(226,232,240,.88);
+  box-shadow:0 10px 25px rgba(15,23,42,.05);
+}
+
+.capvo-paid-preview-row span{
+  color:#64748b;
+  font-size:12px;
+  font-weight:850;
+}
+
+.capvo-paid-preview-row strong{
+  color:#111827;
+  font-size:14px;
+  font-weight:950;
+}
+
+.capvo-paid-preview-row.is-plus strong{color:#059669;}
+.capvo-paid-preview-row.is-minus strong{color:#dc2626;}
+.capvo-paid-preview-row.is-subtotal{
+  background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(16,185,129,.08));
+}
+.capvo-paid-preview-row.is-subtotal strong{color:#4f46e5;}
+
+.capvo-paid-preview-breakdown{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+
+.capvo-paid-preview-breakdown div{
+  padding:11px 12px;
+  border-radius:18px;
+  background:rgba(241,245,249,.9);
+  border:1px solid rgba(226,232,240,.7);
+}
+
+.capvo-paid-preview-breakdown span{
+  display:block;
+  color:#64748b;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.capvo-paid-preview-breakdown strong{
+  display:block;
+  margin-top:4px;
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+}
+
+.capvo-paid-preview-note{
+  display:grid;
+  gap:4px;
+  margin-top:12px;
+  padding:12px 13px;
+  border-radius:20px;
+  background:rgba(236,253,245,.92);
+  border:1px solid rgba(16,185,129,.18);
+}
+
+.capvo-paid-preview-note strong{
+  color:#047857;
+  font-size:12px;
+}
+
+.capvo-paid-preview-note span{
+  color:#334155;
+  font-size:11px;
+  line-height:1.4;
+  font-weight:750;
+}
+
+.capvo-paid-preview-actions{
+  display:grid;
+  grid-template-columns:1fr 1.5fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+.capvo-paid-preview-actions button{
+  height:48px;
+  border:0;
+  border-radius:18px;
+  font-weight:950;
+}
+
+.capvo-paid-preview-secondary{
+  background:#f1f5f9;
+  color:#334155;
+}
+
+.capvo-paid-preview-primary{
+  background:linear-gradient(135deg,#6d5dfc,#8b5cf6);
+  color:white;
+  box-shadow:0 14px 30px rgba(109,93,252,.25);
+}
+
+@media (min-width:640px){
+  .capvo-paid-preview-overlay{align-items:center;}
+}
+
+
+/* ============================================================
+   CAPVO v1.9.4.0 — Onboarding primary wallet setup
+   ============================================================ */
+#capvoOnboardingOverlay .ob-wallet-budget-card{
+  gap:14px !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual{
+  display:grid !important;
+  grid-template-columns:112px minmax(0,1fr) !important;
+  gap:13px !important;
+  align-items:center !important;
+  padding:12px !important;
+  border-radius:26px !important;
+  background:linear-gradient(135deg,rgba(109,93,252,.08),rgba(16,185,129,.08)) !important;
+  border:1px solid rgba(226,232,240,.78) !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card{
+  min-height:96px !important;
+  border-radius:24px !important;
+  padding:14px !important;
+  display:grid !important;
+  align-content:space-between !important;
+  color:white !important;
+  background:
+    radial-gradient(circle at 82% 12%,rgba(255,255,255,.34),transparent 36%),
+    linear-gradient(135deg,#6547f6,#9b7cff) !important;
+  box-shadow:0 18px 38px rgba(101,71,246,.22) !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card.cash{
+  background:
+    radial-gradient(circle at 82% 12%,rgba(255,255,255,.34),transparent 36%),
+    linear-gradient(135deg,#059669,#34d399) !important;
+  box-shadow:0 18px 38px rgba(16,185,129,.2) !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card span{
+  font-size:24px !important;
+  line-height:1 !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card strong{
+  display:block !important;
+  font-size:17px !important;
+  line-height:1.05 !important;
+  letter-spacing:-.04em !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card small{
+  display:block !important;
+  font-size:10px !important;
+  font-weight:850 !important;
+  opacity:.76 !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-copy{
+  display:grid !important;
+  gap:5px !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-copy b{
+  font-size:13px !important;
+  color:#111827 !important;
+  line-height:1.22 !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-copy span{
+  font-size:11px !important;
+  color:#64748b !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-type-grid .ob-pro-pill{
+  min-height:82px !important;
+}
+
+@media (max-width:380px){
+  #capvoOnboardingOverlay .ob-wallet-visual{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.9.4.2 — Onboarding wallet visual width polish
+   ============================================================ */
+#capvoOnboardingOverlay .ob-wallet-visual{
+  grid-template-columns:148px minmax(0,1fr) !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card{
+  min-height:112px !important;
+  padding:16px !important;
+  overflow:visible !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card strong{
+  font-size:15px !important;
+  line-height:1.08 !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:none !important;
+}
+
+#capvoOnboardingOverlay .ob-wallet-visual-card small{
+  font-size:9px !important;
+  line-height:1.25 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+}
+
+@media (max-width:390px){
+  #capvoOnboardingOverlay .ob-wallet-visual{
+    grid-template-columns:136px minmax(0,1fr) !important;
+  }
+  #capvoOnboardingOverlay .ob-wallet-visual-card strong{
+    font-size:14px !important;
+  }
+}
+
+@media (max-width:360px){
+  #capvoOnboardingOverlay .ob-wallet-visual{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* CAPVO v1.9.5.1 — Salary pending / overdue small polish */
+.capvo-paid-preview-payday{
+  display:block;
+  margin-top:4px;
+  color:rgba(100,116,139,.95);
+  font-size:11px;
+  font-weight:850;
+  line-height:1.25;
+}
+
+.dashboard-cycle-paid-btn.salary-overdue{
+  box-shadow:0 14px 34px rgba(245,158,11,.24);
+}

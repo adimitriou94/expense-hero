@@ -388,13 +388,6 @@ body:not(.auth-pending){
   background:linear-gradient(145deg,#ecfdf5,#ffffff) !important;
 }
 
-.modern-payment-widget{
-  margin-top:14px;
-  border-radius:28px;
-  background:rgba(255,255,255,.82) !important;
-  border:1px solid rgba(255,255,255,.9) !important;
-  box-shadow:var(--dash-shadow-soft);
-}
 
 .modern-dashboard-lists{
   display:grid;
@@ -641,57 +634,7 @@ body:not(.auth-pending){
     white-space:nowrap !important;
   }
 
-  .modern-payment-widget{
-    margin-top:12px !important;
-    padding:14px 0 12px 14px !important;
-    border-radius:24px !important;
-    max-height:none !important;
-    overflow:hidden !important;
-  }
-
-  .modern-payment-widget .section-title{
-    margin:0 14px 10px 0 !important;
-    display:flex !important;
-    align-items:flex-end !important;
-    justify-content:space-between !important;
-    gap:10px !important;
-    font-size:16px !important;
-    line-height:1.1 !important;
-  }
-
-  .modern-payment-widget .section-title span{
-    white-space:nowrap !important;
-  }
-
-  .modern-payment-widget .section-title small{
-    display:block !important;
-    color:var(--text3) !important;
-    font-size:10px !important;
-    font-weight:900 !important;
-    letter-spacing:.02em !important;
-    white-space:nowrap !important;
-  }
-
-  .modern-payment-widget .payment-sources-grid{
-    max-height:none !important;
-    overflow-x:auto !important;
-    overflow-y:hidden !important;
-    padding:2px 14px 8px 0 !important;
-  }
-
-  .modern-payment-widget .payment-sources-grid.is-single{
-    padding-right:14px !important;
-  }
-
-  .modern-payment-widget .payment-source-wallet-card{
-    flex-basis:184px !important;
-  }
-
-  .modern-payment-widget .payment-sources-grid.is-single .payment-source-wallet-card{
-    flex-basis:auto !important;
-  }
-
-  /* Lists should start below hero/sidebar and stay clean */
+    /* Lists should start below hero/sidebar and stay clean */
   .modern-list-card{
     min-width:0 !important;
     border-radius:26px !important;
@@ -925,15 +868,7 @@ body:not(.auth-pending){
     font-size: 20px !important;
     letter-spacing: -.4px !important;
   }
-
-  .modern-payment-widget {
-    border-radius: 24px !important;
-    background: rgba(255,255,255,.84) !important;
-    border: 1px solid rgba(255,255,255,.94) !important;
-    box-shadow: 0 10px 26px rgba(16,24,40,.055) !important;
-  }
-
-  /* Quick add */
+/* Quick add */
   .modern-quick-add-card {
     margin-top: 14px !important;
     padding: 16px !important;
@@ -1252,26 +1187,7 @@ body:not(.auth-pending){
   .modern-stat-card .stat-value {
     font-size: 18px !important;
   }
-
-  .modern-payment-widget {
-    padding: 14px !important;
-    border-radius: 20px !important;
-  }
-
-  .modern-payment-widget h3 {
-    font-size: 16px !important;
-    margin-bottom: 10px !important;
-  }
-
-  .income-source-item,
-  .payment-source-card,
-  .modern-payment-widget .income-source-item {
-    min-height: 82px !important;
-    padding: 12px !important;
-    border-radius: 16px !important;
-  }
-
-  /* 7) Quick Add: command-bar feeling */
+/* 7) Quick Add: command-bar feeling */
   .modern-quick-add-card {
     margin-top: 0 !important;
     padding: 14px 16px !important;
@@ -9036,103 +8952,11 @@ body:has(#mCC.active) .mobile-nav-fab{
    Header is split into title/subtitle and cards use a cleaner mobile peek.
    ============================================================ */
 @media (max-width: 768px){
-  .modern-payment-widget{
-    padding:14px 0 13px 14px !important;
-    border-radius:24px !important;
-  }
 
-  .modern-payment-widget .section-title{
-    margin:0 14px 10px 0 !important;
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:flex-start !important;
-    justify-content:flex-start !important;
-    gap:3px !important;
-    line-height:1.12 !important;
-  }
 
-  .modern-payment-widget .section-title .payment-sources-title-main,
-  .modern-payment-widget .section-title span{
-    display:block !important;
-    white-space:normal !important;
-    font-size:17px !important;
-    font-weight:900 !important;
-    letter-spacing:-.02em !important;
-    color:var(--text) !important;
-  }
 
-  .modern-payment-widget .section-title .payment-sources-title-sub,
-  .modern-payment-widget .section-title small{
-    display:block !important;
-    white-space:normal !important;
-    color:var(--text2) !important;
-    font-size:11px !important;
-    font-weight:800 !important;
-    letter-spacing:.01em !important;
-  }
 
-  .modern-payment-widget .payment-sources-grid.payment-sources-carousel{
-    gap:10px !important;
-    padding:2px 16px 9px 0 !important;
-    margin-left:0 !important;
-    margin-right:0 !important;
-    scroll-padding-left:0 !important;
-  }
 
-  .modern-payment-widget .payment-sources-grid.payment-sources-carousel::after{
-    content:'';
-    flex:0 0 2px;
-  }
-
-  .modern-payment-widget .payment-source-wallet-card{
-    flex:0 0 164px !important;
-    min-height:116px !important;
-    padding:12px !important;
-    border-radius:20px !important;
-  }
-
-  .modern-payment-widget .payment-sources-grid.is-single .payment-source-wallet-card{
-    flex:1 1 auto !important;
-    width:100% !important;
-  }
-
-  .modern-payment-widget .payment-source-view-all{
-    flex:0 0 128px !important;
-    min-height:116px !important;
-    border-radius:20px !important;
-  }
-
-  .modern-payment-widget .payment-source-wallet-card .widget-icon{
-    width:42px !important;
-    height:42px !important;
-    border-radius:15px !important;
-  }
-
-  .modern-payment-widget .payment-source-chip{
-    min-width:40px !important;
-    height:22px !important;
-    padding:0 8px !important;
-    font-size:10px !important;
-  }
-
-  .modern-payment-widget .payment-source-mini-content .stat-label{
-    max-width:100% !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  .modern-payment-widget .payment-source-mini-content .stat-value{
-    font-size:19px !important;
-    line-height:1.05 !important;
-  }
-
-  .modern-payment-widget .payment-mini-meta{
-    font-size:11px !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-  }
 }
 
 /* ============================================================

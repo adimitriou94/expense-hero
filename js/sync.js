@@ -3,11 +3,11 @@
 const SYNC_KEY_PREFIX='expense_sync_last_id';
 
 const CAT_KEYWORDS={
-  'Τρόφιμα':['σούπερ μάρκετ','super market','σουπερ','τρόφιμα','ψώνια','μανάβης','κρεοπωλείο','ψάρια','φρούτα','λαχανικά'],
-  'Καφέδες':['καφές','καφε','καφέ','coffee','espresso','freddo','frappé','frappe','καφετέρια'],
-  'Μεταφορά':['βενζίνη','πετρέλαιο','parking','παρκινγκ','μετρό','metro','λεωφορείο','ταξί','taxi','uber','εισιτήριο'],
+  'Τρόφιμα':['σούπερ μάρκετ','super market','supermarket','market','μαρκετ','σουπερ','σούπερ','τρόφιμα','τροφίμα','ψώνια','ψωνια','μανάβης','μαναβης','κρεοπωλείο','κρεοπωλειο','ψάρια','ψαρια','φρούτα','φρουτα','λαχανικά','λαχανικα','σκλαβενίτης','σκλαβενιτης','σκληβενιτης','lidl','λιτλ','ab','βασιλόπουλος','βασιλοπουλος','my market','mymarket'],
+  'Καφέδες':['καφές','καφε','καφέ','coffee','espresso','freddo','φρεντο','frappé','frappe','φραπε','καφετέρια','καφετερια','cappuccino','καπουτσινο'],
+  'Μεταφορά':['βενζίνη','βενζινη','καύσιμα','καυσιμα','πετρέλαιο','πετρελαιο','parking','παρκινγκ','μετρό','μετρο','metro','λεωφορείο','λεωφορειο','ταξί','ταξι','taxi','uber','εισιτήριο','εισιτηριο'],
   'Ψυχαγωγία':['σινεμά','cinema','θέατρο','συναυλία','netflix','spotify','παιχνίδι','game'],
-  'Φαγητό έξω':['εστιατόριο','ταβέρνα','πίτσα','pizza','σουβλάκι','delivery','wolt','efood','φαγητό έξω','γεύμα','δείπνο'],
+  'Φαγητό έξω':['εστιατόριο','εστιατοριο','ταβέρνα','ταβερνα','πίτσα','πιτσα','pizza','σουβλάκι','σουβλακι','γυρος','γύρος','delivery','ντελιβερι','wolt','efood','box','φαγητό έξω','φαγητο εξω','γεύμα','γευμα','δείπνο','δειπνο','burger','μπεργκερ'],
   'Στέγαση':['ενοίκιο','ενοικιο','ρεύμα','νερό','κοινόχρηστα','internet'],
   'Λογαριασμοί':['λογαριασμός','λογαριασμος','deh','δεη','ευδαπ','cosmote','vodafone','wind'],
   'Υγεία':['φαρμακείο','φάρμακο','γιατρός','γιατρος','νοσοκομείο','ιατρός','εξέταση','ασφάλεια'],
@@ -112,86 +112,248 @@ async function saveSyncedExpenses(newExpenseRows){
   }
 }
 
+function syncNormalizeText(text){
+  return String(text||'')
+    .toLocaleLowerCase('el-GR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/ς/g,'σ')
+    .replace(/[^a-z0-9α-ω\s]/gi,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
 function syncPaymentSources(){
-  // Telegram sync is for simple cash / Ticket / Voucher expenses. Credit-card
-  // purchases need card debt/installment side effects, so keep them in the app
-  // card flow until the sync pipeline shares the same transaction engine.
-  return (D.incomeSources||[])
-    .filter(i=>typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(i):(i.restriction && i.restriction!=='none'));
+  // Telegram/voice sync handles real wallets and Ticket/Voucher style sources.
+  // Credit-card purchases still need the Cards flow because they update debt/installments.
+  const wallets=(typeof capvoDailyExpenseEligibleWallets==='function'?capvoDailyExpenseEligibleWallets():[])
+    .map(w=>({
+      ...w,
+      id:w.id,
+      name:w.name,
+      type:'wallet',
+      sourceKind:'wallet',
+      accountType:'wallet',
+      incomeType:'wallet',
+      currentBalance:Number(w.currentBalance ?? w.current_balance)||0,
+      icon:w.icon||'🏦'
+    }));
+
+  const benefits=(D.incomeSources||[])
+    .filter(i=>typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(i):(i.restriction && i.restriction!=='none'))
+    .map(i=>({...i,sourceKind:'benefit'}));
+
+  return wallets.concat(benefits);
+}
+
+function syncSourceLooksRestricted(source){
+  const name=syncNormalizeText(source?.name||'');
+  const meta=syncNormalizeText([
+    source?.budgetRole,source?.budget_role,source?.restrictionType,source?.restriction_type,
+    source?.restriction,source?.category,source?.sourceCategory,source?.source_category,
+    source?.incomeType,source?.type
+  ].filter(Boolean).join(' '));
+  return !!(
+    source?.isRestricted || source?.is_restricted ||
+    /restricted|ticket|voucher|edenred|meal|benefit|food/.test(meta) ||
+    /ticket|τικετ|voucher|βαουτσερ|edenred|κουπονι|διατακτικ/.test(name)
+  );
+}
+
+function syncSourceAliases(source){
+  const aliases=[source?.name,source?.category,source?.incomeType,source?.type,source?.institutionName,source?.maskedLabel]
+    .filter(Boolean);
+
+  const isWallet=typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(source);
+  const name=syncNormalizeText(source?.name||'');
+  const type=syncNormalizeText(source?.type||source?.incomeType||'');
+  const restricted=syncSourceLooksRestricted(source);
+
+  if(isWallet){
+    if(type==='cash' || /μετρη|cash/.test(name)){
+      aliases.push(
+        'μετρητα','μετρητοισ','μετρητοις','μετρητο','μετρητα μου',
+        'cash','cash money','metrita','metrhta','metrita mou','lefta','leuta','χρηματα','λεφτα'
+      );
+    }
+    if(/revolut|ρεβολουτ|revo|ρεβο/.test(name)){
+      aliases.push('revolut','revo','rev','ρεβολουτ','ρεβο','ρεβ','ρεβολουτ μου');
+    }
+    if(/κυριο|λογαριασ|main|primary/.test(name) || source?.isDefault || source?.is_default || source?.isPrimaryBudget || source?.is_primary_budget){
+      aliases.push(
+        'κυριοσ λογαριασμοσ','κυριος λογαριασμος','κυριο λογαριασμο','κυριοσ','κυριος','κυριο',
+        'main','primary','bank','τραπεζα','λογαριασμοσ','λογαριασμος'
+      );
+    }
+    if(restricted){
+      aliases.push(
+        'ticket','tickets','τικετ','τίκετ','τικετα','ticket restaurant','voucher','vouchers',
+        'βαουτσερ','edenred','eden red','κουπονι','κουπονια','διατακτικη','διατακτικες','food pass'
+      );
+    }
+    aliases.push('wallet','πορτοφολι');
+  }else{
+    aliases.push(
+      'ticket','tickets','τικετ','τίκετ','τικετα','ticket restaurant','voucher','vouchers',
+      'βαουτσερ','edenred','eden red','κουπονι','κουπονια','διατακτικη','διατακτικες','food pass'
+    );
+  }
+
+  return [...new Set(aliases.map(syncNormalizeText).filter(Boolean))]
+    .filter(a=>a.length>1);
+}
+
+function syncExplicitPaymentIntent(text){
+  const t=syncNormalizeText(text);
+  if(/ticket|τικετ|voucher|βαουτσερ|edenred|κουπονι|διατακτικ|food pass/.test(t))return 'restricted';
+  if(/revolut|revo|ρεβολουτ|ρεβο/.test(t))return 'revolut';
+  if(/μετρη|cash|metrita|metrhta|lefta|leuta/.test(t))return 'cash';
+  if(/κυριο|λογαριασμο|main|primary/.test(t))return 'primary';
+  return '';
 }
 
 function detectPaymentSourceFromText(text){
-  const t=(text||'').toLowerCase();
+  const t=syncNormalizeText(text);
 
   const sources=typeof syncPaymentSources==='function'?syncPaymentSources():(D.incomeSources||[])
     .filter(i=>typeof isRestrictedPaymentSource==='function'?isRestrictedPaymentSource(i):(i.restriction && i.restriction!=='none'));
 
   if(sources.length===0)return null;
 
-  for(const source of sources){
-    const name=(source.name||'').toLowerCase();
-    const category=(source.category||'').toLowerCase();
-    const type=(source.incomeType||'').toLowerCase();
+  const intent=syncExplicitPaymentIntent(t);
+  const ordered=sources.slice().sort((a,b)=>{
+    const aw=typeof capvoIsWalletPaymentSource==='function'&&capvoIsWalletPaymentSource(a);
+    const bw=typeof capvoIsWalletPaymentSource==='function'&&capvoIsWalletPaymentSource(b);
+    const ar=syncSourceLooksRestricted(a);
+    const br=syncSourceLooksRestricted(b);
+    const an=syncNormalizeText(a?.name||'');
+    const bn=syncNormalizeText(b?.name||'');
 
-    const tokens=[
-      name,
-      category,
-      type,
-      'ticket',
-      'voucher',
-      'edenred',
-      'meal',
-      'restaurant'
-    ].filter(Boolean);
+    if(intent==='restricted' && ar!==br)return ar?-1:1;
+    if(intent==='cash'){
+      const ac=(syncNormalizeText(a?.type||a?.incomeType||'')==='cash') || /μετρη|cash/.test(an);
+      const bc=(syncNormalizeText(b?.type||b?.incomeType||'')==='cash') || /μετρη|cash/.test(bn);
+      if(ac!==bc)return ac?-1:1;
+    }
+    if(intent==='revolut'){
+      const av=/revolut|ρεβολουτ|revo|ρεβο/.test(an);
+      const bv=/revolut|ρεβολουτ|revo|ρεβο/.test(bn);
+      if(av!==bv)return av?-1:1;
+    }
+    if(intent==='primary'){
+      const ap=!!(a?.isDefault||a?.is_default||a?.isPrimaryBudget||a?.is_primary_budget||/κυριο|λογαριασ|main|primary/.test(an));
+      const bp=!!(b?.isDefault||b?.is_default||b?.isPrimaryBudget||b?.is_primary_budget||/κυριο|λογαριασ|main|primary/.test(bn));
+      if(ap!==bp)return ap?-1:1;
+    }
 
+    // Prefer real wallets over legacy income-source benefits unless the alias clearly points elsewhere.
+    if(aw!==bw)return aw?-1:1;
+    return 0;
+  });
+
+  for(const source of ordered){
+    const tokens=syncSourceAliases(source).sort((a,b)=>b.length-a.length);
     if(tokens.some(token=>token && t.includes(token))){
       return source;
     }
   }
 
+  if(typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel()){
+    const def=typeof capvoDailyExpenseDefaultWallet==='function'?capvoDailyExpenseDefaultWallet():(typeof capvoDefaultWallet==='function'?capvoDefaultWallet():null);
+    if(def)return {
+      ...def,
+      id:def.id,
+      name:def.name,
+      type:'wallet',
+      sourceKind:'wallet',
+      accountType:'wallet',
+      incomeType:'wallet',
+      currentBalance:Number(def.currentBalance ?? def.current_balance)||0,
+      icon:def.icon||'🏦'
+    };
+  }
+
   return null;
+}
+
+function syncExtractAmount(text){
+  const value=String(text||'');
+  const match=value.match(/(\d+(?:[.,]\d{1,2})?)(?:\s*(ευρώ|ευρω|euro|€))?(?:\s+(?:και)\s+(\d{1,2})(?:\s*(λεπτά|λεπτα|λεπτό|λεπτο|cents?))?)?/i);
+  if(!match)return null;
+
+  let amount=parseFloat(match[1].replace(',','.'));
+  if(match[3] && !/[.,]/.test(match[1])){
+    const cents=Number(match[3]);
+    if(cents>0 && cents<100)amount+=cents/100;
+  }
+
+  if(!amount || amount<=0)return null;
+  return {amount,raw:match[0]};
+}
+
+function syncStripPaymentWordsFromName(value,paymentSource){
+  let out=syncNormalizeText(value);
+  const common=[
+    'ticket restaurant','ticket','tickets','τικετ','τικετα','voucher','vouchers','βαουτσερ','edenred','eden red','κουπονι','κουπονια','διατακτικη','διατακτικες','food pass',
+    'μετρητα','μετρητοισ','μετρητοις','cash','metrita','metrhta','lefta','leuta',
+    'revolut','revo','rev','ρεβολουτ','ρεβο','ρεβ',
+    'κυριοσ λογαριασμοσ','κυριος λογαριασμος','κυριο λογαριασμο','κυριοσ','κυριος','κυριο','main','primary','bank','τραπεζα','wallet','πορτοφολι'
+  ];
+  const sourceAliases=paymentSource ? syncSourceAliases(paymentSource) : [];
+  const removeList=[...new Set([...common,...sourceAliases])].filter(Boolean).sort((a,b)=>b.length-a.length);
+
+  for(const alias of removeList){
+    const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    out=out.replace(new RegExp(`(^|\\s)${escaped}(?=\\s|$)`,'gi'),' ');
+  }
+
+  out=out
+    .replace(/\b(με|απο|από|σε|στο|στη|στην|στον|απ|απτο|απο|apo|me|se|from|with|by)\b/gi,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  return out;
 }
 
 function parseExpense(text){
   const normalized=(typeof window!=='undefined' && typeof window.normalizeQuickExpenseText==='function')
     ? window.normalizeQuickExpenseText(text)
     : String(text||'');
-  const t=normalized.toLowerCase().trim();
-  const amountMatch=t.match(/(\d+([.,]\d{1,2})?)\s*(ευρώ|ευρω|euro|€)?/);
+  const nt=syncNormalizeText(normalized);
+  const amountInfo=syncExtractAmount(normalized);
 
-  if(!amountMatch)return null;
+  if(!amountInfo)return null;
 
-  const amount=parseFloat(amountMatch[1].replace(',','.'));
-  if(!amount||amount<=0)return null;
-
+  const amount=amountInfo.amount;
   let category='Άλλο';
 
   for(const[cat,keywords]of Object.entries(CAT_KEYWORDS)){
-    if(keywords.some(kw=>t.includes(kw))){
+    if(keywords.some(kw=>nt.includes(syncNormalizeText(kw)))){
       category=cat;
       break;
     }
   }
 
+  const paymentSource=detectPaymentSourceFromText(normalized);
+
   let name=normalized
-    .replace(/\d+([.,]\d{1,2})?\s*(ευρώ|ευρω|euro|€)?/gi,'')
-    .replace(/\b(σήμερα|χθες|αύριο|πρωί|βράδυ|μεσημέρι)\b/gi,'')
-    .trim();
+    .replace(amountInfo.raw,' ')
+    .replace(/\b(σήμερα|σημερα|χθες|χθεσ|αύριο|αυριο|πρωί|πρωι|βράδυ|βραδυ|μεσημέρι|μεσημερι)\b/gi,' ');
+
+  name=syncStripPaymentWordsFromName(name,paymentSource);
 
   if(name.length>0)name=name.charAt(0).toUpperCase()+name.slice(1);
   else name=category;
 
   let date=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 
-  if(t.includes('χθες')){
+  if(nt.includes('χθεσ')){
     const y=new Date();
     y.setDate(y.getDate()-1);
     date=typeof capvoLocalDateKey==='function'?capvoLocalDateKey(y):y.toLocaleDateString('en-CA');
   }
 
-  const paymentSource=detectPaymentSourceFromText(normalized);
-
-  return{
+  const expense={
     amount,
     category,
     name,
@@ -200,6 +362,9 @@ function parseExpense(text){
     paymentSourceName:paymentSource?.name||'',
     paymentSourceType:paymentSource?.incomeType||''
   };
+
+  if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
+  return expense;
 }
 
 async function markTelegramMessages(messageIds,status){
@@ -512,13 +677,16 @@ function openSyncPreview(items){
           <label class="capvo-sync-field capvo-sync-field-pay">
             <span>Πληρωμή</span>
             ${buildSyncPicker(`sPay${idx}`, [
-                {value:'',label:'Κανονικό budget',icon:'💳',desc:'Χωρίς Ticket / Voucher'},
-                ...(typeof syncPaymentSources==='function'?syncPaymentSources():availablePaymentSources()).map(src=>({
-                  value:src.id,
-                  label:src.name,
-                  icon:'🎫',
-                  desc:'Πηγή πληρωμής'
-                }))
+                ...((typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel())?[]:[{value:'',label:'Κανονικό budget',icon:'💶',desc:'Χωρίς wallet / Ticket'}]),
+                ...(typeof syncPaymentSources==='function'?syncPaymentSources():availablePaymentSources()).map(src=>{
+                  const isWallet=typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(src);
+                  return {
+                    value:src.id,
+                    label:isWallet?`${src.name} · ${(typeof fmt==='function'?fmt(Number(src.currentBalance)||0):(Number(src.currentBalance)||0)+'€')}`:src.name,
+                    icon:isWallet?(src.icon||'🏦'):'🎫',
+                    desc:isWallet?'Wallet πληρωμής':'Ticket / Voucher'
+                  };
+                })
               ], e.paymentSourceId||'')}
           </label>
         </div>
@@ -639,6 +807,7 @@ async function confirmSync(...messageIds){
   const newExpenseRows=[];
   const pendingExpenses=[];
   const sourceUsage={};
+  const walletUsage={};
 
   let added=0;
   let skipped=0;
@@ -706,30 +875,47 @@ async function confirmSync(...messageIds){
       date,
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
-      paymentSourceType:paymentSource?.incomeType||'',
-      paymentAccountType:paymentSourceId?'benefit':'cash',
-      affectsCashBudget:!paymentSourceId
+      paymentSourceType:paymentSource?.incomeType||''
     };
 
-    if(paymentSourceId){
+    if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
+    const preparedSource=paymentSourceById(expense.paymentSourceId||expense.walletId||'');
+
+    if(preparedSource && typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(preparedSource)){
+      return failBeforeSave('Οι αγορές με πιστωτική από Telegram Sync δεν υποστηρίζονται ακόμα. Καταχώρησέ τη από την ενότητα Κάρτες για να ενημερωθεί σωστά το χρέος.',idx);
+    }
+
+    if(expense.walletId){
+      const wallet=typeof capvoWalletById==='function'?capvoWalletById(expense.walletId):null;
+      if(!wallet)return failBeforeSave('Δεν βρέθηκε το wallet πληρωμής.',idx);
+      if(typeof capvoDailyExpenseIsSavingsWallet==='function' && capvoDailyExpenseIsSavingsWallet(wallet)){
+        return failBeforeSave('Δεν μπορείς να πληρώσεις έξοδο από αποταμιευτικό wallet.',idx);
+      }
+      const available=Number(wallet.currentBalance)||0;
+      const already=walletUsage[expense.walletId]||0;
+      if(available-already-amount<0){
+        return failBeforeSave(`Το wallet ${wallet.name||'Wallet'} δεν έχει αρκετά χρήματα. Διαθέσιμο: ${typeof fmt==='function'?fmt(Math.max(0,available-already)):`€${Math.max(0,available-already)}`}.`,idx);
+      }
+      walletUsage[expense.walletId]=already+amount;
+    }else if(expense.paymentSourceId){
       const catCheck=typeof validateRestrictedSourceCategory==='function'
         ? validateRestrictedSourceCategory(expense)
-        : {ok:true,source:paymentSource,allowed:[]};
+        : {ok:true,source:preparedSource,allowed:[]};
       if(!catCheck.ok){
         return failBeforeSave(`Η πηγή ${catCheck.source?.name||'πληρωμής'} χρησιμοποιείται μόνο για: ${catCheck.allowed.join(', ')}.`,idx);
       }
 
       const available=typeof paymentSourceRemaining==='function'
-        ? paymentSourceRemaining(paymentSource)
-        : Number(paymentSource.amount)||0;
-      const already=sourceUsage[paymentSourceId]||0;
+        ? paymentSourceRemaining(preparedSource)
+        : Number(preparedSource?.amount)||0;
+      const already=sourceUsage[expense.paymentSourceId]||0;
       if(available-already-amount<0){
-        return failBeforeSave(`Το υπόλοιπο ${paymentSource.name||'της πηγής'} δεν επαρκεί. Διαθέσιμο: ${typeof fmt==='function'?fmt(Math.max(0,available-already)):`€${Math.max(0,available-already)}`}.`,idx);
+        return failBeforeSave(`Το υπόλοιπο ${preparedSource?.name||'της πηγής'} δεν επαρκεί. Διαθέσιμο: ${typeof fmt==='function'?fmt(Math.max(0,available-already)):`€${Math.max(0,available-already)}`}.`,idx);
       }
-      sourceUsage[paymentSourceId]=already+amount;
+      sourceUsage[expense.paymentSourceId]=already+amount;
     }
 
-    pendingExpenses.push({msgId,expense,paymentSource});
+    pendingExpenses.push({msgId,expense,paymentSource:preparedSource});
   }
 
   pendingExpenses.forEach(({msgId,expense,paymentSource})=>{
@@ -750,21 +936,47 @@ async function confirmSync(...messageIds){
       payment_source_id:expense.paymentSourceId||null,
       payment_source_name:paymentSource?.name||null,
       payment_source_type:paymentSource?.incomeType||null,
-      payment_account_type:expense.paymentAccountType||'cash',
+      // Normalize to DB-valid values: cash | restricted_balance | credit_card | transfer
+      payment_account_type:(()=>{ const t=expense.paymentAccountType||'cash'; return ['cash','restricted_balance','credit_card','transfer'].includes(t)?t:'restricted_balance'; })(),
       affects_cash_budget:expense.affectsCashBudget!==false,
-      is_credit_card_purchase:false
+      is_credit_card_purchase:false,
+      // Fields required for schema parity with saveDailyExpenseRow (Telegram never sets these).
+      credit_card_id:null,
+      credit_card_transaction_id:null,
+      installment_plan_id:null,
+      purchase_mode:'normal',
+      installment_count:null,
+      interest_free:true,
+      installment_rate:null,
+      installment_amount:null,
+      wallet_id:expense.walletId||null,
+      budget_effect_amount:Object.prototype.hasOwnProperty.call(expense,'budgetEffectAmount') ? Number(expense.budgetEffectAmount)||0 : null,
+      wallet_balance_effect_amount:Object.prototype.hasOwnProperty.call(expense,'walletBalanceEffectAmount') ? Number(expense.walletBalanceEffectAmount)||0 : 0
     });
 
     importedIds.push(msgId);
     added++;
   });
 
+  let walletBatchRollback=null;
   try{
     statusEl.style.display='block';
     statusEl.className='sync-status loading';
     statusEl.textContent='Αποθήκευση εξόδων...';
 
     if(newExpenseRows.length>0){
+      if(typeof capvoApplyDailyExpenseWalletEffects==='function'){
+        const rollbackOps=[];
+        for(const {expense} of pendingExpenses){
+          const effect=await capvoApplyDailyExpenseWalletEffects(dataOwnerId,expense,null);
+          if(effect?.rollback)rollbackOps.push(effect.rollback);
+        }
+        walletBatchRollback=async()=>{
+          for(const rollback of rollbackOps.reverse()){
+            try{await rollback();}catch(e){console.error('sync wallet rollback failed:',e);}
+          }
+        };
+      }
       await saveSyncedExpenses(newExpenseRows);
       localStorage.setItem('needs_data_reload','1');
     }
@@ -800,6 +1012,16 @@ async function confirmSync(...messageIds){
 
   }catch(err){
     console.error('confirmSync error:',err);
+    if(walletBatchRollback){
+      try{await walletBatchRollback();}catch(rollbackErr){console.error('confirmSync wallet rollback failed:',rollbackErr);}
+    }
+    try{
+      pendingExpenses.forEach(({expense})=>{
+        Object.values(D.months||{}).forEach(m=>{
+          m.daily=(m.daily||[]).filter(x=>String(x.id)!==String(expense.id));
+        });
+      });
+    }catch(cleanErr){console.error('confirmSync local cleanup failed:',cleanErr);}
 
     statusEl.style.display='block';
     statusEl.className='sync-status error';

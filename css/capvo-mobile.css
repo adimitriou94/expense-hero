@@ -555,7 +555,7 @@
 .add-center-overlay .add-center-payment-list button{
   min-height:44px !important;
   border:0 !important;
-  border-radius:15px !important;
+  border-radius:14px !important;
   padding:0 11px !important;
   display:flex !important;
   align-items:center !important;
@@ -638,6 +638,26 @@
     -webkit-backdrop-filter:blur(18px) saturate(1.15) !important;
   }
 
+  /* Wallet section in dashboard: match mobile-dashboard-insights spacing */
+  .capvo-wallets-section{
+    margin: 14px var(--mobile-pad,16px) 0 !important;
+    padding: 16px 16px 4px !important;
+    border-radius: 28px !important;
+    background: rgba(255,255,255,.88) !important;
+    border: 1px solid rgba(255,255,255,.88) !important;
+    box-shadow: 0 16px 42px rgba(20,30,70,.07) !important;
+    backdrop-filter: blur(18px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    font-family: var(--font) !important;
+  }
+
+  .capvo-wallets-header h3{
+    font-family: var(--font) !important;
+    font-size: .88rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -.01em !important;
+  }
+
   /* Remove the old dashboard quick add only on mobile */
   .modern-quick-add-card{
     display:none !important;
@@ -658,7 +678,7 @@
 
   .mobile-insights-head h3{
     margin:0 !important;
-    font-size:18px !important;
+    font-size:17px !important;
     line-height:1.1 !important;
     letter-spacing:-.045em !important;
     font-weight:950 !important;
@@ -831,7 +851,7 @@
   }
 
   .dashboard-preview-widget .section-title{
-    font-size:18px !important;
+    font-size:15px !important;
     letter-spacing:-.045em !important;
   }
 
@@ -1120,12 +1140,12 @@
   .add-center-field input,
   .add-center-picker-button{
     height:50px !important;
-    border-radius:17px !important;
+    border-radius:15px !important;
   }
 
   .add-center-field textarea{
     min-height:78px !important;
-    border-radius:17px !important;
+    border-radius:13px !important;
   }
 
   .add-center-voice{
@@ -6003,8 +6023,8 @@
   }
 
   #mFixed .modal-close{
-    width:38px !important;
-    height:38px !important;
+    width:36px !important;
+    height:36px !important;
     border-radius:14px !important;
     background:#f1f4fa !important;
     color:#72809a !important;
@@ -6605,6 +6625,7 @@ body > .fixed-category-popover .fixed-category-option.active::after{
   #vTransactions,
   #vIncome,
   #vCards,
+  #vWallets,
   #vAdvisor,
   #vStats,
   #vArchive,
@@ -6617,6 +6638,7 @@ body > .fixed-category-popover .fixed-category-option.active::after{
   #vTransactions .transactions-page,
   #vIncome .page-grid,
   #vCards .page-grid,
+  #vWallets .page-grid,
   #vAdvisor .page-grid,
   #vStats .reports-page,
   #vArchive .page-grid,
@@ -8840,8 +8862,8 @@ body > .fixed-category-popover .fixed-category-option.active::after{
   gap:11px !important;
 }
 .budget-cycle-icon{
-  width:42px !important;
-  height:42px !important;
+  width:38px !important;
+  height:38px !important;
   border-radius:16px !important;
   font-size:19px !important;
 }
@@ -9126,15 +9148,13 @@ body > .fixed-category-popover .fixed-category-option.active::after{
   #vDash .dashboard-cycle-summary-card,
   #vDash .dashboard-carryover-card,
   #vDash .mobile-dashboard-insights,
-  #vDash .dashboard-preview-widget,
-  #vDash .modern-payment-widget{
+  #vDash .dashboard-preview-widget{
     max-width:100% !important;
     box-sizing:border-box !important;
   }
 
   #vDash .mobile-dashboard-insights,
-  #vDash .dashboard-preview-widget,
-  #vDash .modern-payment-widget{
+  #vDash .dashboard-preview-widget{
     border-radius:28px !important;
   }
 
@@ -9146,19 +9166,7 @@ body > .fixed-category-popover .fixed-category-option.active::after{
     box-sizing:border-box !important;
   }
 
-  #vDash .modern-stats-grid,
-  #vDash .modern-payment-widget{
-    width:100% !important;
-    max-width:100% !important;
-    box-sizing:border-box !important;
-  }
-
-  #vDash .modern-payment-widget{
-    margin:var(--capvo-dash-section-gap) 0 0 !important;
-  }
-
-  /* Keep carousel content inside the aligned outer card. */
-  #vDash .modern-payment-widget .payment-sources-grid.payment-sources-carousel{
+  #vDash .modern-stats-grid{
     width:100% !important;
     max-width:100% !important;
     box-sizing:border-box !important;
@@ -9931,4 +9939,4382 @@ body.auth-pending .auth-screen.capvo-auth-screen.capvo-auth-loading .capvo-auth-
   visibility:hidden !important;
   opacity:0 !important;
   pointer-events:none !important;
+}
+
+
+/* CAPVO v1.8.6.29 - Wallets page mobile scroll parity */
+@media (max-width: 768px){
+  #vWallets,
+  #vWallets.active{
+    padding-bottom:0 !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+  #vWallets .page-grid{
+    padding-bottom:var(--capvo-dock-safe-space) !important;
+    scroll-padding-bottom:var(--capvo-dock-safe-space) !important;
+  }
+  #vWallets .page-grid > *:last-child{
+    margin-bottom:0 !important;
+  }
+
+  /* Wallet page: proper padding like other pages */
+  #vWallets .page-grid{
+    padding: 12px 12px 0 !important;
+  }
+
+  /* Dashboard wallet section: match dashboard typography */
+  .capvo-wallets-section{
+    padding: 0 4px 4px !important;
+    font-family: var(--font) !important;
+  }
+
+  .capvo-wallets-header h3{
+    font-family: var(--font) !important;
+    font-size: .92rem !important;
+  }
+
+  /* Wallet cards: compact on very small screens */
+  .capvo-wallet-card{
+    flex: 0 0 136px !important;
+    min-height: 100px !important;
+  }
+}
+/* ============================================================
+   CAPVO v1.8.6.32 — Approved Option 4 premium dashboard UI
+   Scope: Dashboard hero + money hub + mobile dock. UI only.
+   ============================================================ */
+
+:root{
+  --capvo-premium-bg:#f7f8fc;
+  --capvo-premium-shell:#ffffff;
+  --capvo-premium-card:#ffffff;
+  --capvo-premium-card-2:rgba(255,255,255,.82);
+  --capvo-premium-text:#08122c;
+  --capvo-premium-muted:#69758f;
+  --capvo-premium-soft:#eef0ff;
+  --capvo-premium-line:rgba(122,132,168,.18);
+  --capvo-premium-purple:#6f5cff;
+  --capvo-premium-purple-2:#9b8cff;
+  --capvo-premium-blue:#5da8ff;
+  --capvo-premium-mint:#4fe7b0;
+  --capvo-premium-shadow:0 18px 55px rgba(15,23,42,.10);
+  --capvo-premium-shadow-soft:0 10px 30px rgba(15,23,42,.065);
+  --capvo-premium-radius:28px;
+}
+
+/*
+   Light mode is now the default visual baseline.
+   We intentionally do NOT switch to dark automatically via prefers-color-scheme,
+   because the current CAPVO app was designed/deployed as light-first.
+   Dark mode remains available only when the app explicitly adds:
+   body.theme-dark / body.dark / html[data-theme="dark"].
+*/
+
+body.theme-dark,
+body.dark,
+html[data-theme="dark"],
+[data-theme="dark"] body{
+  --capvo-premium-bg:#060b1a;
+  --capvo-premium-shell:#071022;
+  --capvo-premium-card:rgba(12,20,42,.82);
+  --capvo-premium-card-2:rgba(15,25,52,.74);
+  --capvo-premium-text:#f6f8ff;
+  --capvo-premium-muted:#a8b3cd;
+  --capvo-premium-soft:rgba(111,92,255,.16);
+  --capvo-premium-line:rgba(159,173,211,.16);
+  --capvo-premium-shadow:0 24px 70px rgba(0,0,0,.42);
+  --capvo-premium-shadow-soft:0 14px 38px rgba(0,0,0,.28);
+}
+
+@media (max-width:768px){
+  body:not(.auth-pending){
+    background:
+      radial-gradient(circle at 75% 0%, rgba(129,115,255,.16), transparent 36%),
+      linear-gradient(180deg, var(--capvo-premium-bg), color-mix(in srgb,var(--capvo-premium-bg) 90%, #fff 10%)) !important;
+  }
+
+  .header{
+    background:color-mix(in srgb,var(--capvo-premium-bg) 78%, transparent) !important;
+    backdrop-filter:blur(22px) saturate(1.25) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(1.25) !important;
+    border-bottom:0 !important;
+  }
+
+  .brand-name,
+  .month-label{
+    color:var(--capvo-premium-text) !important;
+  }
+
+  .month-nav{
+    background:color-mix(in srgb,var(--capvo-premium-card) 74%, transparent) !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    box-shadow:0 10px 30px rgba(15,23,42,.055) !important;
+  }
+
+  .month-nav button{
+    color:var(--capvo-premium-muted) !important;
+  }
+
+  #vDash .modern-dashboard-shell{
+    padding:12px 16px calc(118px + env(safe-area-inset-bottom)) !important;
+    gap:14px !important;
+    background:transparent !important;
+  }
+
+  #vDash .modern-dashboard-main,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    padding:0 !important;
+    margin:0 !important;
+    gap:14px !important;
+  }
+
+  /* Hero — approved card-stack style */
+  #vDash .modern-hero-card{
+    position:relative !important;
+    min-height:520px !important;
+    padding:28px 26px 24px !important;
+    border-radius:34px !important;
+    overflow:hidden !important;
+    background:
+      radial-gradient(160px 160px at 77% 30%, rgba(255,255,255,.40), transparent 70%),
+      radial-gradient(300px 210px at 91% 37%, rgba(119,98,255,.40), transparent 70%),
+      linear-gradient(135deg, #8b85ff 0%, #786eff 42%, #c8bcff 100%) !important;
+    border:1px solid rgba(255,255,255,.55) !important;
+    box-shadow:
+      0 22px 60px rgba(92,82,225,.20),
+      inset 0 1px 0 rgba(255,255,255,.34) !important;
+    color:#fff !important;
+  }
+
+  #vDash .modern-hero-card::before{
+    content:'';
+    position:absolute;
+    right:-40px;
+    top:128px;
+    width:320px;
+    height:210px;
+    border-radius:42px;
+    background:
+      linear-gradient(140deg, rgba(255,255,255,.58), rgba(255,255,255,.16) 48%, rgba(84,67,238,.22));
+    border:1px solid rgba(255,255,255,.48);
+    box-shadow:
+      0 20px 45px rgba(63,52,170,.18),
+      inset 0 1px 0 rgba(255,255,255,.56);
+    transform:rotate(-33deg) skewX(-8deg);
+    opacity:.82;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  #vDash .modern-hero-card::after{
+    content:'';
+    position:absolute;
+    right:18px;
+    top:116px;
+    width:280px;
+    height:185px;
+    border-radius:38px;
+    background:linear-gradient(140deg, rgba(255,255,255,.18), rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.34);
+    transform:rotate(-33deg) translate(36px,-20px);
+    opacity:.62;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  #vDash .modern-hero-card > *{
+    position:relative !important;
+    z-index:1 !important;
+  }
+
+  #vDash .hero-glow,
+  #vDash .modern-hero-pattern{
+    display:none !important;
+  }
+
+  #vDash .modern-hero-header{
+    display:block !important;
+  }
+
+  #vDash .modern-hero-card .eyebrow{
+    color:rgba(255,255,255,.78) !important;
+    font-size:.76rem !important;
+    font-weight:900 !important;
+    letter-spacing:.18em !important;
+    text-transform:uppercase !important;
+    margin-bottom:14px !important;
+  }
+
+  #vDash .hero-balance{
+    font-size:clamp(3.15rem, 15vw, 4.75rem) !important;
+    line-height:.94 !important;
+    letter-spacing:-.07em !important;
+    font-weight:900 !important;
+    color:#fff !important;
+    text-shadow:0 10px 32px rgba(18,21,72,.16) !important;
+  }
+
+  #vDash .modern-hero-caption{
+    color:rgba(255,255,255,.86) !important;
+    font-size:1rem !important;
+    line-height:1.35 !important;
+    max-width:78% !important;
+    margin-top:13px !important;
+    font-weight:600 !important;
+  }
+
+  #vDash .modern-hero-action{
+    height:44px !important;
+    margin-top:20px !important;
+    padding:0 20px !important;
+    border-radius:999px !important;
+    color:#6d5cff !important;
+    background:rgba(255,255,255,.92) !important;
+    border:1px solid rgba(255,255,255,.64) !important;
+    box-shadow:0 12px 26px rgba(36,27,123,.16) !important;
+    font-weight:900 !important;
+  }
+
+  #vDash .modern-hero-metrics{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:14px !important;
+    margin-top:24px !important;
+  }
+
+  #vDash .modern-metric-pill{
+    min-height:90px !important;
+    border-radius:18px !important;
+    padding:17px 18px !important;
+    background:rgba(255,255,255,.82) !important;
+    color:#111a36 !important;
+    border:1px solid rgba(255,255,255,.55) !important;
+    box-shadow:0 16px 36px rgba(57,48,155,.10) !important;
+    backdrop-filter:blur(18px) saturate(1.2) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(1.2) !important;
+  }
+
+  #vDash .modern-metric-pill span{
+    color:#69718a !important;
+    font-size:.72rem !important;
+    font-weight:900 !important;
+    letter-spacing:.14em !important;
+    text-transform:uppercase !important;
+  }
+
+  #vDash .modern-metric-pill strong{
+    color:#121936 !important;
+    font-size:1.35rem !important;
+    font-weight:900 !important;
+    letter-spacing:-.04em !important;
+    margin-top:8px !important;
+  }
+
+  #vDash .modern-metric-pill:nth-child(2)::after{
+    content:'';
+    position:absolute;
+    right:18px;
+    top:50%;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    background:conic-gradient(var(--capvo-premium-purple) var(--capvo-hero-pct, 33%), rgba(111,92,255,.12) 0);
+    transform:translateY(-50%);
+    box-shadow:inset 0 0 0 8px rgba(255,255,255,.48);
+  }
+
+  #vDash .modern-progress-block{
+    margin-top:20px !important;
+  }
+
+  #vDash .progress-track{
+    height:9px !important;
+    background:rgba(255,255,255,.42) !important;
+    border-radius:999px !important;
+    overflow:hidden !important;
+  }
+
+  #vDash .progress-fill{
+    height:100% !important;
+    border-radius:999px !important;
+    background:linear-gradient(90deg, #5af0b6 0%, #74e5ff 100%) !important;
+    box-shadow:0 0 16px rgba(88,239,186,.35) !important;
+  }
+
+  #vDash .progress-labels{
+    margin-top:11px !important;
+    color:rgba(255,255,255,.84) !important;
+    font-size:.86rem !important;
+    font-weight:700 !important;
+  }
+
+  #vDash .dashboard-allowance-grid,
+  #vDash .allowance-grid,
+  #vDash .modern-allowance-grid{
+    display:grid !important;
+    grid-template-columns:1fr 1fr 1fr !important;
+    gap:0 !important;
+    margin-top:20px !important;
+    padding:10px !important;
+    border-radius:22px !important;
+    background:rgba(255,255,255,.88) !important;
+    border:1px solid rgba(255,255,255,.64) !important;
+    box-shadow:0 18px 40px rgba(45,35,125,.10) !important;
+  }
+
+  #vDash .dashboard-allowance-card,
+  #vDash .allowance-card,
+  #vDash .modern-allowance-card{
+    background:transparent !important;
+    box-shadow:none !important;
+    border:0 !important;
+    color:#111936 !important;
+    min-height:76px !important;
+  }
+
+  /* Cycle summary */
+  #vDash .dashboard-cycle-summary-card{
+    border-radius:24px !important;
+    padding:16px !important;
+    background:var(--capvo-premium-card) !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    box-shadow:var(--capvo-premium-shadow-soft) !important;
+  }
+
+  #vDash .dashboard-cycle-kicker,
+  #vDash .dashboard-cycle-summary-main p{
+    color:var(--capvo-premium-muted) !important;
+  }
+
+  #vDash .dashboard-cycle-summary-main strong{
+    color:var(--capvo-premium-text) !important;
+  }
+
+  #vDash .dashboard-cycle-paid-btn{
+    background:linear-gradient(135deg,var(--capvo-premium-purple),#775dff) !important;
+    color:white !important;
+    box-shadow:0 14px 28px rgba(111,92,255,.28) !important;
+    border:0 !important;
+  }
+
+  #vDash .dashboard-cycle-manage-btn{
+    background:var(--capvo-premium-card-2) !important;
+    color:var(--capvo-premium-purple) !important;
+    border:1px solid var(--capvo-premium-line) !important;
+  }
+
+  /* Money hub */
+  #vDash .capvo-wallets-section{
+    margin-top:0 !important;
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+
+  #vDash .capvo-wallets-header{
+    padding:0 2px 10px !important;
+    align-items:center !important;
+  }
+
+  #vDash .capvo-wallets-header h3{
+    color:var(--capvo-premium-text) !important;
+    font-size:1.55rem !important;
+    letter-spacing:-.045em !important;
+    font-weight:900 !important;
+  }
+
+  #vDash .capvo-wallets-header p{
+    color:var(--capvo-premium-muted) !important;
+    font-size:.78rem !important;
+    font-weight:650 !important;
+  }
+
+  #vDash .capvo-wallets-manage-btn{
+    min-height:36px !important;
+    padding:0 10px !important;
+    border:0 !important;
+    background:transparent !important;
+    color:var(--capvo-premium-purple) !important;
+    font-size:.85rem !important;
+    font-weight:900 !important;
+  }
+
+  #vDash .capvo-wallets-manage-btn::after{
+    content:'⚙';
+    display:inline-grid;
+    place-items:center;
+    width:30px;
+    height:30px;
+    margin-left:8px;
+    border-radius:12px;
+    background:rgba(111,92,255,.10);
+  }
+
+  #vDash .capvo-wallet-cards-scroll.capvo-wallet-dashboard-v2{
+    display:grid !important;
+    gap:14px !important;
+    overflow:visible !important;
+    padding:0 !important;
+  }
+
+  #vDash .capvo-money-primary-card{
+    width:100% !important;
+    position:relative !important;
+    min-height:154px !important;
+    border-radius:28px !important;
+    padding:22px 118px 21px 20px !important;
+    display:flex !important;
+    align-items:center !important;
+    text-align:left !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    background:
+      radial-gradient(circle at 82% 42%, rgba(151,135,255,.20), transparent 42%),
+      linear-gradient(135deg, rgba(255,255,255,.98), rgba(249,249,255,.90)) !important;
+    color:var(--capvo-premium-text) !important;
+    box-shadow:var(--capvo-premium-shadow) !important;
+    overflow:hidden !important;
+    opacity:0;
+    transform:translateY(8px);
+    transition:opacity var(--t-normal),transform var(--t-spring),box-shadow var(--t-fast);
+  }
+
+  #vDash .capvo-money-primary-card.is-visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  #vDash .capvo-primary-kicker{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--capvo-premium-purple);
+    font-size:.76rem;
+    text-transform:uppercase;
+    letter-spacing:.16em;
+    font-weight:950;
+    margin-bottom:16px;
+  }
+
+  #vDash .capvo-primary-kicker em{
+    font-style:normal;
+    text-transform:none;
+    letter-spacing:0;
+    font-size:.72rem;
+    padding:4px 9px;
+    border-radius:999px;
+    background:rgba(111,92,255,.08);
+    color:#7768ff;
+    border:1px solid rgba(111,92,255,.14);
+  }
+
+  #vDash .capvo-primary-label{
+    display:block;
+    color:var(--capvo-premium-muted);
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-weight:900;
+    margin-bottom:5px;
+  }
+
+  #vDash .capvo-money-primary-card strong{
+    display:block;
+    color:var(--capvo-premium-text);
+    font-size:1.9rem;
+    line-height:1;
+    font-weight:950;
+    letter-spacing:-.06em;
+  }
+
+  #vDash .capvo-money-primary-card small{
+    display:block;
+    margin-top:8px;
+    color:var(--capvo-premium-muted);
+    font-size:.84rem;
+    font-weight:650;
+  }
+
+  #vDash .capvo-primary-card-art{
+    position:absolute;
+    right:24px;
+    top:18px;
+    width:108px;
+    height:116px;
+    pointer-events:none;
+  }
+
+  #vDash .capvo-wallet-3d{
+    position:absolute;
+    right:8px;
+    top:6px;
+    width:80px;
+    height:76px;
+    border-radius:24px;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.60), transparent 24%),
+      linear-gradient(145deg,#c5bcff 0%,#7b66ff 60%,#4a36e6 100%);
+    box-shadow:0 18px 30px rgba(92,76,230,.26), inset 0 1px 0 rgba(255,255,255,.42);
+    transform:rotate(-12deg);
+  }
+
+  #vDash .capvo-wallet-3d::before{
+    content:'';
+    position:absolute;
+    left:12px;
+    top:34px;
+    width:58px;
+    height:16px;
+    border-radius:12px;
+    background:rgba(255,255,255,.20);
+    border:1px solid rgba(255,255,255,.16);
+  }
+
+  #vDash .capvo-card-last4{
+    position:absolute;
+    right:44px;
+    bottom:15px;
+    color:var(--capvo-premium-muted);
+    font-size:1.05rem;
+    letter-spacing:.08em;
+    font-weight:750;
+  }
+
+  #vDash .capvo-card-network{
+    position:absolute;
+    right:2px;
+    bottom:9px;
+    width:40px;
+    height:24px;
+  }
+
+  #vDash .capvo-card-network i{
+    position:absolute;
+    top:3px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+  }
+
+  #vDash .capvo-card-network i:first-child{left:0;background:#ef4444;}
+  #vDash .capvo-card-network i:last-child{right:0;background:#f59e0b;mix-blend-mode:multiply;}
+
+  #vDash .capvo-primary-arrow{
+    position:absolute;
+    top:22px;
+    right:18px;
+    color:var(--capvo-premium-purple);
+    font-size:1.7rem;
+    line-height:1;
+    font-weight:800;
+  }
+
+  #vDash .capvo-money-groups{
+    display:grid !important;
+    gap:12px !important;
+  }
+
+  #vDash .capvo-money-group{
+    border-radius:24px !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    background:var(--capvo-premium-card) !important;
+    box-shadow:var(--capvo-premium-shadow-soft) !important;
+    overflow:hidden !important;
+  }
+
+  #vDash .capvo-money-group summary{
+    padding:17px 16px !important;
+    min-height:70px !important;
+  }
+
+  #vDash .capvo-group-title{
+    display:flex !important;
+    align-items:center !important;
+    min-width:0 !important;
+    gap:12px !important;
+  }
+
+  #vDash .capvo-group-icon{
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    font-style:normal;
+    background:rgba(79,231,176,.11);
+    color:#10b981;
+    box-shadow:inset 0 0 0 1px rgba(16,185,129,.08);
+  }
+
+  #vDash .capvo-money-group.is-restricted .capvo-group-icon{background:rgba(245,158,11,.11);color:#f59e0b;}
+  #vDash .capvo-money-group.is-debt .capvo-group-icon{background:rgba(111,92,255,.11);color:#7567ff;}
+
+  #vDash .capvo-money-group summary strong{
+    color:var(--capvo-premium-text) !important;
+    font-size:1.05rem !important;
+    font-weight:900 !important;
+  }
+
+  #vDash .capvo-money-group summary small{
+    color:var(--capvo-premium-muted) !important;
+    font-size:.78rem !important;
+    margin-top:3px !important;
+  }
+
+  #vDash .capvo-money-group summary b{
+    color:var(--capvo-premium-text) !important;
+    font-size:1rem !important;
+    font-weight:900 !important;
+  }
+
+  #vDash .capvo-money-group summary b::after{
+    background:rgba(111,92,255,.10) !important;
+    color:var(--capvo-premium-purple) !important;
+  }
+
+  #vDash .capvo-money-rows{
+    padding:0 12px 12px !important;
+  }
+
+  #vDash .capvo-money-row{
+    min-height:62px !important;
+    border-radius:18px !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    background:color-mix(in srgb,var(--capvo-premium-card) 90%, white 10%) !important;
+    color:var(--capvo-premium-text) !important;
+    box-shadow:none !important;
+  }
+
+  #vDash .capvo-money-row + .capvo-money-row{
+    margin-top:8px !important;
+  }
+
+  #vDash .capvo-money-row-icon{
+    border-radius:15px !important;
+    background:color-mix(in srgb,var(--row-color,#6f5cff) 14%, transparent) !important;
+    color:var(--row-color,#6f5cff) !important;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--row-color,#6f5cff) 12%, transparent) !important;
+  }
+
+  #vDash .capvo-money-row-main strong,
+  #vDash .capvo-money-row-side strong{
+    color:var(--capvo-premium-text) !important;
+  }
+
+  #vDash .capvo-money-row-main small,
+  #vDash .capvo-money-row-side small{
+    color:var(--capvo-premium-muted) !important;
+  }
+
+  #vDash .capvo-money-row-side strong.is-debt{
+    color:#ef4444 !important;
+  }
+
+  #vDash .capvo-money-row-side strong.is-zero{
+    color:#8a93aa !important;
+  }
+
+  #vDash .capvo-money-add-row{
+    border:1.5px dashed rgba(111,92,255,.36) !important;
+    background:color-mix(in srgb,var(--capvo-premium-card) 86%, rgba(111,92,255,.10) 14%) !important;
+  }
+
+  #vDash .capvo-money-add-plus{
+    background:rgba(111,92,255,.12) !important;
+    color:var(--capvo-premium-purple) !important;
+  }
+
+  #vDash .capvo-card-limit-line{
+    background:color-mix(in srgb,var(--capvo-premium-muted) 18%, transparent) !important;
+  }
+
+  #vDash .capvo-card-limit-line i{
+    background:linear-gradient(90deg,#7c6dff,#b4a7ff) !important;
+  }
+
+  /* Bottom dock alignment with approved direction */
+  .mobile-bottom-nav{
+    background:color-mix(in srgb,var(--capvo-premium-card) 82%, transparent) !important;
+    border:1px solid var(--capvo-premium-line) !important;
+    box-shadow:0 24px 65px rgba(15,23,42,.16), inset 0 1px 0 rgba(255,255,255,.34) !important;
+  }
+
+  .mobile-nav-item{
+    color:var(--capvo-premium-muted) !important;
+  }
+
+  .mobile-nav-item.active{
+    background:linear-gradient(135deg,#5d4df5,#7b68ff) !important;
+    color:#fff !important;
+    box-shadow:0 15px 34px rgba(111,92,255,.30) !important;
+  }
+
+  .mobile-nav-fab{
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255,255,255,.42), transparent 30%),
+      linear-gradient(145deg,#8e7cff 0%,#6f5cff 50%,#3827d7 100%) !important;
+    box-shadow:0 24px 50px rgba(111,92,255,.43), inset 0 1px 0 rgba(255,255,255,.30) !important;
+  }
+}
+
+@media (max-width:390px){
+  #vDash .modern-hero-card{
+    min-height:500px !important;
+    padding:24px 22px 22px !important;
+    border-radius:30px !important;
+  }
+
+  #vDash .modern-hero-caption{
+    max-width:86% !important;
+    font-size:.92rem !important;
+  }
+
+  #vDash .modern-metric-pill{
+    min-height:82px !important;
+    padding:14px !important;
+  }
+
+  #vDash .capvo-money-primary-card{
+    min-height:146px !important;
+    padding-right:104px !important;
+  }
+
+  #vDash .capvo-primary-card-art{
+    transform:scale(.88);
+    transform-origin:right center;
+  }
+}
+
+/* Automatic OS dark-mode dashboard override removed in v1.8.6.33.
+   Light remains the default. Dark should be enabled only through explicit theme classes. */
+
+
+
+body.theme-dark #vDash .modern-hero-card,
+body.dark #vDash .modern-hero-card,
+html[data-theme="dark"] #vDash .modern-hero-card,
+[data-theme="dark"] body #vDash .modern-hero-card{
+  background:
+    radial-gradient(210px 190px at 78% 34%, rgba(68,124,255,.42), transparent 70%),
+    radial-gradient(320px 240px at 92% 38%, rgba(127,95,255,.40), transparent 70%),
+    linear-gradient(135deg,#071123 0%,#0d1833 38%,#101c46 70%,#172064 100%) !important;
+  border:1px solid rgba(155,140,255,.28) !important;
+}
+
+body.theme-dark #vDash .modern-metric-pill,
+body.dark #vDash .modern-metric-pill,
+html[data-theme="dark"] #vDash .modern-metric-pill,
+[data-theme="dark"] body #vDash .modern-metric-pill,
+body.theme-dark #vDash .capvo-money-primary-card,
+body.dark #vDash .capvo-money-primary-card,
+html[data-theme="dark"] #vDash .capvo-money-primary-card,
+[data-theme="dark"] body #vDash .capvo-money-primary-card,
+body.theme-dark #vDash .capvo-money-group,
+body.dark #vDash .capvo-money-group,
+html[data-theme="dark"] #vDash .capvo-money-group,
+[data-theme="dark"] body #vDash .capvo-money-group{
+  background:var(--capvo-premium-card) !important;
+  border-color:rgba(160,174,215,.15) !important;
+}
+
+/* ============================================================
+   CAPVO v1.8.6.34 — Dashboard width normalization
+   Make all dashboard sections use the same mobile width as
+   "Τελευταίες κινήσεις" and reduce squeezed inner layouts.
+   ============================================================ */
+@media (max-width:768px){
+  :root{
+    --capvo-dash-x:12px;
+    --capvo-dash-section-gap:14px;
+  }
+
+  #vDash,
+  #vDash .modern-dashboard-shell,
+  #vDash .modern-dashboard-main{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-hero-card,
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .capvo-wallets-section,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:calc(100% - (var(--capvo-dash-x) * 2)) !important;
+    max-width:calc(100% - (var(--capvo-dash-x) * 2)) !important;
+    min-width:0 !important;
+    margin-left:var(--capvo-dash-x) !important;
+    margin-right:var(--capvo-dash-x) !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .capvo-wallets-section,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    margin-top:var(--capvo-dash-section-gap) !important;
+    margin-bottom:0 !important;
+  }
+
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+
+  #vDash .dashboard-preview-widget,
+  #vDash .mobile-dashboard-insights,
+  #vDash .capvo-wallets-section{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    border-radius:26px !important;
+  }
+
+  #vDash .capvo-wallets-section{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #vDash .capvo-wallet-cards-scroll.capvo-wallet-dashboard-v2,
+  #vDash .capvo-money-groups,
+  #vDash .capvo-money-group,
+  #vDash .capvo-money-primary-card{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-money-group summary{
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:10px !important;
+  }
+
+  #vDash .capvo-money-row{
+    width:100% !important;
+    grid-template-columns:42px minmax(0,1fr) auto 12px !important;
+    gap:10px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-dashboard-insights{
+    padding:16px 12px 14px !important;
+  }
+
+  #vDash .mobile-insights-head{
+    margin-bottom:14px !important;
+  }
+
+  #vDash .mobile-category-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    grid-template-columns:102px minmax(0,1fr) !important;
+    gap:10px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-donut{
+    width:98px !important;
+    height:98px !important;
+  }
+
+  #vDash .mobile-donut::after{
+    inset:19px !important;
+  }
+
+  #vDash .mobile-donut-hole{
+    inset:25px !important;
+  }
+
+  #vDash .mobile-category-list{
+    width:100% !important;
+    min-width:0 !important;
+    gap:8px !important;
+  }
+
+  #vDash .mobile-category-row{
+    width:100% !important;
+    grid-template-columns:8px minmax(0,1fr) 32px minmax(56px,auto) !important;
+    gap:6px !important;
+    min-width:0 !important;
+  }
+
+  #vDash .mobile-category-name{
+    font-size:12.2px !important;
+  }
+
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{
+    font-size:11.4px !important;
+  }
+
+  #vDash .modern-stats-grid,
+  #vDash .modern-stats-grid{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --capvo-dash-x:10px;
+    --capvo-dash-section-gap:12px;
+  }
+
+  #vDash .mobile-dashboard-insights,
+  #vDash .capvo-wallets-section{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  #vDash .mobile-category-card{
+    grid-template-columns:92px minmax(0,1fr) !important;
+    gap:9px !important;
+  }
+
+  #vDash .mobile-donut{
+    width:90px !important;
+    height:90px !important;
+  }
+
+  #vDash .mobile-donut::after{inset:18px !important;}
+  #vDash .mobile-donut-hole{inset:24px !important;}
+
+  #vDash .mobile-category-row{
+    grid-template-columns:8px minmax(0,1fr) 30px minmax(52px,auto) !important;
+    gap:5px !important;
+  }
+
+  #vDash .mobile-category-name{font-size:11.7px !important;}
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{font-size:10.9px !important;}
+}
+
+/* ============================================================
+   CAPVO v1.8.6.35 — Dashboard unified width pass
+   Goal: every dashboard component uses the same outer width as
+   the recent-movements card, with less squeezed inner layouts.
+   UI only: no business/data logic touched.
+   ============================================================ */
+@media (max-width:768px){
+  :root{
+    --capvo-dashboard-edge:10px;
+    --capvo-dashboard-gap:14px;
+  }
+
+  #vDash,
+  #vDash .modern-dashboard-shell,
+  #vDash .modern-dashboard-main,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+  }
+
+  #vDash .modern-dashboard-shell{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:0 !important;
+    padding:10px 0 calc(118px + env(safe-area-inset-bottom)) !important;
+    background:transparent !important;
+  }
+
+  #vDash .modern-dashboard-main,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    gap:var(--capvo-dashboard-gap) !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  #vDash .modern-hero-card,
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .capvo-wallets-section,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    max-width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    min-width:0 !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  #vDash .modern-dashboard-preview > .dashboard-preview-widget,
+  #vDash .modern-dashboard-side > .modern-stats-grid,
+  #vDash .dashboard-preview-widget{
+    width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    max-width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    min-width:0 !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-dashboard-side > .modern-side-title{
+    width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    max-width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    padding:0 2px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .capvo-wallets-section,
+  #vDash .mobile-dashboard-insights,
+  #vDash .dashboard-preview-widget,
+  #vDash .modern-stats-grid{
+    border-radius:24px !important;
+  }
+
+  /* Money hub: remove nested squeeze; each internal card is full width. */
+  #vDash .capvo-wallets-section{
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  #vDash .capvo-wallets-header{
+    padding:0 2px 8px !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-wallet-cards-scroll,
+  #vDash .capvo-wallet-cards-scroll.capvo-wallet-dashboard-v2,
+  #vDash .capvo-money-primary-card,
+  #vDash .capvo-money-groups,
+  #vDash .capvo-money-group,
+  #vDash .capvo-money-rows{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-money-primary-card,
+  #vDash .capvo-money-group{
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+
+  #vDash .capvo-money-group summary{
+    width:100% !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:10px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-group-title,
+  #vDash .capvo-money-row-main{
+    min-width:0 !important;
+  }
+
+  #vDash .capvo-money-row{
+    width:100% !important;
+    max-width:100% !important;
+    grid-template-columns:42px minmax(0,1fr) auto 12px !important;
+    gap:10px !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Categories: same outer width and more breathing room inside. */
+  #vDash .mobile-dashboard-insights{
+    padding:16px 14px 15px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-category-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    grid-template-columns:88px minmax(0,1fr) !important;
+    gap:12px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-donut{
+    width:84px !important;
+    height:84px !important;
+  }
+
+  #vDash .mobile-donut::after{inset:17px !important;}
+  #vDash .mobile-donut-hole{inset:22px !important;}
+
+  #vDash .mobile-category-list{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+
+  #vDash .mobile-category-row{
+    width:100% !important;
+    max-width:100% !important;
+    grid-template-columns:8px minmax(0,1fr) 36px minmax(58px,auto) !important;
+    gap:7px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-category-name,
+  #vDash .dashboard-preview-info strong,
+  #vDash .dashboard-preview-info span{
+    min-width:0 !important;
+  }
+
+  #vDash .mobile-category-name{font-size:12px !important;}
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{font-size:11.2px !important;}
+
+  /* Recent movements remains the width reference; keep it full and aligned. */
+  #vDash .dashboard-preview-widget{
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+
+  #vDash .dashboard-preview-list{
+    width:100% !important;
+    max-width:100% !important;
+    padding-left:14px !important;
+    padding-right:14px !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Snapshot cards use exactly the same outer width rhythm. */
+  #vDash .modern-stats-grid{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:12px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .modern-stat-card{
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --capvo-dashboard-edge:8px;
+    --capvo-dashboard-gap:13px;
+  }
+
+  #vDash .mobile-dashboard-insights{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #vDash .mobile-category-card{
+    grid-template-columns:78px minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+
+  #vDash .mobile-donut{
+    width:76px !important;
+    height:76px !important;
+  }
+
+  #vDash .mobile-donut::after{inset:15px !important;}
+  #vDash .mobile-donut-hole{inset:20px !important;}
+
+  #vDash .mobile-donut-hole span{font-size:10.8px !important;}
+  #vDash .mobile-donut-hole small{font-size:7.8px !important;}
+
+  #vDash .mobile-category-row{
+    grid-template-columns:7px minmax(0,1fr) 31px minmax(52px,auto) !important;
+    gap:5px !important;
+  }
+
+  #vDash .mobile-category-name{font-size:11.2px !important;}
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{font-size:10.4px !important;}
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.36 — Dashboard category spacing polish
+   - Keep the unified width from v1.8.6.35.
+   - Give Categories and Latest movements proper vertical breathing room.
+   - Make Categories feel like the other premium dashboard components.
+   UI only: no business/data logic touched.
+   ============================================================ */
+@media (max-width:768px){
+  #vDash .mobile-dashboard-insights{
+    margin-bottom:var(--capvo-dashboard-gap) !important;
+    padding:17px 14px 16px !important;
+    background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,255,.96)) !important;
+    border:1px solid rgba(226,232,240,.95) !important;
+    box-shadow:0 14px 32px rgba(15,23,42,.07) !important;
+    overflow:hidden !important;
+  }
+
+  /* The latest-movements block is the width reference, but it must not
+     visually collide with the category card above it. */
+  #vDash .modern-dashboard-preview{
+    margin-top:0 !important;
+    padding-top:0 !important;
+  }
+
+  #vDash .mobile-insights-head{
+    margin-bottom:13px !important;
+    gap:10px !important;
+    align-items:flex-start !important;
+  }
+
+  #vDash .mobile-insights-head h3{
+    letter-spacing:-.035em !important;
+  }
+
+  #vDash .mobile-category-card{
+    padding:0 !important;
+    align-items:center !important;
+  }
+
+  #vDash .mobile-category-list{
+    gap:9px !important;
+  }
+
+  #vDash .mobile-category-row{
+    min-height:22px !important;
+  }
+}
+
+@media (max-width:390px){
+  #vDash .mobile-dashboard-insights{
+    margin-bottom:var(--capvo-dashboard-gap) !important;
+    padding:15px 12px 15px !important;
+  }
+
+  #vDash .mobile-insights-head{
+    margin-bottom:12px !important;
+  }
+}
+
+/* ============================================================
+   CAPVO v1.8.6.37 — Dashboard final visual QA
+   Finalizes the approved Option 4 light-first dashboard pass.
+   Scope: visual/layout only. No business/data logic touched.
+   ============================================================ */
+@media (max-width:768px){
+  :root{
+    --capvo-dashboard-edge:8px;
+    --capvo-dashboard-gap:15px;
+    --capvo-dashboard-radius:24px;
+    --capvo-dashboard-card-bg:linear-gradient(180deg, rgba(255,255,255,.985), rgba(248,250,255,.965));
+    --capvo-dashboard-card-border:rgba(226,232,240,.96);
+    --capvo-dashboard-card-shadow:0 16px 36px rgba(15,23,42,.075);
+  }
+
+  #vDash{
+    overflow-x:hidden !important;
+    background:linear-gradient(180deg,#f8faff 0%,#f3f6fb 58%,#eef3f9 100%) !important;
+  }
+
+  #vDash .modern-dashboard-shell{
+    width:100% !important;
+    max-width:100% !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:0 !important;
+    padding:10px 0 calc(136px + env(safe-area-inset-bottom)) !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+  }
+
+  #vDash .modern-dashboard-main,
+  #vDash .modern-dashboard-preview,
+  #vDash .modern-dashboard-side{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    gap:var(--capvo-dashboard-gap) !important;
+    padding:0 !important;
+    margin:0 !important;
+    box-sizing:border-box !important;
+    overflow:visible !important;
+  }
+
+  /* One source of truth for dashboard component width. */
+  #vDash .modern-hero-card,
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .capvo-wallets-section,
+  #vDash .mobile-dashboard-insights,
+  #vDash .modern-quick-add-card,
+  #vDash .dashboard-preview-widget,
+  #vDash .modern-stats-grid,
+
+  #vDash .modern-dashboard-side > .modern-side-title{
+    width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    max-width:calc(100% - (var(--capvo-dashboard-edge) * 2)) !important;
+    min-width:0 !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .dashboard-cycle-summary-card,
+  #vDash .dashboard-carryover-card,
+  #vDash .mobile-dashboard-insights,
+  #vDash .dashboard-preview-widget{
+    border-radius:var(--capvo-dashboard-radius) !important;
+    background:var(--capvo-dashboard-card-bg) !important;
+    border:1px solid var(--capvo-dashboard-card-border) !important;
+    box-shadow:var(--capvo-dashboard-card-shadow) !important;
+    overflow:hidden !important;
+  }
+
+  /* Keep the money hub premium but make its outer rhythm identical to other cards. */
+  #vDash .capvo-wallets-section{
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+
+  #vDash .capvo-wallets-header{
+    width:100% !important;
+    padding:0 2px 9px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-wallet-cards-scroll,
+  #vDash .capvo-wallet-cards-scroll.capvo-wallet-dashboard-v2,
+  #vDash .capvo-money-hub-approved,
+  #vDash .capvo-money-primary-card,
+  #vDash .capvo-money-groups,
+  #vDash .capvo-money-group,
+  #vDash .capvo-money-rows{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .capvo-money-primary-card,
+  #vDash .capvo-money-group{
+    border-radius:var(--capvo-dashboard-radius) !important;
+    box-shadow:var(--capvo-dashboard-card-shadow) !important;
+  }
+
+  #vDash .capvo-money-groups{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:var(--capvo-dashboard-gap) !important;
+  }
+
+  #vDash .capvo-money-row{
+    grid-template-columns:42px minmax(0,1fr) auto 12px !important;
+    gap:10px !important;
+  }
+
+  #vDash .capvo-money-row-main,
+  #vDash .capvo-money-row-side,
+  #vDash .capvo-group-title{
+    min-width:0 !important;
+  }
+
+  /* Categories: same width, same card language, and clear breathing room before Recent. */
+  #vDash .mobile-dashboard-insights{
+    margin:0 0 var(--capvo-dashboard-gap) !important;
+    padding:17px 14px 16px !important;
+  }
+
+  #vDash .mobile-insights-head{
+    margin:0 0 14px !important;
+    align-items:flex-start !important;
+    gap:10px !important;
+  }
+
+  #vDash .mobile-insights-head h3,
+  #vDash .section-title,
+  #vDash .modern-side-title span,
+  #vDash .capvo-wallets-header h3{
+    letter-spacing:-.035em !important;
+  }
+
+  #vDash .mobile-insights-head button,
+  #vDash .section-add{
+    white-space:nowrap !important;
+    flex:0 0 auto !important;
+  }
+
+  #vDash .mobile-category-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    display:grid !important;
+    grid-template-columns:84px minmax(0,1fr) !important;
+    gap:13px !important;
+    align-items:center !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-donut{
+    width:82px !important;
+    height:82px !important;
+  }
+
+  #vDash .mobile-donut::after{inset:16px !important;}
+  #vDash .mobile-donut-hole{inset:21px !important;}
+
+  #vDash .mobile-category-list{
+    width:100% !important;
+    min-width:0 !important;
+    gap:9px !important;
+  }
+
+  #vDash .mobile-category-row{
+    width:100% !important;
+    min-width:0 !important;
+    grid-template-columns:8px minmax(0,1fr) 34px minmax(58px,auto) !important;
+    gap:7px !important;
+    min-height:23px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .mobile-category-name{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    font-size:12px !important;
+  }
+
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{
+    font-size:11.2px !important;
+  }
+
+  /* Latest movements remains the visual width reference. */
+  #vDash .modern-dashboard-preview{
+    margin-top:0 !important;
+  }
+
+  #vDash .dashboard-preview-widget{
+    padding:0 !important;
+  }
+
+  #vDash .dashboard-preview-widget .modern-list-header{
+    padding:16px 14px 12px !important;
+  }
+
+  #vDash .dashboard-preview-list{
+    width:100% !important;
+    max-width:100% !important;
+    padding:0 14px 14px !important;
+    box-sizing:border-box !important;
+  }
+
+  #vDash .dashboard-preview-item,
+  #vDash .dashboard-preview-info{
+    min-width:0 !important;
+  }
+
+  #vDash .dashboard-preview-info strong,
+  #vDash .dashboard-preview-info span{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  /* Snapshot and voucher/ticket should follow the same spacing system. */
+  #vDash .modern-dashboard-side{
+    margin-top:var(--capvo-dashboard-gap) !important;
+  }
+
+  #vDash .modern-stats-grid{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:12px !important;
+  }
+
+  #vDash .modern-stat-card,
+  #vDash .modern-stats-grid{
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Dock should never cover the last dashboard card. */
+  #vDash .modern-dashboard-side::after{
+    content:"";
+    display:block;
+    height:10px;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --capvo-dashboard-edge:8px;
+    --capvo-dashboard-gap:14px;
+  }
+
+  #vDash .modern-dashboard-shell{
+    padding-bottom:calc(142px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vDash .mobile-dashboard-insights{
+    padding:15px 12px 15px !important;
+  }
+
+  #vDash .mobile-category-card{
+    grid-template-columns:76px minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+
+  #vDash .mobile-donut{
+    width:74px !important;
+    height:74px !important;
+  }
+
+  #vDash .mobile-donut::after{inset:15px !important;}
+  #vDash .mobile-donut-hole{inset:20px !important;}
+  #vDash .mobile-donut-hole span{font-size:10.6px !important;}
+  #vDash .mobile-donut-hole small{font-size:7.6px !important;}
+
+  #vDash .mobile-category-row{
+    grid-template-columns:7px minmax(0,1fr) 30px minmax(50px,auto) !important;
+    gap:5px !important;
+  }
+
+  #vDash .mobile-category-name{font-size:11px !important;}
+  #vDash .mobile-category-pct,
+  #vDash .mobile-category-row strong{font-size:10.3px !important;}
+
+  #vDash .dashboard-preview-widget .modern-list-header{
+    padding:15px 12px 11px !important;
+  }
+
+  #vDash .dashboard-preview-list{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+}
+
+body.theme-dark #vDash,
+body.dark #vDash,
+html[data-theme="dark"] #vDash,
+[data-theme="dark"] body #vDash{
+  background:linear-gradient(180deg,#050b18 0%,#091225 52%,#0d1428 100%) !important;
+}
+
+body.theme-dark #vDash .dashboard-cycle-summary-card,
+body.theme-dark #vDash .dashboard-carryover-card,
+body.theme-dark #vDash .mobile-dashboard-insights,
+body.theme-dark #vDash .dashboard-preview-widget,
+body.dark #vDash .dashboard-cycle-summary-card,
+body.dark #vDash .dashboard-carryover-card,
+body.dark #vDash .mobile-dashboard-insights,
+body.dark #vDash .dashboard-preview-widget,
+html[data-theme="dark"] #vDash .dashboard-cycle-summary-card,
+html[data-theme="dark"] #vDash .dashboard-carryover-card,
+html[data-theme="dark"] #vDash .mobile-dashboard-insights,
+html[data-theme="dark"] #vDash .dashboard-preview-widget{
+  background:linear-gradient(180deg,rgba(15,25,48,.94),rgba(9,17,35,.94)) !important;
+  border-color:rgba(148,163,184,.18) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.26) !important;
+}
+
+/* CAPVO v1.8.6.38 — Premium edit flow for cards/debts */
+#mCC.debt-card-overlay{
+  background:rgba(15,23,42,.34) !important;
+  backdrop-filter:blur(18px) !important;
+  -webkit-backdrop-filter:blur(18px) !important;
+  padding:14px !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+}
+
+#mCC .debt-card-modal{
+  width:min(100%,520px) !important;
+  max-height:calc(100dvh - 28px) !important;
+  overflow:auto !important;
+  border-radius:30px 30px 24px 24px !important;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+  background:
+    radial-gradient(circle at 84% 4%,rgba(124,92,255,.18),transparent 34%),
+    linear-gradient(180deg,#ffffff 0%,#f8f7ff 46%,#f3f5fb 100%) !important;
+  border:1px solid rgba(121,101,255,.18) !important;
+  box-shadow:0 28px 80px rgba(31,41,71,.32) !important;
+  color:#111827 !important;
+  box-sizing:border-box !important;
+}
+
+#mCC .debt-card-modal::before{
+  content:"" !important;
+  display:block !important;
+  width:42px !important;
+  height:5px !important;
+  border-radius:999px !important;
+  margin:0 auto 14px !important;
+  background:rgba(100,116,139,.22) !important;
+  position:static !important;
+  inset:auto !important;
+  opacity:1 !important;
+}
+
+#mCC .debt-modal-close{
+  top:18px !important;
+  right:18px !important;
+  width:38px !important;
+  height:38px !important;
+  border-radius:16px !important;
+  background:rgba(255,255,255,.82) !important;
+  color:#4f46e5 !important;
+  border:1px solid rgba(121,101,255,.18) !important;
+  box-shadow:0 10px 24px rgba(79,70,229,.12) !important;
+}
+
+#mCC .debt-modal-hero{
+  display:grid !important;
+  grid-template-columns:54px minmax(0,1fr) !important;
+  gap:13px !important;
+  align-items:center !important;
+  padding:16px 48px 16px 14px !important;
+  margin:0 0 12px !important;
+  border-radius:24px !important;
+  background:
+    linear-gradient(135deg,rgba(108,92,255,.13),rgba(255,255,255,.92)),
+    radial-gradient(circle at 88% 0%,rgba(96,165,250,.18),transparent 38%) !important;
+  border:1px solid rgba(121,101,255,.15) !important;
+  box-shadow:0 16px 38px rgba(89,70,205,.10) !important;
+}
+
+#mCC .debt-modal-icon{
+  width:54px !important;
+  height:54px !important;
+  border-radius:18px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:linear-gradient(145deg,#7357ff,#8f7bff) !important;
+  color:#fff !important;
+  box-shadow:0 18px 32px rgba(99,91,255,.30) !important;
+  font-size:23px !important;
+}
+
+#mCC .debt-modal-kicker{
+  font-size:10px !important;
+  letter-spacing:.16em !important;
+  color:#6d64e8 !important;
+  text-transform:uppercase !important;
+  font-weight:900 !important;
+  margin-bottom:4px !important;
+}
+
+#mCC .debt-modal-heading h2{
+  font-size:22px !important;
+  line-height:1.1 !important;
+  margin:0 0 5px !important;
+  color:#10172a !important;
+  letter-spacing:-.035em !important;
+}
+
+#mCC .debt-modal-heading p{
+  font-size:12px !important;
+  line-height:1.35 !important;
+  color:#667085 !important;
+  margin:0 !important;
+  max-width:360px !important;
+}
+
+#mCC .debt-type-tabs{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  padding:5px !important;
+  border-radius:18px !important;
+  background:rgba(239,242,255,.86) !important;
+  border:1px solid rgba(121,101,255,.14) !important;
+  margin:0 0 12px !important;
+}
+
+#mCC .debt-type-tabs button{
+  min-height:42px !important;
+  border:0 !important;
+  border-radius:14px !important;
+  background:transparent !important;
+  color:#667085 !important;
+  font-weight:900 !important;
+  font-size:12.5px !important;
+  box-shadow:none !important;
+}
+
+#mCC .debt-type-tabs button.active{
+  background:#ffffff !important;
+  color:#4f46e5 !important;
+  box-shadow:0 12px 26px rgba(79,70,229,.14) !important;
+}
+
+#mCC .debt-context-note{
+  margin:0 0 12px !important;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+  background:rgba(236,253,245,.78) !important;
+  border:1px solid rgba(16,185,129,.16) !important;
+  color:#047857 !important;
+  font-size:11.5px !important;
+  line-height:1.35 !important;
+  font-weight:750 !important;
+}
+
+#mCC .debt-edit-preview{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  gap:12px !important;
+  align-items:end !important;
+  padding:15px !important;
+  margin:0 0 12px !important;
+  border-radius:22px !important;
+  overflow:hidden !important;
+  background:
+    radial-gradient(circle at 86% 12%,rgba(99,102,241,.28),transparent 34%),
+    linear-gradient(135deg,#141b43 0%,#3924a6 56%,#7357ff 100%) !important;
+  color:#fff !important;
+  box-shadow:0 20px 44px rgba(67,56,202,.24) !important;
+}
+
+#mCC .debt-edit-preview::after{
+  content:"" !important;
+  position:absolute !important;
+  width:128px !important;
+  height:92px !important;
+  right:-32px !important;
+  top:10px !important;
+  border-radius:28px !important;
+  transform:rotate(-18deg) !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.06)) !important;
+  border:1px solid rgba(255,255,255,.22) !important;
+}
+
+#mCC .debt-edit-preview-copy,
+#mCC .debt-edit-preview-amount{
+  position:relative !important;
+  z-index:1 !important;
+  min-width:0 !important;
+}
+
+#mCC .debt-edit-preview-copy span,
+#mCC .debt-edit-preview-amount em{
+  display:block !important;
+  font-size:10px !important;
+  letter-spacing:.15em !important;
+  text-transform:uppercase !important;
+  color:rgba(255,255,255,.66) !important;
+  font-style:normal !important;
+  font-weight:900 !important;
+}
+
+#mCC .debt-edit-preview-copy strong{
+  display:block !important;
+  margin-top:4px !important;
+  font-size:19px !important;
+  line-height:1.1 !important;
+  letter-spacing:-.02em !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+#mCC .debt-edit-preview-copy small,
+#mCC .debt-edit-preview-amount small{
+  display:block !important;
+  margin-top:5px !important;
+  color:rgba(255,255,255,.72) !important;
+  font-size:11px !important;
+  max-width:220px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+#mCC .debt-edit-preview-amount{
+  text-align:right !important;
+  padding-right:4px !important;
+}
+
+#mCC .debt-edit-preview-amount strong{
+  display:block !important;
+  margin-top:4px !important;
+  font-size:20px !important;
+  color:#fff !important;
+  letter-spacing:-.02em !important;
+}
+
+#mCC .debt-edit-preview-progress{
+  position:relative !important;
+  z-index:1 !important;
+  grid-column:1 / -1 !important;
+  height:6px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.20) !important;
+  overflow:hidden !important;
+  margin-top:1px !important;
+}
+
+#mCC .debt-edit-preview-progress i{
+  display:block !important;
+  height:100% !important;
+  width:0% ;
+  min-width:8px !important;
+  border-radius:inherit !important;
+  background:linear-gradient(90deg,#43f0b2,#7c6dff) !important;
+  transition:width .22s ease !important;
+}
+
+#mCC .debt-modal-form-card{
+  background:#fff !important;
+  border:1px solid rgba(121,101,255,.14) !important;
+  border-radius:24px !important;
+  padding:15px !important;
+  box-shadow:0 14px 34px rgba(15,23,42,.08) !important;
+}
+
+#mCC .debt-form-section-title{
+  font-size:11px !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase !important;
+  color:#6d64e8 !important;
+  font-weight:950 !important;
+  margin:2px 0 10px !important;
+}
+
+#mCC .debt-modal-grid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:11px !important;
+}
+
+#mCC .debt-full-row{
+  grid-column:1 / -1 !important;
+}
+
+#mCC .debt-modal-form-card .form-group{
+  margin:0 0 11px !important;
+}
+
+#mCC .debt-modal-grid .form-group{
+  margin-bottom:0 !important;
+}
+
+#mCC .debt-modal-form-card label{
+  font-size:11px !important;
+  color:#475467 !important;
+  font-weight:900 !important;
+  margin-bottom:6px !important;
+}
+
+#mCC .debt-modal-form-card label span{
+  color:#98a2b3 !important;
+  font-weight:800 !important;
+}
+
+#mCC .debt-modal-form-card input,
+#mCC .debt-modal-form-card select{
+  height:46px !important;
+  border-radius:15px !important;
+  border:1px solid rgba(148,163,184,.28) !important;
+  background:#f8fafc !important;
+  color:#101828 !important;
+  font-size:15px !important;
+  font-weight:850 !important;
+  padding:0 12px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+#mCC .debt-modal-form-card input:focus{
+  border-color:rgba(99,102,241,.58) !important;
+  background:#fff !important;
+  box-shadow:0 0 0 4px rgba(99,102,241,.12) !important;
+}
+
+#mCC .debt-modal-form-card .form-group small{
+  display:block !important;
+  margin-top:5px !important;
+  color:#98a2b3 !important;
+  font-size:10.5px !important;
+  line-height:1.25 !important;
+}
+
+#mCC .loan-type-custom,
+#mCC .loan-purpose-custom{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+
+#mCC .loan-type-custom button,
+#mCC .loan-purpose-custom button{
+  min-height:40px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(148,163,184,.22) !important;
+  background:#f8fafc !important;
+  color:#475467 !important;
+  font-size:11.5px !important;
+  font-weight:850 !important;
+}
+
+#mCC .loan-type-custom button.active,
+#mCC .loan-purpose-custom button.active{
+  background:rgba(99,102,241,.10) !important;
+  color:#4f46e5 !important;
+  border-color:rgba(99,102,241,.34) !important;
+}
+
+#mCC .debt-modal-hint{
+  margin-top:12px !important;
+  padding:11px 12px !important;
+  border-radius:16px !important;
+  background:rgba(99,102,241,.08) !important;
+  color:#5b5fc7 !important;
+  border:1px solid rgba(99,102,241,.12) !important;
+  font-size:11.5px !important;
+  font-weight:750 !important;
+}
+
+#mCC .debt-modal-error{
+  margin:10px 0 0 !important;
+  border-radius:15px !important;
+  font-size:12px !important;
+}
+
+#mCC .debt-modal-savebar{
+  position:sticky !important;
+  bottom:0 !important;
+  margin:12px -4px -4px !important;
+  padding:10px 4px 4px !important;
+  background:linear-gradient(180deg,rgba(248,247,255,0),rgba(248,247,255,.96) 38%,rgba(248,247,255,1)) !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+#mCC .debt-modal-savebar .btn,
+#mCC #btnCC{
+  min-height:50px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,#6c4dff,#7c5cff) !important;
+  box-shadow:0 18px 34px rgba(99,91,255,.30) !important;
+  font-weight:950 !important;
+  letter-spacing:-.01em !important;
+}
+
+@media (min-width:680px){
+  #mCC.debt-card-overlay{
+    align-items:center !important;
+  }
+
+  #mCC .debt-card-modal{
+    border-radius:30px !important;
+  }
+}
+
+@media (max-width:390px){
+  #mCC .debt-card-modal{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #mCC .debt-modal-grid,
+  #mCC .loan-type-custom,
+  #mCC .loan-purpose-custom{
+    grid-template-columns:1fr !important;
+  }
+
+  #mCC .debt-edit-preview{
+    grid-template-columns:1fr !important;
+  }
+
+  #mCC .debt-edit-preview-amount{
+    text-align:left !important;
+  }
+}
+
+body.theme-dark #mCC.debt-card-overlay,
+body.dark #mCC.debt-card-overlay,
+html[data-theme="dark"] #mCC.debt-card-overlay{
+  background:rgba(2,6,23,.70) !important;
+}
+
+body.theme-dark #mCC .debt-card-modal,
+body.dark #mCC .debt-card-modal,
+html[data-theme="dark"] #mCC .debt-card-modal{
+  background:radial-gradient(circle at 84% 4%,rgba(124,92,255,.18),transparent 34%),linear-gradient(180deg,#0f172a 0%,#111827 100%) !important;
+  border-color:rgba(148,163,184,.16) !important;
+  color:#f8fafc !important;
+}
+
+body.theme-dark #mCC .debt-modal-heading h2,
+body.dark #mCC .debt-modal-heading h2,
+html[data-theme="dark"] #mCC .debt-modal-heading h2{
+  color:#fff !important;
+}
+
+body.theme-dark #mCC .debt-modal-heading p,
+body.dark #mCC .debt-modal-heading p,
+html[data-theme="dark"] #mCC .debt-modal-heading p{
+  color:#b6c0d2 !important;
+}
+
+body.theme-dark #mCC .debt-modal-hero,
+body.dark #mCC .debt-modal-hero,
+html[data-theme="dark"] #mCC .debt-modal-hero,
+body.theme-dark #mCC .debt-modal-form-card,
+body.dark #mCC .debt-modal-form-card,
+html[data-theme="dark"] #mCC .debt-modal-form-card{
+  background:linear-gradient(180deg,rgba(22,31,56,.94),rgba(15,23,42,.94)) !important;
+  border-color:rgba(148,163,184,.16) !important;
+}
+
+body.theme-dark #mCC .debt-modal-form-card input,
+body.dark #mCC .debt-modal-form-card input,
+html[data-theme="dark"] #mCC .debt-modal-form-card input{
+  background:rgba(15,23,42,.82) !important;
+  color:#fff !important;
+  border-color:rgba(148,163,184,.22) !important;
+}
+
+body.theme-dark #mCC .debt-modal-savebar,
+body.dark #mCC .debt-modal-savebar,
+html[data-theme="dark"] #mCC .debt-modal-savebar{
+  background:linear-gradient(180deg,rgba(15,23,42,0),rgba(15,23,42,.94) 38%,rgba(15,23,42,1)) !important;
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.42 — Wallet edit sheet real auto-height fix
+   Purpose:
+   - capvo-mobile.css loads after components and was re-adding
+     generic sheet bottom padding to .add-center-v4.
+   - This override is scoped only to the wallet/account sheet.
+   ============================================================ */
+#capvoWalletSheetOverlay.add-center-overlay,
+#capvoWalletSheetOverlay.add-center-overlay.active{
+  align-items:flex-end !important;
+  padding:0 !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:calc(100dvh - 12px - env(safe-area-inset-top)) !important;
+  padding:0 !important;
+  padding-bottom:0 !important;
+  scroll-padding-bottom:0 !important;
+  margin-bottom:0 !important;
+  overflow:hidden !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-body{
+  flex:0 1 auto !important;
+  min-height:0 !important;
+  padding-bottom:8px !important;
+  scroll-padding-bottom:10px !important;
+  max-height:calc(100dvh - 230px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  overflow-y:auto !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-sticky-actions{
+  flex:0 0 auto !important;
+  margin:0 !important;
+  padding-top:10px !important;
+  padding-bottom:max(10px, env(safe-area-inset-bottom)) !important;
+  border-bottom-left-radius:inherit !important;
+  border-bottom-right-radius:inherit !important;
+}
+
+#capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-sticky-actions > *:last-child{
+  margin-bottom:0 !important;
+}
+
+@media (max-width:768px){
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+    max-height:calc(100dvh - 8px - env(safe-area-inset-top)) !important;
+  }
+
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-body{
+    max-height:calc(100dvh - 224px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.43 — Wallets page scroll + mobile spacing fix
+   The accounts page must scroll under the floating bottom nav.
+   ============================================================ */
+@media (max-width:768px){
+  #vWallets.view,
+  #vWallets.view.active{
+    height:auto !important;
+    min-height:100dvh !important;
+    max-height:none !important;
+    overflow:visible !important;
+    overflow-y:visible !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+    padding-bottom:calc(150px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vWallets .wallets-page-v2{
+    width:100% !important;
+    max-width:100% !important;
+    gap:14px !important;
+    padding-bottom:calc(155px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #vWallets .wallets-hero-v2{
+    min-height:172px !important;
+    padding:23px 22px !important;
+    border-radius:30px !important;
+  }
+
+  #vWallets .wallets-hero-v2 h2{
+    font-size:22px !important;
+  }
+
+  #vWallets .wallets-hero-v2::after{
+    width:104px !important;
+    height:104px !important;
+    right:22px !important;
+    top:50px !important;
+    font-size:46px !important;
+  }
+
+  #vWallets .wallets-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  #vWallets .wallets-summary-grid .income-summary-card{
+    min-height:112px !important;
+    padding:15px 12px !important;
+  }
+
+  #vWallets .wallet-row.wallets-row-v2{
+    grid-template-columns:42px minmax(0,1fr) auto !important;
+    gap:10px !important;
+    padding:10px 10px !important;
+  }
+
+  #vWallets .wallet-row-icon{
+    width:40px !important;
+    height:40px !important;
+  }
+
+  #vWallets .wallet-row-actions{
+    gap:5px !important;
+  }
+
+  #vWallets .wallet-action-btn{
+    width:28px !important;
+    height:28px !important;
+  }
+}
+
+@media (max-width:380px){
+  #vWallets.view,
+  #vWallets.view.active{
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
+
+  #vWallets .wallets-hero-v2 > div{
+    max-width:70% !important;
+  }
+
+  #vWallets .wallets-summary-grid .stat-value,
+  #vWallets .wallets-total-amount{
+    font-size:1.16rem !important;
+  }
+
+  #vWallets .wallet-row.wallets-row-v2{
+    grid-template-columns:38px minmax(0,1fr) auto !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.44 — Wallets mobile final fixes
+   ============================================================ */
+@media (max-width:768px){
+  #vWallets .wallets-hero-v2{
+    min-height:170px !important;
+    padding:22px !important;
+  }
+
+  #vWallets .wallets-hero-v2 > div{
+    max-width:66% !important;
+    padding-bottom:48px !important;
+  }
+
+  #vWallets .wallets-hero-v2 h2{
+    font-size:21px !important;
+  }
+
+  #vWallets .wallets-hero-v2 p{
+    font-size:11.8px !important;
+    max-width:190px !important;
+  }
+
+  #vWallets .wallets-hero-v2::after{
+    width:78px !important;
+    height:78px !important;
+    right:21px !important;
+    top:54px !important;
+    border-radius:24px !important;
+  }
+
+  #vWallets .wallets-hero-v2::before{
+    opacity:.34 !important;
+  }
+
+  #vWallets .wallets-hero-v2 .primary-add{
+    left:22px !important;
+    bottom:20px !important;
+    padding:10px 15px !important;
+  }
+
+  #capvoTransferSheetOverlay .capvo-transfer-sheet-v2{
+    width:calc(100% - 24px) !important;
+    max-width:430px !important;
+    border-radius:28px !important;
+    margin-bottom:max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #capvoTransferSheetOverlay .transfer-sheet-body-v2{
+    max-height:calc(100dvh - 286px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  }
+
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+    border-radius:28px !important;
+    margin-bottom:max(10px, env(safe-area-inset-bottom)) !important;
+    max-height:calc(100dvh - 18px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  }
+
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-sticky-actions{
+    border-bottom-left-radius:28px !important;
+    border-bottom-right-radius:28px !important;
+  }
+}
+
+@media (max-width:380px){
+  #vWallets .wallets-hero-v2 > div{
+    max-width:70% !important;
+  }
+
+  #vWallets .wallets-hero-v2::after{
+    width:70px !important;
+    height:70px !important;
+    right:18px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.8.6.45 — Wallets mobile final touch
+   ============================================================ */
+@media (max-width:768px){
+  #vWallets .wallets-hero-v2::after{
+    content:'💳' !important;
+    font-size:29px !important;
+  }
+
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5{
+    max-height:min(88dvh,760px) !important;
+    margin-bottom:max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-body{
+    max-height:calc(88dvh - 224px - env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width:380px){
+  #vWallets .wallets-hero-v2::after{
+    font-size:27px !important;
+  }
+}
+
+
+/* CAPVO v1.9.1.2 — Mobile hard override for wallet amount inputs */
+@media (max-width:768px){
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input,
+  #capvoWalletSheetOverlay .capvo-wallet-sheet-v5 .wsheet-amount-row .wsheet-input.wsheet-amount-input:focus{
+    min-width:0 !important;
+    width:100% !important;
+    height:48px !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    border-width:0 !important;
+    border-color:transparent !important;
+    outline:0 !important;
+    box-shadow:none !important;
+    background:transparent !important;
+    border-radius:0 !important;
+    appearance:textfield !important;
+    -webkit-appearance:none !important;
+    -moz-appearance:textfield !important;
+  }
+
+  #capvoTransferSheetOverlay .transfer-amount-row .wallet-input.transfer-amount-input,
+  #capvoTransferSheetOverlay .transfer-amount-row .wallet-input.transfer-amount-input:focus{
+    min-width:0 !important;
+    width:100% !important;
+    height:46px !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    border-width:0 !important;
+    border-color:transparent !important;
+    outline:0 !important;
+    box-shadow:none !important;
+    background:transparent !important;
+    border-radius:0 !important;
+  }
+}
+
+
+/* CAPVO v1.9.5.5 — Salary Status UI polish */
+.dashboard-cycle-summary-card{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+  align-items:stretch !important;
+  padding:14px !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(124,58,237,.08),transparent 28%),
+    linear-gradient(135deg,rgba(255,255,255,.99),rgba(248,250,252,.96)) !important;
+}
+
+.dashboard-cycle-summary-head{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+
+.dashboard-salary-badge{
+  flex-shrink:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:28px !important;
+  padding:0 11px !important;
+  border-radius:999px !important;
+  font-size:10.5px !important;
+  font-weight:950 !important;
+  letter-spacing:.045em !important;
+  text-transform:uppercase !important;
+  background:#eef2ff !important;
+  color:#5b21b6 !important;
+  border:1px solid rgba(124,58,237,.12) !important;
+}
+
+.dashboard-salary-status-card{
+  display:grid !important;
+  grid-template-columns:46px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:12px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(255,255,255,.96)) !important;
+  border:1px solid rgba(226,232,240,.92) !important;
+}
+
+.dashboard-salary-status-icon{
+  width:46px !important;
+  height:46px !important;
+  border-radius:16px !important;
+  display:grid !important;
+  place-items:center !important;
+  font-size:22px !important;
+  background:rgba(124,58,237,.10) !important;
+  color:#6d28d9 !important;
+}
+
+.dashboard-salary-status-copy{
+  min-width:0 !important;
+  display:grid !important;
+  gap:3px !important;
+}
+
+.dashboard-salary-status-copy strong{
+  font-size:15px !important;
+  line-height:1.15 !important;
+  color:#111827 !important;
+  font-weight:950 !important;
+  letter-spacing:-.025em !important;
+}
+
+.dashboard-salary-status-copy p{
+  margin:0 !important;
+  font-size:12px !important;
+  line-height:1.25 !important;
+  color:#64748b !important;
+  font-weight:750 !important;
+}
+
+.dashboard-cycle-summary-actions{
+  width:100% !important;
+  justify-content:space-between !important;
+}
+
+.dashboard-cycle-paid-btn{
+  flex:1 1 auto !important;
+  min-height:44px !important;
+  border-radius:16px !important;
+  background:linear-gradient(135deg,#6d5dfc,#7c3aed) !important;
+  box-shadow:0 16px 30px rgba(109,93,252,.22) !important;
+}
+
+.dashboard-cycle-manage-btn{
+  min-height:44px !important;
+  border-radius:16px !important;
+  padding:0 14px !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-due .dashboard-salary-badge{
+  background:linear-gradient(135deg,#6d5dfc,#7c3aed) !important;
+  color:#fff !important;
+  box-shadow:0 12px 25px rgba(109,93,252,.24) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-due .dashboard-salary-status-card{
+  border-color:rgba(124,58,237,.22) !important;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(255,255,255,.98)) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-overdue .dashboard-salary-badge{
+  background:rgba(255,237,213,.96) !important;
+  color:#ea580c !important;
+  border-color:rgba(251,146,60,.32) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-overdue .dashboard-salary-status-card{
+  border-color:rgba(251,146,60,.42) !important;
+  background:linear-gradient(135deg,rgba(255,247,237,.98),rgba(255,255,255,.98)) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-overdue .dashboard-salary-status-icon{
+  background:rgba(255,237,213,.95) !important;
+  color:#ea580c !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-recorded .dashboard-salary-badge{
+  background:rgba(220,252,231,.96) !important;
+  color:#16a34a !important;
+  border-color:rgba(34,197,94,.28) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-recorded .dashboard-salary-status-card{
+  border-color:rgba(34,197,94,.24) !important;
+  background:linear-gradient(135deg,rgba(240,253,244,.98),rgba(255,255,255,.98)) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-recorded .dashboard-salary-status-icon{
+  background:rgba(220,252,231,.95) !important;
+  color:#16a34a !important;
+}
+
+.dashboard-cycle-paid-btn.salary-recorded{
+  background:linear-gradient(135deg,#8b5cf6,#6d5dfc) !important;
+}
+
+.dashboard-cycle-summary-card.salary-state-setup .dashboard-salary-badge{
+  background:rgba(241,245,249,.95) !important;
+  color:#475569 !important;
+}
+
+@media(max-width:380px){
+  .dashboard-cycle-summary-actions{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+  .dashboard-cycle-paid-btn,
+  .dashboard-cycle-manage-btn{
+    width:100% !important;
+  }
+}
+
+
+/* CAPVO v1.9.5.6 — Salary undo safety */
+.capvo-paid-preview-total.is-warning{
+  background:linear-gradient(135deg,rgba(255,237,213,.95),rgba(255,255,255,.98)) !important;
+  border-color:rgba(251,146,60,.35) !important;
+}
+.capvo-paid-preview-note.warning{
+  background:rgba(255,247,237,.96) !important;
+  border-color:rgba(251,146,60,.35) !important;
+  color:#9a3412 !important;
+}
+.capvo-paid-preview-primary.danger{
+  background:linear-gradient(135deg,#ea580c,#f97316) !important;
+  box-shadow:0 16px 32px rgba(249,115,22,.24) !important;
+}
+.dashboard-cycle-paid-btn.salary-recorded{
+  background:#eef2ff !important;
+  color:#3730a3 !important;
+  box-shadow:none !important;
+  border:1px solid rgba(99,102,241,.18) !important;
+}
+
+
+/* CAPVO v1.9.5.7 — Dashboard salary action count */
+.dashboard-cycle-summary-card.salary-state-recorded .dashboard-cycle-summary-actions{
+  grid-template-columns:1fr !important;
+}
+.dashboard-cycle-summary-card.salary-state-recorded .dashboard-cycle-paid-btn{
+  width:100% !important;
+}
+
+
+/* CAPVO v1.9.6.0 — Scheduled fixed expenses foundation */
+.fixed-schedule-panel{
+  margin:14px 0;
+  padding:14px;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(248,250,252,.98),rgba(255,255,255,.96));
+  border:1px solid rgba(226,232,240,.92);
+  box-shadow:0 10px 24px rgba(15,23,42,.05);
+}
+.fixed-schedule-head{
+  display:grid;
+  gap:3px;
+  margin-bottom:12px;
+}
+.fixed-schedule-head strong{
+  color:#0f172a;
+  font-size:14px;
+  font-weight:950;
+}
+.fixed-schedule-head span{
+  color:#64748b;
+  font-size:12px;
+  line-height:1.3;
+  font-weight:650;
+}
+.fixed-autopay-row{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(238,242,255,.78);
+  border:1px solid rgba(199,210,254,.55);
+  color:#334155;
+}
+.fixed-autopay-row input{
+  margin-top:3px;
+}
+.fixed-autopay-row span{
+  display:grid;
+  gap:2px;
+}
+.fixed-autopay-row strong{
+  font-size:12.5px;
+  font-weight:900;
+  color:#334155;
+}
+.fixed-autopay-row small{
+  font-size:11.5px;
+  line-height:1.25;
+  color:#64748b;
+  font-weight:650;
+}
+.scheduled-fixed-row{
+  align-items:center;
+}
+.expense-right.fixed-schedule-right{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+  flex-shrink:0;
+}
+.fixed-due-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  padding:0 7px;
+  border-radius:999px;
+  margin-left:6px;
+  font-size:9.5px;
+  font-weight:950;
+  letter-spacing:.03em;
+  vertical-align:middle;
+}
+.fixed-due-pill.green{background:rgba(220,252,231,.95);color:#16a34a;}
+.fixed-due-pill.purple{background:rgba(237,233,254,.95);color:#6d28d9;}
+.fixed-due-pill.orange{background:rgba(255,237,213,.95);color:#ea580c;}
+.fixed-due-pill.slate{background:rgba(241,245,249,.95);color:#475569;}
+.fixed-pay-btn{
+  border:0;
+  border-radius:999px;
+  min-height:26px;
+  padding:0 10px;
+  font-size:10.5px;
+  font-weight:950;
+  color:#fff;
+  background:linear-gradient(135deg,#6d5dfc,#7c3aed);
+  box-shadow:0 10px 22px rgba(109,93,252,.20);
+}
+.fixed-pay-btn:active{
+  transform:translateY(1px);
+}
+@media(max-width:380px){
+  .expense-item.scheduled-fixed-row{
+    grid-template-columns:auto minmax(0,1fr);
+  }
+  .expense-right.fixed-schedule-right{
+    grid-column:2;
+    align-items:flex-start;
+    margin-top:4px;
+  }
+}
+
+
+/* CAPVO v1.9.6.1 — Fixed payment undo + no double count */
+.fixed-pay-btn.undo{
+  background:#eef2ff !important;
+  color:#3730a3 !important;
+  border:1px solid rgba(99,102,241,.18) !important;
+  box-shadow:none !important;
+}
+
+
+/* CAPVO v1.9.6.3 — Dashboard pending fixed payments */
+.dashboard-fixed-payments-card{
+  margin:12px 0 14px;
+  padding:14px;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(249,115,22,.08),transparent 28%),
+    linear-gradient(135deg,rgba(255,255,255,.99),rgba(248,250,252,.96));
+  border:1px solid rgba(226,232,240,.92);
+  box-shadow:0 16px 34px rgba(15,23,42,.07);
+}
+.dashboard-fixed-payments-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.dashboard-fixed-payments-head span{
+  display:block;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#64748b;
+}
+.dashboard-fixed-payments-head strong{
+  display:block;
+  margin-top:2px;
+  font-size:17px;
+  line-height:1.1;
+  letter-spacing:-.035em;
+  color:#0f172a;
+  font-weight:950;
+}
+.dashboard-fixed-payments-head p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:12px;
+  font-weight:750;
+}
+.dashboard-fixed-payments-head button{
+  border:0;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  background:#eef2ff;
+  color:#4f46e5;
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.dashboard-fixed-payments-list{
+  display:grid;
+  gap:9px;
+}
+.dashboard-fixed-payment-row{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid rgba(226,232,240,.88);
+  background:rgba(255,255,255,.82);
+}
+.dashboard-fixed-payment-row.overdue{
+  border-color:rgba(251,146,60,.38);
+  background:linear-gradient(135deg,rgba(255,247,237,.98),rgba(255,255,255,.96));
+}
+.dashboard-fixed-payment-row.due{
+  border-color:rgba(124,58,237,.22);
+  background:linear-gradient(135deg,rgba(237,233,254,.72),rgba(255,255,255,.96));
+}
+.dashboard-fixed-payment-icon{
+  width:42px;
+  height:42px;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  background:rgba(124,58,237,.10);
+  color:#6d28d9;
+  font-size:19px;
+}
+.dashboard-fixed-payment-row.overdue .dashboard-fixed-payment-icon{
+  background:rgba(255,237,213,.95);
+  color:#ea580c;
+}
+.dashboard-fixed-payment-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.dashboard-fixed-payment-copy strong{
+  font-size:14px;
+  color:#111827;
+  font-weight:950;
+  line-height:1.15;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.dashboard-fixed-payment-copy span{
+  color:#64748b;
+  font-size:11.5px;
+  font-weight:750;
+  line-height:1.25;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.dashboard-fixed-payment-side{
+  display:grid;
+  justify-items:end;
+  gap:6px;
+}
+.dashboard-fixed-payment-side strong{
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.dashboard-fixed-payment-side button{
+  border:0;
+  min-height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#6d5dfc,#7c3aed);
+  color:#fff;
+  font-size:10.5px;
+  font-weight:950;
+  box-shadow:0 10px 20px rgba(109,93,252,.18);
+}
+@media(max-width:370px){
+  .dashboard-fixed-payment-row{
+    grid-template-columns:38px minmax(0,1fr);
+  }
+  .dashboard-fixed-payment-side{
+    grid-column:2;
+    grid-template-columns:auto auto;
+    justify-content:space-between;
+    align-items:center;
+    justify-items:start;
+  }
+}
+
+
+/* CAPVO v1.9.6.5 — Action Center Quick Add style + left bell */
+.modern-hero-card{
+  position:relative;
+}
+
+.capvo-action-center-btn{
+  position:absolute !important;
+  top:18px !important;
+  left:auto !important;
+  right:18px !important;
+  z-index:7 !important;
+  width:34px !important;
+  height:34px !important;
+  border:1px solid rgba(255,255,255,.62) !important;
+  border-radius:17px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:rgba(255,255,255,.92) !important;
+  color:#5b4fe9 !important;
+  box-shadow:0 14px 30px rgba(37,33,88,.18) !important;
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+}
+
+.capvo-action-center-btn .capvo-action-center-icon{
+  font-size:18px !important;
+  line-height:1 !important;
+}
+
+.capvo-action-center-btn.has-alerts{
+  background:#fff !important;
+  color:#5b4fe9 !important;
+  border-color:rgba(255,255,255,.82) !important;
+}
+
+.capvo-action-center-badge{
+  position:absolute !important;
+  top:-6px !important;
+  right:-6px !important;
+  min-width:18px !important;
+  height:18px !important;
+  padding:0 5px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#ef4444 !important;
+  color:#fff !important;
+  border:2px solid rgba(255,255,255,.96) !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  line-height:1 !important;
+  box-shadow:0 8px 18px rgba(239,68,68,.28) !important;
+}
+
+.capvo-action-center-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:12000 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  padding:0 !important;
+  background:rgba(15,23,42,.42) !important;
+  backdrop-filter:blur(8px) !important;
+  -webkit-backdrop-filter:blur(8px) !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:opacity .24s ease !important;
+}
+
+.capvo-action-center-overlay.active{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.capvo-action-center-sheet{
+  width:100% !important;
+  max-width:430px !important;
+  max-height:min(86vh,760px) !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  margin:0 10px calc(10px + env(safe-area-inset-bottom)) !important;
+  padding:10px 16px 18px !important;
+  border-radius:30px !important;
+  border:1px solid rgba(255,255,255,.82) !important;
+  background:rgba(255,255,255,.96) !important;
+  box-shadow:0 28px 80px rgba(15,23,42,.30) !important;
+  transform:translateY(105%) scale(.98) !important;
+  transition:transform .28s cubic-bezier(.2,.85,.2,1) !important;
+}
+
+.capvo-action-center-overlay.active .capvo-action-center-sheet{
+  transform:translateY(0) scale(1) !important;
+}
+
+.capvo-action-center-handle{
+  width:42px !important;
+  height:5px !important;
+  border-radius:999px !important;
+  background:#d8deea !important;
+  margin:0 auto 16px !important;
+}
+
+.capvo-action-center-head{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  margin-bottom:14px !important;
+}
+
+.capvo-action-center-head span{
+  display:block !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+  color:#635bff !important;
+  margin-bottom:7px !important;
+}
+
+.capvo-action-center-head h3{
+  margin:0 !important;
+  color:#111827 !important;
+  font-size:25px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:-.05em !important;
+}
+
+.capvo-action-center-head p{
+  margin:8px 0 0 !important;
+  color:#738096 !important;
+  font-size:13px !important;
+  line-height:1.35 !important;
+  font-weight:650 !important;
+}
+
+.capvo-action-center-close{
+  flex:0 0 42px !important;
+  width:42px !important;
+  height:42px !important;
+  border:0 !important;
+  border-radius:16px !important;
+  background:#f2f5fa !important;
+  color:#738096 !important;
+  font-size:24px !important;
+  font-weight:800 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.capvo-action-center-list{
+  display:grid !important;
+  gap:14px !important;
+}
+
+.capvo-action-center-section{
+  display:grid !important;
+  gap:9px !important;
+}
+
+.capvo-action-center-section h4{
+  margin:0 2px 2px !important;
+  color:#111827 !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  letter-spacing:-.01em !important;
+}
+
+.capvo-action-item{
+  display:grid !important;
+  grid-template-columns:46px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:11px !important;
+  padding:12px !important;
+  border-radius:20px !important;
+  background:#fff !important;
+  border:1px solid rgba(130,140,190,.12) !important;
+  box-shadow:0 10px 28px rgba(15,23,42,.06) !important;
+}
+
+.capvo-action-item.overdue{
+  border-color:rgba(251,146,60,.28) !important;
+  background:linear-gradient(135deg,rgba(255,247,237,.98),#fff) !important;
+}
+
+.capvo-action-item.due{
+  border-color:rgba(99,91,255,.20) !important;
+  background:linear-gradient(135deg,rgba(245,243,255,.96),#fff) !important;
+}
+
+.capvo-action-item-icon{
+  width:46px !important;
+  height:46px !important;
+  border-radius:17px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:rgba(255,237,213,.92) !important;
+  font-size:20px !important;
+}
+
+.capvo-action-item.due .capvo-action-item-icon{
+  background:rgba(99,91,255,.10) !important;
+}
+
+.capvo-action-item-copy{
+  min-width:0 !important;
+  display:grid !important;
+  gap:4px !important;
+}
+
+.capvo-action-item-copy strong{
+  color:#172033 !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+  line-height:1.12 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.capvo-action-item-copy span{
+  color:#66738c !important;
+  font-size:11.5px !important;
+  font-weight:750 !important;
+  line-height:1.25 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.capvo-action-item-side{
+  display:grid !important;
+  justify-items:end !important;
+  gap:7px !important;
+}
+
+.capvo-action-item-side strong{
+  color:#111827 !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+}
+
+.capvo-action-item-side button{
+  border:0 !important;
+  min-height:32px !important;
+  padding:0 12px !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#4f46e5,#6d5dfc) !important;
+  color:#fff !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  box-shadow:0 12px 26px rgba(79,70,229,.26) !important;
+}
+
+.capvo-action-center-empty{
+  min-height:170px !important;
+  display:grid !important;
+  place-items:center !important;
+  align-content:center !important;
+  text-align:center !important;
+  gap:7px !important;
+  padding:22px !important;
+  border-radius:22px !important;
+  background:#f8fafc !important;
+  border:1px dashed rgba(148,163,184,.45) !important;
+}
+
+.capvo-action-center-empty div{
+  font-size:30px !important;
+}
+
+.capvo-action-center-empty strong{
+  color:#0f172a !important;
+  font-size:18px !important;
+  font-weight:950 !important;
+}
+
+.capvo-action-center-empty p{
+  margin:0 !important;
+  color:#64748b !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+#confirmMessage{
+  white-space:pre-line !important;
+}
+
+@media(max-width:370px){
+  .capvo-action-center-btn{
+    top:16px !important;
+    left:auto !important;
+    right:16px !important;
+    width:32px !important;
+    height:32px !important;
+    border-radius:15px !important;
+  }
+
+    .capvo-action-item{
+    grid-template-columns:42px minmax(0,1fr) !important;
+  }
+
+  .capvo-action-item-side{
+    grid-column:2 !important;
+    grid-template-columns:auto auto !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    justify-items:start !important;
+  }
+}
+
+
+/* v1.9.6.7 — Hero compact + safe left notification */
+#vDash .modern-hero-card .modern-hero-header{
+  padding-left:0 !important;
+}
+
+#vDash .capvo-action-center-btn{
+  top:18px !important;
+  left:auto !important;
+  right:18px !important;
+  width:34px !important;
+  height:34px !important;
+  border-radius:13px !important;
+}
+
+#vDash .capvo-action-center-btn .capvo-action-center-icon{
+  font-size:15px !important;
+}
+
+#vDash .capvo-action-center-badge{
+  min-width:18px !important;
+  height:18px !important;
+  top:-6px !important;
+  right:-6px !important;
+  font-size:9.5px !important;
+  border-width:2px !important;
+}
+
+/* Small height reduction without moving the internal dashboard layout. */
+#vDash .modern-hero-card{
+  min-height:500px !important;
+  padding-top:26px !important;
+  padding-bottom:22px !important;
+}
+
+#vDash .hero-balance{
+  font-size:clamp(3.05rem, 14.4vw, 4.55rem) !important;
+}
+
+#vDash .modern-hero-caption{
+  margin-top:11px !important;
+}
+
+#vDash .modern-hero-action{
+  margin-top:18px !important;
+}
+
+#vDash .modern-hero-metrics{
+  margin-top:22px !important;
+}
+
+#vDash .modern-metric-pill{
+  min-height:84px !important;
+  padding:15px 17px !important;
+}
+
+#vDash .allowance-panel{
+  min-height:82px !important;
+}
+
+@media(max-width:370px){
+  #vDash .modern-hero-card .modern-hero-header{
+    padding-left:0 !important;
+  }
+
+  #vDash .capvo-action-center-btn{
+    top:16px !important;
+    left:auto !important;
+    right:16px !important;
+    width:32px !important;
+    height:32px !important;
+    border-radius:12px !important;
+  }
+
+  #vDash .capvo-action-center-btn .capvo-action-center-icon{
+    font-size:14px !important;
+  }
+
+  #vDash .modern-hero-card{
+    min-height:488px !important;
+    padding-top:25px !important;
+    padding-bottom:21px !important;
+  }
+
+  #vDash .modern-metric-pill{
+    min-height:80px !important;
+  }
+}
+
+
+
+/* v1.9.6.8 — Final notification position: top-right inside hero */
+#vDash .modern-hero-card > .capvo-action-center-btn{
+  top:18px !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:auto !important;
+  width:34px !important;
+  height:34px !important;
+  border-radius:14px !important;
+  transform:none !important;
+}
+
+#vDash .modern-hero-card > .capvo-action-center-btn .capvo-action-center-icon{
+  font-size:15px !important;
+}
+
+@media(max-width:370px){
+  #vDash .modern-hero-card > .capvo-action-center-btn{
+    top:16px !important;
+    right:16px !important;
+    left:auto !important;
+    width:32px !important;
+    height:32px !important;
+    border-radius:13px !important;
+  }
+}
+
+
+
+/* v1.9.6.9 — Hard lock notification top-right inside hero */
+#vDash .modern-hero-card #capvoActionCenterBtn.capvo-action-center-btn,
+#capvoActionCenterBtn.capvo-action-center-btn{
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  left:auto !important;
+  bottom:auto !important;
+  width:42px !important;
+  height:42px !important;
+  border-radius:16px !important;
+  z-index:20 !important;
+}
+
+#vDash .modern-hero-card #capvoActionCenterBtn.capvo-action-center-btn .capvo-action-center-icon,
+#capvoActionCenterBtn.capvo-action-center-btn .capvo-action-center-icon{
+  font-size:18px !important;
+}
+
+#vDash .modern-hero-card #capvoActionCenterBtn.capvo-action-center-btn .capvo-action-center-badge,
+#capvoActionCenterBtn.capvo-action-center-btn .capvo-action-center-badge{
+  min-width:20px !important;
+  height:20px !important;
+  top:-7px !important;
+  right:-7px !important;
+  font-size:10px !important;
+}
+
+@media(max-width:370px){
+  #vDash .modern-hero-card #capvoActionCenterBtn.capvo-action-center-btn,
+  #capvoActionCenterBtn.capvo-action-center-btn{
+    top:16px !important;
+    right:16px !important;
+    left:auto !important;
+    width:40px !important;
+    height:40px !important;
+    border-radius:15px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.9.7.1 — Fixed Obligations Calendar Redesign
+   Scope: #vRecurring only. Render/UI patch, no finance logic changes.
+   ============================================================ */
+#vRecurring .fixed-calendar-dashboard{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 14px;
+}
+
+#vRecurring .fixed-summary-chip{
+  min-width:0;
+  border-radius:22px;
+  padding:12px 10px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(119,132,170,.10);
+  box-shadow:0 12px 28px rgba(30,40,90,.055);
+}
+
+#vRecurring .fixed-summary-chip span{
+  display:block;
+  color:#7a8499;
+  font-size:11px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.02em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#vRecurring .fixed-summary-chip strong{
+  display:block;
+  margin-top:8px;
+  color:#111827;
+  font-size:18px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.06em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#vRecurring .fixed-summary-chip.action strong{color:#ef4444;}
+#vRecurring .fixed-summary-chip.today strong{color:#6547f6;}
+#vRecurring .fixed-summary-chip.upcoming strong{color:#0f766e;}
+
+#vRecurring .fixed-calendar-card,
+#vRecurring .fixed-selected-day-card,
+#vRecurring .fixed-obligation-section{
+  border-radius:28px;
+  background:rgba(255,255,255,.95);
+  border:1px solid rgba(119,132,170,.10);
+  box-shadow:0 16px 38px rgba(30,40,90,.065);
+  overflow:hidden;
+}
+
+#vRecurring .fixed-calendar-card{
+  padding:16px;
+  margin:0 0 14px;
+}
+
+#vRecurring .fixed-calendar-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+#vRecurring .fixed-calendar-nav{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:16px;
+  background:rgba(101,71,246,.10);
+  color:#6547f6;
+  font-size:28px;
+  line-height:1;
+  font-weight:950;
+}
+
+#vRecurring .fixed-calendar-title-wrap{
+  min-width:0;
+  text-align:center;
+}
+
+#vRecurring .fixed-calendar-title-wrap strong{
+  display:block;
+  color:#111827;
+  font-size:20px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.06em;
+}
+
+#vRecurring .fixed-calendar-title-wrap button{
+  margin-top:8px;
+  border:0;
+  border-radius:999px;
+  padding:7px 12px;
+  background:rgba(101,71,246,.09);
+  color:#6547f6;
+  font-size:12px;
+  font-weight:950;
+}
+
+#vRecurring .fixed-calendar-weekdays,
+#vRecurring .fixed-calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:7px;
+}
+
+#vRecurring .fixed-calendar-weekdays{
+  margin-bottom:8px;
+}
+
+#vRecurring .fixed-calendar-weekdays span{
+  color:#97a1b5;
+  font-size:11px;
+  font-weight:950;
+  text-align:center;
+}
+
+#vRecurring .fixed-calendar-day{
+  appearance:none;
+  -webkit-appearance:none;
+  position:relative;
+  min-height:66px;
+  padding:8px 5px 7px;
+  border:1px solid rgba(119,132,170,.10);
+  border-radius:18px;
+  background:rgba(248,250,255,.86);
+  color:#1f2937;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:5px;
+  text-align:center;
+  overflow:hidden;
+}
+
+#vRecurring .fixed-calendar-day.is-empty{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  pointer-events:none;
+}
+
+#vRecurring .fixed-calendar-day.has-items{
+  background:rgba(255,255,255,.98);
+  box-shadow:0 10px 22px rgba(30,40,90,.055);
+}
+
+#vRecurring .fixed-calendar-day.is-today{
+  border-color:rgba(101,71,246,.34);
+  box-shadow:0 0 0 3px rgba(101,71,246,.08);
+}
+
+#vRecurring .fixed-calendar-day.is-selected{
+  background:linear-gradient(135deg,#6547f6,#7c5cff);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 16px 30px rgba(101,71,246,.24);
+}
+
+#vRecurring .fixed-calendar-date{
+  font-size:14px;
+  line-height:1;
+  font-weight:950;
+}
+
+#vRecurring .fixed-calendar-dots{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-height:5px;
+}
+
+#vRecurring .fixed-calendar-dots i{
+  width:5px;
+  height:5px;
+  border-radius:999px;
+  background:#6547f6;
+}
+
+#vRecurring .fixed-calendar-dots i.tone-overdue{background:#ef4444;}
+#vRecurring .fixed-calendar-dots i.tone-due{background:#6547f6;}
+#vRecurring .fixed-calendar-dots i.tone-upcoming{background:#0f766e;}
+#vRecurring .fixed-calendar-dots i.tone-paid{background:#22c55e;}
+
+#vRecurring .fixed-calendar-day.is-selected .fixed-calendar-dots i{
+  background:rgba(255,255,255,.92);
+}
+
+#vRecurring .fixed-calendar-day-meta{
+  max-width:100%;
+  color:#6b7280;
+  font-size:10px;
+  line-height:1.05;
+  font-weight:950;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#vRecurring .fixed-calendar-day.is-selected .fixed-calendar-day-meta{
+  color:rgba(255,255,255,.86);
+}
+
+#vRecurring .fixed-selected-day-card,
+#vRecurring .fixed-obligation-section{
+  margin:0 0 14px;
+}
+
+#vRecurring .fixed-selected-day-head,
+#vRecurring .fixed-obligation-section-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 16px 12px;
+}
+
+#vRecurring .fixed-selected-day-head h3,
+#vRecurring .fixed-obligation-section-head h3{
+  margin:0;
+  color:#111827;
+  font-size:18px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.055em;
+}
+
+#vRecurring .fixed-selected-day-head p,
+#vRecurring .fixed-obligation-section-head p{
+  margin:6px 0 0;
+  color:#7a8499;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:800;
+}
+
+#vRecurring .fixed-selected-day-head > span,
+#vRecurring .fixed-obligation-section-head > span{
+  flex:0 0 auto;
+  padding:8px 10px;
+  border-radius:999px;
+  background:rgba(101,71,246,.10);
+  color:#6547f6;
+  font-size:12px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+#vRecurring .fixed-selected-day-list,
+#vRecurring .fixed-obligation-section-list{
+  padding:0 12px 14px;
+}
+
+#vRecurring .fixed-obligation-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px;
+  margin:0 0 10px;
+  border-radius:24px;
+  background:rgba(248,250,255,.95);
+  border:1px solid rgba(119,132,170,.09);
+}
+
+#vRecurring .fixed-obligation-card:last-child{
+  margin-bottom:0;
+}
+
+#vRecurring .fixed-obligation-card.state-overdue{
+  background:linear-gradient(135deg,rgba(254,242,242,.96),rgba(255,255,255,.98));
+  border-color:rgba(239,68,68,.16);
+}
+
+#vRecurring .fixed-obligation-card.state-due{
+  background:linear-gradient(135deg,rgba(245,243,255,.98),rgba(255,255,255,.98));
+  border-color:rgba(101,71,246,.15);
+}
+
+#vRecurring .fixed-obligation-card.state-paid{
+  background:linear-gradient(135deg,rgba(240,253,244,.96),rgba(255,255,255,.98));
+  border-color:rgba(34,197,94,.14);
+}
+
+#vRecurring .fixed-obligation-main{
+  min-width:0;
+  flex:1 1 auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+}
+
+#vRecurring .fixed-obligation-icon{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  box-shadow:0 10px 20px rgba(30,40,90,.06);
+  font-size:19px;
+}
+
+#vRecurring .fixed-obligation-copy{
+  min-width:0;
+  display:block;
+}
+
+#vRecurring .fixed-obligation-copy strong{
+  display:block;
+  color:#111827;
+  font-size:14px;
+  line-height:1.1;
+  font-weight:950;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#vRecurring .fixed-obligation-copy small,
+#vRecurring .fixed-obligation-copy em{
+  display:block;
+  margin-top:4px;
+  color:#7a8499;
+  font-size:11px;
+  line-height:1.2;
+  font-style:normal;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#vRecurring .fixed-obligation-copy em{
+  color:#9aa3b5;
+  font-size:10px;
+}
+
+#vRecurring .fixed-obligation-side{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:7px;
+}
+
+#vRecurring .fixed-obligation-side > strong{
+  color:#111827;
+  font-size:15px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.04em;
+}
+
+#vRecurring .fixed-obligation-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:6px;
+  max-width:150px;
+}
+
+#vRecurring .fixed-pay-btn,
+#vRecurring .fixed-edit-btn{
+  min-height:30px;
+  padding:0 10px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#6547f6,#7c5cff);
+  color:#fff;
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+#vRecurring .fixed-pay-btn.undo{
+  background:rgba(239,68,68,.10);
+  color:#dc2626;
+}
+
+#vRecurring .fixed-edit-btn{
+  background:rgba(17,24,39,.07);
+  color:#4b5563;
+}
+
+#vRecurring .fixed-section-empty{
+  border-radius:20px;
+  padding:14px;
+  background:rgba(248,250,255,.90);
+  color:#8a95aa;
+  font-size:13px;
+  line-height:1.35;
+  font-weight:850;
+  text-align:center;
+}
+
+
+
+/* v1.9.7.1 — Keep the full obligations list compact on users with many recurring items. */
+#vRecurring .fixed-obligation-section-actions{
+  padding:0 12px 16px;
+  display:flex;
+  justify-content:center;
+}
+
+#vRecurring .fixed-all-toggle-btn{
+  min-height:44px;
+  min-width:168px;
+  border:0;
+  border-radius:999px;
+  padding:0 18px;
+  background:linear-gradient(135deg,#6547f6,#7c5cff);
+  color:#fff;
+  font-size:13px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.02em;
+  box-shadow:0 14px 28px rgba(101,71,246,.22);
+}
+
+#vRecurring .fixed-all-toggle-btn:active{
+  transform:translateY(1px);
+}
+
+@media (max-width:768px){
+  #vRecurring #lFixed{
+    padding:8px 12px 16px !important;
+  }
+
+  #vRecurring .fixed-calendar-dashboard{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+
+  #vRecurring .fixed-summary-chip{
+    border-radius:20px;
+    padding:12px;
+  }
+
+  #vRecurring .fixed-calendar-card{
+    border-radius:28px;
+    padding:14px;
+  }
+
+  #vRecurring .fixed-calendar-grid{
+    gap:6px;
+  }
+
+  #vRecurring .fixed-calendar-day{
+    min-height:58px;
+    border-radius:15px;
+    padding:7px 4px 6px;
+  }
+
+  #vRecurring .fixed-calendar-day-meta{
+    font-size:9px;
+  }
+
+  #vRecurring .fixed-obligation-card{
+    align-items:flex-start;
+    border-radius:22px;
+    padding:11px;
+  }
+
+  #vRecurring .fixed-obligation-side{
+    max-width:42%;
+  }
+
+  #vRecurring .fixed-obligation-actions{
+    max-width:120px;
+  }
+}
+
+@media (max-width:380px){
+  #vRecurring .fixed-calendar-day{
+    min-height:54px;
+    border-radius:13px;
+  }
+
+  #vRecurring .fixed-calendar-date{
+    font-size:13px;
+  }
+
+  #vRecurring .fixed-obligation-card{
+    gap:8px;
+  }
+
+  #vRecurring .fixed-obligation-icon{
+    width:38px;
+    height:38px;
+    border-radius:14px;
+  }
+
+  #vRecurring .fixed-obligation-actions{
+    max-width:104px;
+  }
+
+  #vRecurring .fixed-pay-btn,
+  #vRecurring .fixed-edit-btn{
+    min-height:28px;
+    padding:0 8px;
+    font-size:10px;
+  }
+}
+
+
+/* CAPVO v1.9.7.5 — Fixed payment wallet balance guard */
+body.fixed-payment-preview-open{
+  overflow:hidden;
+}
+
+.fixed-payment-preview-overlay{
+  position:fixed;
+  inset:0;
+  z-index:99992;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:18px 14px calc(18px + env(safe-area-inset-bottom));
+  background:rgba(15,23,42,.42);
+  backdrop-filter:blur(14px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease;
+}
+
+.fixed-payment-preview-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.fixed-payment-preview-sheet{
+  width:min(520px,100%);
+  max-height:min(88vh,720px);
+  overflow:auto;
+  border-radius:30px;
+  background:linear-gradient(180deg,#ffffff 0%,#f8f7ff 100%);
+  box-shadow:0 28px 90px rgba(15,23,42,.28);
+  padding:12px 16px 16px;
+  transform:translateY(28px) scale(.98);
+  transition:transform .25s cubic-bezier(.22,1,.36,1);
+}
+
+.fixed-payment-preview-overlay.active .fixed-payment-preview-sheet{
+  transform:translateY(0) scale(1);
+}
+
+.fixed-payment-preview-handle{
+  width:46px;
+  height:5px;
+  border-radius:999px;
+  background:#d7d2ef;
+  margin:0 auto 13px;
+}
+
+.fixed-payment-preview-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:2px 2px 14px;
+}
+
+.fixed-payment-preview-head span{
+  display:block;
+  margin-bottom:5px;
+  color:#7c6fb4;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.fixed-payment-preview-head h3{
+  margin:0;
+  color:#17132f;
+  font-size:22px;
+  line-height:1.1;
+  font-weight:950;
+}
+
+.fixed-payment-preview-head p{
+  margin:6px 0 0;
+  color:#776f92;
+  font-size:13px;
+  line-height:1.35;
+  font-weight:700;
+}
+
+.fixed-payment-preview-close{
+  width:38px;
+  height:38px;
+  flex:0 0 auto;
+  border:0;
+  border-radius:15px;
+  background:#f0edff;
+  color:#4a3f7a;
+  font-size:23px;
+  font-weight:900;
+}
+
+.fixed-payment-preview-body{
+  display:grid;
+  gap:12px;
+}
+
+.fixed-payment-preview-hero{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:13px;
+  border:1px solid rgba(101,71,246,.13);
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 14px 34px rgba(58,40,140,.08);
+}
+
+.fixed-payment-preview-icon{
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  background:#f0edff;
+  font-size:22px;
+}
+
+.fixed-payment-preview-hero strong{
+  display:block;
+  color:#17132f;
+  font-size:16px;
+  font-weight:950;
+  line-height:1.15;
+}
+
+.fixed-payment-preview-hero small{
+  display:block;
+  margin-top:4px;
+  color:#776f92;
+  font-size:12px;
+  font-weight:750;
+}
+
+.fixed-payment-preview-hero em{
+  color:#17132f;
+  font-size:18px;
+  font-style:normal;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+.fixed-payment-preview-wallet{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:20px;
+  background:#f1efff;
+}
+
+.fixed-payment-preview-wallet span,
+.fixed-payment-preview-balance-grid span{
+  color:#776f92;
+  font-size:12px;
+  font-weight:850;
+}
+
+.fixed-payment-preview-wallet strong{
+  color:#271b66;
+  font-size:14px;
+  font-weight:950;
+  text-align:right;
+}
+
+
+.fixed-payment-preview-wallet-picker{
+  display:grid;
+  gap:8px;
+  padding:12px 14px;
+  border-radius:22px;
+  background:#f1efff;
+  border:1px solid rgba(101,71,246,.10);
+}
+
+.fixed-payment-preview-wallet-picker > span{
+  color:#776f92;
+  font-size:12px;
+  font-weight:900;
+}
+
+.fixed-payment-preview-wallet-picker small{
+  color:#7d7598;
+  font-size:11px;
+  line-height:1.3;
+  font-weight:750;
+}
+
+.fixed-payment-preview-wallet-select{
+  width:100%;
+  min-height:46px;
+  border:0;
+  border-radius:17px;
+  padding:0 40px 0 13px;
+  background:#fff;
+  color:#271b66;
+  font-size:14px;
+  font-weight:950;
+  box-shadow:0 10px 24px rgba(58,40,140,.08);
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,#6f5fc7 50%),linear-gradient(135deg,#6f5fc7 50%,transparent 50%);
+  background-position:calc(100% - 20px) 20px,calc(100% - 14px) 20px;
+  background-size:6px 6px,6px 6px;
+  background-repeat:no-repeat;
+}
+
+.fixed-payment-preview-wallet-select:focus{
+  outline:2px solid rgba(101,71,246,.22);
+  outline-offset:2px;
+}
+
+.fixed-payment-preview-balance-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+
+.fixed-payment-preview-balance-grid > div{
+  min-width:0;
+  border-radius:20px;
+  padding:12px 10px;
+  background:#fff;
+  border:1px solid rgba(101,71,246,.10);
+  box-shadow:0 10px 24px rgba(58,40,140,.06);
+}
+
+.fixed-payment-preview-balance-grid strong{
+  display:block;
+  margin-top:5px;
+  color:#17132f;
+  font-size:15px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+.fixed-payment-preview-balance-grid .is-negative strong{
+  color:#dc2626;
+}
+
+.fixed-payment-preview-alert{
+  display:grid;
+  gap:4px;
+  border-radius:20px;
+  padding:12px 14px;
+  font-size:13px;
+  line-height:1.35;
+}
+
+.fixed-payment-preview-alert strong{
+  color:#17132f;
+  font-weight:950;
+}
+
+.fixed-payment-preview-alert span{
+  color:#5f5876;
+  font-weight:700;
+}
+
+.fixed-payment-preview-alert.soft{
+  background:#f5f7ff;
+  border:1px solid rgba(101,71,246,.10);
+}
+
+.fixed-payment-preview-alert.danger{
+  background:#fff1f2;
+  border:1px solid rgba(225,29,72,.18);
+}
+
+.fixed-payment-preview-alert.danger strong,
+.fixed-payment-preview-alert.danger span{
+  color:#be123c;
+}
+
+.fixed-payment-preview-actions{
+  display:grid;
+  grid-template-columns:1fr 1.15fr;
+  gap:10px;
+  position:sticky;
+  bottom:0;
+  margin-top:14px;
+  padding-top:12px;
+  background:linear-gradient(180deg,rgba(248,247,255,0),#f8f7ff 22%,#f8f7ff 100%);
+}
+
+.fixed-payment-preview-secondary,
+.fixed-payment-preview-primary{
+  min-height:48px;
+  border:0;
+  border-radius:18px;
+  font-size:14px;
+  font-weight:950;
+}
+
+.fixed-payment-preview-secondary{
+  background:#eeeafc;
+  color:#4b3d84;
+}
+
+.fixed-payment-preview-primary{
+  background:linear-gradient(135deg,#6547f6,#8b5cf6);
+  color:#fff;
+  box-shadow:0 16px 34px rgba(101,71,246,.26);
+}
+
+.fixed-payment-preview-primary:disabled,
+.fixed-payment-preview-overlay.is-busy .fixed-payment-preview-secondary{
+  opacity:.58;
+  pointer-events:none;
+}
+
+@media (max-width:420px){
+  .fixed-payment-preview-overlay{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .fixed-payment-preview-sheet{
+    border-radius:28px;
+    padding:10px 12px 14px;
+  }
+
+  .fixed-payment-preview-head h3{
+    font-size:20px;
+  }
+
+  
+.fixed-payment-preview-wallet-picker{
+  display:grid;
+  gap:8px;
+  padding:12px 14px;
+  border-radius:22px;
+  background:#f1efff;
+  border:1px solid rgba(101,71,246,.10);
+}
+
+.fixed-payment-preview-wallet-picker > span{
+  color:#776f92;
+  font-size:12px;
+  font-weight:900;
+}
+
+.fixed-payment-preview-wallet-picker small{
+  color:#7d7598;
+  font-size:11px;
+  line-height:1.3;
+  font-weight:750;
+}
+
+.fixed-payment-preview-wallet-select{
+  width:100%;
+  min-height:46px;
+  border:0;
+  border-radius:17px;
+  padding:0 40px 0 13px;
+  background:#fff;
+  color:#271b66;
+  font-size:14px;
+  font-weight:950;
+  box-shadow:0 10px 24px rgba(58,40,140,.08);
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,#6f5fc7 50%),linear-gradient(135deg,#6f5fc7 50%,transparent 50%);
+  background-position:calc(100% - 20px) 20px,calc(100% - 14px) 20px;
+  background-size:6px 6px,6px 6px;
+  background-repeat:no-repeat;
+}
+
+.fixed-payment-preview-wallet-select:focus{
+  outline:2px solid rgba(101,71,246,.22);
+  outline-offset:2px;
+}
+
+.fixed-payment-preview-balance-grid{
+    gap:7px;
+  }
+
+  .fixed-payment-preview-balance-grid > div{
+    padding:10px 7px;
+  }
+
+  .fixed-payment-preview-balance-grid strong{
+    font-size:13px;
+  }
+}
+
+
+/* v1.9.7.5 — Fixed obligations safety/delete polish */
+#vRecurring .fixed-delete-btn{
+  border:0;
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:11px;
+  font-weight:900;
+  background:#fee2e2;
+  color:#b91c1c;
+  cursor:pointer;
+}
+
+#vRecurring .fixed-payment-history-card .fixed-history-main{
+  cursor:default;
+}
+
+#vRecurring .fixed-payment-history-card.is-deleted-schedule{
+  background:linear-gradient(135deg,#fff7ed,#ffffff);
+  border-color:#fed7aa;
+}
+
+.fixed-edit-history-notice{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin:12px 0;
+  padding:12px 13px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+}
+
+.fixed-edit-history-notice strong{
+  font-size:13px;
+  font-weight:900;
+}
+
+.fixed-edit-history-notice span{
+  font-size:12px;
+  line-height:1.35;
+  font-weight:700;
+}
+
+.fixed-edit-danger-zone{
+  margin-top:12px;
+  padding:12px;
+  border-radius:20px;
+  border:1px solid #fee2e2;
+  background:#fffafa;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.fixed-delete-action{
+  width:100%;
+  border:0;
+  border-radius:999px;
+  padding:12px 14px;
+  background:#fee2e2;
+  color:#b91c1c;
+  font-size:13px;
+  font-weight:950;
+  cursor:pointer;
+}
+
+.fixed-edit-danger-zone small{
+  color:#991b1b;
+  opacity:.78;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:700;
+}
+
+
+/* v1.9.7.6 — Fixed modal create/edit clarity */
+#mFixed .fixed-edit-history-notice[hidden],
+#mFixed .fixed-edit-danger-zone[hidden]{
+  display:none !important;
+}
+
+#mFixed.is-create .fixed-edit-history-notice,
+#mFixed.is-create .fixed-edit-danger-zone{
+  display:none !important;
+}
+
+#mFixed .fixed-field-help{
+  display:block;
+  margin:6px 2px 0;
+  color:#7b879c;
+  font-size:11px;
+  line-height:1.32;
+  font-weight:750;
+  letter-spacing:0;
+  text-transform:none;
+}
+
+#fixedEditHistoryNotice,
+#fixedEditDangerZone{
+  flex:0 0 auto;
+}
+
+/* v1.9.7.7 — Fixed modal recurring UX/date format fixes */
+#mFixed .fixed-recurring-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:start;
+}
+
+#mFixed .fixed-recurring-row.is-weekly{
+  grid-template-columns:1fr;
+}
+
+#mFixed #fixedDueDayGroup[hidden]{
+  display:none !important;
+}
+
+#mFixed #fFSchedule{
+  width:100%;
+  min-width:0;
+  padding-left:10px;
+  padding-right:24px;
+  font-size:12px;
+  line-height:1.15;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+#mFixed #fFDueDay,
+#mFixed #fFNextDueDate{
+  letter-spacing:0;
+}
+
+#mFixed #fFNextDueDate::placeholder{
+  color:#94a3b8;
+  opacity:1;
+}
+
+@media(max-width:390px){
+  #mFixed .fixed-recurring-row:not(.is-weekly){
+    grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+    gap:8px;
+  }
+  #mFixed #fFSchedule{
+    font-size:11.5px;
+    padding-left:8px;
+    padding-right:20px;
+  }
 }

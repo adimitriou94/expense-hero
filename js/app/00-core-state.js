@@ -150,6 +150,8 @@ let D = {
   income:0,
   incomeSources:[],
   fixedExpenses:[],
+  fixedExpenseArchive:[],
+  fixedExpensePayments:[],
   creditCards:[],
   months:{},
   preferences:{
@@ -159,8 +161,76 @@ let D = {
     language:'el'
   },
   budgetCycles:[],
-  budgetCycleIncomes:[]
+  budgetCycleIncomes:[],
+  // Phase 2: Wallet model
+  wallets:[],
+  walletTransfers:[],
+  expenseCategories:[]
 };
+
+// ===== WALLET HELPERS =====
+function capvoWallets(){ return Array.isArray(D.wallets)?D.wallets:[]; }
+function capvoActiveWallets(){ return capvoWallets().filter(w=>w.isActive!==false); }
+function capvoDefaultWallet(){ return (typeof capvoPrimaryBudgetWallet==='function'?capvoPrimaryBudgetWallet():null) || capvoActiveWallets().find(w=>w.isDefault) || capvoActiveWallets()[0] || null; }
+function capvoWalletById(id){ return capvoWallets().find(w=>String(w.id)===String(id))||null; }
+function capvoWalletTotalBalance(){
+  if(typeof capvoGetSpendableWalletTotal==='function'){
+    return capvoMoney(capvoGetSpendableWalletTotal());
+  }
+  return capvoMoney(capvoActiveWallets()
+    .filter(w=>w.includeInTotal!==false && !w.isSavings)
+    .reduce((s,w)=>s+(Number(w.currentBalance)||0),0));
+}
+function capvoWalletHasAny(){ return capvoActiveWallets().length>0; }
+
+function capvoPrimaryWalletCycleAmount(){
+  const w=typeof capvoPrimaryBudgetWallet==='function'?capvoPrimaryBudgetWallet():capvoDefaultWallet();
+  return capvoMoney(Number(w?.cycleIncomeAmount)||0);
+}
+
+function capvoHasWalletBudgetModel(){
+  return typeof capvoActiveWallets==='function' && capvoActiveWallets().length>0;
+}
+
+
+// Wallet type config
+const CAPVO_WALLET_TYPES = {
+  bank:     { label:'Τράπεζα',    icon:'🏦', color:'#6547f6' },
+  cash:     { label:'Μετρητά',    icon:'💵', color:'#10b981' },
+  savings:  { label:'Αποταμίευση',icon:'💰', color:'#f59e0b' },
+  prepaid:  { label:'Prepaid',    icon:'💳', color:'#3b82f6' },
+  investment:{ label:'Επένδυση', icon:'📈', color:'#8b5cf6' },
+  other:    { label:'Άλλο',       icon:'💼', color:'#94a3b8' }
+};
+
+// ===== CATEGORY HELPERS =====
+function capvoCategories(){
+  // Returns merged: DB categories (user + system) falling back to hardcoded CEMO
+  if(Array.isArray(D.expenseCategories) && D.expenseCategories.length>0){
+    return D.expenseCategories;
+  }
+  // Fallback to hardcoded while DB loads
+  return Object.keys(CEMO).map((name,i)=>({
+    id:name, name, icon:CEMO[name]||'📌',
+    color:CCLR[name]||'#888780', cssClass:CCLS[name]||'cat-other',
+    sortOrder:i, isSystem:true
+  }));
+}
+function capvoCategoryByName(name){
+  return capvoCategories().find(c=>c.name===name)||null;
+}
+function capvoCategoryIcon(name){
+  const c=capvoCategoryByName(name);
+  return c?c.icon:(CEMO[name]||'📌');
+}
+function capvoCategoryColor(name){
+  const c=capvoCategoryByName(name);
+  return c?c.color:(CCLR[name]||'#888780');
+}
+function capvoCategoryCssClass(name){
+  const c=capvoCategoryByName(name);
+  return c?c.cssClass:(CCLS[name]||'cat-other');
+}
 let curM;
 
 let currentSession=null;
@@ -582,51 +652,39 @@ function closeCycleCarryoverSheet(){
 }
 
 
-function getBudgetCycleStartDay(){
-  return capvoClampCycleDay(D?.preferences?.budgetCycleStartDay||1);
-}
-function getStandardBudgetCycle(refDate=new Date()){
-  const type=getBudgetCycleType();
-  const day=getBudgetCycleStartDay();
+// getBudgetCycleStartDay v1 (duplicate) removed — v1.8.6.20.
+// The version with try/catch and budget_cycle_start_day fallback above is canonical.
+
+function getMonthlyBudgetPeriod(refDate=new Date()){
   const today=refDate instanceof Date?new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),12):new Date();
-
-  let start;
-  let nextStart;
-
-  if(type==='last_working_day'){
-    const thisMonthStart=capvoLastWorkingDayOfMonth(today.getFullYear(),today.getMonth());
-    if(today<thisMonthStart){
-      start=capvoLastWorkingDayOfMonth(today.getFullYear(),today.getMonth()-1);
-      nextStart=thisMonthStart;
-    }else{
-      start=thisMonthStart;
-      nextStart=capvoLastWorkingDayOfMonth(today.getFullYear(),today.getMonth()+1);
-    }
-  }else{
-    start=capvoCycleDayDate(today.getFullYear(),today.getMonth(),day);
-    if(today<start){
-      start=capvoCycleDayDate(today.getFullYear(),today.getMonth()-1,day);
-    }
-    nextStart=capvoCycleDayDate(start.getFullYear(),start.getMonth()+1,day);
-  }
-
+  const start=new Date(today.getFullYear(),today.getMonth(),1,12);
+  const nextStart=new Date(today.getFullYear(),today.getMonth()+1,1,12);
   const end=new Date(nextStart);
   end.setDate(end.getDate()-1);
   return {
-    id:'standard_'+capvoDateKey(start),
+    id:'month_'+capvoDateKey(start),
     start,
     end,
     nextStart,
     startKey:capvoDateKey(start),
     endKey:capvoDateKey(end),
     nextStartKey:capvoDateKey(nextStart),
-    startDay:type==='last_working_day'?start.getDate():day,
-    source:'normal',
-    note:type==='last_working_day'?'last_working_day':'',
-    isGenerated:false,
-    label:formatBudgetCycleLabel(start,end)
+    startDay:1,
+    source:'month',
+    note:'calendar_month',
+    isGenerated:true,
+    label:formatBudgetCycleLabel(start,end),
+    periodType:'month'
   };
 }
+
+
+function getStandardBudgetCycle(refDate=new Date()){
+  // v1.9.5.0: reporting period is calendar-month based.
+  // Payday remains an income/deposit event, not the boundary of reports.
+  return getMonthlyBudgetPeriod(refDate);
+}
+
 function getActiveStoredBudgetCycle(refDate=new Date()){
   const today=refDate instanceof Date?new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),12):new Date();
   const cycles=(D?.budgetCycles||[])
@@ -652,7 +710,9 @@ function getActiveStoredBudgetCycle(refDate=new Date()){
   return cycles[0]||null;
 }
 function getCurrentBudgetCycle(refDate=new Date()){
-  return getActiveStoredBudgetCycle(refDate) || getStandardBudgetCycle(refDate);
+  // v1.9.5.0: active dashboard/reporting period is always the current month.
+  // Stored budget_cycles remain only as event ledger rows for salary deposits/history.
+  return getMonthlyBudgetPeriod(refDate);
 }
 function getPrimaryIncomeSource(){
   // Production rule: never guess the primary budget.
@@ -666,7 +726,7 @@ function getCycleIncomesForCycle(cycleId){
 function formatBudgetCycleLabel(start,end){
   const s=capvoToDate(start);
   const e=capvoToDate(end);
-  if(!s||!e)return 'Τρέχων κύκλος';
+  if(!s||!e)return 'Τρέχουσα περίοδος';
   if(s.getFullYear()!==e.getFullYear())return `${formatGreekFullDate(s)} – ${formatGreekFullDate(e)}`;
   return `${formatGreekDayMonth(s)} – ${formatGreekDayMonth(e)}`;
 }
@@ -762,6 +822,7 @@ function getCurrentCycleSavingsBudgetMovements(){
 function getCurrentCycleBudgetMovements(){
   const rows=[
     ...(typeof getCurrentCycleBudgetExpenses==='function'?getCurrentCycleBudgetExpenses():[]),
+    ...(typeof getCurrentCycleFixedExpenseMovements==='function'?getCurrentCycleFixedExpenseMovements():[]),
     ...(typeof getCurrentCycleActualCardPayments==='function'?getCurrentCycleActualCardPayments():[]),
     ...(typeof getCurrentCycleSavingsBudgetMovements==='function'?getCurrentCycleSavingsBudgetMovements():[])
   ];
@@ -868,35 +929,58 @@ function fixedExpenseMovementDate(e){
   return cycleStart;
 }
 
+function capvoFixedExpenseById(id){
+  const key=String(id||'');
+  return (D.fixedExpenses||[]).find(e=>String(e.id)===key)
+    || (D.fixedExpenseArchive||[]).find(e=>String(e.id)===key)
+    || null;
+}
+
+function capvoFixedExpensePaymentMovement(payment){
+  if(!payment)return null;
+  const fx=capvoFixedExpenseById(payment.fixedExpenseId||payment.fixed_expense_id);
+  const amount=capvoMoney(Number(payment.amount)||0);
+  if(amount<=0)return null;
+
+  const date=normalizeDateValue(payment.paidAt||payment.paid_at||payment.paidForDate||payment.paid_for_date||payment.createdAt||payment.created_at)||todayISO();
+  const wallet=typeof capvoWalletById==='function'?capvoWalletById(payment.walletId||payment.wallet_id):null;
+
+  return {
+    id:`fixed_payment_${payment.id||gid()}`,
+    sourceId:payment.id||'',
+    fixedExpenseId:payment.fixedExpenseId||payment.fixed_expense_id||'',
+    movementType:'fixed_expense_payment',
+    movementGroup:'fixed',
+    name:fx?.name||'Πληρωμή παγίου',
+    amount,
+    budgetImpactAmount:amount,
+    affectsBudget:true,
+    affectsCashBudget:true,
+    category:fx?.category||'Πάγια',
+    date,
+    createdAt:payment.createdAt||payment.created_at||payment.paidAt||payment.paid_at||date,
+    paymentSourceId:payment.walletId||payment.wallet_id||'',
+    paymentSourceName:wallet?.name||'Wallet',
+    paymentAccountType:'fixed_expense_payment',
+    sourceLabel:`Πληρωμή παγίου${wallet?.name?' · '+wallet.name:''}`,
+    paidForDate:payment.paidForDate||payment.paid_for_date||'',
+    canEdit:false,
+    canDelete:false,
+    readOnly:true,
+    isFixedExpense:true,
+    isFixedExpensePayment:true
+  };
+}
+
 function getCurrentCycleFixedExpenseMovements(){
-  return (Array.isArray(D?.fixedExpenses)?D.fixedExpenses:[])
-    .map(e=>{
-      const amount=capvoMoney(Number(e.amount)||0);
-      if(amount<=0)return null;
-      const date=fixedExpenseMovementDate(e);
-      return {
-        id:`fixed_${e.id||gid()}`,
-        sourceId:e.id||'',
-        movementType:'fixed_expense',
-        movementGroup:'budget',
-        name:e.name||'Πάγιο έξοδο',
-        amount,
-        budgetImpactAmount:amount,
-        affectsBudget:true,
-        affectsCashBudget:true,
-        category:e.category||'Πάγια',
-        date,
-        createdAt:e.createdAt||e.created_at||date,
-        paymentSourceId:'fixed',
-        paymentSourceName:'Πάγιο έξοδο',
-        paymentAccountType:'fixed_expense',
-        sourceLabel:'Πάγιο έξοδο · Επηρεάζει budget',
-        canEdit:true,
-        canDelete:true,
-        readOnly:false,
-        isFixedExpense:true
-      };
-    })
+  // v1.9.6.2: use real fixed-expense payments, not planned obligations.
+  // Planned fixed expenses stay in the fixed list; analytics/movements use payments.
+  const rows=typeof fixedExpensePaymentsForCurrentCycle==='function'
+    ? fixedExpensePaymentsForCurrentCycle()
+    : (D.fixedExpensePayments||[]).filter(p=>String(p.status||'paid')!=='reversed');
+
+  return rows
+    .map(capvoFixedExpensePaymentMovement)
     .filter(Boolean);
 }
 
@@ -905,7 +989,9 @@ function getCurrentCycleAllMovements(){
     .map(e=>{
       const affects=typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):true;
       const isCard=!!(e.isCreditCardPurchase || e.is_credit_card_purchase || e.paymentAccountType==='credit_card' || e.payment_account_type==='credit_card' || e.creditCardId || e.credit_card_id || e.installmentPlanId || e.installment_plan_id);
-      const isBenefit=!affects && !isCard && !!(e.paymentSourceId || e.payment_source_id);
+      const isWallet=!!(e.walletId || e.wallet_id);
+      const isBenefit=!affects && !isCard && !!(e.paymentSourceId || e.payment_source_id) && !isWallet;
+      const wallet=isWallet && typeof capvoWalletById==='function' ? capvoWalletById(e.walletId||e.wallet_id) : null;
       const amount=capvoMoney(Number(e.amount)||0);
       return {
         ...e,
@@ -917,7 +1003,8 @@ function getCurrentCycleAllMovements(){
         budgetImpactAmount:affects?amount:0,
         affectsBudget:affects,
         affectsCashBudget:affects,
-        sourceLabel:isCard?'Αγορά με πιστωτική · Δεν επηρεάζει budget':(isBenefit?'Παροχή / περιορισμένη πηγή · Δεν επηρεάζει cash budget':'Budget'),
+        sourceLabel:isCard?'Αγορά με πιστωτική · Δεν επηρεάζει budget':(isBenefit?'Παροχή / περιορισμένη πηγή · Δεν επηρεάζει cash budget':(wallet?'Wallet':'Budget')),
+        paymentSourceName:e.paymentSourceName || e.payment_source_name || wallet?.name || '',
         canEdit:true,
         canDelete:true,
         readOnly:false
@@ -1079,7 +1166,19 @@ function expenseAffectsCashBudget(e){
   if(e.creditCardId || e.credit_card_id || e.creditCardTransactionId || e.credit_card_transaction_id)return false;
   if(e.installmentPlanId || e.installment_plan_id)return false;
 
-  if(e.paymentSourceId || e.payment_source_id)return false;
+  // paymentSourceId indicates a restricted/benefit source (Ticket, Voucher etc.).
+  // Look up the source to confirm it's non-cash; fall back to non-budget if source not found
+  // so legacy rows without explicit flags stay correct. Future wallet sources must set
+  // affectsCashBudget=true explicitly to be counted in budget.
+  const sourceId = e.paymentSourceId || e.payment_source_id;
+  if(sourceId){
+    const src = (D?.incomeSources||[]).find(i=>String(i.id)===String(sourceId));
+    if(!src) return false; // unknown source → treat as restricted (safe default)
+    // A source that counts in spending budget (non-restricted) and is NOT a benefit
+    // means the payment came from regular income (future: cash wallet). Count it.
+    if(capvoCountsInSpendingBudget && capvoCountsInSpendingBudget(src) && !capvoIsBenefitSource(src)) return true;
+    return false; // restricted / benefit source
+  }
   return true;
 }
 function plannedCardPaymentTotal(){
@@ -1094,16 +1193,166 @@ function actualCardPaymentTotal(){
     .filter(t=>isDateInCurrentBudgetCycle(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at))
     .reduce((s,t)=>s+(Number(t.amount)||0),0));
 }
+
+function capvoFixedExpenseEffectiveDate(expense){
+  return expense?.effectiveFromDate || expense?.effective_from_date || '';
+}
+
+function capvoFixedExpenseIsActiveForCycle(expense,cycle=getCurrentBudgetCycle()){
+  const effective=capvoFixedExpenseEffectiveDate(expense);
+  if(!effective)return true;
+  const effectiveDate=capvoParseDateKey(effective);
+  const cycleStart=cycle?.start || capvoParseDateKey(cycle?.startKey||cycle?.startDate||cycle?.start_date);
+  if(!effectiveDate || !cycleStart)return true;
+  return cycleStart>=effectiveDate;
+}
+
+function activeFixedExpensesForCurrentCycle(){
+  const cycle=getCurrentBudgetCycle();
+  return (D.fixedExpenses||[]).filter(e=>capvoFixedExpenseIsActiveForCycle(e,cycle));
+}
+
+
+
+// ===== SCHEDULED FIXED EXPENSE HELPERS =====
+// v1.9.6.0 foundation: fixed expenses become scheduled obligations.
+// They do not reduce budget/wallet just by existing. They affect real money
+// when a payment row is recorded.
+function capvoFixedExpenseScheduleType(expense){
+  const raw=String(expense?.scheduleType||expense?.schedule_type||'monthly').trim();
+  if(['monthly','weekly','yearly','custom'].includes(raw))return raw;
+  return 'monthly';
+}
+
+function capvoFixedExpenseDueDay(expense){
+  const raw=expense?.dueDay ?? expense?.due_day;
+  const n=Math.round(Number(raw)||0);
+  if(n>=1 && n<=31)return n;
+  const next=normalizeDateValue(expense?.nextDueDate||expense?.next_due_date||'');
+  if(next){
+    const d=capvoParseDateKey(next);
+    if(d)return d.getDate();
+  }
+  return 1;
+}
+
+function capvoFixedExpenseNextDueDate(expense,refDate=todayISO()){
+  const existing=normalizeDateValue(expense?.nextDueDate||expense?.next_due_date||'');
+  if(existing)return existing;
+
+  const type=capvoFixedExpenseScheduleType(expense);
+  const today=capvoParseDateKey(refDate)||new Date();
+  const dueDay=capvoFixedExpenseDueDay(expense);
+
+  if(type==='weekly'){
+    return capvoLocalDateKey(new Date(today.getFullYear(),today.getMonth(),today.getDate(),12));
+  }
+
+  if(type==='yearly'){
+    return capvoDateKeyFromParts(today.getFullYear(),today.getMonth(),dueDay);
+  }
+
+  const candidate=new Date(today.getFullYear(),today.getMonth(),Math.min(dueDay,capvoDaysInMonth(today.getFullYear(),today.getMonth())),12);
+  if(candidate<today){
+    const y=today.getFullYear();
+    const m=today.getMonth()+1;
+    return capvoDateKeyFromParts(y,m,Math.min(dueDay,capvoDaysInMonth(y,m)));
+  }
+  return capvoLocalDateKey(candidate);
+}
+
+function capvoAdvanceFixedExpenseDueDate(expense,fromDateKey){
+  const type=capvoFixedExpenseScheduleType(expense);
+  const base=capvoParseDateKey(fromDateKey||capvoFixedExpenseNextDueDate(expense)||todayISO())||new Date();
+  const dueDay=capvoFixedExpenseDueDay(expense);
+
+  if(type==='weekly'){
+    const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+7,12);
+    return capvoLocalDateKey(d);
+  }
+
+  if(type==='yearly'){
+    const d=new Date(base.getFullYear()+1,base.getMonth(),Math.min(dueDay,capvoDaysInMonth(base.getFullYear()+1,base.getMonth())),12);
+    return capvoLocalDateKey(d);
+  }
+
+  const nextMonth=new Date(base.getFullYear(),base.getMonth()+1,1,12);
+  const d=new Date(nextMonth.getFullYear(),nextMonth.getMonth(),Math.min(dueDay,capvoDaysInMonth(nextMonth.getFullYear(),nextMonth.getMonth())),12);
+  return capvoLocalDateKey(d);
+}
+
+function capvoFixedExpensePaymentForDueDate(expenseId,dueDate){
+  return (D.fixedExpensePayments||[]).find(p=>
+    String(p.fixedExpenseId||p.fixed_expense_id||'')===String(expenseId) &&
+    String(p.paidForDate||p.paid_for_date||'').slice(0,10)===String(dueDate||'').slice(0,10) &&
+    String(p.status||'paid')!=='reversed'
+  )||null;
+}
+
+function capvoFixedExpenseIsPaidForDueDate(expense,dueDate){
+  return !!capvoFixedExpensePaymentForDueDate(expense?.id,dueDate||capvoFixedExpenseNextDueDate(expense));
+}
+
+function capvoFixedExpenseStatus(expense,refDate=todayISO()){
+  const nextDue=capvoFixedExpenseNextDueDate(expense,refDate);
+  const paid=capvoFixedExpenseIsPaidForDueDate(expense,nextDue);
+  if(paid)return {state:'paid',label:'Πληρώθηκε',tone:'green',nextDueDate:nextDue};
+  const today=String(refDate||todayISO()).slice(0,10);
+  if(String(nextDue)<today)return {state:'overdue',label:'Εκκρεμεί',tone:'orange',nextDueDate:nextDue};
+  if(String(nextDue)===today)return {state:'due',label:'Σήμερα',tone:'purple',nextDueDate:nextDue};
+  return {state:'upcoming',label:'Προσεχώς',tone:'slate',nextDueDate:nextDue};
+}
+
+function fixedExpensePaymentsForCurrentCycle(){
+  const cycle=getCurrentBudgetCycle();
+  const start=String(cycle?.startKey||'');
+  const end=String(cycle?.endKey||'');
+  return (D.fixedExpensePayments||[]).filter(p=>{
+    const d=String(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||'').slice(0,10);
+    return d && (!start || d>=start) && (!end || d<=end) && String(p.status||'paid')!=='reversed';
+  });
+}
+
+function fixedExpensePaymentsTotalForCurrentCycle(){
+  return capvoMoney(fixedExpensePaymentsForCurrentCycle().reduce((s,p)=>s+(Number(p.amount)||0),0));
+}
+
+function capvoLatestFixedExpensePaymentForCurrentCycle(expenseId){
+  const rows=typeof fixedExpensePaymentsForCurrentCycle==='function'
+    ? fixedExpensePaymentsForCurrentCycle()
+    : (D.fixedExpensePayments||[]);
+  return rows
+    .filter(p=>String(p.fixedExpenseId||p.fixed_expense_id||'')===String(expenseId))
+    .sort((a,b)=>String(b.paidAt||b.paid_at||b.createdAt||b.created_at||'').localeCompare(String(a.paidAt||a.paid_at||a.createdAt||a.created_at||'')))[0]||null;
+}
+
+
+
 function ccPayTotal(){
   // Budget impact from cards must represent actual payments only.
   // Planned/minimum card payments stay in the Cards planner and do not reduce dashboard cash.
   return actualCardPaymentTotal();
 }
-function fixedTotal(){return capvoMoney((D.fixedExpenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0))}
+function fixedTotal(){
+  // v1.9.6.1: In the wallet model, a fixed-expense payment already reduces
+  // the source wallet. Since D.income is derived from wallet balances, counting
+  // the same paid fixed expense again here double-subtracts it on the dashboard.
+  if(typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel())return 0;
+  return typeof fixedExpensePaymentsTotalForCurrentCycle==='function'
+    ? fixedExpensePaymentsTotalForCurrentCycle()
+    : capvoMoney((D.fixedExpenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0));
+}
 function dailyTotal(){return capvoMoney(getCurrentCycleDailyExpenses().reduce((s,e)=>s+(Number(e.amount)||0),0))}
 function allFixedTotal(){return fixedTotal()+ccPayTotal()}
+
+function capvoIsExtraIncomeSource(source){
+  const type=typeof capvoInferMoneySourceType==='function'?capvoInferMoneySourceType(source):(source?.sourceType||'income');
+  return type!=='budget_cycle';
+}
+
 function incomeSourcesTotal(){
   return (D.incomeSources||[])
+    .filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true)
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
@@ -1197,38 +1446,154 @@ function primaryBudgetSource(){
   ) || null;
 }
 
+
+function capvoPaidTodayMetaFromCycle(cycle){
+  try{
+    const note=String(cycle?.note||'');
+    const marker='[[CAPVO_PAID_TODAY_META:';
+    const start=note.indexOf(marker);
+    if(start<0)return null;
+    const from=start+marker.length;
+    const end=note.indexOf(']]',from);
+    if(end<0)return null;
+    const raw=note.slice(from,end);
+    const meta=JSON.parse(raw);
+    return meta && typeof meta==='object' ? meta : null;
+  }catch(e){
+    return null;
+  }
+}
+
+
+function capvoDateInRangeForBudget(value,startKey,endKey){
+  const d=capvoParseDateKey(value);
+  const s=capvoParseDateKey(startKey);
+  const e=capvoParseDateKey(endKey);
+  if(!d||!s||!e)return false;
+  return d>=s && d<=e;
+}
+
+function capvoBudgetSpentForRange(startKey,endKey){
+  try{
+    const fixed=typeof fixedTotal==='function'?fixedTotal():0;
+
+    const daily=(typeof getAllDailyExpenses==='function'?getAllDailyExpenses():[])
+      .filter(e=>capvoDateInRangeForBudget(e.date,startKey,endKey))
+      .filter(e=>typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):true)
+      .reduce((s,e)=>s+(Number(e.amount)||0),0);
+
+    const card=(D.creditCardTransactions||[])
+      .filter(t=>t && (t.affectsBudget===true || t.affects_budget===true))
+      .filter(t=>String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment')
+      .filter(t=>{
+        const raw=t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at;
+        return capvoDateInRangeForBudget(normalizeDateValue(raw)||raw,startKey,endKey);
+      })
+      .reduce((s,t)=>s+(Number(t.amount)||0),0);
+
+    const savings=(D.savingsTransactions||[])
+      .filter(t=>{
+        const raw=t.createdAt||t.created_at||t.date||t.transactionDate||t.transaction_date;
+        return capvoDateInRangeForBudget(normalizeDateValue(raw)||raw,startKey,endKey);
+      })
+      .filter(t=>{
+        const type=String(t.type||'').toLowerCase();
+        const source=String(t.source||'').toLowerCase();
+        return !(type==='transfer_in' || type==='transfer_out' || source.includes('transfer'));
+      })
+      .reduce((s,t)=>{
+        const amount=Number(t.amount)||0;
+        const type=String(t.type||'').toLowerCase();
+        const isWithdrawal=type==='withdrawal' || amount<0;
+        return s+(isWithdrawal?-Math.abs(amount):Math.abs(amount));
+      },0);
+
+    return capvoMoney(fixed+daily+card+savings);
+  }catch(e){
+    return 0;
+  }
+}
+
+function capvoPaidTodayFallbackBudget(cycle){
+  try{
+    if(!cycle || cycle.source!=='paid_today')return null;
+    const salary=capvoMoney(Number(cycle.primaryIncomeAmount||cycle.primary_income_amount)||0);
+    if(salary<=0)return null;
+
+    const raw=capvoMoney(typeof capvoGetSpendableWalletTotal==='function'
+      ? capvoGetSpendableWalletTotal()
+      : capvoWalletTotalBalance());
+
+    const startKey=cycle.startKey||cycle.startDate||cycle.start_date;
+    const start=capvoParseDateKey(startKey);
+    if(!start)return null;
+
+    const previousEnd=new Date(start);
+    previousEnd.setDate(previousEnd.getDate()-1);
+    const previousEndKey=capvoDateKey(previousEnd);
+    const previousCycle=getStandardBudgetCycle(previousEnd);
+    const previousStartKey=previousCycle?.startKey || capvoDateKey(previousCycle?.start) || previousEndKey;
+
+    const previousSpent=capvoBudgetSpentForRange(previousStartKey,previousEndKey);
+    const value=capvoMoney(raw-previousSpent);
+
+    return value>0?value:null;
+  }catch(e){
+    return null;
+  }
+}
+
+
+function capvoPaidTodayBudgetOverride(){
+  try{
+    const cycle=getCurrentBudgetCycle();
+    if(!cycle || cycle.source!=='paid_today')return null;
+    const meta=capvoPaidTodayMetaFromCycle(cycle);
+    const value=capvoMoney(Number(meta?.startingBudget)||0);
+    if(value>0)return value;
+
+    // Backward safety for a paid-today cycle created before v1.9.3.3.
+    return capvoPaidTodayFallbackBudget(cycle);
+  }catch(e){
+    return null;
+  }
+}
+
+
 function budgetIncomeTotal(){
-  const sources=(D.incomeSources||[]).filter(i=>i&&capvoCountsInSpendingBudget(i));
-  const primary=primaryBudgetSource();
+  // v1.9.3.3: if an old manual paid-today cycle is active, use the
+  // captured carryover baseline instead of raw wallet balances. This prevents
+  // old-cycle expenses from being counted back into the new cycle budget.
+  const paidTodayOverride=typeof capvoPaidTodayBudgetOverride==='function'?capvoPaidTodayBudgetOverride():null;
+  if(paidTodayOverride!==null && paidTodayOverride!==undefined)return capvoMoney(paidTodayOverride);
 
-  if(primary){
-    const extras=sources
-      .filter(i=>i.id!==primary.id)
-      .filter(i=>['income','one_time','carryover'].includes(capvoInferMoneySourceType(i)))
-      .reduce((sum,i)=>sum+(Number(i.amount)||0),0);
-
-    return capvoMoney(incomeBudgetAmount(primary)+extras);
+  // v1.9.3.0: the real available budget is the sum of wallet balances
+  // that are marked as budget wallets. Income sources are now extra-income
+  // rules/events that fill wallets, not an additional abstract budget bucket.
+  if(typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel()){
+    return capvoMoney(typeof capvoGetSpendableWalletTotal==='function'
+      ? capvoGetSpendableWalletTotal()
+      : capvoWalletTotalBalance());
   }
 
+  // Backward fallback for users who have not created wallets yet.
+  const sources=(D.incomeSources||[]).filter(i=>i&&capvoCountsInSpendingBudget(i));
   return capvoMoney(sources.reduce((sum,i)=>sum+incomeBudgetAmount(i),0));
 }
 
 function totalCycleAmount(){
-  const sources=(D.incomeSources||[]).filter(i=>i&&capvoCountsInSpendingBudget(i));
-  const primary=primaryBudgetSource();
-
-  if(primary){
-    const extras=sources
-      .filter(i=>i.id!==primary.id)
-      .filter(i=>['income','one_time','carryover'].includes(capvoInferMoneySourceType(i)))
-      .reduce((sum,i)=>sum+(Number(i.amount)||0),0);
-    return capvoMoney((Number(primary.amount)||0)+extras);
+  if(typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel()){
+    return capvoMoney(typeof capvoPrimaryWalletCycleAmount==='function'?capvoPrimaryWalletCycleAmount():0);
   }
 
+  const sources=(D.incomeSources||[]).filter(i=>i&&capvoCountsInSpendingBudget(i));
   return capvoMoney(sources.reduce((sum,i)=>sum+(Number(i.amount)||0),0));
 }
 
 function budgetLimitReservedAmount(){
+  if(typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel()){
+    return 0;
+  }
   const primary=primaryBudgetSource();
   if(!primary)return 0;
   const amount=capvoMoney(Number(primary.amount)||0);
@@ -1238,12 +1603,14 @@ function budgetLimitReservedAmount(){
 
 function savingsIncomeTotal(){
   return (D.incomeSources||[])
+    .filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true)
     .filter(i=>i.isSavings || i.allocationTarget==='savings')
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
 
 function restrictedIncomeTotal(){
   return (D.incomeSources||[])
+    .filter(i=>typeof capvoIsExtraIncomeSource==='function'?capvoIsExtraIncomeSource(i):true)
     .filter(i=>capvoIsBenefitSource(i))
     .reduce((s,i)=>s+(Number(i.amount)||0),0);
 }
@@ -1274,7 +1641,9 @@ function categoryExpensesTotal(categories){
 
   let total=0;
 
-  const rows=typeof getCurrentCycleBudgetExpenses==='function' ? getCurrentCycleBudgetExpenses() : getCurrentCycleDailyExpenses();
+  const rows=typeof getCurrentCycleBudgetMovements==='function'
+    ? getCurrentCycleBudgetMovements()
+    : (typeof getCurrentCycleBudgetExpenses==='function' ? getCurrentCycleBudgetExpenses() : getCurrentCycleDailyExpenses());
   rows.forEach(exp=>{
     if(allowed.has(exp.category)){
       total+=Number(exp.amount)||0;
@@ -1308,14 +1677,77 @@ function paymentSourceRemaining(source){
   );
 }
 
+function capvoDailyExpenseAlreadyAppliedToWallet(e){
+  if(!e)return false;
+  const effect=Number(e.walletBalanceEffectAmount ?? e.wallet_balance_effect_amount)||0;
+  return !!(e.walletId || e.wallet_id) && effect<0;
+}
+
 function dailyCashTotal(){
+  const walletModel=typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel();
+  const budgetRows=typeof getCurrentCycleBudgetExpenses==='function'
+    ? getCurrentCycleBudgetExpenses()
+    : getCurrentCycleDailyExpenses().filter(e=>typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):!e.paymentSourceId);
   const rows=[
-    ...(typeof getCurrentCycleBudgetExpenses==='function'
-      ? getCurrentCycleBudgetExpenses()
-      : getCurrentCycleDailyExpenses().filter(e=>typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):!e.paymentSourceId)),
+    ...budgetRows.filter(e=>!(walletModel && capvoDailyExpenseAlreadyAppliedToWallet(e))),
     ...(typeof getCurrentCycleSavingsBudgetMovements==='function'?getCurrentCycleSavingsBudgetMovements():[])
   ];
   return capvoMoney(rows.reduce((s,e)=>s+(Number(e.amount)||0),0));
+}
+
+
+function capvoDashboardActualFixedTotal(){
+  // Snapshot/display value only: fixed payments are actual movements for the
+  // current cycle. Do not use this in the dashboard balance formula because
+  // wallet-based fixed payments have already reduced the wallet balance.
+  return capvoMoney(typeof fixedExpensePaymentsTotalForCurrentCycle==='function'
+    ? fixedExpensePaymentsTotalForCurrentCycle()
+    : 0);
+}
+
+function capvoDashboardActualCardPaymentTotal(){
+  // Snapshot/display value only. Future wallet-based card payments should still
+  // show here as actual payments, but must not be double-subtracted from wallet
+  // based balances.
+  return capvoMoney(typeof actualCardPaymentTotal==='function'
+    ? actualCardPaymentTotal()
+    : 0);
+}
+
+function capvoDashboardActualDailyBudgetTotal(){
+  // Snapshot/display value only: show actual daily/manual expenses that affect
+  // the budget, even when they have already been applied to wallet balance.
+  // This fixes the dashboard Snapshot cards showing €0 after the wallet-based
+  // manual expense flow, while keeping the balance/double-count guard intact.
+  const rows=typeof getCurrentCycleBudgetExpenses==='function'
+    ? getCurrentCycleBudgetExpenses()
+    : (typeof getCurrentCycleDailyExpenses==='function'?getCurrentCycleDailyExpenses():[]);
+
+  return capvoMoney((rows||[])
+    .filter(e=>{
+      if(!e)return false;
+      const accountType=String(e.paymentAccountType||e.payment_account_type||'').toLowerCase();
+      if(e.isFixedExpense || e.isFixedExpensePayment)return false;
+      if(e.isSavingsMovement)return false;
+      if(e.isCardPayment)return false;
+      if(e.isCreditCardPurchase || e.is_credit_card_purchase)return false;
+      if(accountType==='credit_card' || accountType==='credit_card_payment')return false;
+      return typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):true;
+    })
+    .reduce((sum,e)=>{
+      const impact=typeof capvoMovementBudgetImpact==='function'
+        ? capvoMovementBudgetImpact(e)
+        : (Number(e.amount)||0);
+      return sum+Math.abs(Number(impact)||0);
+    },0));
+}
+
+function capvoDashboardSnapshotTotals(){
+  return {
+    fixed:capvoDashboardActualFixedTotal(),
+    cards:capvoDashboardActualCardPaymentTotal(),
+    daily:capvoDashboardActualDailyBudgetTotal()
+  };
 }
 
 function totalRestrictedCoverage(){

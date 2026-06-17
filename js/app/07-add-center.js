@@ -7,23 +7,33 @@ function addCenterToday(){
   return typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 }
 
-function fillAddCenterPaymentSources(selectedId=''){
+function fillAddCenterPaymentSources(selectedId='',opts={}){
   const el=document.getElementById('acDPay');
   if(!el)return;
 
   const sources=(typeof availablePaymentSources==='function')
     ? availablePaymentSources()
     : [];
+  const hasWalletModel=typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel();
+  const defaultWalletId=hasWalletModel && !selectedId && !opts.preserveBlank
+    ? (typeof capvoDefaultWallet==='function'?capvoDefaultWallet()?.id:'')
+    : '';
+  const effectiveSelected=selectedId || defaultWalletId || '';
 
   el.innerHTML=`
-    <option value="">Κανονικό budget</option>
-    ${sources.map(s=>`
-      <option value="${esc(s.id)}" ${s.id===selectedId?'selected':''}>${esc(s.name)}</option>
-    `).join('')}
+    ${hasWalletModel?'':`<option value="" ${!effectiveSelected?'selected':''}>Κανονικό budget</option>`}
+    ${sources.map(s=>{
+      const isWallet=typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(s);
+      const isCard=s.type==='credit_card' || s.accountType==='credit_card';
+      const balance=isWallet ? ` · ${fmt(Number(s.currentBalance)||0)}` : '';
+      // Keep the native option text clean. The custom picker renders the icon separately,
+      // so including it here creates duplicate icons in the visible mobile UI.
+      return `<option value="${esc(s.id)}" ${String(s.id)===String(effectiveSelected)?'selected':''}>${esc(s.name)}${balance}</option>`;
+    }).join('')}
   `;
 
-  if(selectedId){
-    el.value=selectedId;
+  if(effectiveSelected){
+    el.value=effectiveSelected;
   }
 
   renderAddCenterPaymentPicker();
@@ -31,12 +41,16 @@ function fillAddCenterPaymentSources(selectedId=''){
 }
 
 function paymentSourceLabelById(id){
-  if(!id)return 'Κανονικό budget';
+  if(!id)return (typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel())?'Επίλεξε wallet':'Κανονικό budget';
 
   const source=(typeof paymentSourceById==='function')
     ? paymentSourceById(id)
     : (D.incomeSources||[]).find(s=>s.id===id);
 
+  if(source && typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(source)){
+    const bal=Number(source.currentBalance)||0;
+    return `${source.name||'Wallet'} · ${typeof fmt==='function'?fmt(bal):bal+'€'}`;
+  }
   return source?.name || 'Πηγή πληρωμής';
 }
 
@@ -48,6 +62,7 @@ function paymentSourceIconById(id){
     : (D.incomeSources||[]).find(s=>s.id===id);
 
   if(typeof isCreditCardPaymentSource==='function' && isCreditCardPaymentSource(source))return '💳';
+  if(typeof capvoIsWalletPaymentSource==='function' && capvoIsWalletPaymentSource(source))return source?.icon||'🏦';
   if(source?.restriction && source.restriction!=='none')return '🎫';
   if(source?.isSavings)return '🏦';
   if(source?.incomeType==='card')return '💳';
@@ -303,89 +318,8 @@ function closeQuickAddSheet(event){
   closeAddCenterSheet(event);
 }
 
-async function saveAddCenterManualExpense(){
-  const nameEl=document.getElementById('acDN');
-  const amountEl=document.getElementById('acDA');
-  const catEl=document.getElementById('acDC');
-  const payEl=document.getElementById('acDPay');
-  const dateEl=document.getElementById('acDD');
-  const btn=document.getElementById('addCenterManualSubmit');
-
-  clearQuickAddInlineError('addCenterManualError');
-
-  const name=(nameEl?.value||'').trim();
-  const amount=parseFloat(String(amountEl?.value||'').replace(',','.'));
-  const category=catEl?.value||'Άλλο';
-  const paymentSourceId=payEl?.value||'';
-  const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
-  const date=dateEl?.value||addCenterToday();
-  const userId=getDataOwnerId();
-
-  if(!name){
-    setQuickAddInlineError('Συμπλήρωσε τίτλο εξόδου.','addCenterManualError');
-    nameEl?.focus();
-    return false;
-  }
-
-  if(!amount || amount<=0){
-    setQuickAddInlineError('Συμπλήρωσε έγκυρο ποσό.','addCenterManualError');
-    amountEl?.focus();
-    return false;
-  }
-
-  if(!userId){
-    setQuickAddInlineError('Δεν υπάρχει ενεργή σύνδεση.','addCenterManualError');
-    return false;
-  }
-
-  const expense={
-    id:gid(),
-    name,
-    amount,
-    category,
-    date,
-    paymentSourceId,
-    paymentSourceName:paymentSource?.name||'',
-    paymentSourceType:paymentSource?.incomeType||''
-  };
-
-  const monthKey=date.substring(0,7);
-  ensM(monthKey);
-
-  const canSave=await validateExpenseBeforeSave(expense,{errorTarget:'addCenterManualError'});
-  if(!canSave)return false;
-
-  D.months[monthKey].daily.push(expense);
-
-  try{
-    if(btn){
-      btn.disabled=true;
-      btn.textContent='Αποθήκευση...';
-    }
-
-    await saveDailyExpenseRow(userId,expense);
-    if(typeof saveCreditCardPurchaseSideEffects==='function')await saveCreditCardPurchaseSideEffects(userId,expense);
-    if(typeof persistCreditCardBalanceForPurchase==='function')await persistCreditCardBalanceForPurchase(userId,expense);
-    await saveDailyExpenseRow(userId,expense);
-    curM=monthKey;
-    render();
-    closeAddCenterSheet();
-    showMiniToast('✅ Το έξοδο αποθηκεύτηκε');
-    return true;
-
-  }catch(e){
-    D.months[monthKey].daily=D.months[monthKey].daily.filter(x=>x.id!==expense.id);
-    console.error('saveAddCenterManualExpense failed:',e);
-    setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.','addCenterManualError');
-    return false;
-
-  }finally{
-    if(btn){
-      btn.disabled=false;
-      btn.textContent='Αποθήκευση εξόδου';
-    }
-  }
-}
+// saveAddCenterManualExpense v1 removed — superseded by v3 below (Add Center V4 section).
+// v3 adds: edit mode, makeCreditCardExpensePayload, proper error recovery via fetchAllData.
 
 function setupAddCenterState(){
   syncAddCenterCategoryPicker();
@@ -537,7 +471,7 @@ function txCompleteFillManualForm(e,{edit=false}={}){
   if(nameEl)nameEl.value=e.name||'';
   if(amountEl)amountEl.value=Number(e.amount||0);
   if(catEl)catEl.value=e.category||'Άλλο';
-  if(payEl)payEl.value=e.paymentSourceId||'';
+  if(payEl)payEl.value=e.walletId||e.paymentSourceId||'';
   if(dateEl)dateEl.value=e.date||addCenterToday();
   if(notesEl)notesEl.value=e.notes||'';
 
@@ -715,11 +649,11 @@ function txCompleteDailyRow(e){
   if(!affects)badges.push(`<span class="payment-badge no-budget">Δεν επηρεάζει budget</span>`);
   if(affects && impact<0)badges.push(`<span class="payment-badge budget-return">Επιστροφή budget</span>`);
 
-  const meta=[
-    esc(category),
-    e.paymentSourceName?esc(e.paymentSourceName):'',
-    e.sourceLabel?esc(e.sourceLabel):''
-  ].filter(Boolean).join(' · ');
+  const metaParts=[category,e.paymentSourceName||'',e.sourceLabel||'']
+    .map(x=>String(x||'').trim())
+    .filter(Boolean)
+    .filter((part,idx,arr)=>arr.findIndex(other=>other.toLowerCase()===part.toLowerCase())===idx);
+  const meta=metaParts.map(esc).join(' · ');
 
   return `
     <div class="expense-item tx-v3-row fadeIn ${isSelected?'selected-row':''}" onclick="${!showSelect?`showMobileTransactionDetail('${detailType}','${detailId}')`:''}">
@@ -922,9 +856,12 @@ async function saveAddCenterManualExpense(){
   ensM(monthKey);
 
   const oldExpense=editing && typeof getExistingDailyExpenseById==='function' ? getExistingDailyExpenseById(id) : null;
+  if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
 
   const canSave=await validateExpenseBeforeSave(expense,{editing,errorTarget:'addCenterManualError'});
   if(!canSave)return false;
+
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation(editing?'Ενημερώνεται έξοδο...':'Αποθηκεύεται έξοδο...', 'Ενημερώνω κινήσεις, κάρτες και υπόλοιπα.'))return false;
 
   if(typeof applyCreditCardPurchaseBalance==='function')applyCreditCardPurchaseBalance(expense,oldExpense);
 
@@ -937,25 +874,32 @@ async function saveAddCenterManualExpense(){
 
   D.months[monthKey].daily.push(expense);
 
+  let walletEffect=null;
   try{
     if(btn){
       btn.disabled=true;
       btn.textContent=editing?'Ενημέρωση...':'Αποθήκευση...';
     }
 
+    walletEffect=await capvoApplyDailyExpenseWalletEffects(userId,expense,oldExpense);
     await saveDailyExpenseRow(userId,expense);
     if(typeof saveCreditCardPurchaseSideEffects==='function')await saveCreditCardPurchaseSideEffects(userId,expense);
     if(typeof persistCreditCardBalanceForPurchase==='function')await persistCreditCardBalanceForPurchase(userId,expense);
-    await saveDailyExpenseRow(userId,expense);
+    // NOTE: saveDailyExpenseRow called ONCE only. Second call was a bug (double-write). Fixed v1.8.6.20.
     curM=monthKey;
     addCenterEditState=null;
     render();
     closeAddCenterSheet();
-    showMiniToast(editing?'✅ Η κίνηση ενημερώθηκε':'✅ Το έξοδο αποθηκεύτηκε');
+    const successMsg=editing?'✅ Η κίνηση ενημερώθηκε':'✅ Το έξοδο αποθηκεύτηκε';
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε',successMsg);
+    showMiniToast(successMsg);
     return true;
 
   }catch(e){
     console.error('saveAddCenterManualExpense v3 failed:',e);
+    if(walletEffect?.rollback){
+      try{await walletEffect.rollback();}catch(rollbackErr){console.error('manual wallet rollback failed:',rollbackErr);}
+    }
     // Safest recovery: reload canonical data if possible.
     try{
       await fetchAllData(userId);
@@ -963,10 +907,12 @@ async function saveAddCenterManualExpense(){
     }catch(reloadErr){
       console.error('Reload after save failure failed:',reloadErr);
     }
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω το έξοδο.');
     setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.','addCenterManualError');
     return false;
 
   }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
     if(btn){
       btn.disabled=false;
       btn.textContent=addCenterEditState?'Ενημέρωση εξόδου':'Αποθήκευση εξόδου';
@@ -1007,7 +953,7 @@ async function saveAddCenterManualExpense(){
             <div class="smart-preview-chip">💬</div>
           </div>
           <div class="smart-preview-lines">
-            <div class="smart-preview-line"><span>Παράδειγμα</span><strong>καφές 3 ticket</strong></div>
+            <div class="smart-preview-line"><span>Παράδειγμα</span><strong>καφές 3 μετρητά</strong></div>
           </div>
         </div>`;
       return;

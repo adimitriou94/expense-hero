@@ -91,11 +91,17 @@ async function bulkDelete(type){
   const table=type==='fixed'?'fixed_expenses':'expenses';
 
   try{
-    if(type==='daily' && typeof deleteCreditCardExpenseSideEffectsForIds==='function'){
-      await deleteCreditCardExpenseSideEffectsForIds(ids);
+    if(type==='daily' && typeof deleteExpenseRow==='function'){
+      for(const id of ids){
+        await deleteExpenseRow('daily',id);
+      }
+    }else if(type==='fixed' && typeof capvoSoftDeleteFixedExpense==='function'){
+      for(const id of ids){
+        await capvoSoftDeleteFixedExpense(id);
+      }
+    }else{
+      await deleteRowsFromTable(table,ids);
     }
-
-    await deleteRowsFromTable(table,ids);
 
     if(type==='fixed'){
       D.fixedExpenses=D.fixedExpenses.filter(e=>!ids.includes(e.id));
@@ -158,7 +164,7 @@ function showConfirmModal({
     confirmResolver=resolve;
 
     $('confirmTitle').textContent=title;
-    $('confirmMessage').textContent=message;
+    $('confirmMessage').textContent=String(message||'').replace(/\\n/g,'\n');
 
     $('confirmCancelBtn').textContent=cancelText;
     $('confirmConfirmBtn').textContent=confirmText;
@@ -190,3 +196,112 @@ $('confirmOverlay')?.addEventListener('click',e=>{
     closeConfirmModal(false);
   }
 });
+
+
+/* ============================================================
+   CAPVO v1.9.3.2 — Global operation lock
+   Prevents navigation/double actions while a save/sync/payment is running.
+   ============================================================ */
+window.__capvoAppOperation = window.__capvoAppOperation || {
+  locked:false,
+  startedAt:0,
+  message:'',
+  detail:''
+};
+
+function capvoEnsureOperationOverlay(){
+  let el=document.getElementById('capvoGlobalOperationOverlay');
+  if(el)return el;
+
+  el=document.createElement('div');
+  el.id='capvoGlobalOperationOverlay';
+  el.className='capvo-global-operation-overlay';
+  el.setAttribute('aria-live','polite');
+  el.setAttribute('aria-hidden','true');
+  el.innerHTML=`
+    <div class="capvo-global-operation-card" role="status">
+      <div class="capvo-global-operation-spinner" aria-hidden="true"></div>
+      <div class="capvo-global-operation-copy">
+        <strong id="capvoGlobalOperationTitle">Επεξεργασία...</strong>
+        <span id="capvoGlobalOperationDetail">Μην κλείσεις ή αλλάξεις σελίδα.</span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+}
+
+function capvoBeginAppOperation(message='Επεξεργασία...',detail='Μην κλείσεις ή αλλάξεις σελίδα.'){
+  if(window.__capvoAppOperation?.locked){
+    showMiniToast?.('Περίμενε να ολοκληρωθεί η προηγούμενη ενέργεια.','error');
+    return false;
+  }
+
+  window.__capvoAppOperation={
+    locked:true,
+    startedAt:Date.now(),
+    message,
+    detail
+  };
+
+  const el=capvoEnsureOperationOverlay();
+  const title=document.getElementById('capvoGlobalOperationTitle');
+  const desc=document.getElementById('capvoGlobalOperationDetail');
+  if(title)title.textContent=message;
+  if(desc)desc.textContent=detail;
+
+  el.classList.remove('is-success','is-error');
+  el.classList.add('is-active');
+  el.setAttribute('aria-hidden','false');
+  document.body.classList.add('capvo-operation-locked');
+
+  return true;
+}
+
+function capvoUpdateAppOperation(message,detail,state='busy'){
+  const el=capvoEnsureOperationOverlay();
+  const title=document.getElementById('capvoGlobalOperationTitle');
+  const desc=document.getElementById('capvoGlobalOperationDetail');
+  if(title && message)title.textContent=message;
+  if(desc && detail)desc.textContent=detail;
+
+  el.classList.toggle('is-success',state==='success');
+  el.classList.toggle('is-error',state==='error');
+}
+
+function capvoEndAppOperation(delay=0){
+  const finish=()=>{
+    const el=document.getElementById('capvoGlobalOperationOverlay');
+    if(el){
+      el.classList.remove('is-active','is-success','is-error');
+      el.setAttribute('aria-hidden','true');
+    }
+    document.body.classList.remove('capvo-operation-locked');
+    if(window.__capvoAppOperation){
+      window.__capvoAppOperation.locked=false;
+      window.__capvoAppOperation.message='';
+      window.__capvoAppOperation.detail='';
+    }
+  };
+
+  if(delay>0)setTimeout(finish,delay);
+  else finish();
+}
+
+function capvoAppOperationSuccess(message='Ολοκληρώθηκε',detail='Η ενέργεια ολοκληρώθηκε με επιτυχία.'){
+  capvoUpdateAppOperation(message,detail,'success');
+}
+
+function capvoAppOperationError(message='Κάτι πήγε στραβά',detail='Δοκίμασε ξανά.'){
+  capvoUpdateAppOperation(message,detail,'error');
+}
+
+// Defensive capture: if a fast tap happens before the overlay receives pointer-events,
+// block clicks while the app is locked.
+document.addEventListener('click',function(e){
+  if(!window.__capvoAppOperation?.locked)return;
+  if(e.target?.closest?.('#capvoGlobalOperationOverlay'))return;
+  e.preventDefault();
+  e.stopPropagation();
+},true);
+
