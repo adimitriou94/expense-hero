@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.11.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.14.2">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.11.3">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.11.3">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.11.3">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.11.3">
-  <link rel="manifest" href="manifest.webmanifest?v=1.11.3">
-  <!-- <link rel="stylesheet" href="style.css?v=1.11.3"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.14.2">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.14.2">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.14.2">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.14.2">
+  <link rel="manifest" href="manifest.webmanifest?v=1.14.2">
+  <!-- <link rel="stylesheet" href="style.css?v=1.14.2"> -->
 </head>
 
 <body class="auth-pending">
@@ -53,7 +53,7 @@
       <section class="capvo-login-minimal" aria-label="CAPVO Login">
         <h2>Μάθε πόσα μπορείς να ξοδέψεις μέχρι την επόμενη πληρωμή.</h2>
         <p>
-          Οργάνωσε μισθό, έξοδα, κουμπαράδες και Ticket/Voucher σε ένα καθαρό mobile budget app.
+          Οργάνωσε μισθό, έξοδα, στόχους και Ticket/Voucher σε ένα καθαρό mobile budget app.
         </p>
       </section>
 
@@ -68,7 +68,7 @@
         </div>
         <div class="capvo-feature-line">
           <span class="capvo-feature-icon" aria-hidden="true">♧</span>
-          <span>Κουμπαράδες και στόχοι αποταμίευσης</span>
+          <span>Στόχοι αποταμίευσης και πλάνα</span>
         </div>
       </div>
 
@@ -198,14 +198,14 @@
       <span>Κινήσεις</span>
     </button>
 
-    <button class="desktop-nav-btn nav-btn" data-v="vIncome" onclick="go('vIncome',this)">
-      <svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <span>Έσοδα</span>
-    </button>
-
     <button class="desktop-nav-btn nav-btn" data-v="vWallets" onclick="go('vWallets',this)">
       <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h2"/><path d="M2 10h20"/></svg>
       <span>Λογαριασμοί</span>
+    </button>
+
+    <button class="desktop-nav-btn nav-btn" data-v="vIncome" onclick="go('vIncome',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Έξτρα έσοδα</span>
     </button>
 
     <button class="desktop-nav-btn nav-btn" data-v="vCards" onclick="go('vCards',this)">
@@ -287,8 +287,8 @@
               <div class="modern-hero-caption">Με βάση εισόδημα, πάγια, κάρτες και ημερήσια έξοδα.</div>
             </div>
 
-            <button class="hero-edit modern-hero-action" onclick="go('vIncome',document.querySelector('[data-v=vIncome]'))">
-              Έσοδα ✎
+            <button class="hero-edit modern-hero-action" onclick="openWalletsPage()">
+              Λογαριασμοί ✎
             </button>
           </div>
 
@@ -638,7 +638,7 @@
         <span class="income-savings-shortcut-icon">🏦</span>
       </div>
       <div>
-        <strong>Κουμπαράδες & αποταμίευση</strong>
+        <strong>Στόχοι</strong>
         <small>Οι στόχοι αποταμίευσης έχουν πλέον δική τους σελίδα και δεν μπερδεύονται με το διαθέσιμο budget.</small>
       </div>
       <em>Άνοιγμα ›</em>
@@ -1165,11 +1165,11 @@
     <section class="page-grid savings-page">
       <div class="page-hero bento-card capvo-branded-hero capvo-hero-savings">
         <div>
-          <div class="eyebrow">SAVINGS</div>
-          <h2>Κουμπαράδες</h2>
-          <p>Οργάνωσε όσα κρατάς στην άκρη για στόχους, αγορές, διακοπές ή καθαρή αποταμίευση.</p>
+          <div class="eyebrow">GOALS</div>
+          <h2>Στόχοι</h2>
+          <p>Φτιάξε στόχους με ποσό, ημερομηνία, σημειώσεις και ιστορικό κινήσεων — χωρίς να μπερδεύονται με λογαριασμούς.</p>
         </div>
-        <div class="savings-hero-actions"><button class="section-add primary-add" onclick="openGeneralSavingsFlow()">+ Αποταμίευση</button><button class="section-add primary-add" onclick="openSavingsGoalSheet('', 'target')">+ Στόχος</button></div>
+        <div class="savings-hero-actions"><button class="section-add primary-add" onclick="openSavingsGoalSheet('', 'target')">+ Νέος στόχος</button></div>
       </div>
 
       <section class="savings-summary-grid" id="savingsSummaryGrid"></section>
@@ -1201,15 +1201,15 @@
           <em>›</em>
         </button>
 
-        <button class="more-menu-item" onclick="openWalletsPage()">
-          <span class="more-menu-icon">🏦</span>
-          <span><strong>Λογαριασμοί</strong><small>Τράπεζα, μετρητά, prepaid — όλα τα υπόλοιπά σου</small></span>
+        <button class="more-menu-item" onclick="go('vIncome',document.querySelector('[data-v=vMore]'))">
+          <span class="more-menu-icon">💶</span>
+          <span><strong>Έξτρα έσοδα</strong><small>Bonus, δώρα, παροχές και πηγές χρημάτων εκτός κύριου μισθού</small></span>
           <em>›</em>
         </button>
 
         <button class="more-menu-item" onclick="go('vSavings',document.querySelector('[data-v=vMore]'))">
-          <span class="more-menu-icon">🏦</span>
-          <span><strong>Κουμπαράδες</strong><small>Στόχοι αποταμίευσης, υπόλοιπα κύκλων και πλάνο αγορών</small></span>
+          <span class="more-menu-icon">🎯</span>
+          <span><strong>Στόχοι</strong><small>Πλάνα αποταμίευσης, ημερομηνίες, σημειώσεις και κινήσεις στόχων</small></span>
           <em>›</em>
         </button>
 
@@ -1233,7 +1233,7 @@
 
         <button class="more-menu-item" onclick="go('vSettings',document.querySelector('[data-v=vMore]'))">
           <span class="more-menu-icon">⚙️</span>
-          <span><strong>Ρυθμίσεις</strong><small>Telegram, εισαγωγή / εξαγωγή και λογαριασμός</small></span>
+          <span><strong>Ρυθμίσεις</strong><small>Προφίλ, Telegram, εισαγωγή / εξαγωγή και επιλογές εφαρμογής</small></span>
           <em>›</em>
         </button>
       </section>
@@ -1303,12 +1303,13 @@
     +
   </button>
 
-  <button class="mobile-nav-item nav-btn" data-v="vIncome" onclick="go('vIncome',this)" aria-label="Έσοδα">
+  <button class="mobile-nav-item nav-btn" data-v="vWallets" onclick="openWalletsPage()" aria-label="Λογαριασμοί">
     <svg viewBox="0 0 24 24">
-      <path d="M12 1v22"/>
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+      <rect x="2" y="5" width="20" height="14" rx="2"/>
+      <path d="M16 12h2"/>
+      <path d="M2 10h20"/>
     </svg>
-    <span>Έσοδα</span>
+    <span>Πορτοφόλι</span>
   </button>
 
   <button class="mobile-nav-item nav-btn" data-v="vMore" onclick="go('vMore',this)" aria-label="Περισσότερα">
@@ -2052,27 +2053,27 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.11.3"></script>
+<script src="js/app-version.js?v=1.14.2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.11.3"></script>
+<script src="js/config.js?v=1.14.2"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.11.3"></script>
-  <script src="js/app/09-wallet-financial-engine.js?v=1.11.3"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.11.3"></script>
-<script src="js/app/02-supabase-data.js?v=1.11.3"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.11.3"></script>
-<script src="js/app/04-reports-archive.js?v=1.11.3"></script>
-<script src="js/app/05-income-pickers.js?v=1.11.3"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.11.3"></script>
-<script src="js/app/07-add-center.js?v=1.11.3"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.11.3"></script>
+<script src="js/app/00-core-state.js?v=1.14.2"></script>
+  <script src="js/app/09-wallet-financial-engine.js?v=1.14.2"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.14.2"></script>
+<script src="js/app/02-supabase-data.js?v=1.14.2"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.14.2"></script>
+<script src="js/app/04-reports-archive.js?v=1.14.2"></script>
+<script src="js/app/05-income-pickers.js?v=1.14.2"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.14.2"></script>
+<script src="js/app/07-add-center.js?v=1.14.2"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.14.2"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.11.3"></script>
-<script src="js/sync.js?v=1.11.3"></script>
-<script src="js/advisor.js?v=1.11.3"></script>
-<script src="js/wallets.js?v=1.11.3"></script>
+<script src="js/cards.js?v=1.14.2"></script>
+<script src="js/sync.js?v=1.14.2"></script>
+<script src="js/advisor.js?v=1.14.2"></script>
+<script src="js/wallets.js?v=1.14.2"></script>
 
 
 

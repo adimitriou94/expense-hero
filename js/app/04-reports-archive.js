@@ -276,7 +276,7 @@ function reportsRenderCycleGrid(items){
     {icon:'🧾',label:'Flexible έξοδα',value:totals.daily,meta:'Καθημερινές budget κινήσεις'},
     {icon:'📌',label:'Πάγια πληρωμένα',value:totals.fixed,meta:'Μόνο όσα πατήθηκαν ως πληρωμένα'},
     {icon:'💳',label:'Πληρωμές καρτών',value:totals.cards,meta:'Actual cash outflow για κάρτες'},
-    {icon:'🏦',label:'Κουμπαράς',value:totals.savingsDeposit,meta:'Μεταφορές που επηρέασαν budget'},
+    {icon:'🏦',label:'Στόχος',value:totals.savingsDeposit,meta:'Μεταφορές που επηρέασαν budget'},
     {icon:'💰',label:'Income / μισθός',value:totals.income,meta:'Καταθέσεις στον κύκλο',positive:true},
     {icon:'🔁',label:'Wallet transfers',value:totals.walletTransfers,meta:'Μεταφορές μεταξύ λογαριασμών',neutral:true}
   ];
@@ -937,7 +937,7 @@ function archiveSavingsBudgetRowsInRange(start,end){
       const goal=typeof savingsGoalById==='function'?savingsGoalById(t.goalId||t.goal_id):null;
       return {
         id:t.id||`archive_savings_${date}`,
-        name:isWithdrawal?`Επιστροφή από ${goal?.name||'κουμπαρά'}`:`Μεταφορά σε ${goal?.name||'κουμπαρά'}`,
+        name:isWithdrawal?`Επιστροφή από ${goal?.name||'στόχο'}`:`Μεταφορά σε ${goal?.name||'στόχο'}`,
         category:'Αποταμίευση',
         amount:impact,
         budgetImpactAmount:impact,

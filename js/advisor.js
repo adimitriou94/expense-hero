@@ -680,9 +680,9 @@ function capvoAdvisorSuggestions(ctx){
   }
 
   if(ctx.savingsRate<5 && ctx.balance>ctx.income*.10){
-    list.push({type:'info',icon:'🏦',title:'Υπάρχει χώρος για κουμπαρά',text:`Αν κρατήσεις θετικό υπόλοιπο, μπορείς να μεταφέρεις μέρος του σε Γενική αποταμίευση ή στόχο.`});
+    list.push({type:'info',icon:'🏦',title:'Υπάρχει χώρος για στόχο',text:`Αν κρατήσεις θετικό υπόλοιπο, μπορείς να το βάλεις σε κάποιον στόχο.`});
   }else if(ctx.savingsRate>=10){
-    list.push({type:'success',icon:'💰',title:'Καλή αποταμίευση',text:`Έχεις ήδη δεσμεύσει ${ctx.savingsRate}% του budget σε κουμπαράδες στον κύκλο.`});
+    list.push({type:'success',icon:'💰',title:'Καλή αποταμίευση',text:`Έχεις ήδη δεσμεύσει ${ctx.savingsRate}% του budget σε στόχοι στον κύκλο.`});
   }
 
   if(ctx.topCategory.total>0){
@@ -700,7 +700,7 @@ function capvoAdvisorBestNextStep(model){
   if(model.cardDebt>0 && model.cardAdvice?.recommendedPayment>0 && model.cardAdvice?.cardUsagePct>=60)return `Πλήρωσε περίπου ${fmt(model.cardAdvice.recommendedPayment)} στην κάρτα. Μειώνεις χρέος και κρατάς περίπου ${fmt(model.cardAdvice.afterRecommendedDaily)} ανά ημέρα.`;
   if(model.cardDebt>0 && model.cardAdvice?.safePayment<=0)return 'Μην κάνεις έξτρα πληρωμή κάρτας τώρα. Κράτα το budget για τις ημέρες μέχρι την πληρωμή.';
   if(model.debtRatio>20)return 'Δες τις πληρωμές καρτών/χρεών και φτιάξε μικρό πλάνο μείωσης για τον επόμενο κύκλο.';
-  if(model.savingsRate<10 && model.balance>model.income*.10)return 'Μετέφερε ένα μικρό μέρος του θετικού υπολοίπου στη Γενική αποταμίευση, χωρίς να ρίξεις πολύ το ημερήσιο όριο.';
+  if(model.savingsRate<10 && model.balance>model.income*.10)return 'Μετέφερε ένα μικρό μέρος του θετικού υπολοίπου στη Στόχοι, χωρίς να ρίξεις πολύ το ημερήσιο όριο.';
   if(model.practical?.action)return model.practical.action;
   return 'Συνέχισε με το ίδιο όριο ανά ημέρα και κράτα τις νέες κινήσεις κάτω από το ασφαλές ημερήσιο budget.';
 }
@@ -949,7 +949,7 @@ function rAdv(){
         ${capvoAdvisorBreakdownRow('Πάγια',-model.fixedTotalAmount,'negative','Σταθερές υποχρεώσεις')}
         ${capvoAdvisorBreakdownRow('Κινήσεις budget',-model.cashExpenses,'negative','Cash/bank έξοδα')}
         ${capvoAdvisorBreakdownRow('Πληρωμές καρτών',-model.cardPayments,'negative','Πραγματική εκροή προς κάρτες')}
-        ${capvoAdvisorBreakdownRow('Κουμπαράδες',-model.savingsNet,model.savingsNet>=0?'negative':'positive','Καθαρή επίδραση αποταμίευσης')}
+        ${capvoAdvisorBreakdownRow('Στόχοι',-model.savingsNet,model.savingsNet>=0?'negative':'positive','Καθαρή επίδραση αποταμίευσης')}
         ${capvoAdvisorBreakdownRow('Υπόλοιπο',model.balance,model.balance>=0?'positive':'negative','Μετά από όλα τα παραπάνω')}
       </div>
     </section>
@@ -981,7 +981,7 @@ function rAdv(){
       <div class="advisor-rule-bars">
         ${advisorRuleBar('Ανάγκες + χρέη',model.needs,model.income*.50,true)}
         ${advisorRuleBar('Επιθυμίες',model.wants,model.income*.30,true)}
-        ${advisorRuleBar('Κουμπαράδες',Math.max(0,model.actualSavings),model.income*.20,false)}
+        ${advisorRuleBar('Στόχοι',Math.max(0,model.actualSavings),model.income*.20,false)}
       </div>
     </section>
 
@@ -1015,7 +1015,7 @@ function rAdv(){
       <div class="advisor-rule-mini-list advisor-rule-accordion-list">
         ${advisorDetailedRule('80 / 20','Έξοδα έως 80%, αποταμίευση 20%',[
           {label:'Budget impact',actual:model.spent,target:model.income*.80,max:true,note:'Περιλαμβάνει μόνο πραγματικές κινήσεις budget.'},
-          {label:'Κουμπαράδες',actual:Math.max(0,model.actualSavings),target:model.income*.20,max:false,note:'Στόχος να δεσμεύεται μέρος του budget σε αποταμίευση.'}
+          {label:'Στόχοι',actual:Math.max(0,model.actualSavings),target:model.income*.20,max:false,note:'Στόχος να δεσμεύεται μέρος του budget σε αποταμίευση.'}
         ])}
         ${advisorDetailedRule('Σταθερές υποχρεώσεις','Τα πάγια να μην πνίγουν τον κύκλο',[
           {label:'Πάγια',actual:model.fixedTotalAmount,target:model.income*.45,max:true,note:'Ιδανικά κάτω από 45% του διαθέσιμου budget.'}

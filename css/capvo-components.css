@@ -9721,3 +9721,184 @@ body.capvo-operation-locked{
 .dashboard-cycle-paid-btn.salary-overdue{
   box-shadow:0 14px 34px rgba(245,158,11,.24);
 }
+
+
+/* ============================================================
+   CAPVO v1.12.1 — Wallets production polish
+   Group headers, restricted benefit rows, archived restore
+   ============================================================ */
+#vWallets .wallets-group-label.wallets-group-label-v3{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  padding:12px 2px 9px !important;
+}
+#vWallets .wallets-group-label.wallets-group-label-v3 span{
+  color:#7c879d !important;
+  font-size:10.5px !important;
+  font-weight:950 !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase !important;
+}
+#vWallets .wallets-group-label.wallets-group-label-v3 em{
+  min-width:0 !important;
+  color:#98a3b8 !important;
+  font-style:normal !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
+  text-align:right !important;
+}
+#vWallets .wallet-row.wallets-row-v2.is-archived{
+  opacity:.78 !important;
+  background:linear-gradient(180deg,#f8fafc,#f3f6fb) !important;
+  border-style:dashed !important;
+}
+#vWallets .wallet-row.wallets-row-v2.is-archived .wallet-row-icon{
+  filter:grayscale(.35) !important;
+}
+#vWallets .wallet-restore-btn{
+  background:#ecfdf5 !important;
+  color:#059669 !important;
+}
+#vWallets .wallet-restricted-row{
+  background:linear-gradient(180deg,#fffdf7,#fffaf0) !important;
+  border-color:rgba(245,158,11,.18) !important;
+}
+#vWallets .wallet-restricted-icon{
+  background:#fff7ed !important;
+  color:#f97316 !important;
+}
+#vWallets .wallet-restricted-progress{
+  width:100% !important;
+  height:6px !important;
+  margin-top:7px !important;
+  border-radius:999px !important;
+  overflow:hidden !important;
+  background:#ffedd5 !important;
+}
+#vWallets .wallet-restricted-progress i{
+  display:block !important;
+  height:100% !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg,#fb923c,#f97316) !important;
+}
+#vWallets .wallet-row-mini{
+  color:#98a3b8 !important;
+  font-size:10.5px !important;
+  line-height:1.1 !important;
+  font-weight:850 !important;
+  white-space:nowrap !important;
+}
+@media (max-width:430px){
+  #vWallets .wallets-group-label.wallets-group-label-v3{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+    gap:3px !important;
+  }
+  #vWallets .wallets-group-label.wallets-group-label-v3 em{
+    text-align:left !important;
+  }
+  #vWallets .wallet-restricted-progress{
+    max-width:180px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.12.2 — Wallet restricted benefits + archive collapse
+   ============================================================ */
+#vWallets .wallet-benefit-add-row{
+  border-style:dashed !important;
+  border-color:rgba(249,115,22,.26) !important;
+  background:linear-gradient(180deg,#fffaf3,#fff7ed) !important;
+  cursor:pointer !important;
+  width:100% !important;
+  text-align:left !important;
+}
+#vWallets .wallet-benefit-add-row .wallet-row-info small{
+  color:#9a6a2f !important;
+}
+#vWallets .wallet-benefit-add-pill{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:8px 10px !important;
+  border-radius:999px !important;
+  background:#ffedd5 !important;
+  color:#ea580c !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+}
+#vWallets .wallet-archive-collapse{
+  margin-top:14px !important;
+  border:1px solid rgba(148,163,184,.22) !important;
+  border-radius:22px !important;
+  overflow:hidden !important;
+  background:linear-gradient(180deg,#f8fafc,#f3f6fb) !important;
+}
+#vWallets .wallet-archive-collapse summary{
+  list-style:none !important;
+  cursor:pointer !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  padding:15px 16px !important;
+}
+#vWallets .wallet-archive-collapse summary::-webkit-details-marker{display:none !important;}
+#vWallets .wallet-archive-collapse summary span{
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:4px !important;
+}
+#vWallets .wallet-archive-collapse summary strong{
+  color:#334155 !important;
+  font-size:13px !important;
+  line-height:1.15 !important;
+  font-weight:950 !important;
+}
+#vWallets .wallet-archive-collapse summary small{
+  color:#64748b !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:750 !important;
+}
+#vWallets .wallet-archive-collapse summary em{
+  flex:0 0 auto !important;
+  padding:7px 10px !important;
+  border-radius:999px !important;
+  background:#e2e8f0 !important;
+  color:#475569 !important;
+  font-size:11px !important;
+  font-style:normal !important;
+  font-weight:950 !important;
+}
+#vWallets .wallet-archive-collapse[open] summary em::before{content:'Κλείσιμο';}
+#vWallets .wallet-archive-collapse[open] summary em{font-size:0 !important;}
+#vWallets .wallet-archive-collapse[open] summary em::before{font-size:11px !important;}
+#vWallets .wallet-archive-collapse-body{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+  padding:0 12px 12px !important;
+}
+#vWallets .wallet-archive-collapse-body .wallet-row.wallets-row-v2{
+  margin:0 !important;
+}
+body.theme-dark #vWallets .wallet-benefit-add-row,
+body.dark #vWallets .wallet-benefit-add-row,
+html[data-theme="dark"] #vWallets .wallet-benefit-add-row{
+  background:rgba(146,64,14,.22) !important;
+  border-color:rgba(251,146,60,.28) !important;
+}
+body.theme-dark #vWallets .wallet-archive-collapse,
+body.dark #vWallets .wallet-archive-collapse,
+html[data-theme="dark"] #vWallets .wallet-archive-collapse{
+  background:rgba(15,23,42,.74) !important;
+  border-color:rgba(148,163,184,.22) !important;
+}

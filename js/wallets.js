@@ -16,6 +16,26 @@ function openWalletsPage(){
   renderWalletsPage();
 }
 
+function capvoAllWalletsList(){
+  return Array.isArray(D?.wallets) ? D.wallets.filter(Boolean) : [];
+}
+function capvoArchivedWallets(){
+  return capvoAllWalletsList().filter(w=>w && (w.isActive===false || w.is_active===false));
+}
+function capvoRestrictedIncomeSources(){
+  return (D?.incomeSources||[])
+    .filter(s=>s && (typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(s):(s.restriction&&s.restriction!=='none')))
+    .filter(s=>(Number(s.amount)||0)>0 || s.isRestricted || s.restrictionType || s.restriction_type);
+}
+function capvoWalletTypeLabel(w){
+  const typeInfo=(typeof CAPVO_WALLET_TYPES!=='undefined'?CAPVO_WALLET_TYPES[w?.type]:null)||{label:w?.type||'Λογαριασμός',icon:'🏦'};
+  return typeInfo.label||'Λογαριασμός';
+}
+function capvoWalletTypeIcon(w){
+  const typeInfo=(typeof CAPVO_WALLET_TYPES!=='undefined'?CAPVO_WALLET_TYPES[w?.type]:null)||{icon:'🏦'};
+  return w?.icon || typeInfo.icon || '🏦';
+}
+
 // ── Dashboard money hub (Approved Option 4: premium light/dark) ──────────────
 function renderWalletCards(){
   const container = document.getElementById('dashWalletCards');
@@ -220,19 +240,28 @@ function renderWalletsTotalCard(){
   if(!totalEl) return;
 
   const wallets = capvoActiveWallets();
+  const archivedWallets = capvoArchivedWallets();
+  const restrictedSources = capvoRestrictedIncomeSources();
   const regular = wallets.filter(w=>typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(w):!w.isSavings);
   const savingsWallets = wallets.filter(w=>typeof capvoWalletCountsInBudget==='function'?!capvoWalletCountsInBudget(w):w.isSavings);
-  const total = typeof capvoGetTotalWalletAssets==='function'?capvoGetTotalWalletAssets():capvoWalletTotalBalance();
+  const freeTotal = typeof capvoGetTotalWalletAssets==='function'?capvoGetTotalWalletAssets():capvoWalletTotalBalance();
   const budgetTotal = typeof capvoGetSpendableWalletTotal==='function'
     ? capvoGetSpendableWalletTotal()
     : regular.filter(w=>w.includeInTotal!==false).reduce((s,w)=>s+(Number(w.currentBalance)||0),0);
   const savings = savingsWallets.reduce((s,w)=>s+(Number(w.currentBalance)||0),0);
+  const restrictedRemaining = restrictedSources.reduce((sum,s)=>{
+    const total=Number(s.amount)||0;
+    const used=typeof restrictedCoverageFor==='function' ? (Number(restrictedCoverageFor(s))||0) : 0;
+    const remaining=typeof paymentSourceRemaining==='function' ? (Number(paymentSourceRemaining(s))||0) : Math.max(0,total-used);
+    return sum + Math.max(0,remaining);
+  },0);
   const def = wallets.find(w=>w.isPrimaryBudget) || wallets.find(w=>w.isDefault) || regular[0] || wallets[0];
 
-  totalEl.textContent = typeof fmt==='function'?fmt(total):total+'€';
+  totalEl.textContent = typeof fmt==='function'?fmt(freeTotal):freeTotal+'€';
   if(subEl){
     const parts = [];
     if(savings>0) parts.push(`${typeof fmt==='function'?fmt(savings):savings+'€'} αποταμίευση`);
+    if(restrictedRemaining>0) parts.push(`${typeof fmt==='function'?fmt(restrictedRemaining):restrictedRemaining+'€'} παροχές`);
     parts.push(`${wallets.length} ${wallets.length===1?'λογαριασμός':'λογαριασμοί'}`);
     subEl.textContent = parts.join(' · ');
   }
@@ -241,7 +270,59 @@ function renderWalletsTotalCard(){
   if(countSubEl)countSubEl.textContent = wallets.length===1?'ενεργός':'ενεργοί';
   if(budgetEl)budgetEl.textContent = typeof fmt==='function'?fmt(budgetTotal):budgetTotal+'€';
   if(defaultEl)defaultEl.textContent = def ? (def.name || '—') : '—';
-  if(listCountEl)listCountEl.textContent = `${wallets.length} ${wallets.length===1?'εγγραφή':'εγγραφές'}`;
+  if(listCountEl){
+    const suffix = archivedWallets.length>0 ? ` · ${archivedWallets.length} αρχειοθετημ.` : '';
+    listCountEl.textContent = `${wallets.length} ${wallets.length===1?'ενεργή εγγραφή':'ενεργές εγγραφές'}${suffix}`;
+  }
+}
+
+
+function openWalletBenefitSourceSheet(){
+  if(typeof openModal==='function'){
+    openModal('incomeSource');
+    setTimeout(()=>{
+      try{
+        if(typeof applyIncomePreset==='function')applyIncomePreset('benefit');
+        if(document.getElementById('mIncomeSourceTitle'))document.getElementById('mIncomeSourceTitle').textContent='Προσθήκη παροχής';
+        if(document.getElementById('incomeModalKicker'))document.getElementById('incomeModalKicker').textContent='Περιορισμένη παροχή';
+        if(document.getElementById('incomeModalIntro'))document.getElementById('incomeModalIntro').textContent='Πρόσθεσε Ticket, Voucher ή άλλη παροχή που χρησιμοποιείται μόνο σε συγκεκριμένες κατηγορίες. Δεν είναι ελεύθερος λογαριασμός.';
+        if(document.getElementById('btnIncomeSource'))document.getElementById('btnIncomeSource').textContent='Αποθήκευση παροχής';
+      }catch(e){console.warn('openWalletBenefitSourceSheet preset failed',e);}
+    },80);
+    return;
+  }
+  if(typeof go==='function')go('vIncome',document.querySelector('[data-v=vMore]'));
+}
+
+function walletRestrictedAddRowHtml(hasExisting=false){
+  return `
+    <button type="button" class="wallet-row wallets-row-v2 wallet-benefit-add-row" onclick="openWalletBenefitSourceSheet()">
+      <div class="wallet-row-icon wallet-restricted-icon">🎫</div>
+      <div class="wallet-row-info">
+        <strong>${hasExisting?'Προσθήκη παροχής':'Προσθήκη Ticket / Voucher'}</strong>
+        <small>Δεν είναι ελεύθερος λογαριασμός. Χρησιμοποιείται μόνο σε συγκεκριμένες κατηγορίες.</small>
+      </div>
+      <div class="wallet-row-right">
+        <div class="wallet-benefit-add-pill">+ Παροχή</div>
+      </div>
+    </button>`;
+}
+
+function walletArchivedCollapsedHtml(archivedWallets=[]){
+  if(!archivedWallets.length)return '';
+  return `
+    <details class="wallet-archive-collapse">
+      <summary>
+        <span>
+          <strong>Αρχειοθετημένοι λογαριασμοί</strong>
+          <small>${archivedWallets.length} ${archivedWallets.length===1?'κρυμμένος λογαριασμός':'κρυμμένοι λογαριασμοί'} · το ιστορικό παραμένει</small>
+        </span>
+        <em>Προβολή</em>
+      </summary>
+      <div class="wallet-archive-collapse-body">
+        ${archivedWallets.map(w=>walletRowHtml(w,{kind:'archived'})).join('')}
+      </div>
+    </details>`;
 }
 
 function renderWalletsList(){
@@ -249,54 +330,132 @@ function renderWalletsList(){
   if(!container) return;
 
   const wallets = capvoActiveWallets();
+  const archivedWallets = capvoArchivedWallets();
+  const restrictedSources = capvoRestrictedIncomeSources();
 
-  if(wallets.length === 0){
+  if(wallets.length === 0 && restrictedSources.length===0 && archivedWallets.length===0){
     container.innerHTML = `
       <div class="wallets-empty">
         <div class="wallets-empty-icon">🏦</div>
         <p>Δεν έχεις λογαριασμούς ακόμα.</p>
-        <p>Πρόσθεσε τους τραπεζικούς λογαριασμούς σου για να παρακολουθείς το συνολικό σου υπόλοιπο.</p>
+        <p>Πρόσθεσε τράπεζα, μετρητά ή ψηφιακό πορτοφόλι για να παρακολουθείς το διαθέσιμο υπόλοιπο.</p>
       </div>`;
     return;
   }
 
-  // Group: spendable budget wallets first, then savings / outside-budget wallets
-  const regular = wallets.filter(w=>typeof capvoWalletCountsInBudget==='function' ? capvoWalletCountsInBudget(w) : !w.isSavings);
-  const savingsWallets = wallets.filter(w=>typeof capvoWalletCountsInBudget==='function' ? !capvoWalletCountsInBudget(w) : w.isSavings);
+  const freeWallets = wallets.filter(w=>{
+    const counts = typeof capvoWalletCountsInBudget==='function' ? capvoWalletCountsInBudget(w) : !w.isSavings;
+    return counts && w.includeInTotal!==false;
+  });
+  const outsideBudgetWallets = wallets.filter(w=>{
+    const counts = typeof capvoWalletCountsInBudget==='function' ? capvoWalletCountsInBudget(w) : !w.isSavings;
+    return !counts || w.includeInTotal===false;
+  });
 
   let html = '';
 
-  if(regular.length>0){
-    html += `<div class="wallets-group-label">Λογαριασμοί</div>`;
-    html += regular.map(w=>walletRowHtml(w)).join('');
+  if(freeWallets.length>0){
+    const total = freeWallets.reduce((s,w)=>s+(Number(w.currentBalance)||0),0);
+    html += walletGroupHeaderHtml('Ελεύθερα χρήματα', `${freeWallets.length} ${freeWallets.length===1?'λογαριασμός':'λογαριασμοί'} · ${typeof fmt==='function'?fmt(total):total+'€'}`);
+    html += freeWallets.map(w=>walletRowHtml(w,{kind:'free'})).join('');
   }
-  if(savingsWallets.length>0){
-    html += `<div class="wallets-group-label">Αποταμίευση</div>`;
-    html += savingsWallets.map(w=>walletRowHtml(w)).join('');
+
+  if(restrictedSources.length>0){
+    const summary = restrictedSources.reduce((acc,s)=>{
+      const total=Number(s.amount)||0;
+      const usedRaw=typeof restrictedCoverageFor==='function' ? (Number(restrictedCoverageFor(s))||0) : 0;
+      const used=Math.max(0,Math.min(total,usedRaw));
+      const remaining=typeof paymentSourceRemaining==='function' ? (Number(paymentSourceRemaining(s))||0) : Math.max(0,total-used);
+      acc.total+=total; acc.used+=used; acc.remaining+=Math.max(0,remaining);
+      return acc;
+    },{total:0,used:0,remaining:0});
+    html += walletGroupHeaderHtml('Περιορισμένες παροχές', `${typeof fmt==='function'?fmt(summary.remaining):summary.remaining+'€'} από ${typeof fmt==='function'?fmt(summary.total):summary.total+'€'}`);
+    html += restrictedSources.map(s=>walletRestrictedSourceRowHtml(s)).join('');
+    html += walletRestrictedAddRowHtml(true);
+  }else{
+    html += walletGroupHeaderHtml('Περιορισμένες παροχές', 'Ticket / Voucher · όχι ελεύθερος λογαριασμός');
+    html += walletRestrictedAddRowHtml(false);
+  }
+
+  if(outsideBudgetWallets.length>0){
+    const total = outsideBudgetWallets.reduce((s,w)=>s+(Number(w.currentBalance)||0),0);
+    html += walletGroupHeaderHtml('Εκτός budget / αποταμίευση', `${outsideBudgetWallets.length} ${outsideBudgetWallets.length===1?'λογαριασμός':'λογαριασμοί'} · ${typeof fmt==='function'?fmt(total):total+'€'}`);
+    html += outsideBudgetWallets.map(w=>walletRowHtml(w,{kind:'outside'})).join('');
+  }
+
+  if(archivedWallets.length>0){
+    html += walletArchivedCollapsedHtml(archivedWallets);
   }
 
   container.innerHTML = html;
 }
 
-function walletRowHtml(w){
-  const typeInfo = CAPVO_WALLET_TYPES[w.type]||{label:'Άλλο',icon:'💼'};
+function walletGroupHeaderHtml(title,subtitle=''){
+  return `
+    <div class="wallets-group-label wallets-group-label-v3">
+      <span>${esc(title)}</span>
+      ${subtitle?`<em>${esc(subtitle)}</em>`:''}
+    </div>`;
+}
+
+function walletRowHtml(w,options={}){
+  const kind = options.kind || 'free';
+  const typeInfo = (typeof CAPVO_WALLET_TYPES!=='undefined'?CAPVO_WALLET_TYPES[w.type]:null)||{label:'Άλλο',icon:'💼'};
   const bal = Number(w.currentBalance)||0;
   const balClass = bal < 0 ? 'is-negative' : bal === 0 ? 'is-zero' : '';
+  const isArchived = kind==='archived' || w.isActive===false || w.is_active===false;
+  const meta=[];
+  meta.push(typeInfo.label||'Λογαριασμός');
+  if(w.isPrimaryBudget)meta.push('Βασικός budget');
+  else if(w.isDefault)meta.push('Προεπιλογή');
+  if((Number(w.cycleIncomeAmount)||0)>0)meta.push('μισθός '+(typeof fmt==='function'?fmt(w.cycleIncomeAmount):w.cycleIncomeAmount+'€'));
+  if(typeof capvoWalletCountsInBudget==='function' && !capvoWalletCountsInBudget(w))meta.push('εκτός budget');
+  if(w.includeInTotal===false)meta.push('εκτός συνόλου');
+  if(isArchived)meta.push('αρχειοθετημένος');
+
   return `
-    <div class="wallet-row wallets-row-v2" data-wallet-id="${esc(w.id)}">
+    <div class="wallet-row wallets-row-v2 ${isArchived?'is-archived':''}" data-wallet-id="${esc(w.id)}">
       <div class="wallet-row-icon" style="background:${esc(w.color||'#6547f6')}18;color:${esc(w.color||'#6547f6')}">
         ${esc(w.icon||typeInfo.icon||'🏦')}
       </div>
       <div class="wallet-row-info">
         <strong>${esc(w.name)}</strong>
-        <small>${esc(typeInfo.label)}${w.isPrimaryBudget?' · Βασικός budget'+((Number(w.cycleIncomeAmount)||0)>0?' · μισθός '+(typeof fmt==='function'?fmt(w.cycleIncomeAmount):w.cycleIncomeAmount+'€'):''):w.isDefault?' · Προεπιλογή':''}${(typeof capvoWalletCountsInBudget==='function'&&!capvoWalletCountsInBudget(w))?' · εκτός budget':''}${w.includeInTotal===false?' · εκτός συνόλου':''}</small>
+        <small>${esc(meta.join(' · '))}</small>
       </div>
       <div class="wallet-row-right">
         <div class="wallet-row-balance ${balClass}">${typeof fmt==='function'?fmt(bal):bal+'€'}</div>
         <div class="wallet-row-actions">
-          <button type="button" class="wallet-action-btn" onclick="openWalletTransferSheet('${esc(w.id)}')" title="Μεταφορά">⇄</button>
-          <button type="button" class="wallet-action-btn" onclick="openEditWalletSheet('${esc(w.id)}')" title="Επεξεργασία">✎</button>
+          ${isArchived
+            ? `<button type="button" class="wallet-action-btn wallet-restore-btn" onclick="restoreWallet('${esc(w.id)}')" title="Επαναφορά">↺</button>`
+            : `<button type="button" class="wallet-action-btn" onclick="openWalletTransferSheet('${esc(w.id)}')" title="Μεταφορά">⇄</button>
+               <button type="button" class="wallet-action-btn" onclick="openEditWalletSheet('${esc(w.id)}')" title="Επεξεργασία">✎</button>`}
         </div>
+      </div>
+    </div>`;
+}
+
+function walletRestrictedSourceRowHtml(s){
+  const total=Number(s.amount)||0;
+  const usedRaw=typeof restrictedCoverageFor==='function' ? (Number(restrictedCoverageFor(s))||0) : 0;
+  const used=Math.max(0,Math.min(total,usedRaw));
+  const remaining=typeof paymentSourceRemaining==='function' ? (Number(paymentSourceRemaining(s))||0) : Math.max(0,total-used);
+  const percent=total>0 ? Math.min(100,Math.max(0,(used/total)*100)) : 0;
+  const rawType=String(s.restrictionType||s.restriction_type||s.sourceCategory||s.source_category||s.category||'').toLowerCase();
+  const label=rawType.includes('voucher')?'Voucher':rawType.includes('ticket')?'Ticket / φαγητό':'Περιορισμένη παροχή';
+  const icon=rawType.includes('voucher')?'🎟️':rawType.includes('ticket')?'🍽️':'🔐';
+  const allowed=typeof allowedCategoriesForSource==='function' ? allowedCategoriesForSource(s) : [];
+  const restrictionText=allowed&&allowed.length ? `μόνο για ${allowed.slice(0,3).join(', ')}${allowed.length>3?'…':''}` : label;
+  return `
+    <div class="wallet-row wallets-row-v2 wallet-restricted-row" data-source-id="${esc(s.id||'')}">
+      <div class="wallet-row-icon wallet-restricted-icon">${icon}</div>
+      <div class="wallet-row-info">
+        <strong>${esc(s.name||label)}</strong>
+        <small>${esc(restrictionText)} · Χρήση ${typeof fmt==='function'?fmt(used):used+'€'} / ${typeof fmt==='function'?fmt(total):total+'€'}</small>
+        <div class="wallet-restricted-progress" aria-hidden="true"><i style="width:${percent.toFixed(1)}%"></i></div>
+      </div>
+      <div class="wallet-row-right">
+        <div class="wallet-row-balance">${typeof fmt==='function'?fmt(remaining):remaining+'€'}</div>
+        <small class="wallet-row-mini">από ${typeof fmt==='function'?fmt(total):total+'€'}</small>
       </div>
     </div>`;
 }
@@ -736,10 +895,17 @@ async function saveWalletFromSheet(){
 async function confirmDeleteWallet(walletId){
   if(!walletId)return;
   const wallet=capvoWalletById(walletId);
+  const balance=Number(wallet?.currentBalance)||0;
+  const balanceText=typeof fmt==='function'?fmt(balance):balance+'€';
+  const warnings=[];
+  if(Math.abs(balance)>0)warnings.push(`Ο λογαριασμός έχει ακόμα υπόλοιπο ${balanceText}.`);
+  if(wallet?.isPrimaryBudget)warnings.push('Είναι ο βασικός λογαριασμός budget.');
+  if(wallet?.isDefault)warnings.push('Είναι προεπιλεγμένος λογαριασμός.');
+  const message=`${warnings.length?warnings.join(' ')+' ':''}Θα κρυφτεί από τις νέες επιλογές, αλλά οι παλιές κινήσεις θα μείνουν στο ιστορικό. Μπορείς να τον επαναφέρεις από τους Αρχειοθετημένους λογαριασμούς.`;
   const confirmed=await showConfirmModal({
     title:'Αρχειοθέτηση λογαριασμού',
-    message:`Ο λογαριασμός "${wallet?.name||'Άγνωστος'}" θα αρχειοθετηθεί. Οι κινήσεις που έχουν καταχωρηθεί δεν θα διαγραφούν.`,
-    confirmText:'Αρχειοθέτηση'
+    message,
+    confirmText:Math.abs(balance)>0?'Συνέχεια αρχειοθέτησης':'Αρχειοθέτηση'
   });
   if(!confirmed)return;
 
@@ -756,6 +922,31 @@ async function confirmDeleteWallet(walletId){
   }catch(e){
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αρχειοθετήσω τον λογαριασμό.');
     showMiniToast(e.message||'Σφάλμα αρχειοθέτησης','error');
+  }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
+  }
+}
+
+async function restoreWallet(walletId){
+  if(!walletId)return;
+  const wallet=capvoAllWalletsList().find(w=>String(w.id)===String(walletId));
+  const confirmed=await showConfirmModal({
+    title:'Επαναφορά λογαριασμού',
+    message:`Ο λογαριασμός "${wallet?.name||'Άγνωστος'}" θα εμφανίζεται ξανά στις επιλογές για νέες κινήσεις και μεταφορές.`,
+    confirmText:'Επαναφορά'
+  });
+  if(!confirmed)return;
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Επαναφέρεται λογαριασμός...', 'Κρατάω το ίδιο ιστορικό και ενεργοποιώ ξανά την πηγή.'))return;
+  try{
+    await capvoRestoreWallet(walletId);
+    const userId=getFinanceUserId?.();
+    if(userId){await fetchAllData(userId);render();}
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Ο λογαριασμός επανήλθε.');
+    showMiniToast('✅ Επαναφέρθηκε');
+    if(document.getElementById('vWallets')?.classList.contains('active')) renderWalletsPage();
+  }catch(e){
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να επαναφέρω τον λογαριασμό.');
+    showMiniToast(e.message||'Σφάλμα επαναφοράς','error');
   }finally{
     if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
   }

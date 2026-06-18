@@ -172,7 +172,7 @@ async function fetchAllData(userId){
       D.savingsGoals=(goals||[]).map(g=>({
         id:g.id,
         userId:g.user_id,
-        name:g.name||'Κουμπαράς',
+        name:g.name||'Στόχος',
         icon:g.icon||'🏦',
         targetAmount:Number(g.target_amount)||0,
         currentAmount:Number(g.current_amount)||0,
@@ -318,6 +318,11 @@ async function fetchAllData(userId){
       category:t.category||'',
       affectsBudget:!!t.affects_budget,
       budgetEffectType:t.budget_effect_type||'none',
+      walletId:t.wallet_id||'',
+      walletNameSnapshot:t.wallet_name_snapshot||'',
+      walletBalanceBefore:Object.prototype.hasOwnProperty.call(t,'wallet_balance_before') ? Number(t.wallet_balance_before)||0 : null,
+      walletBalanceAfter:Object.prototype.hasOwnProperty.call(t,'wallet_balance_after') ? Number(t.wallet_balance_after)||0 : null,
+      walletBalanceEffectAmount:Object.prototype.hasOwnProperty.call(t,'wallet_balance_effect_amount') ? Number(t.wallet_balance_effect_amount)||0 : null,
       createdAt:t.created_at||''
     }));
 
@@ -1033,7 +1038,7 @@ function showPaidTodayPreviewModal(preview){
           <div><span>Πάγια</span><strong>${fmt(preview.proposedSpent.fixed)}</strong></div>
           <div><span>Ημερήσια μήνα</span><strong>${fmt(preview.proposedSpent.daily)}</strong></div>
           <div><span>Πληρωμές καρτών</span><strong>${fmt(preview.proposedSpent.card)}</strong></div>
-          <div><span>Κουμπαράς</span><strong>${fmt(preview.proposedSpent.savings)}</strong></div>
+          <div><span>Στόχος</span><strong>${fmt(preview.proposedSpent.savings)}</strong></div>
         </div>
 
         <div class="capvo-paid-preview-note">
@@ -2188,6 +2193,20 @@ async function capvoDeleteWallet(walletId){
   const {error}=await supabaseClient
     .from('wallets')
     .update({is_active:false, updated_at:new Date().toISOString()})
+    .eq('id',walletId)
+    .eq('user_id',ownerUserId);
+
+  if(error)throw error;
+}
+
+async function capvoRestoreWallet(walletId){
+  const ownerUserId=getFinanceUserId();
+  if(!ownerUserId)throw new Error('Missing user');
+
+  // Restore archived wallet. History remains linked to the same wallet id.
+  const {error}=await supabaseClient
+    .from('wallets')
+    .update({is_active:true, updated_at:new Date().toISOString()})
     .eq('id',walletId)
     .eq('user_id',ownerUserId);
 

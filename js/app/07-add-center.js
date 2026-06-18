@@ -622,7 +622,7 @@ function txCompletePaymentText(e,type){
   if(e?.sourceLabel)return e.sourceLabel;
   if(e?.isCardPayment || e?.paymentAccountType==='credit_card_payment')return 'Πληρωμή κάρτας · Επηρεάζει budget';
   if(e?.isCreditCardPurchase || e?.paymentAccountType==='credit_card')return 'Αγορά με πιστωτική · Δεν επηρεάζει budget';
-  if(e?.isSavingsMovement)return e?.isSavingsTransfer?'Εσωτερική μεταφορά κουμπαρά':'Κουμπαράς';
+  if(e?.isSavingsMovement)return e?.isSavingsTransfer?'Εσωτερική μεταφορά στόχου':'Στόχος';
   if(e?.paymentSourceName)return e.paymentSourceName;
   return 'Budget / Μετρητά';
 }
@@ -646,7 +646,7 @@ function txCompleteMovementTypeLabel(e,type){
   if(mt==='credit_card_purchase')return 'Αγορά με πιστωτική';
   if(mt==='wallet_transfer')return 'Μεταφορά wallet';
   if(mt==='savings_deposit')return 'Αποταμίευση';
-  if(mt==='savings_withdrawal')return 'Επιστροφή από κουμπαρά';
+  if(mt==='savings_withdrawal')return 'Επιστροφή από στόχο';
   if(mt==='savings_transfer_in' || mt==='savings_transfer_out')return 'Εσωτερική μεταφορά';
   if(mt==='restricted_expense')return 'Κίνηση παροχής';
   return 'Κίνηση budget';
@@ -759,6 +759,15 @@ async function txCompleteDeleteWithConfirm(type,id){
   }
 }
 
+
+async function txCompleteUndoCardPayment(txId){
+  const cleanId=String(txId||'').replace(/^card_payment_/,'');
+  if(!cleanId)return;
+  closeMobileTransactionDetail();
+  if(typeof undoCardPayment==='function')await undoCardPayment(cleanId);
+  else showMiniToast?.('Η αναίρεση πληρωμής κάρτας δεν είναι διαθέσιμη.','error');
+}
+
 function showMobileTransactionDetail(type,id){
   if(window.innerWidth>768){
     return (type==='fixed') ? editExp(type,id) : undefined;
@@ -787,14 +796,17 @@ function showMobileTransactionDetail(type,id){
   const displayTitle=typeof capvoMovementDisplayTitle==='function'?capvoMovementDisplayTitle(e):(merchantText||e.name||'Κίνηση');
   const canEdit=type!=='movement' && e.canEdit!==false;
   const canDelete=type!=='movement' && e.canDelete!==false;
-  const actions=(canEdit||canDelete)?`
+  const canUndoCardPayment=!!(e.isCardPayment && (e.sourceId || String(id||'').replace(/^card_payment_/,'')));
+  const cardPaymentTxId=e.sourceId || String(id||'').replace(/^card_payment_/,'');
+  const actions=(canEdit||canDelete||canUndoCardPayment)?`
     <div class="tx-v25-actions">
       ${canEdit?`<button type="button" class="tx-v25-action primary" onclick="txCompleteOpenManualForEdit('${type}','${id}')"><span>✎</span>Επεξεργασία</button>`:''}
       ${canEdit?`<button type="button" class="tx-v25-action secondary" onclick="txCompleteOpenManualForDuplicate('${type}','${id}')"><span>⧉</span>Αντιγραφή</button>`:''}
+      ${canUndoCardPayment?`<button type="button" class="tx-v25-action secondary" onclick="txCompleteUndoCardPayment('${cardPaymentTxId}')"><span>↺</span>Αναίρεση</button>`:''}
       ${canDelete?`<button type="button" class="tx-v25-action danger" onclick="txCompleteDeleteWithConfirm('${type}','${id}')"><span>🗑</span>Διαγραφή</button>`:''}
     </div>`:`
     <div class="tx-v25-readonly-note">
-      Αυτή η κίνηση προέρχεται από κάρτα ή κουμπαρά και εμφανίζεται εδώ πληροφοριακά. Η διαχείρισή της γίνεται από την αντίστοιχη ενότητα.
+      Αυτή η κίνηση προέρχεται από κάρτα ή στόχο και εμφανίζεται εδώ πληροφοριακά. Η διαχείρισή της γίνεται από την αντίστοιχη ενότητα.
     </div>`;
 
   const sourceText=e.paymentSourceName||payText;
@@ -873,7 +885,7 @@ function txCompleteDailyRow(e){
   const badges=[`<span class="tx-type-badge tx-type-${esc(kind)}">${esc(typeLabel)}</span>`];
   if(isFixed && typeLabel!=='Πληρωμή παγίου')badges.push(`<span class="payment-badge fixed-payment">Πάγιο</span>`);
   if(isCard)badges.push(`<span class="payment-badge credit-card">Κάρτα</span>`);
-  if(isSavings)badges.push(`<span class="payment-badge savings">Κουμπαράς</span>`);
+  if(isSavings)badges.push(`<span class="payment-badge savings">Στόχος</span>`);
   if(isIncome)badges.push(`<span class="payment-badge budget-return">Income</span>`);
   if(isWallet)badges.push(`<span class="payment-badge no-budget">Transfer</span>`);
   if(!affects)badges.push(`<span class="payment-badge no-budget">Δεν επηρεάζει budget</span>`);
