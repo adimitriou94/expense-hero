@@ -384,6 +384,10 @@ async function fetchAllData(userId){
         name:e.name,
         amount:Number(e.amount)||0,
         category:e.category,
+        categoryId:e.category_id||null,
+        subcategoryId:e.subcategory_id||null,
+        merchantName:e.merchant_name||'',
+        notes:e.notes||'',
         date:e.date,
         paymentSourceId:e.payment_source_id||'',
         paymentSourceName:e.payment_source_name||'',
@@ -485,7 +489,8 @@ async function fetchAllData(userId){
         cssClass:c.css_class||'cat-other',
         sortOrder:Number(c.sort_order)||0,
         isSystem:!!c.is_system,
-        parentId:c.parent_id||null
+        parentId:c.parent_id||null,
+        keywords:Array.isArray(c.keywords)?c.keywords:[]
       }));
     }
 
@@ -654,6 +659,7 @@ async function saveToSupabase(){
 
     Object.entries(D.months).forEach(([monthKey,m])=>{
       (m.daily||[]).forEach(e=>{
+        if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(e);
         allDaily.push({
           id:e.id,
           user_id:ownerUserId,
@@ -661,6 +667,10 @@ async function saveToSupabase(){
           name:e.name,
           amount:e.amount,
           category:e.category,
+          category_id:e.categoryId||e.category_id||null,
+          subcategory_id:e.subcategoryId||e.subcategory_id||null,
+          merchant_name:e.merchantName||e.merchant_name||null,
+          notes:e.notes||null,
           date:e.date,
           type:'daily',
           month_key:monthKey,

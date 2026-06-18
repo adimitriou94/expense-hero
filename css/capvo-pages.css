@@ -16737,3 +16737,367 @@ body.capvo-dashboard-to-wizard-transition #vDash{
     gap:8px !important;
   }
 }
+
+
+/* ===== CAPVO v1.11.1 — Statistics foundation ===== */
+#vStats .reports-mix-card,
+#vStats .reports-subcategory-card,
+#vStats .reports-wallet-card,
+#vStats .reports-merchant-card{
+  overflow:hidden;
+}
+
+#vStats .reports-cycle-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+#vStats .reports-cycle-card{
+  min-width:0;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#fff,rgba(248,250,255,.94));
+  border:1px solid rgba(119,132,170,.12);
+  box-shadow:0 10px 24px rgba(30,40,90,.045);
+}
+
+#vStats .reports-cycle-card > span{
+  flex:0 0 auto;
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:15px;
+  background:#f1edff;
+  color:#6547f6;
+  font-size:18px;
+}
+
+#vStats .reports-cycle-card.positive > span{background:#dcfce7;color:#16a34a;}
+#vStats .reports-cycle-card.neutral > span{background:#e0f2fe;color:#0284c7;}
+
+#vStats .reports-cycle-card div{min-width:0;}
+#vStats .reports-cycle-card small{
+  display:block;
+  color:#7c879d;
+  font-size:11px;
+  line-height:1.2;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+#vStats .reports-cycle-card strong{
+  display:block;
+  margin-top:5px;
+  color:#111827;
+  font-size:20px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.04em;
+  white-space:nowrap;
+}
+#vStats .reports-cycle-card em{
+  display:block;
+  margin-top:6px;
+  color:#8b96ae;
+  font-size:12px;
+  line-height:1.35;
+  font-style:normal;
+  font-weight:750;
+}
+
+#vStats .reports-grid-two{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+#vStats .reports-section-head.compact{
+  margin-bottom:14px;
+}
+
+#vStats .reports-mini-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#vStats .reports-break-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  border-radius:19px;
+  background:rgba(248,250,255,.88);
+  border:1px solid rgba(119,132,170,.11);
+}
+
+#vStats .reports-break-main{
+  min-width:0;
+  flex:1;
+}
+
+#vStats .reports-break-main strong{
+  display:block;
+  color:#151c2d;
+  font-size:13.5px;
+  line-height:1.25;
+  font-weight:900;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+#vStats .reports-break-main small{
+  display:block;
+  margin-top:3px;
+  color:#8b96ae;
+  font-size:11.5px;
+  line-height:1.25;
+  font-weight:750;
+}
+
+#vStats .reports-break-track{
+  height:7px;
+  margin-top:8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e8edf7;
+}
+
+#vStats .reports-break-track span{
+  display:block;
+  height:100%;
+  min-width:8px;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#6547f6,#8b5cf6);
+}
+
+#vStats .reports-break-value{
+  flex:0 0 auto;
+  color:#111827;
+  font-size:13px;
+  font-weight:950;
+  white-space:nowrap;
+}
+
+#vStats .reports-mini-empty{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(248,250,255,.8);
+  border:1px dashed rgba(119,132,170,.18);
+}
+
+#vStats .reports-mini-more{
+  padding:3px 4px 0;
+  color:#8b96ae;
+  font-size:12px;
+  font-weight:800;
+  text-align:center;
+}
+
+@media (max-width: 780px){
+  #vStats .reports-cycle-grid,
+  #vStats .reports-grid-two{
+    grid-template-columns:1fr;
+  }
+
+  #vStats .reports-cycle-card{
+    padding:13px;
+    border-radius:20px;
+  }
+
+  #vStats .reports-cycle-card strong{
+    font-size:19px;
+  }
+}
+
+
+/* ===== CAPVO v1.11.1 — Statistics actionable polish ===== */
+#vStats .reports-action-card,
+#vStats .reports-ticket-card{
+  overflow:hidden;
+}
+
+#vStats .reports-action-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+#vStats .reports-action-item{
+  min-width:0;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#fff,rgba(248,250,255,.95));
+  border:1px solid rgba(119,132,170,.12);
+  box-shadow:0 12px 24px rgba(30,40,90,.04);
+}
+
+#vStats .reports-action-item > span{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  background:#eef2ff;
+  color:#4f46e5;
+  font-size:18px;
+}
+
+#vStats .reports-action-item div{min-width:0;}
+#vStats .reports-action-item strong{
+  display:block;
+  color:#101827;
+  font-size:14px;
+  line-height:1.2;
+  font-weight:950;
+}
+#vStats .reports-action-item p{
+  margin:5px 0 0;
+  color:#64748b;
+  font-size:12.5px;
+  line-height:1.45;
+  font-weight:750;
+}
+#vStats .reports-action-item p strong{display:inline;font-size:inherit;}
+
+#vStats .reports-action-item.green > span{background:#dcfce7;color:#16a34a;}
+#vStats .reports-action-item.amber > span{background:#fef3c7;color:#d97706;}
+#vStats .reports-action-item.red > span{background:#fee2e2;color:#dc2626;}
+#vStats .reports-action-item.purple > span{background:#f3e8ff;color:#7c3aed;}
+#vStats .reports-action-item.blue > span{background:#dbeafe;color:#2563eb;}
+
+#vStats .reports-ticket-grid{
+  display:grid;
+  gap:14px;
+}
+
+#vStats .reports-ticket-summary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+
+#vStats .reports-ticket-stat{
+  min-width:0;
+  padding:13px;
+  border-radius:19px;
+  background:rgba(248,250,255,.9);
+  border:1px solid rgba(119,132,170,.12);
+}
+
+#vStats .reports-ticket-stat small,
+#vStats .reports-ticket-stat em{
+  display:block;
+  color:#8b96ae;
+  font-size:11px;
+  line-height:1.25;
+  font-weight:850;
+  font-style:normal;
+}
+#vStats .reports-ticket-stat strong{
+  display:block;
+  margin:5px 0 4px;
+  color:#111827;
+  font-size:16px;
+  line-height:1.15;
+  font-weight:950;
+  overflow-wrap:anywhere;
+}
+
+#vStats .reports-ticket-sources{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+#vStats .reports-ticket-source{
+  min-width:0;
+  padding:13px;
+  border-radius:20px;
+  background:linear-gradient(180deg,#fff7ed,#ffffff);
+  border:1px solid rgba(245,158,11,.16);
+}
+
+#vStats .reports-ticket-source-head{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+#vStats .reports-ticket-source-head > span{
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#ffedd5;
+}
+#vStats .reports-ticket-source-head div{min-width:0;}
+#vStats .reports-ticket-source-head strong{
+  display:block;
+  color:#111827;
+  font-size:13.5px;
+  font-weight:950;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+#vStats .reports-ticket-source-head small{
+  display:block;
+  margin-top:4px;
+  color:#8b96ae;
+  font-size:11.5px;
+  font-weight:800;
+  line-height:1.3;
+}
+#vStats .reports-ticket-track{
+  height:8px;
+  margin-top:12px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#fed7aa;
+}
+#vStats .reports-ticket-track span{
+  display:block;
+  height:100%;
+  min-width:8px;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#f59e0b,#fb923c);
+}
+#vStats .reports-ticket-source em{
+  display:block;
+  margin-top:7px;
+  color:#9a6b18;
+  font-size:11.5px;
+  font-weight:850;
+  font-style:normal;
+}
+#vStats .reports-ticket-empty{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(248,250,255,.8);
+  border:1px dashed rgba(119,132,170,.18);
+}
+
+@media (max-width:780px){
+  #vStats .reports-action-list,
+  #vStats .reports-ticket-summary,
+  #vStats .reports-ticket-sources{
+    grid-template-columns:1fr;
+  }
+  #vStats .reports-action-item{
+    border-radius:20px;
+    padding:13px;
+  }
+}

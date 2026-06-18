@@ -54,6 +54,16 @@ function paymentSourceLabelById(id){
   return source?.name || 'Πηγή πληρωμής';
 }
 
+function paymentSourceCompactLabelById(id){
+  if(!id)return (typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel())?'Επίλεξε wallet':'Κανονικό budget';
+
+  const source=(typeof paymentSourceById==='function')
+    ? paymentSourceById(id)
+    : (D.incomeSources||[]).find(s=>s.id===id);
+
+  return source?.name || 'Πηγή πληρωμής';
+}
+
 function paymentSourceIconById(id){
   if(!id)return '💶';
 
@@ -103,7 +113,7 @@ function syncAddCenterPaymentPicker(){
   if(!select)return;
 
   const value=select.value || '';
-  if(text)text.textContent=paymentSourceLabelById(value);
+  if(text)text.textContent=paymentSourceCompactLabelById(value);
   if(icon)icon.textContent=paymentSourceIconById(value);
 
   list?.querySelectorAll('button').forEach(btn=>{
@@ -139,23 +149,172 @@ function selectAddCenterPaymentSource(id=''){
 }
 
 function addCenterCategoryEmoji(category){
+  const c=(typeof capvoRootCategoryByName==='function')?capvoRootCategoryByName(category):null;
+  if(c?.icon)return c.icon;
   if(typeof CEMO!=='undefined' && CEMO[category])return CEMO[category];
-
-  return {
-    'Τρόφιμα':'🛒',
-    'Καφέδες':'☕',
-    'Μεταφορά':'🚗',
-    'Ψυχαγωγία':'🎭',
-    'Φαγητό έξω':'🍕',
-    'Λογαριασμοί':'💡',
-    'Υγεία':'🏥',
-    'Ρούχα':'👕',
-    'Δάνεια':'🏦',
-    'Συνδρομές':'📱',
-    'Άλλο':'📌'
-  }[category] || '📌';
+  return '📌';
 }
-
+function addCenterSelectedRootCategory(){
+  const select=document.getElementById('acDC');
+  const selectedId=select?.value||'';
+  return (typeof capvoCategoryById==='function'?capvoCategoryById(selectedId):null)
+    || (typeof capvoDefaultRootCategory==='function'?capvoDefaultRootCategory():null);
+}
+function addCenterCustomCategoryValue(){return '__custom__';}
+function normalizeAddCenterCategoryName(value){
+  return typeof capvoNormalizeTextKey==='function'
+    ? capvoNormalizeTextKey(value)
+    : String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+function addCenterSelectedCustomSubcategoryName(){
+  return String(document.getElementById('acDCustomSubcategoryName')?.value||'').trim();
+}
+function addCenterManualSaveToast(message,type='error'){
+  if(typeof clearQuickAddInlineError==='function')clearQuickAddInlineError('addCenterManualError');
+  if(typeof showMiniToast==='function')showMiniToast(message,type);
+}
+function syncAddCenterCustomSubcategoryUI(){
+  const select=document.getElementById('acDSubcategory');
+  const block=document.getElementById('acDCustomSubcategoryBlock');
+  const custom=select?.value===addCenterCustomCategoryValue();
+  block?.classList.toggle('hidden',!custom);
+  if(!custom){
+    const input=document.getElementById('acDCustomSubcategoryName');
+    const save=document.getElementById('acDSaveCustomSubcategory');
+    if(input)input.value='';
+    if(save)save.checked=false;
+  }
+}
+async function capvoEnsureCustomSubcategory(parentId,name){
+  const clean=String(name||'').trim().replace(/\s+/g,' ');
+  if(!clean)return null;
+  const parent=typeof capvoCategoryById==='function'?capvoCategoryById(parentId):null;
+  if(!parent || parent.parentId)return null;
+  const userId=typeof getDataOwnerId==='function'?getDataOwnerId():'';
+  if(!userId)throw new Error('Missing user for custom category.');
+  const key=normalizeAddCenterCategoryName(clean);
+  const existing=(typeof capvoSubcategories==='function'?capvoSubcategories(parent.id):[])
+    .find(c=>normalizeAddCenterCategoryName(c.name)===key);
+  if(existing)return existing;
+  if(typeof supabaseClient==='undefined' || !supabaseClient)throw new Error('Supabase client unavailable.');
+  const row={
+    user_id:userId,
+    parent_id:parent.id,
+    name:clean,
+    icon:'🏷️',
+    color:parent.color||'#6547f6',
+    css_class:parent.cssClass||parent.css_class||'cat-other',
+    sort_order:999,
+    is_system:false,
+    is_active:true,
+    keywords:[]
+  };
+  const {data,error}=await supabaseClient
+    .from('expense_categories')
+    .insert(row)
+    .select('*')
+    .single();
+  if(error)throw error;
+  const mapped={
+    id:data.id,
+    userId:data.user_id||null,
+    parentId:data.parent_id||null,
+    name:data.name,
+    icon:data.icon||'🏷️',
+    color:data.color||parent.color||'#6547f6',
+    cssClass:data.css_class||parent.cssClass||'cat-other',
+    sortOrder:Number(data.sort_order)||999,
+    isSystem:!!data.is_system,
+    keywords:Array.isArray(data.keywords)?data.keywords:[]
+  };
+  if(typeof D!=='undefined'){
+    D.expenseCategories=Array.isArray(D.expenseCategories)?D.expenseCategories:[];
+    D.expenseCategories.push(mapped);
+  }
+  return mapped;
+}
+function renderAddCenterCategoryOptions(selectedIdOrName=''){
+  const select=document.getElementById('acDC');
+  const list=document.getElementById('acDCCustomList');
+  if(!select || !list)return;
+  const roots=(typeof capvoRootCategories==='function'?capvoRootCategories():[]);
+  const fallback=roots[0] || null;
+  let selected=(typeof capvoCategoryById==='function'?capvoCategoryById(selectedIdOrName):null)
+    || (typeof capvoRootCategoryByName==='function'?capvoRootCategoryByName(selectedIdOrName):null)
+    || fallback;
+  if(!selected)return;
+  select.innerHTML=roots.map(c=>`<option value="${esc(c.id)}">${esc(c.icon||'📌')} ${esc(c.name)}</option>`).join('');
+  select.value=selected.id;
+  list.innerHTML=roots.map(c=>`
+    <button type="button" data-category-id="${esc(c.id)}" onclick="selectAddCenterCategory('${esc(c.id)}')">
+      <span>${esc(c.icon||'📌')}</span><strong>${esc(c.name)}</strong>
+    </button>`).join('');
+  renderAddCenterSubcategoryOptions('',selected.id);
+  syncAddCenterCategoryPicker();
+}
+function renderAddCenterSubcategoryOptions(selectedId='',parentId=''){
+  const select=document.getElementById('acDSubcategory');
+  const list=document.getElementById('acDSubcategoryCustomList');
+  if(!select)return;
+  const root=parentId ? (typeof capvoCategoryById==='function'?capvoCategoryById(parentId):null) : addCenterSelectedRootCategory();
+  const children=(typeof capvoSubcategories==='function' && root?.id)?capvoSubcategories(root.id):[];
+  const customValue=addCenterCustomCategoryValue();
+  select.innerHTML=`<option value="">Χωρίς υποκατηγορία</option>`
+    +children.map(c=>`<option value="${esc(c.id)}">${esc(c.icon||'📌')} ${esc(c.name)}</option>`).join('')
+    +`<option value="${customValue}">✍️ Δική μου υποκατηγορία...</option>`;
+  if(selectedId && [...select.options].some(o=>String(o.value)===String(selectedId)))select.value=selectedId;
+  else select.value='';
+  if(list){
+    const noSubActive=!select.value;
+    const customActive=select.value===customValue;
+    list.innerHTML=`
+      <button type="button" data-subcategory-id="" class="${noSubActive?'active':''}" onclick="selectAddCenterSubcategory('')">
+        <span>—</span><strong>Χωρίς υποκατηγορία</strong>
+      </button>
+    `+children.map(c=>`
+      <button type="button" data-subcategory-id="${esc(c.id)}" class="${String(select.value)===String(c.id)?'active':''}" onclick="selectAddCenterSubcategory('${esc(c.id)}')">
+        <span>${esc(c.icon||'📌')}</span><strong>${esc(c.name)}</strong>
+      </button>`).join('')+`
+      <button type="button" data-subcategory-id="${customValue}" class="add-center-custom-subcategory-option ${customActive?'active':''}" onclick="selectAddCenterSubcategory('${customValue}')">
+        <span>✍️</span><strong>Δική μου υποκατηγορία...</strong>
+      </button>`;
+  }
+  syncAddCenterSubcategoryPicker();
+  syncAddCenterCustomSubcategoryUI();
+}
+function closeAddCenterSubcategoryPicker(){
+  const list=document.getElementById('acDSubcategoryCustomList');
+  const btn=document.getElementById('acDSubcategoryCustom');
+  list?.classList.remove('active');
+  btn?.classList.remove('active');
+  btn?.setAttribute('aria-expanded','false');
+}
+function toggleAddCenterSubcategoryPicker(event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  closeAddCenterCategoryPicker();
+  closeAddCenterPaymentPicker();
+  const list=document.getElementById('acDSubcategoryCustomList');
+  const btn=document.getElementById('acDSubcategoryCustom');
+  if(!list || !btn)return;
+  const open=!list.classList.contains('active');
+  list.classList.toggle('active',open);
+  btn.classList.toggle('active',open);
+  btn.setAttribute('aria-expanded',String(open));
+}
+function selectAddCenterSubcategory(subcategoryId){
+  const select=document.getElementById('acDSubcategory');
+  if(!select)return;
+  select.value=subcategoryId||'';
+  select.dispatchEvent(new Event('change',{bubbles:true}));
+  syncAddCenterSubcategoryPicker();
+  syncAddCenterCustomSubcategoryUI();
+  closeAddCenterSubcategoryPicker();
+  if(select.value===addCenterCustomCategoryValue()){
+    setTimeout(()=>document.getElementById('acDCustomSubcategoryName')?.focus(),80);
+  }
+  clearQuickAddInlineError('addCenterManualError');
+}
 function closeAddCenterCategoryPicker(){
   const list=document.getElementById('acDCCustomList');
   const btn=document.getElementById('acDCCustom');
@@ -163,7 +322,20 @@ function closeAddCenterCategoryPicker(){
   btn?.classList.remove('active');
   btn?.setAttribute('aria-expanded','false');
 }
-
+function syncAddCenterSubcategoryPicker(){
+  const select=document.getElementById('acDSubcategory');
+  const text=document.getElementById('acDSubcategoryCustomText');
+  const icon=document.getElementById('acDSubcategoryCustomIcon');
+  const list=document.getElementById('acDSubcategoryCustomList');
+  const isCustom=select?.value===addCenterCustomCategoryValue();
+  const c=!isCustom && select?.value && typeof capvoCategoryById==='function' ? capvoCategoryById(select.value) : null;
+  if(text)text.textContent=isCustom?'Δική μου υποκατηγορία':(c?.name||'Χωρίς υποκατηγορία');
+  if(icon)icon.textContent=isCustom?'✍️':(c?.icon||'🏷️');
+  list?.querySelectorAll('button').forEach(btn=>{
+    btn.classList.toggle('active',String(btn.dataset.subcategoryId||'')===String(select?.value||''));
+  });
+  syncAddCenterCustomSubcategoryUI();
+}
 function syncAddCenterCategoryPicker(){
   const select=document.getElementById('acDC');
   const text=document.getElementById('acDCCustomText');
@@ -171,21 +343,23 @@ function syncAddCenterCategoryPicker(){
   const list=document.getElementById('acDCCustomList');
   if(!select)return;
 
-  const value=select.value || 'Τρόφιμα';
-  if(text)text.textContent=value;
-  if(icon)icon.textContent=addCenterCategoryEmoji(value);
+  const c=(typeof capvoCategoryById==='function'?capvoCategoryById(select.value):null)
+    || (typeof capvoDefaultRootCategory==='function'?capvoDefaultRootCategory():null);
+  if(c && select.value!==c.id)select.value=c.id;
+  if(text)text.textContent=c?.name||'Άλλο';
+  if(icon)icon.textContent=c?.icon||'📌';
 
   list?.querySelectorAll('button').forEach(btn=>{
-    const isActive=(btn.textContent || '').includes(value);
-    btn.classList.toggle('active',isActive);
+    btn.classList.toggle('active',String(btn.dataset.categoryId||'')===String(c?.id||''));
   });
+  renderAddCenterSubcategoryOptions(document.getElementById('acDSubcategory')?.value||'',c?.id||'');
 }
-
 function toggleAddCenterCategoryPicker(event){
   event?.preventDefault?.();
   event?.stopPropagation?.();
 
   closeAddCenterPaymentPicker();
+  closeAddCenterSubcategoryPicker();
 
   const list=document.getElementById('acDCCustomList');
   const btn=document.getElementById('acDCCustom');
@@ -196,30 +370,47 @@ function toggleAddCenterCategoryPicker(event){
   btn.classList.toggle('active',open);
   btn.setAttribute('aria-expanded',String(open));
 }
-
-function selectAddCenterCategory(category){
+function selectAddCenterCategory(categoryId){
   const select=document.getElementById('acDC');
   if(!select)return;
 
-  select.value=category;
+  select.value=categoryId;
   select.dispatchEvent(new Event('change',{bubbles:true}));
+  renderAddCenterSubcategoryOptions('',categoryId);
   syncAddCenterCategoryPicker();
   closeAddCenterCategoryPicker();
   clearQuickAddInlineError('addCenterManualError');
+}
+function setAddCenterCategoryFromExpense(e){
+  const meta=typeof capvoResolveExpenseCategoryMeta==='function'?capvoResolveExpenseCategoryMeta(e):null;
+  renderAddCenterCategoryOptions(meta?.categoryId||e?.category||'');
+  renderAddCenterSubcategoryOptions(meta?.subcategoryId||'',meta?.categoryId||'');
+  syncAddCenterCustomSubcategoryUI();
 }
 
 function resetAddCenterManualForm(){
   const name=document.getElementById('acDN');
   const amount=document.getElementById('acDA');
   const cat=document.getElementById('acDC');
+  const subcat=document.getElementById('acDSubcategory');
+  const merchant=document.getElementById('acDMerchant');
   const date=document.getElementById('acDD');
   const notes=document.getElementById('acDNotes');
 
   if(name)name.value='';
   if(amount)amount.value='';
-  if(cat)cat.value='Τρόφιμα';
+  if(typeof renderAddCenterCategoryOptions==='function')renderAddCenterCategoryOptions('Τρόφιμα');
+  else if(cat)cat.value='Τρόφιμα';
+  if(subcat)subcat.value='';
+  if(merchant)merchant.value='';
+  const customInput=document.getElementById('acDCustomSubcategoryName');
+  const customSave=document.getElementById('acDSaveCustomSubcategory');
+  if(customInput)customInput.value='';
+  if(customSave)customSave.checked=false;
   syncAddCenterCategoryPicker();
+  syncAddCenterCustomSubcategoryUI();
   closeAddCenterCategoryPicker();
+  closeAddCenterSubcategoryPicker();
   closeAddCenterPaymentPicker();
   if(date)date.value=addCenterToday();
   if(notes)notes.value='';
@@ -447,9 +638,13 @@ function txCompleteFormatMovementAmount(e,type){
 
 function txCompleteMovementTypeLabel(e,type){
   if(type==='fixed')return 'Πάγιο έξοδο';
+  if(typeof capvoMovementTypeLabel==='function')return capvoMovementTypeLabel(e);
   const mt=String(e?.movementType||'');
+  if(mt==='salary_deposit' || mt==='income_deposit')return 'Εισόδημα';
+  if(mt==='fixed_expense_payment')return 'Πληρωμή παγίου';
   if(mt==='card_payment')return 'Πληρωμή κάρτας';
   if(mt==='credit_card_purchase')return 'Αγορά με πιστωτική';
+  if(mt==='wallet_transfer')return 'Μεταφορά wallet';
   if(mt==='savings_deposit')return 'Αποταμίευση';
   if(mt==='savings_withdrawal')return 'Επιστροφή από κουμπαρά';
   if(mt==='savings_transfer_in' || mt==='savings_transfer_out')return 'Εσωτερική μεταφορά';
@@ -463,6 +658,8 @@ function txCompleteFillManualForm(e,{edit=false}={}){
   const nameEl=document.getElementById('acDN');
   const amountEl=document.getElementById('acDA');
   const catEl=document.getElementById('acDC');
+  const subcatEl=document.getElementById('acDSubcategory');
+  const merchantEl=document.getElementById('acDMerchant');
   const payEl=document.getElementById('acDPay');
   const dateEl=document.getElementById('acDD');
   const notesEl=document.getElementById('acDNotes');
@@ -470,7 +667,10 @@ function txCompleteFillManualForm(e,{edit=false}={}){
 
   if(nameEl)nameEl.value=e.name||'';
   if(amountEl)amountEl.value=Number(e.amount||0);
-  if(catEl)catEl.value=e.category||'Άλλο';
+  if(typeof setAddCenterCategoryFromExpense==='function')setAddCenterCategoryFromExpense(e);
+  else if(catEl)catEl.value=e.category||'Άλλο';
+  if(subcatEl)subcatEl.value=e.subcategoryId||e.subcategory_id||'';
+  if(merchantEl)merchantEl.value=e.merchantName||e.merchant_name||'';
   if(payEl)payEl.value=e.walletId||e.paymentSourceId||'';
   if(dateEl)dateEl.value=e.date||addCenterToday();
   if(notesEl)notesEl.value=e.notes||'';
@@ -574,14 +774,17 @@ function showMobileTransactionDetail(type,id){
   if(!overlay || !content)return;
 
   const category=e.category||'Άλλο';
-  const icon=CEMO[category]||'📌';
+  const categoryLabel=typeof capvoCategoryTreeLabel==='function'?capvoCategoryTreeLabel(e):category;
+  const icon=typeof capvoCategoryIcon==='function'?capvoCategoryIcon(category):(CEMO[category]||'📌');
   const payText=txCompletePaymentText(e,type);
   const dateLabel=type==='fixed' ? 'Κάθε μήνα' : txCompleteLongDate(e.date);
   const typeLabel=txCompleteMovementTypeLabel(e,type);
-  const amountLabel=txCompleteFormatMovementAmount(e,type);
+  const amountLabel=typeof capvoMovementSignedAmountLabel==='function'?capvoMovementSignedAmountLabel(e):txCompleteFormatMovementAmount(e,type);
   const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):(e.affectsBudget===false?0:Number(e.amount)||0);
   const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
   const noteText=e.notes || e.note || '';
+  const merchantText=e.merchantName||e.merchant_name||'';
+  const displayTitle=typeof capvoMovementDisplayTitle==='function'?capvoMovementDisplayTitle(e):(merchantText||e.name||'Κίνηση');
   const canEdit=type!=='movement' && e.canEdit!==false;
   const canDelete=type!=='movement' && e.canDelete!==false;
   const actions=(canEdit||canDelete)?`
@@ -594,24 +797,39 @@ function showMobileTransactionDetail(type,id){
       Αυτή η κίνηση προέρχεται από κάρτα ή κουμπαρά και εμφανίζεται εδώ πληροφοριακά. Η διαχείρισή της γίνεται από την αντίστοιχη ενότητα.
     </div>`;
 
+  const sourceText=e.paymentSourceName||payText;
+  const budgetText=affects?(impact<0?'Επιστρέφει budget':'Επηρεάζει budget'):'Δεν επηρεάζει budget';
+  const secondaryTitle=(merchantText && e.name && String(e.name)!==String(merchantText)) ? String(e.name) : '';
+  const hasMemo=!!(merchantText || secondaryTitle || noteText);
+
   content.innerHTML=`
-    <div class="tx-v25-detail-hero">
+    <div class="tx-v26-detail-hero">
       <button class="tx-v25-close" type="button" onclick="closeMobileTransactionDetail()" aria-label="Κλείσιμο">×</button>
-      <div class="tx-v25-icon ${CCLS[category]||'cat-other'}">${icon}</div>
-      <div class="tx-v25-kicker">${esc(typeLabel)}</div>
-      <h3>${esc(e.name)}</h3>
+      <div class="tx-v26-identity">
+        <div class="tx-v25-icon ${CCLS[category]||'cat-other'}">${icon}</div>
+        <div class="tx-v26-headline">
+          <div class="tx-v25-kicker">${esc(typeLabel)}</div>
+          <h3>${esc(displayTitle)}</h3>
+          <div class="tx-v26-mini-path">${esc(categoryLabel)}</div>
+        </div>
+      </div>
       <div class="tx-v25-amount ${!affects?'is-neutral':''} ${impact<0?'is-return':''}">${amountLabel}</div>
-      <div class="tx-v25-subtitle">${esc(category)} · ${esc(payText)}</div>
+      <div class="tx-v26-source-chip">${esc(sourceText)}</div>
     </div>
 
-    <div class="tx-v25-summary">
-      <div class="tx-v25-summary-item"><span>Ημερομηνία</span><strong>${esc(dateLabel)}</strong></div>
-      <div class="tx-v25-summary-item"><span>Κατηγορία</span><strong>${esc(category)}</strong></div>
-      <div class="tx-v25-summary-item"><span>Πηγή</span><strong>${esc(e.paymentSourceName||payText)}</strong></div>
-      <div class="tx-v25-summary-item"><span>Budget</span><strong>${affects?(impact<0?'Επιστρέφει budget':'Επηρεάζει budget'):'Δεν επηρεάζει budget'}</strong></div>
+    ${hasMemo ? `<div class="tx-v26-memo-card">
+      ${merchantText ? `<div class="tx-v26-memo-row"><span>Κατάστημα / Λεπτομέρεια</span><strong>${esc(merchantText)}</strong></div>` : ''}
+      ${secondaryTitle ? `<div class="tx-v26-memo-row"><span>Τίτλος</span><strong>${esc(secondaryTitle)}</strong></div>` : ''}
+      ${noteText ? `<div class="tx-v26-note-block"><span>Σημείωση</span><p>${esc(noteText)}</p></div>` : ''}
+    </div>` : ''}
+
+    <div class="tx-v26-meta-list">
+      <div class="tx-v26-meta-row"><span>Ημερομηνία</span><strong>${esc(dateLabel)}</strong></div>
+      <div class="tx-v26-meta-row"><span>Κατηγορία</span><strong>${esc(categoryLabel)}</strong></div>
+      <div class="tx-v26-meta-row"><span>Πηγή</span><strong>${esc(sourceText)}</strong></div>
+      <div class="tx-v26-meta-row"><span>Budget</span><strong>${esc(budgetText)}</strong></div>
     </div>
 
-    ${noteText ? `<div class="tx-v25-note"><span>Σημείωση</span><p>${esc(noteText)}</p></div>` : ''}
     ${actions}
   `;
 
@@ -627,8 +845,9 @@ function closeMobileTransactionDetail(){
 
 function txCompleteDailyRow(e){
   const category=e.category||'Άλλο';
-  const c=CCLS[category]||'cat-other';
-  const em=CEMO[category]||'📌';
+  const categoryLabel=typeof capvoCategoryTreeLabel==='function'?capvoCategoryTreeLabel(e):category;
+  const c=typeof capvoCategoryCssClass==='function'?capvoCategoryCssClass(category):(CCLS[category]||'cat-other');
+  const em=typeof capvoCategoryIcon==='function'?capvoCategoryIcon(category):(CEMO[category]||'📌');
   const isSelected=selectedDaily.has(e.sourceId||e.id);
   const showSelect=selectionMode.daily && e.canDelete!==false && e.movementType==='daily_expense';
   const affects=!!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
@@ -637,19 +856,30 @@ function txCompleteDailyRow(e){
     ? 'fixed'
     : (e.readOnly || e.canEdit===false ? 'movement' : 'daily');
   const detailId=detailType==='movement'?e.id:(e.sourceId||e.id);
-  const isCard=String(e.movementGroup||'')==='cards' || e.isCardPayment || e.isCreditCardPurchase || e.paymentAccountType==='credit_card';
-  const isSavings=String(e.movementGroup||'')==='savings' || e.isSavingsMovement;
-  const amountLabel=!affects
-    ? fmt(Math.abs(Number(e.amount)||0))
-    : (impact<0 ? '+'+fmt(Math.abs(impact)) : '-'+fmt(Math.abs(impact)));
+  const kind=typeof capvoMovementKind==='function'?capvoMovementKind(e):String(e.movementGroup||'budget');
+  const typeLabel=txCompleteMovementTypeLabel(e,'daily');
+  const isCard=kind==='cards' || String(e.movementGroup||'')==='cards' || e.isCardPayment || e.isCreditCardPurchase || e.paymentAccountType==='credit_card';
+  const isSavings=kind==='savings' || String(e.movementGroup||'')==='savings' || e.isSavingsMovement;
+  const isIncome=kind==='income' || e.isIncomeMovement;
+  const isWallet=kind==='wallets' || e.isWalletTransfer;
+  const isFixed=kind==='fixed' || e.isFixedExpensePayment || e.isFixedExpense;
+  const amountLabel=typeof capvoMovementSignedAmountLabel==='function'
+    ? capvoMovementSignedAmountLabel(e)
+    : (!affects ? fmt(Math.abs(Number(e.amount)||0)) : (impact<0 ? '+'+fmt(Math.abs(impact)) : '-'+fmt(Math.abs(impact))));
+  const displayTitle=typeof capvoMovementDisplayTitle==='function'?capvoMovementDisplayTitle(e):(e.merchantName||e.merchant_name||e.name||'Κίνηση');
+  const noteText=String(e.notes||e.note||'').trim();
+  const merchant=String(e.merchantName||e.merchant_name||'').trim();
 
-  const badges=[];
+  const badges=[`<span class="tx-type-badge tx-type-${esc(kind)}">${esc(typeLabel)}</span>`];
+  if(isFixed && typeLabel!=='Πληρωμή παγίου')badges.push(`<span class="payment-badge fixed-payment">Πάγιο</span>`);
   if(isCard)badges.push(`<span class="payment-badge credit-card">Κάρτα</span>`);
   if(isSavings)badges.push(`<span class="payment-badge savings">Κουμπαράς</span>`);
+  if(isIncome)badges.push(`<span class="payment-badge budget-return">Income</span>`);
+  if(isWallet)badges.push(`<span class="payment-badge no-budget">Transfer</span>`);
   if(!affects)badges.push(`<span class="payment-badge no-budget">Δεν επηρεάζει budget</span>`);
-  if(affects && impact<0)badges.push(`<span class="payment-badge budget-return">Επιστροφή budget</span>`);
+  if(affects && impact<0 && !isIncome)badges.push(`<span class="payment-badge budget-return">Επιστροφή budget</span>`);
 
-  const metaParts=[category,e.paymentSourceName||'',e.sourceLabel||'']
+  const metaParts=[categoryLabel,merchant&&merchant!==displayTitle?merchant:'',e.paymentSourceName||'',e.sourceLabel||'']
     .map(x=>String(x||'').trim())
     .filter(Boolean)
     .filter((part,idx,arr)=>arr.findIndex(other=>other.toLowerCase()===part.toLowerCase())===idx);
@@ -663,8 +893,9 @@ function txCompleteDailyRow(e){
         </label>`:''}
       <div class="expense-icon ${c}">${em}</div>
       <div class="expense-info">
-        <div class="expense-name">${esc(e.name)}</div>
+        <div class="expense-name">${esc(displayTitle)}</div>
         <div class="expense-cat">${meta}${badges.join('')}</div>
+        ${noteText?`<div class="tx-row-note">📝 ${esc(noteText)}</div>`:''}
       </div>
       <div class="tx-v3-row-right">
         <div class="expense-amount is-daily ${!affects?'is-neutral':''} ${impact<0?'is-return':''}">${amountLabel}</div>
@@ -687,7 +918,8 @@ function renderDailyList(){
   const listEl=$('lDaily');
   if(!countEl || !listEl)return;
 
-  countEl.innerHTML=`${movementRows.length} κινήσεις κύκλου`;
+  const visibleFilterLabel=(document.querySelector('[data-mobile-transaction-filter].active')?.textContent||'Όλα').trim();
+  countEl.innerHTML=`${movementRows.length} κινήσεις κύκλου · ${esc(visibleFilterLabel)}`;
 
   if((movementRows||[]).length===0){
     listEl.innerHTML=`
@@ -797,15 +1029,26 @@ async function saveAddCenterManualExpense(){
   const nameEl=document.getElementById('acDN');
   const amountEl=document.getElementById('acDA');
   const catEl=document.getElementById('acDC');
+  const subcatEl=document.getElementById('acDSubcategory');
+  const merchantEl=document.getElementById('acDMerchant');
   const payEl=document.getElementById('acDPay');
   const dateEl=document.getElementById('acDD');
+  const notesEl=document.getElementById('acDNotes');
   const btn=document.getElementById('addCenterManualSubmit');
 
   clearQuickAddInlineError('addCenterManualError');
 
   const name=(nameEl?.value||'').trim();
   const amount=parseFloat(String(amountEl?.value||'').replace(',','.'));
-  const category=catEl?.value||'Άλλο';
+  const categoryId=catEl?.value||'';
+  const rootCategory=(typeof capvoCategoryById==='function'?capvoCategoryById(categoryId):null)
+    || (typeof capvoRootCategoryByName==='function'?capvoRootCategoryByName(categoryId):null);
+  const category=rootCategory?.name||'Άλλο';
+  let subcategoryId=subcatEl?.value||'';
+  const customSubcategoryName=addCenterSelectedCustomSubcategoryName();
+  const saveCustomSubcategory=!!document.getElementById('acDSaveCustomSubcategory')?.checked;
+  const merchantName=(merchantEl?.value||'').trim();
+  let notes=(notesEl?.value||'').trim();
   const paymentSourceId=payEl?.value||'';
   const paymentSource=typeof paymentSourceById==='function' ? paymentSourceById(paymentSourceId) : null;
   const date=dateEl?.value||addCenterToday();
@@ -814,20 +1057,46 @@ async function saveAddCenterManualExpense(){
   const id=editing ? addCenterEditState.id : gid();
 
   if(!name){
-    setQuickAddInlineError('Συμπλήρωσε τίτλο εξόδου.','addCenterManualError');
+    addCenterManualSaveToast('Συμπλήρωσε τίτλο εξόδου.');
     nameEl?.focus();
     return false;
   }
 
   if(!amount || amount<=0){
-    setQuickAddInlineError('Συμπλήρωσε έγκυρο ποσό.','addCenterManualError');
+    addCenterManualSaveToast('Συμπλήρωσε έγκυρο ποσό.');
     amountEl?.focus();
     return false;
   }
 
   if(!userId){
-    setQuickAddInlineError('Δεν υπάρχει ενεργή σύνδεση.','addCenterManualError');
+    addCenterManualSaveToast('Δεν υπάρχει ενεργή σύνδεση.');
     return false;
+  }
+
+  if(subcategoryId===addCenterCustomCategoryValue()){
+    if(!customSubcategoryName){
+      addCenterManualSaveToast('Γράψε τη δική σου υποκατηγορία ή διάλεξε υπάρχουσα.');
+      document.getElementById('acDCustomSubcategoryName')?.focus();
+      return false;
+    }
+    if(saveCustomSubcategory){
+      try{
+        const customCategory=await capvoEnsureCustomSubcategory(rootCategory?.id,customSubcategoryName);
+        if(customCategory){
+          subcategoryId=customCategory.id;
+          renderAddCenterSubcategoryOptions(subcategoryId,rootCategory?.id||'');
+        }else{
+          subcategoryId='';
+        }
+      }catch(categoryError){
+        console.error('custom subcategory create failed:',categoryError);
+        addCenterManualSaveToast('Δεν μπόρεσα να αποθηκεύσω τη δική σου υποκατηγορία. Δοκίμασε ξανά.');
+        return false;
+      }
+    }else{
+      subcategoryId='';
+      notes=[`Είδος: ${customSubcategoryName}`,notes].filter(Boolean).join('\n');
+    }
   }
 
   const expense=typeof makeCreditCardExpensePayload==='function'
@@ -836,6 +1105,10 @@ async function saveAddCenterManualExpense(){
         name,
         amount,
         category,
+        categoryId:categoryId||null,
+        subcategoryId:subcategoryId||null,
+        merchantName,
+        notes,
         date,
         paymentSourceId,
         paymentSourceName:paymentSource?.name||'',
@@ -846,6 +1119,10 @@ async function saveAddCenterManualExpense(){
         name,
         amount,
         category,
+        categoryId:categoryId||null,
+        subcategoryId:subcategoryId||null,
+        merchantName,
+        notes,
         date,
         paymentSourceId,
         paymentSourceName:paymentSource?.name||'',
@@ -855,10 +1132,11 @@ async function saveAddCenterManualExpense(){
   const monthKey=date.substring(0,7);
   ensM(monthKey);
 
+  if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
   const oldExpense=editing && typeof getExistingDailyExpenseById==='function' ? getExistingDailyExpenseById(id) : null;
   if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
 
-  const canSave=await validateExpenseBeforeSave(expense,{editing,errorTarget:'addCenterManualError'});
+  const canSave=await validateExpenseBeforeSave(expense,{editing});
   if(!canSave)return false;
 
   if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation(editing?'Ενημερώνεται έξοδο...':'Αποθηκεύεται έξοδο...', 'Ενημερώνω κινήσεις, κάρτες και υπόλοιπα.'))return false;
@@ -908,7 +1186,7 @@ async function saveAddCenterManualExpense(){
       console.error('Reload after save failure failed:',reloadErr);
     }
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω το έξοδο.');
-    setQuickAddInlineError('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.','addCenterManualError');
+    addCenterManualSaveToast('Δεν μπόρεσα να αποθηκεύσω το έξοδο. Δοκίμασε ξανά.');
     return false;
 
   }finally{
@@ -959,7 +1237,7 @@ async function saveAddCenterManualExpense(){
       return;
     }
 
-    const icon=(typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌';
+    const icon=typeof capvoCategoryIcon==='function' ? capvoCategoryIcon(parsed.category) : ((typeof CEMO!=='undefined' && CEMO[parsed.category]) ? CEMO[parsed.category] : '📌');
     const amount=(typeof fmt==='function') ? fmt(parsed.amount) : `€${Number(parsed.amount||0).toFixed(2)}`;
     const payment=parsed.paymentSourceName || 'Κανονικό budget';
     const today=typeof addCenterToday==='function' ? addCenterToday() : (typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'));
@@ -976,7 +1254,7 @@ async function saveAddCenterManualExpense(){
           <div class="smart-preview-chip">${icon}</div>
         </div>
         <div class="smart-preview-lines">
-          <div class="smart-preview-line"><span>Κατηγορία</span><strong>${esc(parsed.category || 'Άλλο')}</strong></div>
+          <div class="smart-preview-line"><span>Κατηγορία</span><strong>${esc(typeof capvoCategoryTreeLabel==='function'?capvoCategoryTreeLabel(parsed):(parsed.category || 'Άλλο'))}</strong></div>
           <div class="smart-preview-line"><span>Πληρωμή</span><strong>${esc(payment)}</strong></div>
           <div class="smart-preview-line"><span>Ημερομηνία</span><strong>${esc(today)}</strong></div>
         </div>

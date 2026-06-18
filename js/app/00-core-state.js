@@ -231,6 +231,83 @@ function capvoCategoryCssClass(name){
   const c=capvoCategoryByName(name);
   return c?c.cssClass:(CCLS[name]||'cat-other');
 }
+
+function capvoCategoryById(id){
+  if(!id)return null;
+  return capvoCategories().find(c=>String(c.id)===String(id))||null;
+}
+function capvoNormalizeTextKey(value){
+  return String(value||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function capvoRootCategories(){
+  return capvoCategories()
+    .filter(c=>!c.parentId)
+    .sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0) || String(a.name||'').localeCompare(String(b.name||''),'el'));
+}
+function capvoSubcategories(parentId){
+  if(!parentId)return [];
+  return capvoCategories()
+    .filter(c=>String(c.parentId||'')===String(parentId))
+    .sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0) || String(a.name||'').localeCompare(String(b.name||''),'el'));
+}
+function capvoRootCategoryByName(name){
+  const key=capvoNormalizeTextKey(name);
+  return capvoRootCategories().find(c=>capvoNormalizeTextKey(c.name)===key)||null;
+}
+function capvoDefaultRootCategory(){
+  return capvoRootCategoryByName('Τρόφιμα') || capvoRootCategoryByName('Άλλο') || capvoRootCategories()[0] || null;
+}
+function capvoCategoryTreeLabel(expense){
+  const root=capvoCategoryById(expense?.categoryId||expense?.category_id)||capvoRootCategoryByName(expense?.category)||null;
+  const sub=capvoCategoryById(expense?.subcategoryId||expense?.subcategory_id)||null;
+  const rootName=root?.name||expense?.category||'Άλλο';
+  if(sub && String(sub.parentId||'')===String(root?.id||''))return `${rootName} › ${sub.name}`;
+  return rootName;
+}
+function capvoExpenseTitle(expense){
+  const merchant=String(expense?.merchantName||expense?.merchant_name||'').trim();
+  return merchant || expense?.name || 'Έξοδο';
+}
+function capvoExpenseSearchText(expense){
+  return [
+    expense?.name,
+    expense?.merchantName||expense?.merchant_name,
+    expense?.notes||expense?.note,
+    capvoCategoryTreeLabel(expense),
+    expense?.paymentSourceName||expense?.payment_source_name
+  ].filter(Boolean).join(' ');
+}
+function capvoResolveExpenseCategoryMeta(expense){
+  const rootById=capvoCategoryById(expense?.categoryId||expense?.category_id);
+  const rootByName=capvoRootCategoryByName(expense?.category);
+  let root=rootById && !rootById.parentId ? rootById : rootByName;
+  if(!root)root=capvoDefaultRootCategory();
+
+  let sub=capvoCategoryById(expense?.subcategoryId||expense?.subcategory_id);
+  if(sub && root && String(sub.parentId||'')!==String(root.id||''))sub=null;
+
+  return {
+    categoryId:root?.id||null,
+    categoryName:root?.name||expense?.category||'Άλλο',
+    subcategoryId:sub?.id||null,
+    subcategoryName:sub?.name||''
+  };
+}
+function capvoApplyExpenseCategoryMeta(expense){
+  if(!expense)return expense;
+  const meta=capvoResolveExpenseCategoryMeta(expense);
+  expense.categoryId=meta.categoryId;
+  expense.category_id=meta.categoryId;
+  expense.subcategoryId=meta.subcategoryId;
+  expense.subcategory_id=meta.subcategoryId;
+  expense.category=meta.categoryName;
+  return expense;
+}
 let curM;
 
 let currentSession=null;
@@ -849,6 +926,138 @@ function capvoMovementBudgetImpact(row){
   return capvoMoney(Number(row.amount)||0);
 }
 
+function capvoBudgetCycleById(id){
+  if(!id)return null;
+  return (D?.budgetCycles||[]).find(c=>String(c.id)===String(id))||null;
+}
+
+function capvoMovementKind(row){
+  const mt=String(row?.movementType||row?.movement_type||'').toLowerCase();
+  const group=String(row?.movementGroup||row?.movement_group||'').toLowerCase();
+  if(group==='income' || mt.includes('income') || mt.includes('salary'))return 'income';
+  if(group==='fixed' || mt.includes('fixed'))return 'fixed';
+  if(group==='cards' || mt.includes('card') || String(row?.paymentAccountType||row?.payment_account_type||'').includes('credit_card'))return 'cards';
+  if(group==='wallets' || mt.includes('wallet_transfer'))return 'wallets';
+  if(group==='savings' || mt.includes('savings') || row?.isSavingsMovement)return 'savings';
+  if(group==='benefits' || mt.includes('restricted'))return 'benefits';
+  return 'expenses';
+}
+
+function capvoMovementTypeLabel(row){
+  const kind=capvoMovementKind(row);
+  const mt=String(row?.movementType||row?.movement_type||'').toLowerCase();
+  if(mt==='salary_deposit' || mt==='income_deposit')return 'Εισόδημα';
+  if(mt==='fixed_expense_payment')return 'Πληρωμή παγίου';
+  if(mt==='card_payment')return 'Πληρωμή κάρτας';
+  if(mt==='credit_card_purchase')return 'Αγορά με κάρτα';
+  if(mt==='wallet_transfer')return 'Μεταφορά wallet';
+  if(mt==='savings_deposit')return 'Αποταμίευση';
+  if(mt==='savings_withdrawal')return 'Επιστροφή κουμπαρά';
+  if(mt==='restricted_expense')return 'Παροχή';
+  if(kind==='income')return 'Εισόδημα';
+  if(kind==='fixed')return 'Πάγιο';
+  if(kind==='cards')return 'Κάρτα';
+  if(kind==='wallets')return 'Wallet';
+  if(kind==='savings')return 'Κουμπαράς';
+  if(kind==='benefits')return 'Παροχή';
+  return 'Έξοδο';
+}
+
+function capvoMovementSignedAmountLabel(row){
+  const amount=Number(row?.amount)||0;
+  const impact=typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(row):(row?.affectsBudget===false?0:amount);
+  const affects=!!(row?.affectsBudget ?? row?.affectsCashBudget ?? row?.affects_cash_budget);
+  const kind=capvoMovementKind(row);
+  if(kind==='income')return '+'+fmt(Math.abs(amount));
+  if(!affects)return fmt(Math.abs(amount));
+  if(impact<0)return '+'+fmt(Math.abs(impact));
+  return '-'+fmt(Math.abs(impact));
+}
+
+function capvoMovementDisplayTitle(row){
+  const merchant=String(row?.merchantName||row?.merchant_name||'').trim();
+  if(merchant)return merchant;
+  return row?.name || row?.description || capvoMovementTypeLabel(row) || 'Κίνηση';
+}
+
+function getCurrentCycleIncomeMovements(){
+  const rows=Array.isArray(D?.budgetCycleIncomes)?D.budgetCycleIncomes:[];
+  return rows
+    .map(i=>{
+      if(i.walletDepositApplied===false && i.wallet_deposit_applied===false)return null;
+      const amount=capvoMoney(Number(i.amount)||0);
+      if(amount<=0)return null;
+      const cycle=capvoBudgetCycleById(i.cycleId||i.cycle_id);
+      const rawDate=i.walletDepositAppliedAt||i.wallet_deposit_applied_at||i.createdAt||i.created_at||cycle?.startDate||cycle?.start_date||todayISO();
+      const date=normalizeDateValue(rawDate)||todayISO();
+      if(!isDateInCurrentBudgetCycle(date))return null;
+      const wallet=typeof capvoWalletById==='function'?capvoWalletById(i.destinationWalletId||i.destination_wallet_id):null;
+      return {
+        id:`income_${i.id||gid()}`,
+        sourceId:i.id||'',
+        movementType:'salary_deposit',
+        movementGroup:'income',
+        name:i.name||'Εισόδημα',
+        amount,
+        budgetImpactAmount:-amount,
+        affectsBudget:true,
+        affectsCashBudget:true,
+        category:'Εισόδημα',
+        date,
+        createdAt:i.createdAt||i.created_at||date,
+        paymentSourceId:i.destinationWalletId||i.destination_wallet_id||'',
+        paymentSourceName:wallet?.name||'Wallet',
+        paymentAccountType:'income_deposit',
+        sourceLabel:`Κατάθεση${wallet?.name?' · '+wallet.name:''}`,
+        note:i.note||'',
+        canEdit:false,
+        canDelete:false,
+        readOnly:true,
+        isIncomeMovement:true
+      };
+    })
+    .filter(Boolean);
+}
+
+function getCurrentCycleWalletTransferMovements(){
+  const rows=Array.isArray(D?.walletTransfers)?D.walletTransfers:[];
+  return rows
+    .map(t=>{
+      const date=normalizeDateValue(t.date||t.createdAt||t.created_at)||todayISO();
+      if(!isDateInCurrentBudgetCycle(date))return null;
+      const amount=capvoMoney(Number(t.amount)||0);
+      if(amount<=0)return null;
+      const from=typeof capvoWalletById==='function'?capvoWalletById(t.fromWalletId||t.from_wallet_id):null;
+      const to=typeof capvoWalletById==='function'?capvoWalletById(t.toWalletId||t.to_wallet_id):null;
+      const impact=capvoMoney(Number(t.budgetImpactAmount||t.budget_effect_amount)||0);
+      return {
+        id:`wallet_transfer_${t.id||gid()}`,
+        sourceId:t.id||'',
+        movementType:'wallet_transfer',
+        movementGroup:'wallets',
+        name:`${from?.name||'Wallet'} → ${to?.name||'Wallet'}`,
+        amount,
+        budgetImpactAmount:impact,
+        affectsBudget:impact!==0,
+        affectsCashBudget:impact!==0,
+        category:'Wallets',
+        date,
+        createdAt:t.createdAt||t.created_at||date,
+        paymentSourceId:t.fromWalletId||t.from_wallet_id||'',
+        paymentSourceName:from&&to?`${from.name} → ${to.name}`:(from?.name||to?.name||'Wallet transfer'),
+        paymentAccountType:'wallet_transfer',
+        sourceLabel:'Μεταφορά wallet',
+        note:t.note||'',
+        notes:t.note||'',
+        canEdit:false,
+        canDelete:false,
+        readOnly:true,
+        isWalletTransfer:true
+      };
+    })
+    .filter(Boolean);
+}
+
 function getCurrentCycleSavingsAllMovements(){
   const txs=Array.isArray(D?.savingsTransactions)?D.savingsTransactions:[];
   return txs
@@ -936,9 +1145,24 @@ function capvoFixedExpenseById(id){
     || null;
 }
 
+function capvoFixedExpensePaymentExpense(payment){
+  if(!payment)return null;
+  const fxId=payment.fixedExpenseId||payment.fixed_expense_id;
+  return typeof capvoFixedExpenseById==='function' ? capvoFixedExpenseById(fxId) : null;
+}
+
+function capvoFixedExpensePaymentIsCountable(payment){
+  if(!payment || String(payment.status||'paid')==='reversed')return false;
+  // If the parent fixed expense is missing, the payment is an orphan/stale row.
+  // With the current soft-delete model, valid history still has a parent in
+  // D.fixedExpenseArchive. Orphans should not pollute Dashboard/Snapshot.
+  return !!capvoFixedExpensePaymentExpense(payment);
+}
+
 function capvoFixedExpensePaymentMovement(payment){
   if(!payment)return null;
-  const fx=capvoFixedExpenseById(payment.fixedExpenseId||payment.fixed_expense_id);
+  const fx=capvoFixedExpensePaymentExpense(payment);
+  if(!fx)return null;
   const amount=capvoMoney(Number(payment.amount)||0);
   if(amount<=0)return null;
 
@@ -1046,8 +1270,10 @@ function getCurrentCycleAllMovements(){
 
   const savings=typeof getCurrentCycleSavingsAllMovements==='function'?getCurrentCycleSavingsAllMovements():[];
   const fixed=typeof getCurrentCycleFixedExpenseMovements==='function'?getCurrentCycleFixedExpenseMovements():[];
+  const income=typeof getCurrentCycleIncomeMovements==='function'?getCurrentCycleIncomeMovements():[];
+  const transfers=typeof getCurrentCycleWalletTransferMovements==='function'?getCurrentCycleWalletTransferMovements():[];
 
-  return [...fixed,...daily,...cardPayments,...savings].sort((a,b)=>
+  return [...fixed,...daily,...cardPayments,...savings,...income,...transfers].sort((a,b)=>
     String(b.date||'').localeCompare(String(a.date||'')) ||
     String(capvoMovementSortKey(b)).localeCompare(String(capvoMovementSortKey(a))) ||
     String(b.id||'').localeCompare(String(a.id||''))
@@ -1308,8 +1534,9 @@ function fixedExpensePaymentsForCurrentCycle(){
   const start=String(cycle?.startKey||'');
   const end=String(cycle?.endKey||'');
   return (D.fixedExpensePayments||[]).filter(p=>{
+    if(typeof capvoFixedExpensePaymentIsCountable==='function' && !capvoFixedExpensePaymentIsCountable(p))return false;
     const d=String(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||'').slice(0,10);
-    return d && (!start || d>=start) && (!end || d<=end) && String(p.status||'paid')!=='reversed';
+    return d && (!start || d>=start) && (!end || d<=end);
   });
 }
 

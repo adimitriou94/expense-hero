@@ -434,13 +434,43 @@ function capvoFixedCalendarOccurrenceDates(expense,monthDate){
 
 function capvoFixedCalendarRowsForMonth(monthKey){
   const monthDate=capvoFixedCalendarMonthDate(monthKey);
-  return (D.fixedExpenses||[])
-    .flatMap(expense=>capvoFixedCalendarOccurrenceDates(expense,monthDate).map(dueDate=>{
-      const status=capvoFixedCalendarStatusForDueDate(expense,dueDate);
-      const wallet=expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null;
-      return {expense,dueDate,status,wallet,payment:status.payment||null};
-    }))
-    .sort(capvoFixedCalendarSortRows);
+  const keyPrefix=String(monthKey||capvoFixedCalendarMonthKeyFromDate(monthDate));
+  const activeExpenses=(D.fixedExpenses||[]);
+  const rows=activeExpenses.flatMap(expense=>capvoFixedCalendarOccurrenceDates(expense,monthDate).map(dueDate=>{
+    const status=capvoFixedCalendarStatusForDueDate(expense,dueDate);
+    const wallet=expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null;
+    return {expense,dueDate,status,wallet,payment:status.payment||null};
+  }));
+
+  // Also place real paid fixed-payment rows on the month calendar. This lets
+  // the current month show what already happened even after the fixed expense
+  // has advanced to its next due date. It is visual/history only and does not
+  // create or change payments.
+  const seen=new Set(rows.map(row=>`${String(row.expense?.id||'')}|${String(row.dueDate||'').slice(0,10)}`));
+  (D.fixedExpensePayments||[])
+    .filter(p=>typeof capvoFixedExpensePaymentIsCountable==='function' ? capvoFixedExpensePaymentIsCountable(p) : String(p.status||'paid')!=='reversed')
+    .forEach(payment=>{
+      const dueDate=String(payment.paidForDate||payment.paid_for_date||payment.paidAt||payment.paid_at||'').slice(0,10);
+      if(!dueDate || dueDate.slice(0,7)!==keyPrefix)return;
+      const expenseId=payment.fixedExpenseId||payment.fixed_expense_id;
+      const duplicateKey=`${String(expenseId||'')}|${dueDate}`;
+      if(seen.has(duplicateKey))return;
+      const expense=activeExpenses.find(e=>String(e.id)===String(expenseId));
+      if(!expense)return;
+      const wallet=(payment.walletId||payment.wallet_id) && typeof capvoWalletById==='function'
+        ? capvoWalletById(payment.walletId||payment.wallet_id)
+        : (expense.sourceWalletId && typeof capvoWalletById==='function'?capvoWalletById(expense.sourceWalletId):null);
+      rows.push({
+        expense,
+        dueDate,
+        status:{state:'paid',label:'Πληρώθηκε',tone:'green',nextDueDate:dueDate,payment},
+        wallet,
+        payment
+      });
+      seen.add(duplicateKey);
+    });
+
+  return rows.sort(capvoFixedCalendarSortRows);
 }
 
 function capvoFixedCalendarCurrentRows(){
@@ -458,11 +488,13 @@ function capvoFixedCalendarCurrentRows(){
 
 function capvoFixedCalendarRecentPayments(limit=5){
   return (D.fixedExpensePayments||[])
-    .filter(p=>String(p.status||'paid')!=='reversed')
+    .filter(p=>typeof capvoFixedExpensePaymentIsCountable==='function' ? capvoFixedExpensePaymentIsCountable(p) : String(p.status||'paid')!=='reversed')
     .map(payment=>{
-      const expense=typeof capvoFixedExpenseById==='function'
-        ? capvoFixedExpenseById(payment.fixedExpenseId||payment.fixed_expense_id)
-        : (D.fixedExpenses||[]).find(e=>String(e.id)===String(payment.fixedExpenseId||payment.fixed_expense_id));
+      const expense=typeof capvoFixedExpensePaymentExpense==='function'
+        ? capvoFixedExpensePaymentExpense(payment)
+        : (typeof capvoFixedExpenseById==='function'
+          ? capvoFixedExpenseById(payment.fixedExpenseId||payment.fixed_expense_id)
+          : (D.fixedExpenses||[]).find(e=>String(e.id)===String(payment.fixedExpenseId||payment.fixed_expense_id)));
       const wallet=payment.walletId && typeof capvoWalletById==='function'?capvoWalletById(payment.walletId):null;
       return {payment,expense,wallet,dueDate:String(payment.paidForDate||payment.paid_for_date||payment.paidAt||payment.paid_at||'').slice(0,10)};
     })
@@ -1016,9 +1048,14 @@ function mobileTransactionMatchesFilter(e){
   const filter=mobileTransactionFilter||'all';
   if(filter==='all' || filter==='cycle') return true;
 
-  if(filter==='budget')return !!(e.affectsBudget ?? e.affectsCashBudget ?? e.affects_cash_budget);
-  if(filter==='cards')return String(e.movementGroup||'')==='cards' || String(e.paymentAccountType||e.payment_account_type||'').includes('credit_card') || !!(e.isCardPayment||e.isCreditCardPurchase||e.creditCardId||e.installmentPlanId);
-  if(filter==='savings')return String(e.movementGroup||'')==='savings' || !!e.isSavingsMovement;
+  const kind=typeof capvoMovementKind==='function'?capvoMovementKind(e):String(e.movementGroup||'budget');
+  if(filter==='budget' || filter==='expenses')return kind==='expenses' || kind==='benefits';
+  if(filter==='fixed')return kind==='fixed' || !!(e.isFixedExpensePayment||e.isFixedExpense);
+  if(filter==='cards')return kind==='cards' || String(e.paymentAccountType||e.payment_account_type||'').includes('credit_card') || !!(e.isCardPayment||e.isCreditCardPurchase||e.creditCardId||e.installmentPlanId);
+  if(filter==='wallets')return kind==='wallets' || !!e.isWalletTransfer;
+  if(filter==='savings')return kind==='savings' || !!e.isSavingsMovement;
+  if(filter==='income')return kind==='income' || !!e.isIncomeMovement;
+  if(filter==='returns')return (typeof capvoMovementBudgetImpact==='function'?capvoMovementBudgetImpact(e):Number(e.amount)||0)<0;
 
   const dateStr=String(e.date||'');
   if(!dateStr) return true;
@@ -1044,9 +1081,16 @@ function mobileTransactionMatchesSearch(e){
   const q=(input?.value||'').trim().toLowerCase();
   if(!q)return true;
 
-  return [e.name,e.category,e.paymentSourceName,e.paymentAccountType,e.sourceLabel,e.movementType,e.date]
-    .filter(Boolean)
-    .some(v=>String(v).toLowerCase().includes(q));
+  const haystack=[
+    typeof capvoExpenseSearchText==='function'?capvoExpenseSearchText(e):'',
+    typeof capvoCategoryTreeLabel==='function'?capvoCategoryTreeLabel(e):'',
+    typeof capvoMovementTypeLabel==='function'?capvoMovementTypeLabel(e):'',
+    e.name,e.category,e.merchantName||e.merchant_name,e.notes||e.note,
+    e.paymentSourceName,e.paymentAccountType,e.sourceLabel,e.movementType,e.date,
+    e.amount
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  return haystack.includes(q);
 }
 
 function getExpenseByTypeAndId(type,id){
@@ -1344,21 +1388,29 @@ function renderDashboardPreview(){
     if(!affects)badges.push('Δεν επηρεάζει budget');
     if(affects && isReturn)badges.push('Επιστροφή budget');
 
+    const categoryLabel=typeof capvoCategoryTreeLabel==='function'?capvoCategoryTreeLabel(e):(e.category||'Άλλο');
+    const categoryIcon=typeof capvoCategoryIcon==='function'?capvoCategoryIcon(e.category):(CEMO[e.category]||'📌');
+    const categoryClass=typeof capvoCategoryCssClass==='function'?capvoCategoryCssClass(e.category):(CCLS[e.category]||'cat-other');
+    const displayTitle=typeof capvoMovementDisplayTitle==='function'?capvoMovementDisplayTitle(e):(e.merchantName||e.merchant_name||e.name||'Κίνηση');
+    const noteText=String(e.notes||e.note||'').trim();
+    const typeLabel=typeof capvoMovementTypeLabel==='function'?capvoMovementTypeLabel(e):'';
     const meta=[
-      esc(e.category || 'Άλλο'),
-      e.date||'',
+      typeLabel?esc(typeLabel):'',
+      esc(categoryLabel),
+      e.merchantName||e.merchant_name?esc(e.merchantName||e.merchant_name):'',
+      noteText?`📝 ${esc(noteText)}`:'',
       e.sourceLabel?esc(e.sourceLabel):'',
       ...badges.map(esc)
     ].filter(Boolean).join(' · ');
 
     return `
     <div class="dashboard-preview-row">
-      <div class="expense-icon ${CCLS[e.category] || 'cat-other'}">
-        ${CEMO[e.category] || (isFixed?'📌':'📌')}
+      <div class="expense-icon ${categoryClass}">
+        ${categoryIcon || (isFixed?'📌':'📌')}
       </div>
 
       <div class="dashboard-preview-info">
-        <strong>${esc(e.name || 'Κίνηση')}</strong>
+        <strong>${esc(displayTitle)}</strong>
         <span>${meta}</span>
       </div>
 

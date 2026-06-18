@@ -45,7 +45,17 @@ function renderWalletCards(){
   const budgetTotal = wallets.length>0
     ? (typeof capvoGetSpendableWalletTotal==='function'?capvoGetSpendableWalletTotal():(typeof capvoWalletTotalBalance==='function'?capvoWalletTotalBalance():wallets.reduce((s,w)=>s+(Number(w.currentBalance)||0),0)))
     : (typeof budgetIncomeTotal==='function'?budgetIncomeTotal():budgetSources.reduce((s,w)=>s+(Number(w.amount)||0),0));
-  const restrictedTotal = restrictedSources.reduce((s,x)=>s+(Number(x.amount)||0),0);
+  const restrictedSummary = restrictedSources.reduce((acc,x)=>{
+    const total = Number(x.amount)||0;
+    const used = typeof restrictedCoverageFor==='function' ? (Number(restrictedCoverageFor(x))||0) : 0;
+    const remaining = typeof paymentSourceRemaining==='function' ? (Number(paymentSourceRemaining(x))||0) : Math.max(0,total-used);
+    acc.total += total;
+    acc.used += Math.max(0,Math.min(total,used));
+    acc.remaining += Math.max(0,remaining);
+    return acc;
+  },{total:0,used:0,remaining:0});
+  const restrictedTotal = restrictedSummary.remaining;
+  const restrictedInitialTotal = restrictedSummary.total;
   const cardDebtTotal = cards.reduce((s,c)=>s+(typeof cardDisplayDebt==='function'?cardDisplayDebt(c):(Number(c.balance)||0)),0);
   const moneyFmt = v => typeof fmt==='function'?fmt(v):(Number(v||0).toFixed(2)+'€');
 
@@ -104,8 +114,8 @@ function renderWalletCards(){
       ${restrictedSources.length>0?`
         <details class="capvo-money-group is-restricted capvo-money-group-approved" open>
           <summary>
-            <span class="capvo-group-title"><i class="capvo-group-icon">🔐</i><span><strong>Περιορισμένα υπόλοιπα</strong><small>Ticket, Voucher και παροχές</small></span></span>
-            <b>${moneyFmt(restrictedTotal)}</b>
+            <span class="capvo-group-title"><i class="capvo-group-icon">🔐</i><span><strong>Περιορισμένα υπόλοιπα</strong><small>Ticket, Voucher και παροχές · διαθέσιμο / σύνολο</small></span></span>
+            <b title="Υπόλοιπο / συνολική παροχή">${moneyFmt(restrictedTotal)} / ${moneyFmt(restrictedInitialTotal)}</b>
           </summary>
           <div class="capvo-money-rows">${restrictedRows}</div>
         </details>`:''}
@@ -155,18 +165,22 @@ function capvoDashboardIncomeRow(s,moneyFmt){
 }
 
 function capvoDashboardRestrictedRow(s,moneyFmt){
-  const amount = Number(s.amount)||0;
+  const total = Number(s.amount)||0;
+  const usedRaw = typeof restrictedCoverageFor==='function' ? (Number(restrictedCoverageFor(s))||0) : 0;
+  const used = Math.max(0,Math.min(total,usedRaw));
+  const remaining = typeof paymentSourceRemaining==='function' ? (Number(paymentSourceRemaining(s))||0) : Math.max(0,total-used);
   const rawType = String(s.restrictionType||s.restriction_type||s.sourceCategory||s.source_category||s.category||s.name||'').toLowerCase();
   const isTicket = rawType.includes('ticket');
   const isVoucher = rawType.includes('voucher') || rawType.includes('άυλη');
   const icon = isTicket?'🎫':isVoucher?'🎁':'🔒';
-  const meta = isTicket?'Ticket / φαγητό':isVoucher?'Voucher / άυλη':'Περιορισμένη χρήση';
+  const baseMeta = isTicket?'Ticket / φαγητό':isVoucher?'Voucher / άυλη':'Περιορισμένη χρήση';
+  const usageMeta = total>0 ? `Χρήση ${moneyFmt(used)} / ${moneyFmt(total)}` : 'Χρήση περιορισμένης παροχής';
   const color = isTicket?'#f59e0b':isVoucher?'#8b5cf6':'#64748b';
   return `
     <button type="button" class="capvo-money-row is-restricted" style="--row-color:${color}" onclick="typeof editIncomeSource==='function'?editIncomeSource('${esc(s.id)}'):go('vIncome',document.querySelector('[data-v=vIncome]'))">
       <span class="capvo-money-row-icon">${icon}</span>
-      <span class="capvo-money-row-main"><strong>${esc(s.name)}</strong><small>${meta}</small></span>
-      <span class="capvo-money-row-side"><strong>${moneyFmt(amount)}</strong><small>Restricted</small></span>
+      <span class="capvo-money-row-main"><strong>${esc(s.name)}</strong><small>${esc(baseMeta)} · ${esc(usageMeta)}</small></span>
+      <span class="capvo-money-row-side"><strong>${moneyFmt(remaining)}</strong><small>από ${moneyFmt(total)}</small></span>
       <span class="capvo-money-row-chevron" aria-hidden="true">›</span>
     </button>`;
 }
@@ -498,8 +512,6 @@ function renderWalletSheet(wallet){
           </div>
         </div>
 
-        <div id="walletSheetError" class="wsheet-error" style="display:none"></div>
-
       </div>
 
       <div class="wsheet-sticky-actions">
@@ -643,12 +655,21 @@ async function saveWalletFromSheet(){
   const isDefault=isPrimaryBudget;
   const cycleIncomeAmount=isPrimaryBudget ? (parseFloat(document.getElementById('walletSheetCycleIncomeAmount')?.value)||0) : 0;
   const color=getSelectedWalletColor();
-  const errorEl=document.getElementById('walletSheetError');
+  const clearWalletValidationState=()=>{
+    const legacyError=document.getElementById('walletSheetError');
+    if(legacyError){
+      legacyError.textContent='';
+      legacyError.style.display='none';
+      legacyError.classList.remove('is-success','is-error','is-info');
+    }
+  };
 
   const showError=(msg)=>{
-    if(errorEl)capvoSheetStatus(errorEl,msg,'error');
-    else showMiniToast(msg,'error');
+    clearWalletValidationState();
+    if(typeof showMiniToast==='function') showMiniToast(msg,'error');
   };
+
+  clearWalletValidationState();
 
   if(!name){showError('Βάλε όνομα λογαριασμού.');document.getElementById('walletSheetName')?.focus();return;}
   if(balance<0){showError('Το υπόλοιπο δεν μπορεί να είναι αρνητικό.');return;}
@@ -659,6 +680,7 @@ async function saveWalletFromSheet(){
   walletSheetSubmitting=true;
   const btn=document.getElementById('walletSheetSaveBtn');
   if(btn){btn.disabled=true;btn.textContent='Αποθήκευση...';}
+  clearWalletValidationState();
 
   try{
     const walletData={
@@ -689,10 +711,10 @@ async function saveWalletFromSheet(){
     }
 
     const successMsg=walletSheetMode==='add'?'✅ Προστέθηκε λογαριασμός':'✅ Ο λογαριασμός αποθηκεύτηκε';
-    capvoSheetStatus(errorEl,successMsg,'success');
+    clearWalletValidationState();
     if(btn){btn.disabled=true;btn.textContent='Ολοκληρώθηκε ✓';}
     capvoAppOperationSuccess?.('Ολοκληρώθηκε',successMsg);
-    showMiniToast(successMsg);
+    if(typeof showMiniToast==='function') showMiniToast(successMsg,'success');
 
     if(document.getElementById('vWallets')?.classList.contains('active')){
       renderWalletsPage();
@@ -888,11 +910,20 @@ async function submitWalletTransfer(){
   const amount=parseFloat(document.getElementById('transferAmount')?.value)||0;
   const note=(document.getElementById('transferNote')?.value||'').trim();
   const errorEl=document.getElementById('transferSheetError');
+  const clearTransferValidationState=()=>{
+    if(errorEl){
+      errorEl.textContent='';
+      errorEl.style.display='none';
+      errorEl.classList.remove('is-success','is-error','is-info');
+    }
+  };
 
   const showError=(msg)=>{
-    if(errorEl)capvoSheetStatus(errorEl,msg,'error');
-    else showMiniToast(msg,'error');
+    clearTransferValidationState();
+    if(typeof showMiniToast==='function')showMiniToast(msg,'error');
   };
+
+  clearTransferValidationState();
 
   if(!fromWalletId){showError('Επίλεξε λογαριασμό αποστολής.');return;}
   if(!toWalletId){showError('Επίλεξε λογαριασμό παραλαβής.');return;}
@@ -912,7 +943,7 @@ async function submitWalletTransfer(){
     if(userId){await fetchAllData(userId);render();}
 
     const successMsg=`✅ Μεταφορά ${typeof fmt==='function'?fmt(amount):amount+'€'} ολοκληρώθηκε`;
-    capvoSheetStatus(errorEl,successMsg,'success');
+    clearTransferValidationState();
     if(btn){btn.disabled=true;btn.textContent='Ολοκληρώθηκε ✓';}
     capvoAppOperationSuccess?.('Ολοκληρώθηκε',successMsg);
     showMiniToast(successMsg);

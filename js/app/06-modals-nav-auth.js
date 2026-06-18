@@ -26,15 +26,46 @@ function toggleDailyCategoryMenu(forceState){
   picker.classList.toggle('is-open',shouldOpen);
 }
 
+function renderDailyCategoryOptions(selectedIdOrName=''){
+  const select=$('fDC');
+  const menu=$('dailyCategoryMenu');
+  if(!select || !menu)return;
+  const roots=typeof capvoRootCategories==='function'?capvoRootCategories():[];
+  if(!roots.length)return;
+  let selected=(typeof capvoCategoryById==='function'?capvoCategoryById(selectedIdOrName):null)
+    || (typeof capvoRootCategoryByName==='function'?capvoRootCategoryByName(selectedIdOrName):null)
+    || roots[0];
+  select.innerHTML=roots.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  select.value=selected.id;
+  menu.innerHTML=roots.map(c=>`<button type="button" data-category-id="${esc(c.id)}" onclick="setDailyCategory('${esc(c.id)}')">${esc(c.icon||'📌')} ${esc(c.name)}</button>`).join('');
+  renderDailySubcategoryOptions('',selected.id);
+  syncDailyCategoryUI(selected.id);
+}
+function renderDailySubcategoryOptions(selectedId='',parentId=''){
+  const select=$('fDSubcategory');
+  if(!select)return;
+  const root=parentId ? (typeof capvoCategoryById==='function'?capvoCategoryById(parentId):null) : (typeof capvoCategoryById==='function'?capvoCategoryById($('fDC')?.value):null);
+  const children=(typeof capvoSubcategories==='function' && root?.id)?capvoSubcategories(root.id):[];
+  select.innerHTML='<option value="">Χωρίς υποκατηγορία</option>'+children.map(c=>`<option value="${esc(c.id)}">${esc(c.icon||'📌')} ${esc(c.name)}</option>`).join('');
+  select.value=(selectedId && [...select.options].some(o=>String(o.value)===String(selectedId)))?selectedId:'';
+}
+function syncDailySubcategoryUI(){}
+
 function syncDailyCategoryUI(category){
-  const current=category||$('fDC')?.value||'Άλλο';
+  const select=$('fDC');
+  const current=category||select?.value||'';
+  const c=(typeof capvoCategoryById==='function'?capvoCategoryById(current):null)
+    || (typeof capvoRootCategoryByName==='function'?capvoRootCategoryByName(current):null)
+    || (typeof capvoDefaultRootCategory==='function'?capvoDefaultRootCategory():null);
+  if(select && c && select.value!==c.id)select.value=c.id;
   const label=$('dailyCategoryCurrent');
-  if(label)label.textContent=current;
+  if(label)label.textContent=c?.name||'Άλλο';
   const helper=$('dailyCategoryTriggerLabel');
   if(helper)helper.textContent='Επίλεξε κατηγορία';
   document.querySelectorAll('#dailyCategoryMenu button').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.category===current);
+    btn.classList.toggle('active',String(btn.dataset.categoryId||'')===String(c?.id||''));
   });
+  renderDailySubcategoryOptions($('fDSubcategory')?.value||'',c?.id||'');
 }
 
 function getSelectedCreditCardRate(){
@@ -101,7 +132,11 @@ function openModal(t){
     if($('interestFreeToggle'))$('interestFreeToggle').classList.add('active');
     if($('fDInstallmentRateGroup'))$('fDInstallmentRateGroup').style.display='none';
     updateDailyCreditCardOptions();
-    syncDailyCategoryUI('Άλλο');
+    if(typeof renderDailyCategoryOptions==='function')renderDailyCategoryOptions('Άλλο');
+    else syncDailyCategoryUI('Άλλο');
+    if($('fDSubcategory'))$('fDSubcategory').value='';
+    if($('fDMerchant'))$('fDMerchant').value='';
+    if($('fDNotes'))$('fDNotes').value='';
     toggleDailyCategoryMenu(false);
 
     // autofocus disabled: user taps the field when ready;
@@ -119,7 +154,7 @@ function openModal(t){
     if(typeof syncFixedCategoryPicker==='function')syncFixedCategoryPicker('Στέγαση');
     if($('fFSchedule'))$('fFSchedule').value='monthly';
     if($('fFDueDay'))$('fFDueDay').value=String(new Date().getDate());
-    if($('fFNextDueDate'))$('fFNextDueDate').value=capvoFixedDateToGreek(todayISO?.()||new Date().toLocaleDateString('en-CA'));
+    capvoSetFixedNextDueDateInputValue(todayISO?.()||new Date().toLocaleDateString('en-CA'));
     capvoSyncFixedScheduleUI({force:true});
     if($('fFAutoPay'))$('fFAutoPay').checked=false;
     fillFixedSourceWalletSelect('');
@@ -254,7 +289,7 @@ function editExp(t,id){
     if($('fFSchedule'))$('fFSchedule').value=e.scheduleType||'monthly';
     if($('fFDueDay'))$('fFDueDay').value=capvoFixedExpenseDueDay?.(e)||e.dueDay||1;
     const fixedEditNextDue=capvoFixedExpenseNextDueDate?.(e)||e.nextDueDate||'';
-    if($('fFNextDueDate'))$('fFNextDueDate').value=capvoFixedDateToGreek(fixedEditNextDue);
+    capvoSetFixedNextDueDateInputValue(fixedEditNextDue);
     capvoSyncFixedScheduleUI({preserveDate:true});
     if($('fFAutoPay'))$('fFAutoPay').checked=!!e.autoPay;
     fillFixedSourceWalletSelect(e.sourceWalletId||'');
@@ -280,8 +315,15 @@ function editExp(t,id){
   $('mDailyTitle').innerHTML='✎ Επεξεργασία<button class="modal-close" onclick="closeM()">×</button>';
   $('fDN').value=e.name;
   $('fDA').value=e.amount;
-  $('fDC').value=e.category;
-  syncDailyCategoryChips?.(e.category);
+  const dailyMeta=typeof capvoResolveExpenseCategoryMeta==='function'?capvoResolveExpenseCategoryMeta(e):null;
+  if(typeof renderDailyCategoryOptions==='function')renderDailyCategoryOptions(dailyMeta?.categoryId||e.category||'Άλλο');
+  else {$('fDC').value=e.category;syncDailyCategoryChips?.(e.category);}
+  if($('fDSubcategory')){
+    renderDailySubcategoryOptions?.(dailyMeta?.subcategoryId||'',dailyMeta?.categoryId||'');
+    $('fDSubcategory').value=dailyMeta?.subcategoryId||'';
+  }
+  if($('fDMerchant'))$('fDMerchant').value=e.merchantName||e.merchant_name||'';
+  if($('fDNotes'))$('fDNotes').value=e.notes||'';
   $('fDD').value=e.date;
   $('fDID').value=id;
   $('btnDaily').textContent='Ενημέρωση';
@@ -306,6 +348,7 @@ async function saveDailyExpenseRow(userId,expense){
   if(!ownerUserId)throw new Error('Missing authenticated user id.');
 
   expense=typeof normalizeCreditCardExpensePayload==='function' ? normalizeCreditCardExpensePayload(expense) : expense;
+  if(typeof capvoApplyExpenseCategoryMeta==='function')expense=capvoApplyExpenseCategoryMeta(expense);
 
   const row={
     id:expense.id,
@@ -314,6 +357,10 @@ async function saveDailyExpenseRow(userId,expense){
     name:expense.name,
     amount:expense.amount,
     category:expense.category,
+    category_id:expense.categoryId||expense.category_id||null,
+    subcategory_id:expense.subcategoryId||expense.subcategory_id||null,
+    merchant_name:expense.merchantName||expense.merchant_name||null,
+    notes:expense.notes||null,
     date:expense.date,
     type:'daily',
     month_key:expense.date.substring(0,7),
@@ -359,10 +406,11 @@ async function saveDailyExpenseRow(userId,expense){
 
 
 
-function setDailyCategory(category){
+function setDailyCategory(categoryId){
   const el=$('fDC');
-  if(el)el.value=category;
-  syncDailyCategoryUI(category);
+  if(el)el.value=categoryId;
+  renderDailySubcategoryOptions('',categoryId);
+  syncDailyCategoryUI(categoryId);
   toggleDailyCategoryMenu(false);
 }
 
@@ -483,7 +531,7 @@ function updateInstallmentEstimate(){
 document.addEventListener('change',e=>{
   if(e.target && e.target.id==='fDPay')updateDailyCreditCardOptions();
   if(e.target && ['fDInstallments','fDInstallmentRate'].includes(e.target.id))updateInstallmentEstimate();
-  if(e.target && e.target.id==='fDC')syncDailyCategoryUI(e.target.value);
+  if(e.target && e.target.id==='fDC'){renderDailySubcategoryOptions('',e.target.value);syncDailyCategoryUI(e.target.value);}
 });
 
 document.addEventListener('input',e=>{
@@ -1086,7 +1134,13 @@ async function saveDaily(){
   const a=parseFloat($('fDA').value);
   const id=$('fDID').value;
   const date=$('fDD').value||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA'));
-  const category=$('fDC').value;
+  const categoryId=$('fDC')?.value||'';
+  const rootCategory=(typeof capvoCategoryById==='function'?capvoCategoryById(categoryId):null)
+    || (typeof capvoRootCategoryByName==='function'?capvoRootCategoryByName(categoryId):null);
+  const category=rootCategory?.name||'Άλλο';
+  const subcategoryId=$('fDSubcategory')?.value||'';
+  const merchantName=($('fDMerchant')?.value||'').trim();
+  const notes=($('fDNotes')?.value||'').trim();
   const payEl=$('fDPay');
   let paymentSourceId=payEl?.value||'';
   const lockedCardId=payEl?.dataset?.lockedCardId || window.capvoLockedCardPurchaseId || '';
@@ -1126,6 +1180,10 @@ async function saveDaily(){
       name:n,
       amount:a,
       category,
+      categoryId:categoryId||null,
+      subcategoryId:subcategoryId||null,
+      merchantName,
+      notes,
       date,
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
@@ -1137,6 +1195,10 @@ async function saveDaily(){
       name:n,
       amount:a,
       category,
+      categoryId:categoryId||null,
+      subcategoryId:subcategoryId||null,
+      merchantName,
+      notes,
       date,
       paymentSourceId,
       paymentSourceName:paymentSource?.name||'',
@@ -1144,6 +1206,7 @@ async function saveDaily(){
     },paymentSource);
   }
 
+  if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
   const oldExpense=id?getExistingDailyExpenseById(id):null;
   if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
 
@@ -1249,6 +1312,15 @@ function capvoFixedGreekDateToISO(value){
   return '';
 }
 
+function capvoSetFixedNextDueDateInputValue(value){
+  const field=$('fFNextDueDate');
+  if(!field)return;
+  const iso=capvoFixedGreekDateToISO(value) || (normalizeDateValue?.(value)||'');
+  field.value = field.type === 'date' ? iso : capvoFixedDateToGreek(iso);
+  field.style.borderColor='';
+  delete field.dataset.invalidDate;
+}
+
 function capvoFixedNextDateFromRule(scheduleType,dueDay,refDateKey){
   const type=String(scheduleType||'monthly');
   const today=typeof capvoParseDateKey==='function'?(capvoParseDateKey(refDateKey||todayISO?.())||new Date()):new Date();
@@ -1291,7 +1363,7 @@ function capvoNormalizeFixedNextDueDateInput(options={}){
     return '';
   }
   field.style.borderColor='';
-  field.value=capvoFixedDateToGreek(iso);
+  field.value = field.type === 'date' ? iso : capvoFixedDateToGreek(iso);
 
   if(options.syncDueDay && $('fFDueDay') && String($('fFSchedule')?.value||'monthly')!=='weekly'){
     const d=capvoParseDateKey?.(iso);
@@ -1321,12 +1393,12 @@ function capvoSyncFixedScheduleUI(options={}){
     if(dueLabel)dueLabel.textContent='Ημέρα μήνα';
     if(dueHelp)dueHelp.textContent='π.χ. 17 → εμφανίζεται κάθε χρόνο στην ίδια ημέρα του μήνα.';
     if(nextLabel)nextLabel.textContent='Επόμενη ετήσια εμφάνιση';
-    if(nextHelp)nextHelp.textContent='Ελληνική μορφή ημερομηνίας. Αν αλλάξεις την ημερομηνία, συγχρονίζεται και η ημέρα μήνα.';
+    if(nextHelp)nextHelp.textContent='Ημερομηνία τύπου date. Η συσκευή τη δείχνει στη δική της μορφή, ενώ στη βάση σώζεται ως ημερομηνία.';
   }else{
     if(dueLabel)dueLabel.textContent='Πληρώνεται κάθε μήνα στις';
     if(dueHelp)dueHelp.textContent='π.χ. 17 → εμφανίζεται κάθε μήνα στις 17. Όταν πληρωθεί, πάει στον επόμενο μήνα την ίδια ημέρα.';
     if(nextLabel)nextLabel.textContent='Επόμενη προγραμματισμένη εμφάνιση';
-    if(nextHelp)nextHelp.textContent='Υπολογίζεται από την ημέρα μήνα. Μπορείς να το αλλάξεις και θα συγχρονιστεί η ημέρα.';
+    if(nextHelp)nextHelp.textContent='Υπολογίζεται από την ημέρα μήνα. Αν το αλλάξεις, αποθηκεύεται ως ημερομηνία και συγχρονίζεται η ημέρα.';
   }
 
   if(type==='weekly' && dueInput && !dueInput.value){
@@ -1338,7 +1410,7 @@ function capvoSyncFixedScheduleUI(options={}){
     const currentIso=capvoFixedGreekDateToISO(dateInput.value);
     const ref=currentIso || todayISO?.() || new Date().toLocaleDateString('en-CA');
     const next=capvoFixedNextDateFromRule(type,dueInput?.value||new Date().getDate(),ref);
-    dateInput.value=capvoFixedDateToGreek(next);
+    capvoSetFixedNextDueDateInputValue(next);
   }
 }
 
@@ -1365,7 +1437,7 @@ function readFixedScheduleForm(){
   const sourceWalletId=String($('fFWallet')?.value||'');
   const autoPay=!!$('fFAutoPay')?.checked;
   const nextDueDate=invalidDate ? '' : (typedDate || capvoFixedNextDateFromRule(type,dueDay,todayISO?.()));
-  if(!typedDate && !invalidDate && $('fFNextDueDate'))$('fFNextDueDate').value=capvoFixedDateToGreek(nextDueDate);
+  if(!typedDate && !invalidDate)capvoSetFixedNextDueDateInputValue(nextDueDate);
   return {scheduleType:type,dueDay,sourceWalletId,autoPay,nextDueDate};
 }
 
@@ -1391,11 +1463,17 @@ async function saveFixedExpenseRow(userId,expense){
     auto_pay:!!expense.autoPay
   };
 
+  // Reactivate deterministic onboarding-created fixed expenses if the wizard is retried
+  // after a previous soft delete. Historical payments remain untouched.
+  if(expense.deletedAt===null || expense.deleted_at===null){
+    payload.deleted_at=null;
+  }
+
   let {error}=await supabaseClient
     .from('fixed_expenses')
     .upsert(payload,{onConflict:'id'});
 
-  if(error && /(effective_from_date|schedule_type|due_day|next_due_date|source_wallet_id|auto_pay)/i.test(String(error.message||error.details||''))){
+  if(error && /(effective_from_date|schedule_type|due_day|next_due_date|source_wallet_id|auto_pay|deleted_at)/i.test(String(error.message||error.details||''))){
     const legacyPayload={...payload};
     delete legacyPayload.effective_from_date;
     delete legacyPayload.schedule_type;
@@ -1403,6 +1481,7 @@ async function saveFixedExpenseRow(userId,expense){
     delete legacyPayload.next_due_date;
     delete legacyPayload.source_wallet_id;
     delete legacyPayload.auto_pay;
+    delete legacyPayload.deleted_at;
     const retry=await supabaseClient
       .from('fixed_expenses')
       .upsert(legacyPayload,{onConflict:'id'});
@@ -1478,7 +1557,7 @@ async function saveFixed(){
 
   if(!fixedSchedule.nextDueDate){
     $('fFNextDueDate').style.borderColor='var(--red)';
-    showMiniToast?.('Συμπλήρωσε σωστή ημερομηνία, π.χ. 19/6/2026.','error');
+    showMiniToast?.('Συμπλήρωσε σωστή ημερομηνία επόμενης εμφάνισης.','error');
     return;
   }
 
@@ -2088,6 +2167,10 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
         name:parsed.name || 'Έξοδο',
         amount:Number(parsed.amount)||0,
         category:parsed.category || 'Άλλο',
+        categoryId:parsed.categoryId||parsed.category_id||null,
+        subcategoryId:parsed.subcategoryId||parsed.subcategory_id||null,
+        merchantName:parsed.merchantName||parsed.merchant_name||'',
+        notes:parsed.notes||'',
         date:parsed.date||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')),
         paymentSourceId:parsed.paymentSourceId||'',
         paymentSourceName:parsed.paymentSourceName||'',
@@ -2098,12 +2181,17 @@ async function quickAddExpense(sourceInputId='quickAddInput',options={}){
         name:parsed.name || 'Έξοδο',
         amount:Number(parsed.amount)||0,
         category:parsed.category || 'Άλλο',
+        categoryId:parsed.categoryId||parsed.category_id||null,
+        subcategoryId:parsed.subcategoryId||parsed.subcategory_id||null,
+        merchantName:parsed.merchantName||parsed.merchant_name||'',
+        notes:parsed.notes||'',
         date:parsed.date||(typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')),
         paymentSourceId:parsed.paymentSourceId||'',
         paymentSourceName:parsed.paymentSourceName||'',
         paymentSourceType:parsed.paymentSourceType||''
       };
 
+  if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
   if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
 
   const monthKey=expense.date.substring(0,7);
@@ -3132,7 +3220,7 @@ function quickAddFallbackParse(text){
   const amount=Number(amountMatch[1].replace(',','.'))||0;
   if(amount<=0)return null;
 
-  const name=raw.replace(amountMatch[0],'').replace(/\b(ticket|voucher|edenred|τίκετ|τικετ|κάρτα|καρτα|card|μετρητά|μετρητα|cash|revolut|revo|ρεβολουτ|ρεβο)\b/gi,'').trim() || 'Έξοδο';
+  const name=raw.replace(amountMatch[0],'').replace(/\b(ticket|voucher|edenred|τίκετ|τικετ|κάρτα|καρτα|card|μετρητά|μετρητα|cash|revolut|revolout|revoloyt|revolute|revo|ρεβολουτ|ρεβολου|ρεβολοτ|ρεβο)\b/gi,'').trim() || 'Έξοδο';
   const lower=raw.toLowerCase();
 
   let category='Άλλο';
@@ -3145,6 +3233,7 @@ function quickAddFallbackParse(text){
   if(/ticket|voucher/.test(lower)) paymentSourceName='Ticket';
   else if(/καρτα|κάρτα|card/.test(lower)) paymentSourceName='Κάρτα';
   else if(/cash|μετρη/.test(lower)) paymentSourceName='Μετρητά';
+  else if(/revolut|revolout|revoloyt|revolute|revo|ρεβολουτ|ρεβολου|ρεβολοτ|ρεβο/.test(lower)) paymentSourceName='Revolut';
 
   return {name,amount,category,paymentSourceName};
 }
@@ -3419,9 +3508,7 @@ function capvoWizardDefaultState(){
     ticketAmount:'',
     voucherAmount:'',
     fixed:[
-      {name:'Ενοίκιο / Δάνειο',amount:'',category:'Στέγαση'},
-      {name:'Internet / Τηλέφωνο',amount:'',category:'Λογαριασμοί'},
-      {name:'Συνδρομές',amount:'',category:'Συνδρομές'}
+      {name:'',amount:'',category:'Στέγαση',dueDay:String(prefs.budgetCycleStartDay||1),todayStatus:'unpaid'}
     ],
     savingsName:general.name||'Γενική αποταμίευση',
     savingsIcon:general.icon||'💰'
@@ -3499,6 +3586,30 @@ function capvoWizardFixedAmountValue(row){
   return capvoWizardMoney(raw);
 }
 
+function capvoWizardFixedDueDayValue(row,s){
+  const raw=String(row?.dueDay ?? '').trim();
+  const fallback=capvoWizardDefaultFixedDueDay(s);
+  if(!raw)return fallback;
+  const parsed=Number(raw.replace(/[^0-9]/g,''));
+  if(!Number.isFinite(parsed))return fallback;
+  return typeof capvoClampCycleDay==='function'
+    ? capvoClampCycleDay(parsed)
+    : Math.min(31,Math.max(1,parsed));
+}
+
+function capvoWizardTodayDay(){
+  return new Date().getDate();
+}
+
+function capvoWizardFixedIsDueToday(row,s){
+  return capvoWizardFixedDueDayValue(row,s) === capvoWizardTodayDay();
+}
+
+function capvoWizardFixedTodayStatus(row){
+  const raw=String(row?.todayStatus||'unpaid').trim();
+  return raw === 'paid' ? 'paid' : 'unpaid';
+}
+
 function capvoWizardFixedRowHasUserInput(row){
   const rawAmount=capvoWizardFixedAmountRaw(row);
   const rawName=String(row?.name ?? '').trim();
@@ -3513,7 +3624,9 @@ function capvoWizardFixedRowsForSave(s){
       name:String(row?.name||'').trim(),
       amountRaw:capvoWizardFixedAmountRaw(row),
       amount:capvoWizardFixedAmountValue(row),
-      category:capvoWizardNormalizeFixedCategory(row?.category||'Άλλο')
+      category:capvoWizardNormalizeFixedCategory(row?.category||'Άλλο'),
+      dueDay:capvoWizardFixedDueDayValue(row,s),
+      todayStatus:capvoWizardFixedTodayStatus(row)
     }))
     .filter(row=>row.amountRaw || row.amount>0 || row.name);
 }
@@ -3529,8 +3642,9 @@ function capvoWizardMarkFixedRow(idx,field='amount'){
     const amount=document.getElementById(`obFixed${idx}Amount`);
     const name=document.getElementById(`obFixed${idx}Name`);
     const category=document.getElementById(`obFixed${idx}Category`);
-    [amount,name,category].forEach(el=>{ if(el)el.style.borderColor=''; });
-    const target=field==='name'?name:(field==='category'?category:amount);
+    const dueDay=document.getElementById(`obFixed${idx}DueDay`);
+    [amount,name,category,dueDay].forEach(el=>{ if(el)el.style.borderColor=''; });
+    const target=field==='name'?name:(field==='category'?category:(field==='dueDay'?dueDay:amount));
     if(target){
       target.style.borderColor='var(--red)';
       target.focus?.();
@@ -3570,13 +3684,107 @@ function capvoWizardPrimaryWalletColor(type){
 }
 
 function capvoWizardNextCycleStartKey(s){
-  // v1.9.5.0: fixed expenses created during onboarding start from the next
-  // calendar month, because reports/periods are now month-based.
+  // Fixed expenses created during onboarding are only scheduled obligations.
+  // They start from next month so the initial wallet balance is never reduced
+  // just because the user completed the wizard.
   const today=new Date();
   const candidate=new Date(today.getFullYear(),today.getMonth()+1,1,12);
   return typeof capvoDateKey==='function'
     ? capvoDateKey(candidate)
     : candidate.toISOString().slice(0,10);
+}
+
+function capvoWizardDefaultFixedDueDay(s){
+  if(String(s?.cycleType||'fixed_day')==='fixed_day'){
+    return typeof capvoClampCycleDay==='function'
+      ? capvoClampCycleDay(s?.cycleDay||1)
+      : Math.min(31,Math.max(1,Number(s?.cycleDay)||1));
+  }
+  // Last-working-day is supported for salary reminders, not for each fixed expense.
+  // Keep onboarding simple: default fixed expenses to the 1st and let the user
+  // fine-tune them later from Πάγια & Υποχρεώσεις.
+  return 1;
+}
+
+function capvoWizardNextMonthlyDueDateKeyForDay(dueDay,options={}){
+  const today=new Date();
+  const todayKey=typeof capvoDateKey==='function' ? capvoDateKey(today) : today.toISOString().slice(0,10);
+  let year=today.getFullYear();
+  let month=today.getMonth();
+
+  const build=(y,m)=>{
+    const days=typeof capvoDaysInMonth==='function'
+      ? capvoDaysInMonth(y,m)
+      : new Date(y,m+1,0).getDate();
+    const safeDay=Math.min(Math.max(1,Number(dueDay)||1),days);
+    return typeof capvoDateKeyFromParts==='function'
+      ? capvoDateKeyFromParts(y,m,safeDay)
+      : new Date(y,m,safeDay,12).toISOString().slice(0,10);
+  };
+
+  let candidate=build(year,month);
+  // Wizard setup starts from the user's current reality.
+  // Past days go to next month. Future days stay in current month.
+  // If the due day is today and the user says it was already paid, start next month.
+  if(candidate < todayKey || (candidate === todayKey && options.skipToday)){
+    month+=1;
+    if(month>11){month=0;year+=1;}
+    candidate=build(year,month);
+  }
+  return candidate;
+}
+
+function capvoWizardNextMonthlyDueDateKey(s){
+  return capvoWizardNextMonthlyDueDateKeyForDay(capvoWizardDefaultFixedDueDay(s));
+}
+
+function capvoWizardFixedDefaults(s,primaryWalletId,row={}){
+  const dueDay=capvoWizardFixedDueDayValue(row,s);
+  const alreadyPaidToday=capvoWizardFixedIsDueToday(row,s) && capvoWizardFixedTodayStatus(row)==='paid';
+  const nextDueDate=capvoWizardNextMonthlyDueDateKeyForDay(dueDay,{skipToday:alreadyPaidToday});
+
+  // The onboarding wizard represents the user's current reality from today onward.
+  // A future due day in the current month must appear in the current calendar;
+  // a past/already-paid day starts from the next scheduled occurrence.
+  return {
+    scheduleType:'monthly',
+    dueDay,
+    nextDueDate,
+    effectiveFromDate:nextDueDate,
+    sourceWalletId:String(primaryWalletId||''),
+    autoPay:false,
+    deletedAt:null
+  };
+}
+
+function capvoWizardFixedStableSuffix(row){
+  const raw=`${row?.idx||0}|${row?.name||''}|${row?.category||''}|${row?.dueDay||''}`;
+  const hash=capvoWizardDeterministicUuid(raw).replace(/-/g,'').slice(0,12);
+  return `fixed_${row?.idx||0}_${hash}`;
+}
+
+async function capvoSoftDeleteObsoleteOnboardingFixedExpenses(ownerUserId,keepIds=[]){
+  try{
+    const keep=new Set((keepIds||[]).map(String));
+    const {data,error}=await supabaseClient
+      .from('fixed_expenses')
+      .select('id,deleted_at')
+      .eq('user_id',ownerUserId)
+      .like('id','ob_fixed_%');
+    if(error)throw error;
+    const now=new Date().toISOString();
+    const obsolete=(data||[]).filter(r=>!r.deleted_at && !keep.has(String(r.id)));
+    for(const row of obsolete){
+      const {error:updateError}=await supabaseClient
+        .from('fixed_expenses')
+        .update({deleted_at:now,updated_at:now})
+        .eq('user_id',ownerUserId)
+        .eq('id',row.id);
+      if(updateError)throw updateError;
+    }
+  }catch(e){
+    console.warn('[CAPVO] onboarding obsolete fixed cleanup skipped',e?.message||e);
+  }
 }
 
 function capvoWizardValidateBudgetStep(s,{focus=true}={}){
@@ -3640,6 +3848,11 @@ function capvoWizardValidateFixedStep(s,{focus=true}={}){
         if(focus)capvoWizardMarkFixedRow(row.idx,'name');
         return false;
       }
+      if(row.dueDay<1 || row.dueDay>31){
+        showMiniToast('Η ημέρα πληρωμής παγίου πρέπει να είναι από 1 έως 31.','error');
+        if(focus)capvoWizardMarkFixedRow(row.idx,'dueDay');
+        return false;
+      }
     }
   }
 
@@ -3698,9 +3911,11 @@ function capvoOnboardingUpdateFromInputs(){
   }
   if(get('obFixed0Amount')){
     s.fixed=(s.fixed||[]).map((row,idx)=>({
-      name:(get(`obFixed${idx}Name`)?.value||row.name||'Πάγιο').trim(),
+      name:(get(`obFixed${idx}Name`)?.value||row.name||'').trim(),
       amount:get(`obFixed${idx}Amount`)?.value||'',
-      category:capvoWizardNormalizeFixedCategory(get(`obFixed${idx}Category`)?.value||row.category||'Άλλο')
+      category:capvoWizardNormalizeFixedCategory(get(`obFixed${idx}Category`)?.value||row.category||'Άλλο'),
+      dueDay:String(readBudgetCycleDayInput(get(`obFixed${idx}DueDay`),row.dueDay||capvoWizardDefaultFixedDueDay(s)) || row.dueDay || capvoWizardDefaultFixedDueDay(s)),
+      todayStatus:get(`obFixed${idx}TodayPaid`)?.checked ? 'paid' : 'unpaid'
     }));
   }
   if(get('obSavingsName')){
@@ -3715,13 +3930,26 @@ function capvoOnboardingUpdateFromInputs(){
 function capvoOnboardingAddFixedRow(){
   const s=capvoOnboardingUpdateFromInputs();
   s.fixed=Array.isArray(s.fixed)?s.fixed:[];
-  s.fixed.push({name:'',amount:'',category:'Άλλο'});
+  s.fixed.push({name:'',amount:'',category:'Άλλο',dueDay:String(capvoWizardDefaultFixedDueDay(s)),todayStatus:'unpaid'});
   window.__capvoOnboarding=s;
   renderCapvoOnboardingWizard();
   setTimeout(()=>{
     const idx=Math.max(0,s.fixed.length-1);
     document.getElementById(`obFixed${idx}Name`)?.focus?.();
   },40);
+}
+
+function capvoOnboardingRemoveFixedRow(idx){
+  const s=capvoOnboardingUpdateFromInputs();
+  s.fixed=Array.isArray(s.fixed)?s.fixed:[];
+  const removeIdx=Number(idx);
+  if(!Number.isFinite(removeIdx) || removeIdx<0 || removeIdx>=s.fixed.length)return;
+  s.fixed.splice(removeIdx,1);
+  if(!s.fixed.length){
+    s.fixed.push({name:'',amount:'',category:'Στέγαση',dueDay:String(capvoWizardDefaultFixedDueDay(s)),todayStatus:'unpaid'});
+  }
+  window.__capvoOnboarding=s;
+  renderCapvoOnboardingWizard();
 }
 
 function capvoPersistOnboardingStep(step){
@@ -3953,28 +4181,57 @@ function capvoOnboardingStepHtml(s){
   }
 
   if(step===2){
-    const rows=(s.fixed||[]).map((row,idx)=>{
+    const allFixedRows=Array.isArray(s.fixed)?s.fixed:[];
+    const rows=allFixedRows.map((row,idx)=>{
       const iconClass=idx===0?'home':idx===1?'wifi':'repeat';
       const category=capvoWizardNormalizeFixedCategory(row.category||'Άλλο');
-      return `<div class="ob-pro-fixed-row ob-pro-fixed-row-with-category">
+      const dueDay=esc(String(row.dueDay||capvoWizardDefaultFixedDueDay(s)));
+      const isDueToday=capvoWizardFixedIsDueToday(row,s);
+      const todayStatus=capvoWizardFixedTodayStatus(row);
+      const removeBtn=idx>0 ? `<button type="button" class="ob-pro-fixed-remove" aria-label="Αφαίρεση παγίου" onclick="capvoOnboardingRemoveFixedRow(${idx})">×</button>` : '';
+      const todayDecision=isDueToday ? `
+          <div class="ob-pro-fixed-today-choice">
+            <div class="ob-pro-fixed-today-head">
+              <strong>Λήγει σήμερα</strong>
+              <span>Τι ισχύει;</span>
+            </div>
+            <div class="ob-pro-fixed-today-options">
+              <label class="${todayStatus!=='paid'?'selected':''}">
+                <input type="radio" name="obFixed${idx}TodayStatus" id="obFixed${idx}TodayUnpaid" value="unpaid" ${todayStatus!=='paid'?'checked':''}>
+                <span>Όχι ακόμα</span>
+              </label>
+              <label class="${todayStatus==='paid'?'selected':''}">
+                <input type="radio" name="obFixed${idx}TodayStatus" id="obFixed${idx}TodayPaid" value="paid" ${todayStatus==='paid'?'checked':''}>
+                <span>Πληρώθηκε</span>
+              </label>
+            </div>
+          </div>` : '';
+      return `<div class="ob-pro-fixed-row ob-pro-fixed-row-with-category ob-pro-fixed-row-scheduled">
+        ${removeBtn}
         <i class="premium-mini-icon ${iconClass}" aria-hidden="true"></i>
         <div class="ob-pro-fixed-main">
-          <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="Όνομα παγίου">
+          <input id="obFixed${idx}Name" type="text" value="${esc(row.name||'')}" placeholder="π.χ. Ενοίκιο, Internet, Netflix">
           <div class="ob-pro-fixed-meta">
             <select id="obFixed${idx}Category" class="ob-pro-fixed-category" aria-label="Κατηγορία παγίου">${capvoWizardFixedCategoryOptions(category)}</select>
             <input id="obFixed${idx}Amount" class="ob-pro-fixed-amount" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(row.amount||'')}" placeholder="Ποσό">
           </div>
+          <label class="ob-pro-fixed-due-inline">
+            <span>Πληρώνεται κάθε μήνα στις</span>
+            <input id="obFixed${idx}DueDay" class="ob-pro-fixed-due-day" type="text" inputmode="numeric" maxlength="2" value="${dueDay}" placeholder="1-31" onchange="capvoOnboardingUpdateFromInputs();renderCapvoOnboardingWizard();" onblur="capvoOnboardingUpdateFromInputs();renderCapvoOnboardingWizard();">
+          </label>
+          ${todayDecision}
         </div>
       </div>`;
     }).join('');
     return shell(
       'Σταθερές δαπάνες',
-      'Προαιρετικό. Τα πάγια που βάζεις εδώ θα ξεκινήσουν από τον επόμενο κύκλο, ώστε να μη μειώσουν το αρχικό υπόλοιπο που έχεις σήμερα.',
+      'Προαιρετικό. Βάλε ένα βασικό πάγιο τώρα ή άφησέ το κενό και πρόσθεσε τα υπόλοιπα αργότερα.',
       `
       <div class="ob-pro-card fixed">
-        <div class="ob-pro-tip">Πρόταση: βάλε τα βασικά πάγια. Θα υπολογιστούν από τον επόμενο μισθολογικό κύκλο.</div>
+        <div class="ob-pro-tip">Τα πάγια είναι προγραμματισμένες υποχρεώσεις. Δεν αφαιρούν χρήματα τώρα. Θα εμφανιστούν στο ημερολόγιο και θα μειώσουν wallet μόνο όταν πατήσεις “Πληρώθηκε”.</div>
         <div class="ob-pro-fixed-stack">${rows}</div>
         <button type="button" class="ob-pro-add-fixed" onclick="capvoOnboardingAddFixedRow()">+ Προσθήκη άλλου παγίου</button>
+        <div class="ob-pro-inline-note">Κράτα το wizard απλό: μπορείς να αλλάξεις wallet, ημέρα και συχνότητα μετά από τη σελίδα Πάγια & Υποχρεώσεις.</div>
       </div>`,
       triActions('Συνέχεια','capvoOnboardingNext()')
     );
@@ -4030,6 +4287,7 @@ function capvoOnboardingStepHtml(s){
       <div class="ob-complete-list">
         <div><i class="premium-mini-icon wallet"></i><strong>Ο βασικός λογαριασμός και ο μισθός σου αποθηκεύτηκαν.</strong></div>
         <div><i class="premium-mini-icon cycle"></i><strong>Ο οικονομικός κύκλος είναι έτοιμος.</strong></div>
+        <div><i class="premium-mini-icon repeat"></i><strong>Τα πάγια αποθηκεύτηκαν ως προγραμματισμένες υποχρεώσεις, χωρίς να μειώσουν wallet.</strong></div>
         <div><i class="premium-mini-icon quick"></i><strong>Συνέχισε με Quick Add ή πρόσθεσε τα πρώτα σου έξοδα.</strong></div>
       </div>
     </div>`,
@@ -4517,14 +4775,36 @@ function capvoEnsureWizardMobileScrollFixStyles(){
   document.head.appendChild(style);
 }
 
-function renderCapvoOnboardingWizard(){
+function renderCapvoOnboardingWizard(options={}){
   capvoEnsureOnboardingProStyles();
   capvoEnsureOnboardingPremiumStyles();
   capvoEnsureWizardMobileScrollFixStyles();
   const overlay=capvoEnsureOnboardingOverlay();
   const s=window.__capvoOnboarding||capvoWizardDefaultState();
+
+  // Preserve the internal wizard scroll when the same step re-renders.
+  // Mobile Safari/Chrome were jumping the onboarding back to the top when
+  // a fixed-expense due-day input blurred and the step was re-rendered.
+  // Step changes still start naturally from the top.
+  const currentScroller=overlay.querySelector?.('.ob-stepper-pro');
+  const currentStep=Number(window.__capvoLastOnboardingRenderStep);
+  const nextStep=Number(s.step)||0;
+  const shouldPreserveScroll=options.preserveScroll !== false &&
+    overlay.classList.contains('active') &&
+    Number.isFinite(currentStep) &&
+    currentStep===nextStep;
+  const preservedScrollTop=shouldPreserveScroll ? Number(currentScroller?.scrollTop||0) : 0;
+
   overlay.innerHTML=capvoOnboardingStepHtml(s);
   overlay.classList.add('active');
+  window.__capvoLastOnboardingRenderStep=nextStep;
+
+  if(shouldPreserveScroll && preservedScrollTop>0){
+    requestAnimationFrame(()=>{
+      const nextScroller=overlay.querySelector?.('.ob-stepper-pro');
+      if(nextScroller)nextScroller.scrollTop=preservedScrollTop;
+    });
+  }
 
   if(window.__capvoWizardSmoothIntro){
     overlay.classList.add('capvo-wizard-smooth-intro');
@@ -4841,21 +5121,25 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     }
 
     // ── Fixed expenses: position-based deterministic ids ───────────────────
-    // id = userId + '_ob_fixed_' + idx → same row position always same id.
-    // On retry the upsert updates the existing row instead of inserting a new one.
-    // Existing fixed expenses NOT from onboarding are left untouched.
-    for(const row of capvoWizardFixedRowsForSave(s)){
-      if(row.amount>0 && row.name){
-        const fixedId=capvoWizardDeterministicId(ownerUserId,'fixed_'+row.idx);
-        await saveFixedExpenseRow(ownerUserId,{
-          id:fixedId,
-          name:row.name,
-          amount:row.amount,
-          category:row.category,
-          effectiveFromDate:capvoWizardNextCycleStartKey(s),
-          createdAt:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')
-        });
-      }
+    // Wizard fixed expenses are scheduled obligations, not actual payments.
+    // They do NOT reduce any wallet here. They get a sensible default schedule
+    // and the primary wallet as a suggested payment source for the later
+    // “Πληρώθηκε” action. Existing fixed expenses NOT from onboarding are untouched.
+    const wizardFixedRows=capvoWizardFixedRowsForSave(s).filter(row=>row.amount>0 && row.name);
+    const wizardFixedIds=wizardFixedRows.map(row=>capvoWizardDeterministicId(ownerUserId,capvoWizardFixedStableSuffix(row)));
+    await capvoSoftDeleteObsoleteOnboardingFixedExpenses(ownerUserId,wizardFixedIds);
+
+    for(const row of wizardFixedRows){
+      const fixedId=capvoWizardDeterministicId(ownerUserId,capvoWizardFixedStableSuffix(row));
+      const rowDefaults=capvoWizardFixedDefaults(s,walletId,row);
+      await saveFixedExpenseRow(ownerUserId,{
+        id:fixedId,
+        name:row.name,
+        amount:row.amount,
+        category:row.category,
+        ...rowDefaults,
+        createdAt:typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA')
+      });
     }
 
     // ── Savings goal name/icon update (idempotent by design) ──────────────
@@ -4894,7 +5178,7 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
 
     window.__capvoFinishingOnboarding=false;
 
-    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η αρχική ρύθμιση αποθηκεύτηκε.');
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η αρχική ρύθμιση αποθηκεύτηκε. Τα πάγια μπήκαν ως υποχρεώσεις, όχι ως πληρωμές.');
 
     if(openTelegramAfter){
       if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(420);

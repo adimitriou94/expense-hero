@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.9.8.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.11.3">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.9.8.3">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.9.8.3">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.9.8.3">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.9.8.3">
-  <link rel="manifest" href="manifest.webmanifest?v=1.9.8.3">
-  <!-- <link rel="stylesheet" href="style.css?v=1.9.8.3"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.11.3">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.11.3">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.11.3">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.11.3">
+  <link rel="manifest" href="manifest.webmanifest?v=1.11.3">
+  <!-- <link rel="stylesheet" href="style.css?v=1.11.3"> -->
 </head>
 
 <body class="auth-pending">
@@ -503,15 +503,18 @@
       <div class="mobile-transactions-tools" aria-label="Φίλτρα κινήσεων">
         <label class="mobile-transaction-search">
           <span>⌕</span>
-          <input id="mobileTransactionSearch" type="search" placeholder="Ψάξε όνομα, κατηγορία ή πληρωμή..." oninput="renderDailyList();">
+          <input id="mobileTransactionSearch" type="search" placeholder="Ψάξε κατάστημα, σημείωση, κατηγορία ή wallet..." oninput="renderDailyList();">
         </label>
         <div class="mobile-transaction-chips">
           <button type="button" class="mobile-transaction-chip active" data-mobile-transaction-filter="all" onclick="setMobileTransactionFilter('all')">Όλα</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="budget" onclick="setMobileTransactionFilter('budget')">Budget</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="expenses" onclick="setMobileTransactionFilter('expenses')">Έξοδα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="fixed" onclick="setMobileTransactionFilter('fixed')">Πάγια</button>
           <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="cards" onclick="setMobileTransactionFilter('cards')">Κάρτες</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="savings" onclick="setMobileTransactionFilter('savings')">Κουμπαράδες</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="wallets" onclick="setMobileTransactionFilter('wallets')">Wallets</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="savings" onclick="setMobileTransactionFilter('savings')">Savings</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="income" onclick="setMobileTransactionFilter('income')">Income</button>
           <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="today" onclick="setMobileTransactionFilter('today')">Σήμερα</button>
-          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">Εβδομάδα</button>
+          <button type="button" class="mobile-transaction-chip" data-mobile-transaction-filter="week" onclick="setMobileTransactionFilter('week')">7 ημέρες</button>
         </div>
       </div>
 
@@ -742,9 +745,25 @@
         </div>
       </section>
 
-      <section class="reports-card reports-breakdown-card">
+      <section class="reports-card reports-mix-card">
         <div class="reports-section-head">
           <span class="reports-section-index">2.</span>
+          <h3>Ανάλυση κύκλου</h3>
+        </div>
+        <div class="reports-cycle-grid" id="reportsCycleGrid"></div>
+      </section>
+
+      <section class="reports-card reports-action-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">3.</span>
+          <h3>Τι να προσέξεις</h3>
+        </div>
+        <div class="reports-action-list" id="reportsActionList"></div>
+      </section>
+
+      <section class="reports-card reports-breakdown-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">4.</span>
           <h3>Κατανομή εξόδων ανά κατηγορία</h3>
         </div>
 
@@ -762,9 +781,43 @@
         </div>
       </section>
 
+      <section class="reports-card reports-subcategory-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">5.</span>
+          <h3>Top υποκατηγορίες</h3>
+        </div>
+        <div class="reports-mini-list" id="reportsSubcategoryList"></div>
+      </section>
+
+      <section class="reports-grid-two">
+        <section class="reports-card reports-wallet-card">
+          <div class="reports-section-head compact">
+            <span class="reports-section-index">6.</span>
+            <h3>Wallets / πηγές</h3>
+          </div>
+          <div class="reports-mini-list" id="reportsWalletList"></div>
+        </section>
+
+        <section class="reports-card reports-merchant-card">
+          <div class="reports-section-head compact">
+            <span class="reports-section-index">7.</span>
+            <h3>Merchants</h3>
+          </div>
+          <div class="reports-mini-list" id="reportsMerchantList"></div>
+        </section>
+      </section>
+
+      <section class="reports-card reports-ticket-card">
+        <div class="reports-section-head">
+          <span class="reports-section-index">8.</span>
+          <h3>Ticket / Voucher usage</h3>
+        </div>
+        <div class="reports-ticket-grid" id="reportsTicketUsage"></div>
+      </section>
+
       <section class="reports-card reports-insights-card">
         <div class="reports-section-head">
-          <span class="reports-section-index">3.</span>
+          <span class="reports-section-index">9.</span>
           <h3>Insights</h3>
         </div>
 
@@ -1345,17 +1398,7 @@
           <label>Κατηγορία</label>
 
           <select id="acDC" class="add-center-native-select" aria-hidden="true" tabindex="-1">
-            <option value="Τρόφιμα">🛒 Τρόφιμα</option>
-            <option value="Καφέδες">☕ Καφέδες</option>
-            <option value="Μεταφορά">🚗 Μεταφορά</option>
-            <option value="Ψυχαγωγία">🎭 Ψυχαγωγία</option>
-            <option value="Φαγητό έξω">🍕 Φαγητό έξω</option>
-            <option value="Λογαριασμοί">💡 Λογαριασμοί</option>
-            <option value="Υγεία">🏥 Υγεία</option>
-            <option value="Ρούχα">👕 Ρούχα</option>
-            <option value="Δάνεια">🏦 Δάνεια</option>
-            <option value="Συνδρομές">📱 Συνδρομές</option>
-            <option value="Άλλο">📌 Άλλο</option>
+            <option value="">Φόρτωση κατηγοριών...</option>
           </select>
 
           <button type="button" class="add-center-picker-button" id="acDCCustom" onclick="toggleAddCenterCategoryPicker(event)" aria-expanded="false">
@@ -1366,19 +1409,39 @@
             <span class="add-center-picker-chevron">›</span>
           </button>
 
-          <div class="add-center-category-list" id="acDCCustomList" role="listbox" aria-label="Επιλογή κατηγορίας">
-            <button type="button" onclick="selectAddCenterCategory('Τρόφιμα')">🛒 <span>Τρόφιμα</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Καφέδες')">☕ <span>Καφέδες</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Μεταφορά')">🚗 <span>Μεταφορά</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Ψυχαγωγία')">🎭 <span>Ψυχαγωγία</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Φαγητό έξω')">🍕 <span>Φαγητό έξω</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Λογαριασμοί')">💡 <span>Λογαριασμοί</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Υγεία')">🏥 <span>Υγεία</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Ρούχα')">👕 <span>Ρούχα</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Δάνεια')">🏦 <span>Δάνεια</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Συνδρομές')">📱 <span>Συνδρομές</span></button>
-            <button type="button" onclick="selectAddCenterCategory('Άλλο')">📌 <span>Άλλο</span></button>
-          </div>
+          <div class="add-center-category-list" id="acDCCustomList" role="listbox" aria-label="Επιλογή κατηγορίας"></div>
+        </div>
+
+        <div class="add-center-field add-center-select-field add-center-subcategory-field">
+          <label>Υποκατηγορία <span>(προαιρετικό)</span></label>
+          <select id="acDSubcategory" class="add-center-native-select" aria-hidden="true" tabindex="-1" onchange="syncAddCenterSubcategoryPicker && syncAddCenterSubcategoryPicker()">
+            <option value="">Χωρίς υποκατηγορία</option>
+          </select>
+
+          <button type="button" class="add-center-picker-button" id="acDSubcategoryCustom" onclick="toggleAddCenterSubcategoryPicker(event)" aria-expanded="false">
+            <span class="add-center-picker-left">
+              <span class="add-center-picker-icon" id="acDSubcategoryCustomIcon">🏷️</span>
+              <span id="acDSubcategoryCustomText">Χωρίς υποκατηγορία</span>
+            </span>
+            <span class="add-center-picker-chevron">›</span>
+          </button>
+
+          <div class="add-center-subcategory-list" id="acDSubcategoryCustomList" role="listbox" aria-label="Επιλογή υποκατηγορίας"></div>
+        </div>
+
+        <div class="add-center-field add-center-custom-subcategory-block hidden" id="acDCustomSubcategoryBlock">
+          <label>Δική μου υποκατηγορία <span>(προαιρετικό)</span></label>
+          <input type="text" id="acDCustomSubcategoryName" placeholder="π.χ. Επιτραπέζια, Escape room, Εισιτήρια αγώνα" autocomplete="off">
+          <label class="add-center-custom-save-row">
+            <input type="checkbox" id="acDSaveCustomSubcategory">
+            <span>Να εμφανίζεται ξανά στις επιλογές μου</span>
+          </label>
+          <p>Αν δεν το ενεργοποιήσεις, θα μείνει μόνο σε αυτή την κίνηση ως λεπτομέρεια.</p>
+        </div>
+
+        <div class="add-center-field">
+          <label>Κατάστημα / Λεπτομέρεια <span>(προαιρετικό)</span></label>
+          <input type="text" id="acDMerchant" placeholder="π.χ. Pizza Hut, Σκλαβενίτης, Shell" autocomplete="off">
         </div>
 
         <div class="add-center-field add-center-select-field add-center-payment-field">
@@ -1406,7 +1469,7 @@
 
         <div class="add-center-field">
           <label>Σημειώσεις <span>(προαιρετικό)</span></label>
-          <textarea id="acDNotes" rows="3" placeholder="Πρόσθεσε σημείωση..."></textarea>
+          <textarea id="acDNotes" rows="3" placeholder="π.χ. παραγγελία με φίλους, αριθμός απόδειξης..."></textarea>
         </div>
 
         <div class="quick-add-error hidden add-center-error" id="addCenterManualError" aria-live="polite"></div>
@@ -1438,16 +1501,7 @@
       <div class="form-group daily-category-group">
         <label>Κατηγορία</label>
         <select id="fDC" class="daily-category-native" onchange="syncDailyCategoryUI && syncDailyCategoryUI(this.value)">
-          <option value="Τρόφιμα">Τρόφιμα</option>
-          <option value="Καφέδες">Καφέδες</option>
-          <option value="Μεταφορά">Μεταφορά</option>
-          <option value="Ψυχαγωγία">Ψυχαγωγία</option>
-          <option value="Φαγητό έξω">Φαγητό έξω</option>
-          <option value="Υγεία">Υγεία</option>
-          <option value="Ρούχα">Ρούχα</option>
-          <option value="Δάνεια">Δάνεια</option>
-          <option value="Συνδρομές">Συνδρομές</option>
-          <option value="Άλλο" selected>Άλλο</option>
+          <option value="">Φόρτωση κατηγοριών...</option>
         </select>
 
         <div class="daily-category-picker" id="dailyCategoryPicker">
@@ -1456,20 +1510,27 @@
             <strong id="dailyCategoryCurrent">Άλλο</strong>
             <em>▾</em>
           </button>
-          <div class="daily-category-menu" id="dailyCategoryMenu">
-            <button type="button" data-category="Τρόφιμα" onclick="setDailyCategory('Τρόφιμα')">Τρόφιμα</button>
-            <button type="button" data-category="Καφέδες" onclick="setDailyCategory('Καφέδες')">Καφέδες</button>
-            <button type="button" data-category="Μεταφορά" onclick="setDailyCategory('Μεταφορά')">Μεταφορά</button>
-            <button type="button" data-category="Ψυχαγωγία" onclick="setDailyCategory('Ψυχαγωγία')">Ψυχαγωγία</button>
-            <button type="button" data-category="Φαγητό έξω" onclick="setDailyCategory('Φαγητό έξω')">Φαγητό έξω</button>
-            <button type="button" data-category="Υγεία" onclick="setDailyCategory('Υγεία')">Υγεία</button>
-            <button type="button" data-category="Ρούχα" onclick="setDailyCategory('Ρούχα')">Ρούχα</button>
-            <button type="button" data-category="Δάνεια" onclick="setDailyCategory('Δάνεια')">Δάνεια</button>
-            <button type="button" data-category="Συνδρομές" onclick="setDailyCategory('Συνδρομές')">Συνδρομές</button>
-            <button type="button" data-category="Άλλο" class="active" onclick="setDailyCategory('Άλλο')">Άλλο</button>
-          </div>
+          <div class="daily-category-menu" id="dailyCategoryMenu"></div>
         </div>
       </div>
+    </div>
+
+    <div class="form-row daily-category-details-row">
+      <div class="form-group">
+        <label>Υποκατηγορία <span>(προαιρετικό)</span></label>
+        <select id="fDSubcategory" onchange="syncDailySubcategoryUI && syncDailySubcategoryUI()">
+          <option value="">Χωρίς υποκατηγορία</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Κατάστημα / Λεπτομέρεια <span>(προαιρετικό)</span></label>
+        <input type="text" id="fDMerchant" placeholder="π.χ. Pizza Hut">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Σημείωση <span>(προαιρετικό)</span></label>
+      <textarea id="fDNotes" rows="2" placeholder="π.χ. παραγγελία με φίλους"></textarea>
     </div>
 
     <div class="form-group payment-source-group" id="fDPayGroup">
@@ -1586,8 +1647,8 @@
 
       <div class="form-group">
         <label id="fixedNextDueLabel">Επόμενη προγραμματισμένη εμφάνιση</label>
-        <input type="text" id="fFNextDueDate" inputmode="numeric" placeholder="π.χ. 19/6/2026" onblur="capvoNormalizeFixedNextDueDateInput({syncDueDay:true})">
-        <small class="fixed-field-help" id="fixedNextDueHelp">Ελληνική μορφή ημερομηνίας. Αν αλλάξεις την ημερομηνία, συγχρονίζεται και η ημέρα μήνα.</small>
+        <input type="date" id="fFNextDueDate" lang="el-GR" onblur="capvoNormalizeFixedNextDueDateInput({syncDueDay:true})">
+        <small class="fixed-field-help" id="fixedNextDueHelp">Ημερομηνία τύπου date. Η εμφάνιση ακολουθεί τη γλώσσα της συσκευής, ενώ στη βάση αποθηκεύεται σωστά ως ημερομηνία.</small>
       </div>
 
       <div class="form-group">
@@ -1991,27 +2052,27 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.9.8.3"></script>
+<script src="js/app-version.js?v=1.11.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.9.8.3"></script>
+<script src="js/config.js?v=1.11.3"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.9.8.3"></script>
-  <script src="js/app/09-wallet-financial-engine.js?v=1.9.8.3"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.9.8.3"></script>
-<script src="js/app/02-supabase-data.js?v=1.9.8.3"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.9.8.3"></script>
-<script src="js/app/04-reports-archive.js?v=1.9.8.3"></script>
-<script src="js/app/05-income-pickers.js?v=1.9.8.3"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.9.8.3"></script>
-<script src="js/app/07-add-center.js?v=1.9.8.3"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.9.8.3"></script>
+<script src="js/app/00-core-state.js?v=1.11.3"></script>
+  <script src="js/app/09-wallet-financial-engine.js?v=1.11.3"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.11.3"></script>
+<script src="js/app/02-supabase-data.js?v=1.11.3"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.11.3"></script>
+<script src="js/app/04-reports-archive.js?v=1.11.3"></script>
+<script src="js/app/05-income-pickers.js?v=1.11.3"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.11.3"></script>
+<script src="js/app/07-add-center.js?v=1.11.3"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.11.3"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.9.8.3"></script>
-<script src="js/sync.js?v=1.9.8.3"></script>
-<script src="js/advisor.js?v=1.9.8.3"></script>
-<script src="js/wallets.js?v=1.9.8.3"></script>
+<script src="js/cards.js?v=1.11.3"></script>
+<script src="js/sync.js?v=1.11.3"></script>
+<script src="js/advisor.js?v=1.11.3"></script>
+<script src="js/wallets.js?v=1.11.3"></script>
 
 
 

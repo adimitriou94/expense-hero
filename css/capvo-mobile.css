@@ -4950,23 +4950,28 @@
     margin-top: 10px !important;
     color: #7d8aa4 !important;
     font-size: 13px !important;
-    line-height: 1.35 !important;
+    line-height: 1.4 !important;
     font-weight: 800 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
   }
 
   .tx-v25-summary {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr !important;
     gap: 10px !important;
-    margin-top: 8px !important;
+    margin-top: 10px !important;
   }
 
   .tx-v25-summary-item {
     min-width: 0 !important;
-    padding: 13px !important;
+    padding: 14px 15px !important;
     border-radius: 20px !important;
     background: rgba(248,250,255,.86) !important;
     border: 1px solid rgba(120,130,180,.10) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
   }
 
   .tx-v25-summary-item span {
@@ -4983,12 +4988,14 @@
   .tx-v25-summary-item strong {
     display: block !important;
     color: #182033 !important;
-    font-size: 13px !important;
-    line-height: 1.25 !important;
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
     font-weight: 900 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
   }
 
   .tx-v25-note {
@@ -5015,6 +5022,9 @@
     font-size: 13px !important;
     line-height: 1.45 !important;
     font-weight: 750 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
   }
 
   .tx-v25-actions {
@@ -14316,5 +14326,680 @@ body.fixed-payment-preview-open{
     font-size:11.5px;
     padding-left:8px;
     padding-right:20px;
+  }
+}
+
+/* v1.9.8.6 — onboarding fixed due day + safer compact payment labels */
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled .ob-pro-fixed-due-inline{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 72px !important;
+  align-items:center !important;
+  gap:8px !important;
+  margin-top:0 !important;
+  padding:9px 10px !important;
+  border:1px solid rgba(226,232,240,.86) !important;
+  border-radius:15px !important;
+  background:rgba(248,250,252,.82) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled .ob-pro-fixed-due-inline span{
+  min-width:0 !important;
+  color:#64748b !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  line-height:1.15 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled .ob-pro-fixed-due-day{
+  width:100% !important;
+  min-height:38px !important;
+  height:38px !important;
+  padding:0 10px !important;
+  text-align:center !important;
+  border-radius:13px !important;
+  font-size:14px !important;
+  font-weight:950 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled .ob-pro-inline-note{
+  margin-top:6px !important;
+}
+#addCenterManualPanel .add-center-payment-field .add-center-picker-left span:last-child{
+  max-width:100% !important;
+  display:block !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+#addCenterManualPanel .add-center-payment-list button strong{
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+/* v1.9.8.8 — onboarding fixed due-day visual polish */
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled{
+  position:relative !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-remove{
+  position:absolute !important;
+  top:8px !important;
+  right:8px !important;
+  width:28px !important;
+  height:28px !important;
+  border:0 !important;
+  border-radius:999px !important;
+  background:rgba(254,226,226,.95) !important;
+  color:#dc2626 !important;
+  font-size:17px !important;
+  font-weight:950 !important;
+  line-height:1 !important;
+  display:grid !important;
+  place-items:center !important;
+  box-shadow:0 8px 18px rgba(220,38,38,.12) !important;
+  z-index:3 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove) .ob-pro-fixed-main{
+  padding-right:24px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice{
+  display:grid !important;
+  gap:10px !important;
+  margin-top:10px !important;
+  padding:13px !important;
+  border:1px solid rgba(251,191,36,.40) !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg,rgba(255,251,235,.96),rgba(255,247,237,.90)) !important;
+  box-shadow:0 12px 24px rgba(180,83,9,.08) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > strong{
+  color:#92400e !important;
+  font-size:12.5px !important;
+  font-weight:950 !important;
+  line-height:1.25 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > span{
+  color:#a16207 !important;
+  font-size:11.5px !important;
+  font-weight:850 !important;
+  line-height:1.35 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:9px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label{
+  min-width:0 !important;
+  min-height:48px !important;
+  border:1px solid rgba(226,232,240,.92) !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:8px !important;
+  padding:9px 10px !important;
+  color:#475569 !important;
+  font-size:11.5px !important;
+  font-weight:950 !important;
+  text-align:left !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label.selected,
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label:has(input:checked){
+  border-color:rgba(101,71,246,.42) !important;
+  background:rgba(101,71,246,.08) !important;
+  color:#5b36ea !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options input{
+  width:14px !important;
+  min-height:14px !important;
+  height:14px !important;
+  padding:0 !important;
+  margin:0 !important;
+  accent-color:#6547f6 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice small{
+  color:#92400e !important;
+  font-size:11px !important;
+  font-weight:850 !important;
+  line-height:1.4 !important;
+}
+@media(max-width:390px){
+  #capvoOnboardingOverlay .ob-pro-fixed-today-options{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* v1.9.8.9 — onboarding fixed rows final UI polish only
+   - Keep remove X away from text/inputs.
+   - Replace the yellow "today" warning with a calmer CAPVO-style info card.
+   This is visual-only; no wizard/date/wallet logic changes. */
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove){
+  padding-top:14px !important;
+  padding-right:14px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-remove{
+  top:12px !important;
+  right:12px !important;
+  width:26px !important;
+  height:26px !important;
+  background:rgba(255,255,255,.96) !important;
+  color:#ef4444 !important;
+  border:1px solid rgba(254,202,202,.96) !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.08) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove) .ob-pro-fixed-main{
+  padding-right:42px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice{
+  margin-top:12px !important;
+  padding:14px !important;
+  gap:12px !important;
+  border:1px solid rgba(101,71,246,.18) !important;
+  border-radius:20px !important;
+  background:linear-gradient(180deg,rgba(248,247,255,.98),rgba(255,255,255,.94)) !important;
+  box-shadow:0 14px 28px rgba(101,71,246,.07) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > strong{
+  color:#312e81 !important;
+  font-size:13px !important;
+  letter-spacing:-.01em !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > span{
+  color:#64748b !important;
+  font-size:12px !important;
+  line-height:1.45 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options{
+  gap:10px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label{
+  min-height:54px !important;
+  padding:10px 12px !important;
+  border-color:rgba(226,232,240,.95) !important;
+  background:rgba(255,255,255,.92) !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.035) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label.selected,
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label:has(input:checked){
+  border-color:rgba(101,71,246,.36) !important;
+  background:linear-gradient(180deg,rgba(101,71,246,.10),rgba(255,255,255,.96)) !important;
+  color:#4f46e5 !important;
+  box-shadow:0 10px 22px rgba(101,71,246,.10) !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options input{
+  flex:0 0 auto !important;
+  width:16px !important;
+  height:16px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice small{
+  color:#64748b !important;
+  font-size:11.5px !important;
+  line-height:1.45 !important;
+}
+@media(max-width:390px){
+  #capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove) .ob-pro-fixed-main{
+    padding-right:36px !important;
+  }
+}
+
+/* v1.9.8.10 — compact wizard today choice + remove button safety */
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove){
+  padding-right:18px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove) .ob-pro-fixed-main{
+  padding-right:46px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-remove{
+  top:14px !important;
+  right:14px !important;
+  width:24px !important;
+  height:24px !important;
+  font-size:14px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice{
+  margin-top:8px !important;
+  padding:10px !important;
+  gap:8px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(101,71,246,.16) !important;
+  background:rgba(248,247,255,.72) !important;
+  box-shadow:none !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-head strong,
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > strong{
+  color:#4f46e5 !important;
+  font-size:11.5px !important;
+  font-weight:950 !important;
+  line-height:1.15 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-head span,
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice > span{
+  color:#64748b !important;
+  font-size:10.5px !important;
+  font-weight:850 !important;
+  line-height:1.15 !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options{
+  grid-template-columns:1fr 1fr !important;
+  gap:7px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label{
+  min-height:38px !important;
+  padding:7px 8px !important;
+  gap:6px !important;
+  border-radius:13px !important;
+  font-size:10.5px !important;
+  line-height:1.1 !important;
+  justify-content:center !important;
+  text-align:center !important;
+  box-shadow:none !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options input{
+  width:13px !important;
+  height:13px !important;
+  min-height:13px !important;
+  flex:0 0 13px !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-options label span{
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+#capvoOnboardingOverlay .ob-pro-fixed-today-choice small{
+  display:none !important;
+}
+@media(max-width:390px){
+  #capvoOnboardingOverlay .ob-pro-fixed-today-options{
+    grid-template-columns:1fr 1fr !important;
+  }
+  #capvoOnboardingOverlay .ob-pro-fixed-row-scheduled:has(.ob-pro-fixed-remove) .ob-pro-fixed-main{
+    padding-right:42px !important;
+  }
+}
+
+
+/* v1.9.9.3 - Add Center subcategory custom picker */
+.add-center-overlay .add-center-subcategory-list,
+#addCenterManualPanel .add-center-subcategory-list{
+  display:none !important;
+  margin-top:8px !important;
+  padding:7px !important;
+  border:1px solid rgba(120,130,180,.13) !important;
+  border-radius:18px !important;
+  background:rgba(255,255,255,.96) !important;
+  box-shadow:0 18px 38px rgba(45,39,95,.10) !important;
+  max-height:210px !important;
+  overflow:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  z-index:35 !important;
+}
+.add-center-overlay .add-center-subcategory-list.active,
+#addCenterManualPanel .add-center-subcategory-list.active{
+  display:grid !important;
+  gap:6px !important;
+}
+.add-center-overlay .add-center-subcategory-list button,
+#addCenterManualPanel .add-center-subcategory-list button{
+  width:100% !important;
+  min-height:42px !important;
+  padding:8px 10px !important;
+  border:0 !important;
+  border-radius:14px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:9px !important;
+  text-align:left !important;
+  background:rgba(246,248,252,.92) !important;
+  color:#182033 !important;
+  font-weight:850 !important;
+}
+.add-center-overlay .add-center-subcategory-list button span,
+#addCenterManualPanel .add-center-subcategory-list button span{
+  width:24px !important;
+  height:24px !important;
+  border-radius:10px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#fff !important;
+  flex:0 0 24px !important;
+}
+.add-center-overlay .add-center-subcategory-list button strong,
+#addCenterManualPanel .add-center-subcategory-list button strong{
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+.add-center-overlay .add-center-subcategory-list button.active,
+#addCenterManualPanel .add-center-subcategory-list button.active{
+  background:rgba(100,71,246,.12) !important;
+  color:#4b2fe4 !important;
+  box-shadow:inset 0 0 0 1px rgba(100,71,246,.18) !important;
+}
+
+
+/* v1.9.9.4 - Custom subcategory inline flow polish */
+#addCenterManualPanel .add-center-custom-subcategory-block{
+  margin-top:10px !important;
+  padding:16px !important;
+  border:1px solid rgba(100,71,246,.18) !important;
+  border-radius:22px !important;
+  background:linear-gradient(180deg,rgba(248,247,255,.98),rgba(255,255,255,1)) !important;
+  box-shadow:0 16px 34px rgba(57,45,110,.08) !important;
+}
+#addCenterManualPanel .add-center-custom-subcategory-block.hidden{
+  display:none !important;
+}
+#addCenterManualPanel .add-center-custom-subcategory-block > label:first-child{
+  margin-bottom:8px !important;
+  font-size:11px !important;
+  line-height:1.2 !important;
+  letter-spacing:.08em !important;
+}
+#addCenterManualPanel .add-center-custom-subcategory-block input[type="text"]{
+  width:100% !important;
+  min-height:48px !important;
+  font-size:14px !important;
+  border-radius:16px !important;
+}
+#addCenterManualPanel .add-center-custom-save-row{
+  margin:14px 0 0 !important;
+  padding:12px 13px !important;
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:12px !important;
+  border:1px solid rgba(100,71,246,.16) !important;
+  border-radius:16px !important;
+  background:rgba(255,255,255,.94) !important;
+  color:#202842 !important;
+  text-transform:none !important;
+  font-weight:900 !important;
+  font-size:14px !important;
+  line-height:1.32 !important;
+  letter-spacing:0 !important;
+  box-shadow:0 8px 18px rgba(57,45,110,.05) !important;
+}
+#addCenterManualPanel .add-center-custom-save-row input{
+  width:24px !important;
+  height:24px !important;
+  min-width:24px !important;
+  min-height:24px !important;
+  flex:0 0 24px !important;
+  margin:0 !important;
+  accent-color:#6547f6 !important;
+}
+#addCenterManualPanel .add-center-custom-save-row span{
+  display:block !important;
+  min-width:0 !important;
+}
+#addCenterManualPanel .add-center-custom-subcategory-block p{
+  margin:10px 2px 0 !important;
+  color:#65718a !important;
+  font-size:12.5px !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+#addCenterManualPanel .add-center-subcategory-list .add-center-custom-subcategory-option{
+  background:rgba(100,71,246,.08) !important;
+  color:#4b2fe4 !important;
+}
+
+
+/* ===== CAPVO v1.10.0 — categorized movement feed polish ===== */
+#vTransactions .tx-type-badge{
+  display:inline-flex !important;
+  align-items:center !important;
+  height:18px !important;
+  padding:0 7px !important;
+  margin-left:6px !important;
+  border-radius:999px !important;
+  background:rgba(91,79,255,.09) !important;
+  color:#5547e8 !important;
+  font-size:9.8px !important;
+  font-weight:950 !important;
+  letter-spacing:.01em !important;
+  vertical-align:middle !important;
+}
+#vTransactions .tx-type-fixed{background:rgba(245,158,11,.12) !important;color:#a16207 !important;}
+#vTransactions .tx-type-cards{background:rgba(59,130,246,.12) !important;color:#1d4ed8 !important;}
+#vTransactions .tx-type-savings{background:rgba(16,185,129,.12) !important;color:#047857 !important;}
+#vTransactions .tx-type-income{background:rgba(34,197,94,.13) !important;color:#15803d !important;}
+#vTransactions .tx-type-wallets{background:rgba(100,116,139,.12) !important;color:#475569 !important;}
+#vTransactions .tx-type-benefits{background:rgba(217,119,6,.12) !important;color:#b45309 !important;}
+#vTransactions .tx-row-note{
+  margin-top:4px !important;
+  color:#64748b !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+#vTransactions .expense-item.tx-v3-row{
+  align-items:flex-start !important;
+  padding-top:12px !important;
+  padding-bottom:12px !important;
+}
+#vTransactions .expense-item.tx-v3-row .expense-cat{
+  white-space:normal !important;
+  display:-webkit-box !important;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical !important;
+}
+#vTransactions .expense-item.tx-v3-row .tx-v3-row-right{
+  padding-top:2px !important;
+}
+#vTransactions .expense-amount.is-return{
+  color:#10b981 !important;
+}
+#vTransactions .expense-amount.is-neutral{
+  color:#64748b !important;
+}
+#vTransactions .tx-v25-amount.is-return{color:#10b981 !important;}
+#vTransactions .tx-v25-amount.is-neutral{color:#64748b !important;}
+@media (max-width:768px){
+  #vTransactions .mobile-transaction-chips{
+    padding-bottom:3px !important;
+  }
+  #vTransactions .mobile-transaction-chip{
+    min-width:auto !important;
+    height:35px !important;
+    padding:0 13px !important;
+  }
+}
+
+
+/* CAPVO v1.10.2 — premium transaction detail sheet
+   Display-only polish. Keeps long category/source/notes visible without changing financial logic. */
+#mobileTransactionDetail .tx-v26-detail-hero{
+  position:relative !important;
+  padding:8px 4px 16px !important;
+}
+#mobileTransactionDetail .tx-v26-identity{
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding-right:46px !important;
+}
+#mobileTransactionDetail .tx-v26-identity .tx-v25-icon{
+  flex:0 0 62px !important;
+  width:62px !important;
+  height:62px !important;
+  margin:0 !important;
+  border-radius:23px !important;
+  font-size:27px !important;
+}
+#mobileTransactionDetail .tx-v26-headline{
+  min-width:0 !important;
+  flex:1 1 auto !important;
+  text-align:left !important;
+}
+#mobileTransactionDetail .tx-v26-headline .tx-v25-kicker{
+  margin:0 0 5px !important;
+}
+#mobileTransactionDetail .tx-v26-headline h3{
+  max-width:none !important;
+  margin:0 !important;
+  font-size:23px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.045em !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+#mobileTransactionDetail .tx-v26-mini-path{
+  margin-top:7px !important;
+  color:#7d8aa4 !important;
+  font-size:12.5px !important;
+  line-height:1.35 !important;
+  font-weight:850 !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+#mobileTransactionDetail .tx-v26-detail-hero .tx-v25-amount{
+  margin-top:16px !important;
+  text-align:left !important;
+  font-size:38px !important;
+}
+#mobileTransactionDetail .tx-v26-source-chip{
+  display:inline-flex !important;
+  max-width:100% !important;
+  margin-top:10px !important;
+  padding:8px 11px !important;
+  border-radius:999px !important;
+  background:rgba(99,91,255,.09) !important;
+  color:#594ee8 !important;
+  font-size:12.5px !important;
+  line-height:1.2 !important;
+  font-weight:900 !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+#mobileTransactionDetail .tx-v26-memo-card,
+#mobileTransactionDetail .tx-v26-meta-list{
+  margin-top:12px !important;
+  padding:13px !important;
+  border-radius:22px !important;
+  background:rgba(248,250,255,.9) !important;
+  border:1px solid rgba(120,130,180,.12) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72) !important;
+}
+#mobileTransactionDetail .tx-v26-memo-row,
+#mobileTransactionDetail .tx-v26-meta-row{
+  display:grid !important;
+  grid-template-columns:minmax(82px, .72fr) minmax(0, 1.28fr) !important;
+  gap:12px !important;
+  align-items:start !important;
+  padding:10px 0 !important;
+  border-bottom:1px solid rgba(148,163,184,.14) !important;
+}
+#mobileTransactionDetail .tx-v26-memo-row:first-child,
+#mobileTransactionDetail .tx-v26-meta-row:first-child{
+  padding-top:2px !important;
+}
+#mobileTransactionDetail .tx-v26-memo-row:last-child,
+#mobileTransactionDetail .tx-v26-meta-row:last-child{
+  padding-bottom:2px !important;
+  border-bottom:0 !important;
+}
+#mobileTransactionDetail .tx-v26-memo-row span,
+#mobileTransactionDetail .tx-v26-note-block span,
+#mobileTransactionDetail .tx-v26-meta-row span{
+  color:#8b96ae !important;
+  font-size:10.5px !important;
+  line-height:1.25 !important;
+  font-weight:950 !important;
+  letter-spacing:.07em !important;
+  text-transform:uppercase !important;
+}
+#mobileTransactionDetail .tx-v26-memo-row strong,
+#mobileTransactionDetail .tx-v26-meta-row strong{
+  min-width:0 !important;
+  color:#182033 !important;
+  font-size:13.5px !important;
+  line-height:1.38 !important;
+  font-weight:900 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:initial !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+  text-align:left !important;
+}
+#mobileTransactionDetail .tx-v26-note-block{
+  padding-top:11px !important;
+}
+#mobileTransactionDetail .tx-v26-note-block:first-child{
+  padding-top:2px !important;
+}
+#mobileTransactionDetail .tx-v26-note-block p{
+  margin:7px 0 0 !important;
+  color:#182033 !important;
+  font-size:14px !important;
+  line-height:1.5 !important;
+  font-weight:760 !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+@media (max-width:380px){
+  #mobileTransactionDetail .tx-v26-identity{
+    gap:11px !important;
+  }
+  #mobileTransactionDetail .tx-v26-identity .tx-v25-icon{
+    flex-basis:56px !important;
+    width:56px !important;
+    height:56px !important;
+  }
+  #mobileTransactionDetail .tx-v26-headline h3{
+    font-size:21px !important;
+  }
+  #mobileTransactionDetail .tx-v26-memo-row,
+  #mobileTransactionDetail .tx-v26-meta-row{
+    grid-template-columns:1fr !important;
+    gap:5px !important;
+  }
+}
+
+
+/* ============================================================
+   CAPVO v1.10.3 — Transaction detail bottom/action safety
+   - Keep action buttons in normal document flow.
+   - Remove the large generic sheet bottom clearance from this detail sheet.
+   - Prevent content from sliding underneath sticky buttons.
+   ============================================================ */
+@media (max-width: 768px){
+  #mobileTransactionDetail.mobile-transaction-detail-overlay{
+    padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mobileTransactionDetail .mobile-transaction-detail-sheet{
+    max-height: min(90dvh, 760px) !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mobileTransactionDetail .tx-v25-actions{
+    position: static !important;
+    bottom: auto !important;
+    z-index: auto !important;
+    margin-top: 14px !important;
+    padding: 8px 0 0 !important;
+    background: transparent !important;
+  }
+
+  #mobileTransactionDetail .tx-v25-action.danger{
+    margin-bottom: 0 !important;
   }
 }

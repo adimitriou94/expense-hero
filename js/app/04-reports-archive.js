@@ -19,14 +19,37 @@ function reportsMonthRange(monthKey){
 }
 
 function reportsItemFromExpense(e,type='daily'){
+  const categoryMeta=typeof capvoResolveExpenseCategoryMeta==='function'
+    ? capvoResolveExpenseCategoryMeta(e)
+    : {categoryName:e?.category||'Άλλο',subcategoryName:''};
+  const categoryName=categoryMeta.categoryName || e?.category || 'Άλλο';
+  const subcategoryName=categoryMeta.subcategoryName || '';
+  const merchantName=String(e?.merchantName||e?.merchant_name||'').trim();
+  const notes=String(e?.notes||e?.note||'').trim();
+  const amount=typeof capvoMoney==='function'?capvoMoney(Number(e?.amount)||0):(Number(e?.amount)||0);
+  const budgetImpactAmount=typeof capvoMovementBudgetImpact==='function'
+    ? capvoMovementBudgetImpact(e)
+    : (typeof e?.budgetImpactAmount!=='undefined'?Number(e.budgetImpactAmount)||0:amount);
+  const movementKind=typeof capvoMovementKind==='function'
+    ? capvoMovementKind(e)
+    : (type==='fixed'?'fixed':type==='card_payment'?'cards':type==='savings'?'savings':'expenses');
+
   return {
-    id:e.id||'',
-    name:e.name||'Κίνηση',
-    category:e.category||'Άλλο',
-    amount:Number(e.amount)||0,
-    type:e.isCardPayment?'card_payment':type,
-    date:e.date||'',
-    paymentSourceName:e.paymentSourceName||'',
+    id:e?.id||'',
+    name:e?.name||merchantName||'Κίνηση',
+    displayTitle:merchantName || e?.name || 'Κίνηση',
+    category:categoryName,
+    categoryLabel:subcategoryName?`${categoryName} › ${subcategoryName}`:categoryName,
+    subcategory:subcategoryName,
+    merchantName,
+    notes,
+    amount,
+    budgetImpactAmount,
+    type:e?.isCardPayment?'card_payment':type,
+    movementKind,
+    date:e?.date||'',
+    paymentSourceName:e?.paymentSourceName||e?.payment_source_name||'',
+    paymentAccountType:e?.paymentAccountType||e?.payment_account_type||'',
     affectsCashBudget:typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(e):true
   };
 }
@@ -39,11 +62,13 @@ function reportsFixedItems(monthKey){
   const endKey=range?capvoDateKey(range.end):'';
 
   return (Array.isArray(D.fixedExpensePayments)?D.fixedExpensePayments:[])
-    .filter(p=>String(p.status||'paid')!=='reversed')
+    .filter(p=>typeof capvoFixedExpensePaymentIsCountable==='function' ? capvoFixedExpensePaymentIsCountable(p) : String(p.status||'paid')!=='reversed')
     .map(p=>{
-      const fx=typeof capvoFixedExpenseById==='function'
-        ? capvoFixedExpenseById(p.fixedExpenseId||p.fixed_expense_id)
-        : (D.fixedExpenses||[]).find(e=>String(e.id)===String(p.fixedExpenseId||p.fixed_expense_id));
+      const fx=typeof capvoFixedExpensePaymentExpense==='function'
+        ? capvoFixedExpensePaymentExpense(p)
+        : (typeof capvoFixedExpenseById==='function'
+          ? capvoFixedExpenseById(p.fixedExpenseId||p.fixed_expense_id)
+          : (D.fixedExpenses||[]).find(e=>String(e.id)===String(p.fixedExpenseId||p.fixed_expense_id)));
       const date=normalizeDateValue(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||'');
       if(!date)return null;
       if(startKey && date<startKey)return null;
@@ -52,7 +77,14 @@ function reportsFixedItems(monthKey){
         id:p.id||'',
         name:fx?.name||'Πληρωμή παγίου',
         category:fx?.category||'Πάγια',
+        categoryLabel:fx?.category||'Πάγια',
+        subcategory:'',
+        merchantName:'',
+        notes:p.notes||p.note||'',
+        displayTitle:fx?.name||'Πληρωμή παγίου',
         amount:Number(p.amount)||0,
+        budgetImpactAmount:Number(p.amount)||0,
+        movementKind:'fixed',
         type:'fixed',
         date,
         paymentSourceName:(typeof capvoWalletById==='function'?capvoWalletById(p.walletId||p.wallet_id)?.name:'')||'Wallet',
@@ -79,7 +111,14 @@ function reportsActualCardPaymentsInRange(start,end){
         id:t.id||'',
         name:t.description||('Πληρωμή '+(card?.name||'κάρτας')),
         category:t.category||'Πιστωτικές',
+        categoryLabel:t.category||'Πιστωτικές',
+        subcategory:'',
+        merchantName:'',
+        notes:t.notes||t.note||'',
+        displayTitle:t.description||('Πληρωμή '+(card?.name||'κάρτας')),
         amount:Number(t.amount)||0,
+        budgetImpactAmount:Number(t.amount)||0,
+        movementKind:'cards',
         type:'card_payment',
         date:normalizeDateValue(raw)||'',
         paymentSourceName:card?.name||'Πιστωτική κάρτα',
@@ -98,7 +137,7 @@ function reportsCurrentCycleBudgetItems(includeFixed=true){
     .filter(e=>includeFixed || !(e.isFixedExpense || e.isFixedExpensePayment))
     .map(e=>reportsItemFromExpense(
       e,
-      e.isFixedExpensePayment?'fixed':(e.isCardPayment?'card_payment':'daily')
+      e.isFixedExpensePayment?'fixed':(e.isCardPayment?'card_payment':(e.isSavingsMovement?'savings':'daily'))
     ));
   return items.filter(e=>Number(e.amount)!==0);
 }
@@ -160,13 +199,362 @@ function reportsPctDelta(current,previous){
   return `${sign}${rounded}% από προηγ. μήνα`;
 }
 
+function reportsAbsAmount(row){
+  return Math.abs(Number(row?.amount)||0);
+}
+
+function reportsBudgetOutAmount(row){
+  const impact=Number(row?.budgetImpactAmount ?? row?.amount)||0;
+  return impact>0?impact:0;
+}
+
+function reportsGroupRows(rows,keyFn,amountFn=reportsBudgetOutAmount){
+  const map=new Map();
+  (rows||[]).forEach(row=>{
+    const key=String(keyFn(row)||'').trim();
+    if(!key)return;
+    const amount=Number(amountFn(row))||0;
+    if(amount<=0)return;
+    const current=map.get(key)||{key,total:0,count:0,rows:[]};
+    current.total+=amount;
+    current.count+=1;
+    current.rows.push(row);
+    map.set(key,current);
+  });
+  return [...map.values()].sort((a,b)=>b.total-a.total || b.count-a.count || a.key.localeCompare(b.key,'el'));
+}
+
+function reportsRenderMiniList(id,rows,total,{empty='Δεν υπάρχουν δεδομένα ακόμα.',limit=5,showCount=false}={}){
+  const el=$(id);
+  if(!el)return;
+  const visible=Number.isFinite(limit)?rows.slice(0,limit):rows;
+  if(!visible.length || total<=0){
+    el.innerHTML=`<div class="reports-empty reports-mini-empty">${esc(empty)}</div>`;
+    return;
+  }
+  el.innerHTML=visible.map(row=>{
+    const pct=total>0?Math.max(3,Math.round(row.total/total*100)):0;
+    const meta=showCount?`${row.count} ${row.count===1?'κίνηση':'κινήσεις'} · ${Math.round(row.total/total*100)}%`:`${Math.round(row.total/total*100)}% του συνόλου`;
+    return `
+      <div class="reports-break-row">
+        <div class="reports-break-main">
+          <strong>${esc(row.key)}</strong>
+          <small>${esc(meta)}</small>
+          <div class="reports-break-track"><span style="width:${pct}%"></span></div>
+        </div>
+        <div class="reports-break-value">${fmt(row.total)}</div>
+      </div>`;
+  }).join('') + (rows.length>visible.length?`<div class="reports-mini-more">+ ${rows.length-visible.length} ακόμα</div>`:'');
+}
+
+function reportsMovementTypeTotals(items){
+  const daily=items.filter(e=>{
+    const kind=String(e.movementKind||'').toLowerCase();
+    const type=String(e.type||'').toLowerCase();
+    return kind==='expenses' || (type==='daily' && !['fixed','cards','savings'].includes(kind));
+  }).reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
+  const fixed=items.filter(e=>e.type==='fixed' || e.movementKind==='fixed').reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
+  const cards=items.filter(e=>e.type==='card_payment' || e.movementKind==='cards').reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
+  const savingsDeposit=items.filter(e=>e.movementKind==='savings' || e.category==='Αποταμίευση').reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
+
+  const allMovements=typeof getCurrentCycleAllMovements==='function'?getCurrentCycleAllMovements():[];
+  const income=allMovements
+    .filter(e=>typeof capvoMovementKind==='function'?capvoMovementKind(e)==='income':String(e.movementGroup||'')==='income')
+    .reduce((s,e)=>s+Math.abs(Number(e.amount)||0),0);
+  const walletTransfers=allMovements
+    .filter(e=>typeof capvoMovementKind==='function'?capvoMovementKind(e)==='wallets':String(e.movementGroup||'')==='wallets')
+    .reduce((s,e)=>s+Math.abs(Number(e.amount)||0),0);
+
+  return {daily,fixed,cards,savingsDeposit,income,walletTransfers};
+}
+
+function reportsRenderCycleGrid(items){
+  const el=$('reportsCycleGrid');
+  if(!el)return;
+  const totals=reportsMovementTypeTotals(items);
+  const cards=[
+    {icon:'🧾',label:'Flexible έξοδα',value:totals.daily,meta:'Καθημερινές budget κινήσεις'},
+    {icon:'📌',label:'Πάγια πληρωμένα',value:totals.fixed,meta:'Μόνο όσα πατήθηκαν ως πληρωμένα'},
+    {icon:'💳',label:'Πληρωμές καρτών',value:totals.cards,meta:'Actual cash outflow για κάρτες'},
+    {icon:'🏦',label:'Κουμπαράς',value:totals.savingsDeposit,meta:'Μεταφορές που επηρέασαν budget'},
+    {icon:'💰',label:'Income / μισθός',value:totals.income,meta:'Καταθέσεις στον κύκλο',positive:true},
+    {icon:'🔁',label:'Wallet transfers',value:totals.walletTransfers,meta:'Μεταφορές μεταξύ λογαριασμών',neutral:true}
+  ];
+  el.innerHTML=cards.map(c=>`
+    <article class="reports-cycle-card ${c.positive?'positive':''} ${c.neutral?'neutral':''}">
+      <span>${c.icon}</span>
+      <div>
+        <small>${esc(c.label)}</small>
+        <strong>${fmt(c.value)}</strong>
+        <em>${esc(c.meta)}</em>
+      </div>
+    </article>`).join('');
+}
+
+
+function reportsCycleTimeInfo(){
+  try{
+    const cycle=getCurrentBudgetCycle();
+    const today=new Date();
+    const t=new Date(today.getFullYear(),today.getMonth(),today.getDate(),12);
+    const ms=24*60*60*1000;
+    const elapsed=Math.max(1,Math.floor((Math.min(t,cycle.end)-cycle.start)/ms)+1);
+    const totalDays=Math.max(1,Math.floor((cycle.end-cycle.start)/ms)+1);
+    const remainingDays=Math.max(0,Math.floor((cycle.end-t)/ms));
+    return {cycle,elapsed,totalDays,remainingDays};
+  }catch(e){
+    return {cycle:null,elapsed:1,totalDays:1,remainingDays:0};
+  }
+}
+
+function reportsBenefitSources(){
+  return (Array.isArray(D?.incomeSources)?D.incomeSources:[])
+    .filter(src=>{
+      if(!src)return false;
+      if(typeof capvoIsBenefitSource==='function' && capvoIsBenefitSource(src))return true;
+      const text=String(`${src.name||''} ${src.category||''} ${src.incomeType||src.income_type||''} ${src.restrictionType||src.restriction_type||''}`).toLowerCase();
+      return !!(src.isRestricted || src.is_restricted || (src.restriction && src.restriction!=='none') || text.includes('ticket') || text.includes('voucher') || text.includes('άυλη'));
+    });
+}
+
+function reportsBenefitExpenseRows(){
+  const sources=reportsBenefitSources();
+  const ids=new Set(sources.map(s=>String(s.id||'')).filter(Boolean));
+  return (typeof getCurrentCycleDailyExpenses==='function'?getCurrentCycleDailyExpenses():[])
+    .filter(e=>{
+      const sourceId=String(e?.paymentSourceId||e?.payment_source_id||'');
+      if(sourceId && ids.has(sourceId))return true;
+      const text=String(`${e?.paymentSourceName||e?.payment_source_name||''} ${e?.paymentSourceType||e?.payment_source_type||''}`).toLowerCase();
+      return text.includes('ticket') || text.includes('voucher') || text.includes('άυλη');
+    })
+    .map(e=>{
+      const row=reportsItemFromExpense(e,'benefit');
+      return {...row,amount:Math.abs(Number(e?.amount)||0),budgetImpactAmount:Math.abs(Number(e?.amount)||0),sourceId:e?.paymentSourceId||e?.payment_source_id||''};
+    })
+    .filter(e=>Number(e.amount)>0);
+}
+
+function reportsTicketUsageModel(){
+  const sources=reportsBenefitSources();
+  const rows=reportsBenefitExpenseRows();
+  const rowsBySource=new Map();
+  rows.forEach(r=>{
+    const key=String(r.sourceId||'');
+    if(!key)return;
+    const list=rowsBySource.get(key)||[];
+    list.push(r);
+    rowsBySource.set(key,list);
+  });
+
+  const cards=sources.map(src=>{
+    const sourceRows=rowsBySource.get(String(src.id||''))||[];
+    const amount=capvoMoney(Number(src.amount)||0);
+    const used=typeof restrictedCoverageFor==='function'
+      ? capvoMoney(Number(restrictedCoverageFor(src))||0)
+      : capvoMoney(sourceRows.reduce((s,r)=>s+Number(r.amount||0),0));
+    const remaining=capvoMoney(Math.max(0,amount-used));
+    const pct=amount>0?Math.min(100,Math.round(used/amount*100)):0;
+    return {
+      id:src.id||'',
+      name:src.name||src.category||'Ticket / Voucher',
+      amount,
+      used,
+      remaining,
+      pct,
+      rows:sourceRows
+    };
+  });
+
+  const orphanRows=rows.filter(r=>!r.sourceId || !sources.some(s=>String(s.id)===String(r.sourceId)));
+  if(orphanRows.length){
+    const used=capvoMoney(orphanRows.reduce((s,r)=>s+Number(r.amount||0),0));
+    cards.push({id:'benefit_other',name:'Ticket / Voucher',amount:used,used,remaining:0,pct:100,rows:orphanRows});
+  }
+
+  const allRows=cards.flatMap(c=>c.rows||[]);
+  const totalAmount=cards.reduce((s,c)=>s+c.amount,0);
+  const totalUsed=cards.reduce((s,c)=>s+c.used,0);
+  const totalRemaining=cards.reduce((s,c)=>s+c.remaining,0);
+  const byCategory=reportsGroupRows(allRows,e=>e.categoryLabel||e.category||'',row=>Number(row.amount)||0);
+  const byMerchant=reportsGroupRows(allRows,e=>e.merchantName||'',row=>Number(row.amount)||0);
+  return {cards,totalAmount,totalUsed,totalRemaining,byCategory,byMerchant,rows:allRows};
+}
+
+function reportsRenderTicketUsage(){
+  const el=$('reportsTicketUsage');
+  if(!el)return;
+  const model=reportsTicketUsageModel();
+  if(!model.cards.length && !model.rows.length){
+    el.innerHTML='<div class="reports-empty reports-ticket-empty">Δεν υπάρχει ακόμα χρήση Ticket/Voucher σε αυτόν τον κύκλο.</div>';
+    return;
+  }
+
+  const topCategory=model.byCategory[0];
+  const topMerchant=model.byMerchant[0];
+  const cardsHtml=model.cards.slice(0,3).map(c=>`
+    <article class="reports-ticket-source">
+      <div class="reports-ticket-source-head">
+        <span>🎟️</span>
+        <div>
+          <strong>${esc(c.name)}</strong>
+          <small>${fmt(c.used)} χρήση · ${fmt(c.remaining)} υπόλοιπο</small>
+        </div>
+      </div>
+      <div class="reports-ticket-track"><span style="width:${Math.max(3,c.pct)}%"></span></div>
+      <em>${c.pct}% χρησιμοποιημένο</em>
+    </article>`).join('');
+
+  const insights=[
+    {label:'Χρήση',value:fmt(model.totalUsed),meta:model.totalAmount>0?`${Math.round(model.totalUsed/model.totalAmount*100)}% από διαθέσιμο`:'τρέχων κύκλος'},
+    {label:'Υπόλοιπο',value:fmt(model.totalRemaining),meta:'restricted balance'},
+    {label:'Top χρήση',value:topCategory?esc(topCategory.key):'—',meta:topCategory?fmt(topCategory.total):'δεν υπάρχουν αρκετά δεδομένα'},
+    {label:'Top merchant',value:topMerchant?esc(topMerchant.key):'—',meta:topMerchant?`${topMerchant.count} κινήσεις · ${fmt(topMerchant.total)}`:'δεν έχει merchant ακόμα'}
+  ];
+
+  el.innerHTML=`
+    <div class="reports-ticket-summary">
+      ${insights.map(i=>`
+        <div class="reports-ticket-stat">
+          <small>${esc(i.label)}</small>
+          <strong>${i.value}</strong>
+          <em>${esc(i.meta)}</em>
+        </div>`).join('')}
+    </div>
+    <div class="reports-ticket-sources">${cardsHtml}</div>
+  `;
+}
+
+function reportsActionToneClass(tone){
+  return ['blue','purple','amber','red','green'].includes(tone)?tone:'blue';
+}
+
+function reportsBuildActionItems(items,total,grouped={}){
+  const totals=reportsMovementTypeTotals(items);
+  const {elapsed,totalDays,remainingDays}=reportsCycleTimeInfo();
+  const avg=elapsed>0?total/elapsed:0;
+  const income=Number(D?.income)||0;
+  const remainingBudget=capvoMoney(Math.max(0,income-total));
+  const safeDaily=remainingDays>0?capvoMoney(remainingBudget/remainingDays):remainingBudget;
+  const actions=[];
+
+  if(total<=0){
+    actions.push({icon:'🌱',tone:'green',title:'Ξεκίνα να γεμίζεις δεδομένα',text:'Μόλις περάσουν μερικές κινήσεις, εδώ θα εμφανίζονται πρακτικές προτάσεις για τον κύκλο.'});
+    return actions;
+  }
+
+  if(remainingDays>0 && income>0){
+    const tone=avg>safeDaily && safeDaily>0?'amber':'green';
+    actions.push({
+      icon:tone==='amber'?'⚠️':'✅',
+      tone,
+      title:'Ρυθμός μέχρι την επόμενη πληρωμή',
+      text:tone==='amber'
+        ? `Ο μέσος ρυθμός σου είναι ${fmt(avg)} / ημέρα, ενώ με το υπόλοιπο budget μένουν περίπου ${fmt(safeDaily)} / ημέρα για ${remainingDays} ημέρες.`
+        : `Ο ρυθμός σου είναι ελεγχόμενος. Μέση ημέρα ${fmt(avg)} και ασφαλές υπόλοιπο περίπου ${fmt(safeDaily)} / ημέρα.`
+    });
+  }
+
+  const fixedFlexibleBase=totals.daily+totals.fixed;
+  if(fixedFlexibleBase>0){
+    const fixedPct=Math.round(totals.fixed/fixedFlexibleBase*100);
+    actions.push({
+      icon:'📌',
+      tone:fixedPct>=45?'amber':'blue',
+      title:'Πάγια vs flexible',
+      text:`Τα πάγια είναι ${fixedPct}% των βασικών εξόδων του κύκλου. Flexible: ${fmt(totals.daily)}, πάγια: ${fmt(totals.fixed)}.`
+    });
+  }
+
+  const topMerchant=grouped.byMerchant?.[0];
+  if(topMerchant){
+    actions.push({
+      icon:'🏪',
+      tone:topMerchant.total/total>=0.25?'amber':'purple',
+      title:'Top merchant',
+      text:`Το ${esc(topMerchant.key)} έχει ${fmt(topMerchant.total)} σε ${topMerchant.count} ${topMerchant.count===1?'κίνηση':'κινήσεις'}.`
+    });
+  }
+
+  const topSub=grouped.bySubcategory?.[0];
+  if(topSub){
+    actions.push({
+      icon:'🧭',
+      tone:topSub.total/total>=0.30?'amber':'blue',
+      title:'Top υποκατηγορία',
+      text:`Η πιο δυνατή υποκατηγορία είναι ${esc(topSub.key)} με ${fmt(topSub.total)}.`
+    });
+  }
+
+  const foodTotal=(grouped.byCategory?.get?.('Τρόφιμα')||0)+(grouped.byCategory?.get?.('Φαγητό έξω')||0)+(grouped.byCategory?.get?.('Καφέδες')||0);
+  if(foodTotal>0){
+    const pct=Math.round(foodTotal/total*100);
+    actions.push({
+      icon:'🍽️',
+      tone:pct>=35?'amber':'purple',
+      title:'Φαγητό / καφές',
+      text:`Φαγητό, καφέδες και supermarket είναι ${pct}% των εξόδων του κύκλου (${fmt(foodTotal)}).`
+    });
+  }
+
+  const ticket=reportsTicketUsageModel();
+  if(ticket.totalUsed>0){
+    actions.push({
+      icon:'🎟️',
+      tone:'green',
+      title:'Ticket / Voucher',
+      text:`Χρησιμοποιήθηκαν ${fmt(ticket.totalUsed)} και μένουν ${fmt(ticket.totalRemaining)} σε restricted παροχές.`
+    });
+  }
+
+  return actions.slice(0,5);
+}
+
+function reportsRenderActionItems(items,total,groups){
+  const el=$('reportsActionList');
+  if(!el)return;
+  const actions=reportsBuildActionItems(items,total,groups);
+  el.innerHTML=actions.map(a=>`
+    <article class="reports-action-item ${reportsActionToneClass(a.tone)}">
+      <span>${a.icon}</span>
+      <div>
+        <strong>${esc(a.title)}</strong>
+        <p>${a.text}</p>
+      </div>
+    </article>`).join('');
+}
+
+function reportsRenderFoundationSections(items){
+  reportsRenderCycleGrid(items);
+
+  const expenseTotal=items.reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
+  const bySubcategory=reportsGroupRows(items,e=>e.subcategory?`${e.category} › ${e.subcategory}`:'',reportsBudgetOutAmount);
+  const byWallet=reportsGroupRows(items,e=>e.paymentSourceName||'Budget / Μετρητά',reportsBudgetOutAmount);
+  const byMerchant=reportsGroupRows(items,e=>e.merchantName||'',reportsBudgetOutAmount);
+  const byCategoryMap=new Map();
+  (items||[]).forEach(e=>{
+    const amount=reportsBudgetOutAmount(e);
+    if(amount<=0)return;
+    const key=e.category||'Άλλο';
+    byCategoryMap.set(key,(byCategoryMap.get(key)||0)+amount);
+  });
+
+  reportsRenderActionItems(items,expenseTotal,{bySubcategory,byWallet,byMerchant,byCategory:byCategoryMap});
+  reportsRenderMiniList('reportsSubcategoryList',bySubcategory,expenseTotal,{empty:'Δεν υπάρχουν αρκετές υποκατηγορίες ακόμα.',limit:6,showCount:true});
+  reportsRenderMiniList('reportsWalletList',byWallet,expenseTotal,{empty:'Δεν υπάρχουν πηγές πληρωμής για τον κύκλο.',limit:5,showCount:true});
+  reportsRenderMiniList('reportsMerchantList',byMerchant,expenseTotal,{empty:'Δεν υπάρχουν merchants/καταστήματα ακόμα.',limit:5,showCount:true});
+  reportsRenderTicketUsage();
+}
+
 function rStats(){
   const items=reportsAllMonthlyItems(curM);
-  const total=items.reduce((s,e)=>s+e.amount,0);
+  const total=items.reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
 
   const byCategory={};
   items.forEach(e=>{
-    byCategory[e.category]=(byCategory[e.category]||0)+e.amount;
+    const amount=reportsBudgetOutAmount(e);
+    if(amount<=0)return;
+    const key=e.category||'Άλλο';
+    byCategory[key]=(byCategory[key]||0)+amount;
   });
 
   const sorted=Object.entries(byCategory).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
@@ -175,14 +563,14 @@ function rStats(){
 
   const largest=items
     .filter(e=>e.type!=='card')
-    .sort((a,b)=>b.amount-a.amount)[0] || items.sort((a,b)=>b.amount-a.amount)[0];
+    .sort((a,b)=>reportsBudgetOutAmount(b)-reportsBudgetOutAmount(a))[0] || [...items].sort((a,b)=>reportsBudgetOutAmount(b)-reportsBudgetOutAmount(a))[0];
 
   const cycle=getCurrentBudgetCycle();
   const elapsed=reportsCurrentCycleElapsedDays();
   const avg=elapsed>0?total/elapsed:0;
 
   const prevKey=reportsPreviousMonthKey(curM);
-  const prevTotal=reportsAllMonthlyItems(prevKey).reduce((s,e)=>s+e.amount,0);
+  const prevTotal=reportsAllMonthlyItems(prevKey).reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
   const prevAvg=prevTotal>0?prevTotal/new Date(Number(prevKey.split('-')[0]),Number(prevKey.split('-')[1]),0).getDate():0;
 
   if($('reportsTotal'))$('reportsTotal').textContent=fmt(total);
@@ -191,8 +579,10 @@ function rStats(){
   if($('reportsAvgDelta'))$('reportsAvgDelta').textContent=`${elapsed} ημέρες κύκλου`;
   if($('reportsTopCategory'))$('reportsTopCategory').textContent=topCategory[0];
   if($('reportsTopPct'))$('reportsTopPct').textContent=`${topPct}% των εξόδων`;
-  if($('reportsLargestTx'))$('reportsLargestTx').textContent=fmt(largest?.amount||0);
-  if($('reportsLargestTxMeta'))$('reportsLargestTxMeta').textContent=largest?`${largest.name} · ${reportsShortDate(largest.date)}`:'—';
+  if($('reportsLargestTx'))$('reportsLargestTx').textContent=fmt(reportsBudgetOutAmount(largest));
+  if($('reportsLargestTxMeta'))$('reportsLargestTxMeta').textContent=largest?`${largest.displayTitle||largest.name} · ${reportsShortDate(largest.date)}`:'—';
+
+  reportsRenderFoundationSections(items);
 
   if(sorted.length===0 || total<=0){
     if($('chartCatDonut'))$('chartCatDonut').style.background='#eef2f7';
@@ -241,7 +631,7 @@ function rStats(){
   insights.push({
     icon:'📌',
     tone:'blue',
-    text:'Οι αναφορές μετρούν μόνο κινήσεις που επηρεάζουν πραγματικά το budget του κύκλου.'
+    text:'Οι αναφορές μετρούν μόνο actual κινήσεις που επηρεάζουν πραγματικά το budget του κύκλου.'
   });
 
   if(topCategory[1]>0){
@@ -257,14 +647,23 @@ function rStats(){
     insights.push({
       icon:'💡',
       tone:'purple',
-      text:`Τα έξοδα φαγητού/καφέ είναι <strong>${Math.round(foodTotal/total*100)}%</strong> του μήνα.`
+      text:`Τα έξοδα φαγητού/καφέ είναι <strong>${Math.round(foodTotal/total*100)}%</strong> του κύκλου.`
     });
   }else{
-    const freeAfterFixed=D.income-allFixedTotal();
+    const freeAfterFixed=(Number(D.income)||0)-(typeof allFixedTotal==='function'?allFixedTotal():0);
     insights.push({
       icon:'💡',
       tone:'purple',
       text:`Μετά τις σταθερές υποχρεώσεις μένουν <strong>${fmt(Math.max(0,freeAfterFixed))}</strong> για ευέλικτη χρήση.`
+    });
+  }
+
+  const ticketModel=reportsTicketUsageModel();
+  if(ticketModel.totalUsed>0){
+    insights.push({
+      icon:'🎟️',
+      tone:'green',
+      text:`Ticket/Voucher χρήση: <strong>${fmt(ticketModel.totalUsed)}</strong>, υπόλοιπο ${fmt(ticketModel.totalRemaining)}.`
     });
   }
 
@@ -284,7 +683,7 @@ function rStats(){
     const d=new Date(chartEnd.getFullYear(),chartEnd.getMonth(),chartEnd.getDate()-i,12);
     if(d<cycle.start)continue;
     const k=capvoDateKey(d);
-    days.push({label:`${d.getDate()}/${d.getMonth()+1}`,total:movementItems.filter(e=>e.date===k).reduce((s,e)=>s+(Number(e.amount)||0),0)});
+    days.push({label:`${d.getDate()}/${d.getMonth()+1}`,total:movementItems.filter(e=>e.date===k).reduce((s,e)=>s+reportsBudgetOutAmount(e),0)});
   }
 
   const dayMax=Math.max(...days.map(d=>d.total),1);
@@ -299,10 +698,12 @@ function rStats(){
 
 function reportsBuildCategoryRows(limit=null){
   const items=reportsAllMonthlyItems(curM);
-  const total=items.reduce((s,e)=>s+e.amount,0);
+  const total=items.reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
   const byCategory={};
   items.forEach(e=>{
-    byCategory[e.category]=(byCategory[e.category]||0)+(Number(e.amount)||0);
+    const amount=reportsBudgetOutAmount(e);
+    if(amount<=0)return;
+    byCategory[e.category]=(byCategory[e.category]||0)+amount;
   });
 
   const rows=Object.entries(byCategory)
@@ -358,7 +759,7 @@ function openReportsAdvancedSheet(){
   if(!overlay || !content)return;
 
   const items=reportsAllMonthlyItems(curM);
-  const total=items.reduce((s,e)=>s+e.amount,0);
+  const total=items.reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
   const daily=reportsCurrentMovementItems();
   const elapsed=reportsCurrentCycleElapsedDays();
   const avg=elapsed>0?total/elapsed:0;
@@ -366,34 +767,34 @@ function openReportsAdvancedSheet(){
   const byDay={};
   daily.forEach(e=>{
     const key=e.date||'';
-    if(key)byDay[key]=(byDay[key]||0)+(Number(e.amount)||0);
+    if(key)byDay[key]=(byDay[key]||0)+reportsBudgetOutAmount(e);
   });
   const topDay=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
 
   const byPay={};
   daily.forEach(e=>{
     const name=e.paymentSourceName || e.paymentSourceType || 'Budget / Μετρητά';
-    byPay[name]=(byPay[name]||0)+(Number(e.amount)||0);
+    byPay[name]=(byPay[name]||0)+reportsBudgetOutAmount(e);
   });
   const topPay=Object.entries(byPay).sort((a,b)=>b[1]-a[1])[0];
 
   const largest=items
     .filter(e=>e.type!=='card')
-    .sort((a,b)=>b.amount-a.amount)[0] || items.sort((a,b)=>b.amount-a.amount)[0];
+    .sort((a,b)=>reportsBudgetOutAmount(b)-reportsBudgetOutAmount(a))[0] || [...items].sort((a,b)=>reportsBudgetOutAmount(b)-reportsBudgetOutAmount(a))[0];
 
   const {rows}=reportsBuildCategoryRows();
   const topCategory=rows[0];
 
   const prevKey=reportsPreviousMonthKey(curM);
   const prevItems=reportsAllMonthlyItems(prevKey);
-  const prevTotal=prevItems.reduce((s,e)=>s+e.amount,0);
+  const prevTotal=prevItems.reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
   const diff=prevTotal>0?total-prevTotal:null;
 
   const cards=[
     {icon:'📅',label:'Μέση ημερήσια δαπάνη',value:fmt(avg),meta:`Υπολογισμός σε ${elapsed} ημέρες κύκλου`},
     {icon:'🔥',label:'Ημέρα με τα περισσότερα έξοδα',value:topDay?fmt(topDay[1]):'—',meta:topDay?reportsShortDate(topDay[0]):'Δεν υπάρχουν ημερήσιες κινήσεις'},
     {icon:'💳',label:'Πιο συχνή πηγή πληρωμής',value:topPay?esc(topPay[0]):'—',meta:topPay?fmt(topPay[1]):'Δεν υπάρχουν πηγές πληρωμής'},
-    {icon:'↗',label:'Μεγαλύτερη συναλλαγή',value:fmt(largest?.amount||0),meta:largest?`${esc(largest.name)} · ${reportsShortDate(largest.date)}`:'—'},
+    {icon:'↗',label:'Μεγαλύτερη συναλλαγή',value:fmt(reportsBudgetOutAmount(largest)),meta:largest?`${esc(largest.displayTitle||largest.name)} · ${reportsShortDate(largest.date)}`:'—'},
     {icon:'👑',label:'Top κατηγορία',value:topCategory?esc(topCategory[0]):'—',meta:topCategory&&total>0?`${Math.round(topCategory[1]/total*100)}% του κύκλου`:'—'},
     {icon:diff===null?'📊':diff<=0?'✅':'⚠️',label:'Σύγκριση με προηγούμενο μήνα',value:diff===null?'—':fmt(Math.abs(diff)),meta:diff===null?'Χρειάζεται προηγούμενος μήνας':(diff<=0?'λιγότερα από προηγ. μήνα':'περισσότερα από προηγ. μήνα')}
   ];

@@ -7,7 +7,7 @@ const CAT_KEYWORDS={
   'Καφέδες':['καφές','καφε','καφέ','coffee','espresso','freddo','φρεντο','frappé','frappe','φραπε','καφετέρια','καφετερια','cappuccino','καπουτσινο'],
   'Μεταφορά':['βενζίνη','βενζινη','καύσιμα','καυσιμα','πετρέλαιο','πετρελαιο','parking','παρκινγκ','μετρό','μετρο','metro','λεωφορείο','λεωφορειο','ταξί','ταξι','taxi','uber','εισιτήριο','εισιτηριο'],
   'Ψυχαγωγία':['σινεμά','cinema','θέατρο','συναυλία','netflix','spotify','παιχνίδι','game'],
-  'Φαγητό έξω':['εστιατόριο','εστιατοριο','ταβέρνα','ταβερνα','πίτσα','πιτσα','pizza','σουβλάκι','σουβλακι','γυρος','γύρος','delivery','ντελιβερι','wolt','efood','box','φαγητό έξω','φαγητο εξω','γεύμα','γευμα','δείπνο','δειπνο','burger','μπεργκερ'],
+  'Φαγητό έξω':['φαγητο','φαγητό','φαγητα','φαγητά','εστιατόριο','εστιατοριο','ταβέρνα','ταβερνα','πίτσα','πιτσα','pizza','σουβλάκι','σουβλακι','γυρος','γύρος','delivery','ντελιβερι','wolt','efood','box','φαγητό έξω','φαγητο εξω','γεύμα','γευμα','δείπνο','δειπνο','burger','μπεργκερ'],
   'Στέγαση':['ενοίκιο','ενοικιο','ρεύμα','νερό','κοινόχρηστα','internet'],
   'Λογαριασμοί':['λογαριασμός','λογαριασμος','deh','δεη','ευδαπ','cosmote','vodafone','wind'],
   'Υγεία':['φαρμακείο','φάρμακο','γιατρός','γιατρος','νοσοκομείο','ιατρός','εξέταση','ασφάλεια'],
@@ -18,6 +18,149 @@ const CAT_KEYWORDS={
 };
 
 const ALL_CATS=['Τρόφιμα','Καφέδες','Μεταφορά','Ψυχαγωγία','Φαγητό έξω','Στέγαση','Λογαριασμοί','Υγεία','Ρούχα','Συνδρομές','Δάνεια','Άλλο'];
+
+function syncDbCategoryCandidates(normalizedText){
+  if(typeof capvoCategories!=='function')return [];
+  const cats=capvoCategories();
+  if(!Array.isArray(cats)||!cats.length)return [];
+
+  const candidates=[];
+  const ordered=cats.slice().sort((a,b)=>{
+    const ad=a.parentId?0:1;
+    const bd=b.parentId?0:1;
+    return ad-bd || (Number(a.sortOrder)||0)-(Number(b.sortOrder)||0) || String(a.name||'').localeCompare(String(b.name||''),'el');
+  });
+
+  for(const cat of ordered){
+    const terms=[cat.name,...(Array.isArray(cat.keywords)?cat.keywords:[])].filter(Boolean)
+      .map(term=>({raw:String(term),key:syncNormalizeText(term)}))
+      .filter(t=>t.key && t.key.length>1)
+      .sort((a,b)=>b.key.length-a.key.length);
+
+    for(const term of terms){
+      if(!syncTextHasAlias(normalizedText,term.key))continue;
+      const parent=cat.parentId && typeof capvoCategoryById==='function' ? capvoCategoryById(cat.parentId) : null;
+      candidates.push({
+        cat,
+        parent,
+        rawTerm:term.raw,
+        termKey:term.key,
+        isSubcategory:!!cat.parentId,
+        termLength:term.key.length,
+        sortOrder:Number(cat.sortOrder)||0
+      });
+    }
+  }
+
+  return candidates;
+}
+
+function syncMatchCategoryFromDb(normalizedText){
+  const matches=syncDbCategoryCandidates(normalizedText);
+  if(!matches.length)return null;
+
+  matches.sort((a,b)=>{
+    // Prefer specific subcategories, then longer/more precise terms.
+    if(a.isSubcategory!==b.isSubcategory)return a.isSubcategory?-1:1;
+    if(a.termLength!==b.termLength)return b.termLength-a.termLength;
+    return a.sortOrder-b.sortOrder;
+  });
+
+  const best=matches[0];
+  if(best.isSubcategory && best.parent){
+    return {
+      category:best.parent.name,
+      categoryId:best.parent.id,
+      subcategoryId:best.cat.id,
+      subcategoryName:best.cat.name,
+      matchedTerm:best.rawTerm,
+      matchedTermKey:best.termKey
+    };
+  }
+
+  return {
+    category:best.cat.name,
+    categoryId:best.cat.id,
+    subcategoryId:null,
+    subcategoryName:'',
+    matchedTerm:best.rawTerm,
+    matchedTermKey:best.termKey
+  };
+}
+
+function syncGenericMerchantTermSet(){
+  return new Set([
+    'supermarket','super market','market','mini market','μαρκετ','σουπερ','σουπερ μαρκετ','σουπερμαρκετ',
+    'καφεσ','καφε','coffee','espresso','freddo','φρεντο','cappuccino','καπουτσινο',
+    'φαγητο','φαγητο εξω','delivery','ντελιβερι','pizza','πιτσα','burger','μπεργκερ','σουβλακι','γυροσ','γευμα','δειπνο',
+    'βενζινη','καυσιμα','fuel','taxi','ταξι','parking','παρκινγκ','εισιτηριο','εισιτηρια','match ticket',
+    'στοιχημα','bet','betting','online betting','casino','καζινο','τζογοσ','τυχερα παιχνιδια',
+    'φαρμακειο','γιατροσ','εξετασεισ','ρουχα','παπουτσια','συνδρομη','subscription',
+    'λογαριασμοσ','ρευμα','νερο','internet','κινητο','ενοικιο','κοινοχρηστα','αλλο','uncategorized'
+  ].map(syncNormalizeText));
+}
+
+function syncHumanizeMerchantHint(term){
+  const raw=String(term||'').trim();
+  if(!raw)return '';
+  const normalized=syncNormalizeText(raw);
+  const known={
+    'pizzahut':'Pizza Hut','pizza hut':'Pizza Hut','domino':'Domino','dominos':'Domino\'s',
+    'stoiximan':'Stoiximan','novibet':'Novibet','bet365':'Bet365','betshop':'Betshop',
+    'more com':'More.com','more.com':'More.com','ticketmaster':'Ticketmaster','viva tickets':'Viva Tickets',
+    'wolt':'Wolt','efood':'efood','box':'BOX','lidl':'Lidl','ab':'AB','sklavenitis':'Σκλαβενίτης',
+    'σκλαβενιτησ':'Σκλαβενίτης','σκλαβενιτης':'Σκλαβενίτης','my market':'My Market','mymarket':'My Market',
+    'shell':'Shell','bp':'BP','avin':'Avin','eko':'EKO','cosmote':'Cosmote','vodafone':'Vodafone','nova':'Nova',
+    'netflix':'Netflix','spotify':'Spotify','apple':'Apple','google':'Google','youtube':'YouTube','disney':'Disney+'
+  };
+  if(known[normalized])return known[normalized];
+
+  return raw.split(/\s+/).map(part=>{
+    if(!part)return part;
+    if(/^[A-Z0-9]{2,}$/.test(part))return part;
+    if(/^[a-z0-9.]+$/i.test(part))return part.charAt(0).toUpperCase()+part.slice(1).toLowerCase();
+    return part.charAt(0).toLocaleUpperCase('el-GR')+part.slice(1);
+  }).join(' ');
+}
+
+function syncExtractMerchantFromDb(normalizedText,categoryMatch){
+  const matches=syncDbCategoryCandidates(normalizedText);
+  if(!matches.length)return '';
+
+  const generic=syncGenericMerchantTermSet();
+  const parentName=syncNormalizeText(categoryMatch?.category||'');
+  const subName=syncNormalizeText(categoryMatch?.subcategoryName||'');
+
+  const candidates=matches
+    .filter(m=>m.rawTerm && m.termKey)
+    .filter(m=>m.termKey!==parentName && m.termKey!==subName)
+    .filter(m=>!generic.has(m.termKey))
+    .filter(m=>m.termKey.length>=3)
+    .sort((a,b)=>b.termLength-a.termLength);
+
+  if(!candidates.length)return '';
+  return syncHumanizeMerchantHint(candidates[0].rawTerm);
+}
+
+function syncStripDbCategoryTermsFromName(value,categoryMatch){
+  let out=syncNormalizeText(value);
+  if(!categoryMatch)return out;
+
+  const terms=[categoryMatch.category,categoryMatch.subcategoryName,categoryMatch.matchedTerm]
+    .filter(Boolean)
+    .map(syncNormalizeText)
+    .filter(Boolean)
+    .sort((a,b)=>b.length-a.length);
+
+  for(const term of terms){
+    // Do not remove merchant-like matched terms such as "pizza hut"; they are useful names.
+    if(term.includes(' ') && ![syncNormalizeText(categoryMatch.category),syncNormalizeText(categoryMatch.subcategoryName)].includes(term))continue;
+    const escaped=term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    out=out.replace(new RegExp(`(^|\\s)${escaped}(?=\\s|$)`,'gi'),' ');
+  }
+
+  return out.replace(/\s+/g,' ').trim();
+}
 
 function getCurrentChatId(){
   if(typeof getTelegramChatId==='function')return getTelegramChatId();
@@ -123,6 +266,76 @@ function syncNormalizeText(text){
     .trim();
 }
 
+
+
+function syncTokenSimilarity(a,b){
+  a=syncNormalizeText(a);
+  b=syncNormalizeText(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  if(a.length<3 || b.length<3)return 0;
+
+  const maxLen=Math.max(a.length,b.length);
+  const minLen=Math.min(a.length,b.length);
+  if(maxLen-minLen>3)return 0;
+
+  const dp=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));
+  for(let i=0;i<=a.length;i++)dp[i][0]=i;
+  for(let j=0;j<=b.length;j++)dp[0][j]=j;
+  for(let i=1;i<=a.length;i++){
+    for(let j=1;j<=b.length;j++){
+      const cost=a[i-1]===b[j-1]?0:1;
+      dp[i][j]=Math.min(
+        dp[i-1][j]+1,
+        dp[i][j-1]+1,
+        dp[i-1][j-1]+cost
+      );
+    }
+  }
+  const dist=dp[a.length][b.length];
+  if(maxLen<=5)return dist<=1?1-(dist/maxLen):0;
+  if(maxLen<=8)return dist<=2?1-(dist/maxLen):0;
+  return dist<=2?1-(dist/maxLen):0;
+}
+
+function syncTextHasAlias(normalizedText,alias){
+  const t=syncNormalizeText(normalizedText);
+  const a=syncNormalizeText(alias);
+  if(!t||!a)return false;
+  if(t.includes(a))return true;
+
+  const aliasTokens=a.split(' ').filter(Boolean);
+  const textTokens=t.split(' ').filter(Boolean);
+  if(aliasTokens.length===0)return false;
+
+  if(aliasTokens.length===1){
+    const token=aliasTokens[0];
+    if(token.length<4)return false;
+    return textTokens.some(part=>syncTokenSimilarity(part,token)>=0.74);
+  }
+
+  // For multi-word aliases, compare sliding windows and allow one small speech-to-text typo.
+  for(let i=0;i<=textTokens.length-aliasTokens.length;i++){
+    const window=textTokens.slice(i,i+aliasTokens.length);
+    let score=0;
+    for(let j=0;j<aliasTokens.length;j++)score+=syncTokenSimilarity(window[j],aliasTokens[j]);
+    if(score/aliasTokens.length>=0.82)return true;
+  }
+  return false;
+}
+
+function syncIsPaymentAliasToken(token,aliases){
+  const t=syncNormalizeText(token);
+  if(!t || t.length<3)return false;
+  return (aliases||[]).some(alias=>{
+    const a=syncNormalizeText(alias);
+    if(!a || a.includes(' '))return false;
+    if(t===a)return true;
+    if(a.length>=4 && syncTokenSimilarity(t,a)>=0.74)return true;
+    return false;
+  });
+}
+
 function syncPaymentSources(){
   // Telegram/voice sync handles real wallets and Ticket/Voucher style sources.
   // Credit-card purchases still need the Cards flow because they update debt/installments.
@@ -176,8 +389,11 @@ function syncSourceAliases(source){
         'cash','cash money','metrita','metrhta','metrita mou','lefta','leuta','χρηματα','λεφτα'
       );
     }
-    if(/revolut|ρεβολουτ|revo|ρεβο/.test(name)){
-      aliases.push('revolut','revo','rev','ρεβολουτ','ρεβο','ρεβ','ρεβολουτ μου');
+    if(/revolut|revolout|revoloyt|ρεβολουτ|revo|ρεβο/.test(name)){
+      aliases.push(
+        'revolut','revolout','revoloyt','revolute','revoloud','revolut μου','revolout μου',
+        'revo','rev','ρεβολουτ','ρεβολου','ρεβολουτ μου','ρεβολοτ','ρεβο','ρεβ'
+      );
     }
     if(/κυριο|λογαριασ|main|primary/.test(name) || source?.isDefault || source?.is_default || source?.isPrimaryBudget || source?.is_primary_budget){
       aliases.push(
@@ -206,7 +422,7 @@ function syncSourceAliases(source){
 function syncExplicitPaymentIntent(text){
   const t=syncNormalizeText(text);
   if(/ticket|τικετ|voucher|βαουτσερ|edenred|κουπονι|διατακτικ|food pass/.test(t))return 'restricted';
-  if(/revolut|revo|ρεβολουτ|ρεβο/.test(t))return 'revolut';
+  if(/revolut|revolout|revoloyt|revolute|revo|ρεβολουτ|ρεβολου|ρεβολοτ|ρεβο/.test(t))return 'revolut';
   if(/μετρη|cash|metrita|metrhta|lefta|leuta/.test(t))return 'cash';
   if(/κυριο|λογαριασμο|main|primary/.test(t))return 'primary';
   return '';
@@ -236,8 +452,8 @@ function detectPaymentSourceFromText(text){
       if(ac!==bc)return ac?-1:1;
     }
     if(intent==='revolut'){
-      const av=/revolut|ρεβολουτ|revo|ρεβο/.test(an);
-      const bv=/revolut|ρεβολουτ|revo|ρεβο/.test(bn);
+      const av=/revolut|revolout|revoloyt|ρεβολουτ|ρεβολου|revo|ρεβο/.test(an);
+      const bv=/revolut|revolout|revoloyt|ρεβολουτ|ρεβολου|revo|ρεβο/.test(bn);
       if(av!==bv)return av?-1:1;
     }
     if(intent==='primary'){
@@ -253,7 +469,7 @@ function detectPaymentSourceFromText(text){
 
   for(const source of ordered){
     const tokens=syncSourceAliases(source).sort((a,b)=>b.length-a.length);
-    if(tokens.some(token=>token && t.includes(token))){
+    if(tokens.some(token=>token && syncTextHasAlias(t,token))){
       return source;
     }
   }
@@ -296,7 +512,7 @@ function syncStripPaymentWordsFromName(value,paymentSource){
   const common=[
     'ticket restaurant','ticket','tickets','τικετ','τικετα','voucher','vouchers','βαουτσερ','edenred','eden red','κουπονι','κουπονια','διατακτικη','διατακτικες','food pass',
     'μετρητα','μετρητοισ','μετρητοις','cash','metrita','metrhta','lefta','leuta',
-    'revolut','revo','rev','ρεβολουτ','ρεβο','ρεβ',
+    'revolut','revolout','revoloyt','revolute','revo','rev','ρεβολουτ','ρεβολου','ρεβολοτ','ρεβο','ρεβ',
     'κυριοσ λογαριασμοσ','κυριος λογαριασμος','κυριο λογαριασμο','κυριοσ','κυριος','κυριο','main','primary','bank','τραπεζα','wallet','πορτοφολι'
   ];
   const sourceAliases=paymentSource ? syncSourceAliases(paymentSource) : [];
@@ -306,6 +522,9 @@ function syncStripPaymentWordsFromName(value,paymentSource){
     const escaped=alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     out=out.replace(new RegExp(`(^|\\s)${escaped}(?=\\s|$)`,'gi'),' ');
   }
+
+  const fuzzyAliases=removeList.filter(a=>a && !a.includes(' ') && a.length>=4);
+  out=out.split(' ').filter(part=>!syncIsPaymentAliasToken(part,fuzzyAliases)).join(' ');
 
   out=out
     .replace(/\b(με|απο|από|σε|στο|στη|στην|στον|απ|απτο|απο|apo|me|se|from|with|by)\b/gi,' ')
@@ -326,24 +545,36 @@ function parseExpense(text){
 
   const amount=amountInfo.amount;
   let category='Άλλο';
+  let categoryId=null;
+  let subcategoryId=null;
 
-  for(const[cat,keywords]of Object.entries(CAT_KEYWORDS)){
-    if(keywords.some(kw=>nt.includes(syncNormalizeText(kw)))){
-      category=cat;
-      break;
+  const dbCategory=syncMatchCategoryFromDb(nt);
+  if(dbCategory){
+    category=dbCategory.category||category;
+    categoryId=dbCategory.categoryId||null;
+    subcategoryId=dbCategory.subcategoryId||null;
+  }else{
+    for(const[cat,keywords]of Object.entries(CAT_KEYWORDS)){
+      if(keywords.some(kw=>nt.includes(syncNormalizeText(kw)))){
+        category=cat;
+        break;
+      }
     }
   }
 
   const paymentSource=detectPaymentSourceFromText(normalized);
+  const merchantName=dbCategory ? syncExtractMerchantFromDb(nt,dbCategory) : '';
 
-  let name=normalized
+  let nameBase=normalized
     .replace(amountInfo.raw,' ')
     .replace(/\b(σήμερα|σημερα|χθες|χθεσ|αύριο|αυριο|πρωί|πρωι|βράδυ|βραδυ|μεσημέρι|μεσημερι)\b/gi,' ');
 
-  name=syncStripPaymentWordsFromName(name,paymentSource);
+  nameBase=syncStripPaymentWordsFromName(nameBase,paymentSource);
+  nameBase=syncStripDbCategoryTermsFromName(nameBase,dbCategory);
 
-  if(name.length>0)name=name.charAt(0).toUpperCase()+name.slice(1);
-  else name=category;
+  let name=merchantName || nameBase;
+  if(name.length>0)name=name.charAt(0).toLocaleUpperCase('el-GR')+name.slice(1);
+  else name=dbCategory?.subcategoryName || category;
 
   let date=typeof todayISO==='function'?todayISO():new Date().toLocaleDateString('en-CA');
 
@@ -356,13 +587,18 @@ function parseExpense(text){
   const expense={
     amount,
     category,
+    categoryId,
+    subcategoryId,
     name,
     date,
+    merchantName:merchantName||'',
+    notes:'',
     paymentSourceId:paymentSource?.id||'',
     paymentSourceName:paymentSource?.name||'',
     paymentSourceType:paymentSource?.incomeType||''
   };
 
+  if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
   if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
   return expense;
 }
@@ -915,6 +1151,7 @@ async function confirmSync(...messageIds){
       sourceUsage[expense.paymentSourceId]=already+amount;
     }
 
+    if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
     pendingExpenses.push({msgId,expense,paymentSource:preparedSource});
   }
 
@@ -930,6 +1167,10 @@ async function confirmSync(...messageIds){
       name:expense.name,
       amount:expense.amount,
       category:expense.category,
+      category_id:expense.categoryId||expense.category_id||null,
+      subcategory_id:expense.subcategoryId||expense.subcategory_id||null,
+      merchant_name:expense.merchantName||expense.merchant_name||null,
+      notes:expense.notes||null,
       date:expense.date,
       type:'daily',
       month_key:monthKey,
