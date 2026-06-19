@@ -15164,3 +15164,163 @@ body.fixed-payment-preview-open{
     padding-right:12px !important;
   }
 }
+
+/* ============================================================
+   CAPVO v1.15.2 — Mobile sheet consistency pass
+   Scope: visual/safe-area fixes only. No financial logic changes.
+
+   Goals:
+   - Keep premium sheets rounded at the bottom.
+   - Prevent sticky action bars from covering form content.
+   - Standardise safe scrolling for the remaining mobile modals.
+   ============================================================ */
+@media (max-width:768px){
+  body.modal-open .mobile-bottom-nav,
+  body.modal-open .mobile-nav-fab,
+  body.sheet-open .mobile-bottom-nav,
+  body.sheet-open .mobile-nav-fab,
+  body:has(#mDaily.active) .mobile-bottom-nav,
+  body:has(#mDaily.active) .mobile-nav-fab,
+  body:has(#mFixed.active) .mobile-bottom-nav,
+  body:has(#mFixed.active) .mobile-nav-fab,
+  body:has(#mIncomeSource.active) .mobile-bottom-nav,
+  body:has(#mIncomeSource.active) .mobile-nav-fab,
+  body:has(#mBudgetCycle.active) .mobile-bottom-nav,
+  body:has(#mBudgetCycle.active) .mobile-nav-fab{
+    opacity:0 !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+    transform:translateX(-50%) translateY(22px) scale(.96) !important;
+  }
+
+  #mDaily.modal-overlay,
+  #mFixed.modal-overlay,
+  #mIncomeSource.modal-overlay,
+  #mBudgetCycle.modal-overlay,
+  .reports-sheet-overlay,
+  .savings-sheet-overlay,
+  .fixed-payment-preview-overlay,
+  .budget-limit-sheet-overlay,
+  .capvo-action-center-overlay{
+    align-items:flex-end !important;
+    justify-content:center !important;
+    overflow:hidden !important;
+    padding:calc(8px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)) !important;
+    box-sizing:border-box !important;
+  }
+
+  #mDaily .modal,
+  #mFixed .modal,
+  #mIncomeSource .income-source-modal,
+  #mBudgetCycle .budget-cycle-modal,
+  .reports-sheet,
+  .savings-sheet,
+  .fixed-payment-preview-sheet,
+  .budget-limit-sheet,
+  .capvo-action-center-sheet{
+    width:min(100%,520px) !important;
+    max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    margin:0 auto !important;
+    border-radius:32px !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+    box-sizing:border-box !important;
+    scroll-padding-bottom:calc(20px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mDaily .modal,
+  #mFixed .modal{
+    padding:12px 18px calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mDaily .modal::before,
+  #mFixed .modal::before{
+    width:42px !important;
+    height:5px !important;
+    border-radius:999px !important;
+    margin:2px auto 15px !important;
+    background:rgba(100,116,139,.22) !important;
+  }
+
+  #mDaily h2,
+  #mFixed h2{
+    margin-bottom:14px !important;
+    padding-right:42px !important;
+    font-size:22px !important;
+    line-height:1.08 !important;
+    letter-spacing:-.045em !important;
+  }
+
+  #mDaily .modal-close,
+  #mFixed .modal-close{
+    position:absolute !important;
+    top:18px !important;
+    right:18px !important;
+    z-index:20 !important;
+    width:42px !important;
+    height:42px !important;
+    border-radius:16px !important;
+  }
+
+  #mDaily #btnDaily,
+  #mFixed #btnFixed,
+  #mIncomeSource .income-wizard-actions,
+  #mIncomeSource .income-modal-actions,
+  .fixed-payment-preview-actions{
+    position:static !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    z-index:auto !important;
+    margin-top:14px !important;
+    padding-top:8px !important;
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+
+  #mDaily #btnDaily,
+  #mFixed #btnFixed,
+  #mIncomeSource .income-save-btn{
+    width:100% !important;
+    min-height:54px !important;
+    border-radius:19px !important;
+  }
+
+  #mFixed .fixed-edit-danger-zone{
+    margin-top:12px !important;
+    margin-bottom:0 !important;
+    padding-bottom:0 !important;
+  }
+
+  #mIncomeSource .income-source-modal.income-wizard-modal{
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #mBudgetCycle .budget-cycle-modal{
+    padding:16px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .reports-sheet,
+  .savings-sheet,
+  .fixed-payment-preview-sheet,
+  .budget-limit-sheet,
+  .capvo-action-center-sheet{
+    padding-bottom:calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (min-width:769px){
+  #mDaily .modal,
+  #mFixed .modal,
+  #mIncomeSource .income-source-modal,
+  #mBudgetCycle .budget-cycle-modal,
+  .reports-sheet,
+  .savings-sheet,
+  .fixed-payment-preview-sheet,
+  .budget-limit-sheet,
+  .capvo-action-center-sheet{
+    border-radius:28px !important;
+  }
+}
