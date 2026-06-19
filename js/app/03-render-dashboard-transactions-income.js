@@ -37,11 +37,24 @@ function render(){
   const ccS=ccPayTotal();
   const dlS=dailyTotal();
   const cashDaily=dailyCashTotal();
-  
-  const tot=capvoMoney(fxS+ccS+cashDaily);
-  const bal=capvoMoney(D.income-tot);
 
-  const pct=D.income>0?Math.min(100,Math.round(tot/D.income*100)):0;
+  // Balance formula and dashboard usage display are intentionally separated.
+  // In the wallet model, wallet balances are already reduced by actual payments/expenses,
+  // so fixedTotal/ccPayTotal/dailyCashTotal can be 0 to avoid double-subtracting.
+  // The hero usage panel, however, must still show the real actual movements of the cycle.
+  const formulaTot=capvoMoney(fxS+ccS+cashDaily);
+  const bal=capvoMoney(D.income-formulaTot);
+
+  const snapshotTotals=typeof capvoDashboardSnapshotTotals==='function'
+    ? capvoDashboardSnapshotTotals()
+    : {fixed:fxS,cards:ccS,daily:cashDaily};
+  const usageSpent=capvoMoney((Number(snapshotTotals.fixed)||0)+(Number(snapshotTotals.cards)||0)+(Number(snapshotTotals.daily)||0));
+  const isWalletModel=typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel();
+  const cycleBase=capvoMoney(typeof totalCycleAmount==='function'?totalCycleAmount():0);
+  const usageBase=capvoMoney(isWalletModel
+    ? Math.max(cycleBase||0, (Number(D.income)||0)+usageSpent, Number(D.income)||0)
+    : Math.max(Number(D.income)||0, usageSpent));
+  const pct=usageBase>0?Math.min(100,Math.round(usageSpent/usageBase*100)):0;
   const cycle=getCurrentBudgetCycle();
 
   $('mLabel').textContent=cycle.label;
@@ -50,20 +63,17 @@ function render(){
   const heroCaption=document.querySelector('.modern-hero-caption');
   if(heroCaption)heroCaption.textContent=`Τρέχουσα μηνιαία περίοδος: ${cycle.label}.`;
   renderDashboardGreeting();
-  $('dIncome').textContent=fmt(D.income);
+  $('dIncome').textContent=fmt(usageBase);
   $('dBalance').textContent=fmt(bal);
   $('dBalance').style.color=bal<0?'#fca5a5':'#ffffff';
   $('dBar').style.width=pct+'%';
   $('dPct').textContent=pct+'%';
   const heroCard=document.querySelector('.modern-hero-card');
   if(heroCard)heroCard.style.setProperty('--capvo-hero-pct', pct+'%');
-  $('dSpent').textContent=fmt(tot)+' / '+fmt(D.income);
+  $('dSpent').textContent=fmt(usageSpent)+' / '+fmt(usageBase);
   renderDashboardAllowanceCards(bal);
   renderFirstUseBudgetPrompt();
 
-  const snapshotTotals=typeof capvoDashboardSnapshotTotals==='function'
-    ? capvoDashboardSnapshotTotals()
-    : {fixed:fxS,cards:ccS,daily:cashDaily};
   $('sFixed').textContent=fmt(snapshotTotals.fixed);
   $('sCC').textContent=fmt(snapshotTotals.cards);
   $('sDaily').textContent=fmt(snapshotTotals.daily);

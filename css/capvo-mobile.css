@@ -15324,3 +15324,290 @@ body.fixed-payment-preview-open{
     border-radius:28px !important;
   }
 }
+
+/* ============================================================
+   CAPVO v1.15.7 — Dashboard hero header only correction
+   Base: Application(33). Scope: #vDash top hero only.
+   Keeps allowance mini stats. No dashboard sections below are touched.
+   ============================================================ */
+#vDash .modern-hero-card{
+  position:relative !important;
+  min-height:auto !important;
+  height:auto !important;
+  padding:24px 18px 16px !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+
+#vDash .modern-hero-card::before{
+  right:-46px !important;
+  top:74px !important;
+  width:245px !important;
+  height:160px !important;
+  border-radius:34px !important;
+  opacity:.54 !important;
+  transform:rotate(-33deg) skewX(-7deg) !important;
+}
+
+#vDash .modern-hero-card::after{
+  right:-18px !important;
+  top:72px !important;
+  width:205px !important;
+  height:136px !important;
+  border-radius:32px !important;
+  opacity:.34 !important;
+  transform:rotate(-33deg) translate(24px,-10px) !important;
+}
+
+#vDash .modern-hero-card > *{
+  position:relative !important;
+  z-index:2 !important;
+}
+
+#vDash .modern-hero-card #capvoActionCenterBtn.capvo-action-center-btn,
+#vDash .modern-hero-card > .capvo-action-center-btn{
+  top:14px !important;
+  right:14px !important;
+  width:38px !important;
+  height:38px !important;
+  border-radius:15px !important;
+  z-index:8 !important;
+}
+
+#vDash .capvo-hero-header-v1157{
+  display:block !important;
+  position:relative !important;
+  min-height:158px !important;
+  padding:0 122px 0 0 !important;
+}
+
+#vDash .capvo-hero-left-v1157{
+  min-width:0 !important;
+  max-width:100% !important;
+}
+
+#vDash .modern-hero-card .eyebrow{
+  margin:0 0 8px !important;
+  color:rgba(255,255,255,.72) !important;
+  font-size:10.2px !important;
+  line-height:1 !important;
+  letter-spacing:.18em !important;
+  font-weight:950 !important;
+  text-transform:uppercase !important;
+}
+
+#vDash .hero-balance{
+  display:block !important;
+  color:#fff !important;
+  font-size:clamp(46px, 13.2vw, 61px) !important;
+  line-height:.86 !important;
+  letter-spacing:-.075em !important;
+  font-weight:950 !important;
+  text-shadow:0 12px 30px rgba(31,23,113,.18) !important;
+  white-space:nowrap !important;
+}
+
+#vDash .modern-hero-caption{
+  max-width:190px !important;
+  margin:10px 0 0 !important;
+  color:rgba(255,255,255,.88) !important;
+  font-size:12.2px !important;
+  line-height:1.28 !important;
+  font-weight:750 !important;
+}
+
+#vDash .modern-hero-action{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:auto !important;
+  min-width:104px !important;
+  height:38px !important;
+  margin:13px 0 0 !important;
+  padding:0 16px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.94) !important;
+  border:1px solid rgba(255,255,255,.70) !important;
+  color:#6d5cff !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  box-shadow:0 12px 24px rgba(44,31,142,.14) !important;
+  backdrop-filter:blur(14px) saturate(1.12) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.12) !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157{
+  position:absolute !important;
+  top:49px !important;
+  right:0 !important;
+  width:112px !important;
+  min-height:112px !important;
+  padding:13px 12px 11px !important;
+  border-radius:23px !important;
+  display:grid !important;
+  align-content:start !important;
+  gap:8px !important;
+  color:#fff !important;
+  background:linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.08)) !important;
+  border:1px solid rgba(255,255,255,.32) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 16px 34px rgba(47,37,148,.12) !important;
+  backdrop-filter:blur(16px) saturate(1.18) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.18) !important;
+  overflow:hidden !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157::after{
+  content:'' !important;
+  position:absolute !important;
+  right:-23px !important;
+  bottom:-22px !important;
+  width:72px !important;
+  height:72px !important;
+  border-radius:999px !important;
+  border:9px solid rgba(255,255,255,.16) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10) !important;
+  pointer-events:none !important;
+}
+
+#vDash .capvo-budget-kicker-v1157,
+#vDash .capvo-hero-budget-panel-v1157 > span:first-child{
+  position:relative !important;
+  z-index:2 !important;
+  display:block !important;
+  color:rgba(255,255,255,.72) !important;
+  font-size:8px !important;
+  line-height:1.15 !important;
+  font-weight:950 !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 #dPct{
+  position:relative !important;
+  z-index:2 !important;
+  display:block !important;
+  color:#fff !important;
+  font-size:28px !important;
+  line-height:.9 !important;
+  font-weight:950 !important;
+  letter-spacing:-.055em !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 .modern-progress-block{
+  position:relative !important;
+  z-index:2 !important;
+  margin:1px 0 0 !important;
+  padding:0 !important;
+  display:grid !important;
+  gap:6px !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 .progress-track{
+  width:100% !important;
+  height:6px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.26) !important;
+  overflow:hidden !important;
+  box-shadow:none !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 .progress-fill{
+  height:100% !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg,#ffffff,#dcd7ff) !important;
+  box-shadow:none !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 .progress-labels{
+  display:grid !important;
+  gap:2px !important;
+  margin:0 !important;
+  color:rgba(255,255,255,.67) !important;
+  font-size:7.7px !important;
+  line-height:1.1 !important;
+  font-weight:850 !important;
+  text-align:left !important;
+}
+
+#vDash .capvo-hero-budget-panel-v1157 .progress-labels span:last-child,
+#vDash .capvo-hero-budget-panel-v1157 #dSpent{
+  color:rgba(255,255,255,.92) !important;
+  font-size:8.2px !important;
+  line-height:1.08 !important;
+  font-weight:950 !important;
+  letter-spacing:-.02em !important;
+}
+
+#vDash .capvo-hero-income-anchor-v1157{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip:rect(0,0,0,0) !important;
+  white-space:nowrap !important;
+  border:0 !important;
+}
+
+#vDash .dashboard-allowance-cards.hero-budget-metrics{
+  margin:12px 0 0 !important;
+  padding:8px !important;
+  border-radius:20px !important;
+  background:rgba(255,255,255,.12) !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 12px 28px rgba(40,30,130,.08) !important;
+}
+
+#vDash .dashboard-allowance-card{
+  min-height:54px !important;
+  border-radius:15px !important;
+}
+
+@media(max-width:370px){
+  #vDash .modern-hero-card{
+    padding:22px 16px 15px !important;
+    border-radius:26px !important;
+  }
+
+  #vDash .capvo-hero-header-v1157{
+    min-height:154px !important;
+    padding-right:110px !important;
+  }
+
+  #vDash .hero-balance{
+    font-size:clamp(42px, 12.5vw, 54px) !important;
+  }
+
+  #vDash .modern-hero-caption{
+    max-width:165px !important;
+    font-size:11.5px !important;
+  }
+
+  #vDash .modern-hero-action{
+    min-width:98px !important;
+    height:36px !important;
+    font-size:11.5px !important;
+  }
+
+  #vDash .capvo-hero-budget-panel-v1157{
+    top:50px !important;
+    width:104px !important;
+    min-height:106px !important;
+    padding:12px 11px 10px !important;
+    border-radius:21px !important;
+  }
+
+  #vDash .capvo-hero-budget-panel-v1157 #dPct{
+    font-size:25px !important;
+  }
+
+  #vDash .capvo-hero-budget-panel-v1157 .progress-labels{
+    font-size:7.2px !important;
+  }
+}

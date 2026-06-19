@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.15.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.15.8">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.15.2">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.15.2">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.15.2">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.15.2">
-  <link rel="manifest" href="manifest.webmanifest?v=1.15.2">
-  <!-- <link rel="stylesheet" href="style.css?v=1.15.2"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.15.8">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.15.8">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.15.8">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.15.8">
+  <link rel="manifest" href="manifest.webmanifest?v=1.15.8">
+  <!-- <link rel="stylesheet" href="style.css?v=1.15.8"> -->
 </head>
 
 <body class="auth-pending">
@@ -280,37 +280,32 @@
             <span class="capvo-action-center-badge" id="capvoActionCenterBadge" style="display:none">0</span>
           </button>
 
-          <div class="modern-hero-header">
-            <div>
+          <div class="modern-hero-header capvo-hero-header-v1157">
+            <div class="capvo-hero-left-v1157">
               <div class="eyebrow">Υπόλοιπο μήνα</div>
               <div class="hero-balance" id="dBalance">€0,00</div>
               <div class="modern-hero-caption">Με βάση εισόδημα, πάγια, κάρτες και ημερήσια έξοδα.</div>
+
+              <button class="hero-edit modern-hero-action" onclick="openWalletsPage()">
+                Λογαριασμοί ›
+              </button>
             </div>
 
-            <button class="hero-edit modern-hero-action" onclick="openWalletsPage()">
-              Λογαριασμοί ✎
-            </button>
-          </div>
-
-          <div class="modern-hero-metrics">
-            <div class="modern-metric-pill">
-              <span>Εισόδημα</span>
-              <strong id="dIncome">€0,00</strong>
-            </div>
-            <div class="modern-metric-pill">
-              <span>Χρήση budget</span>
+            <div class="capvo-hero-budget-panel-v1157" aria-label="Χρήση budget">
+              <span class="capvo-budget-kicker-v1157">Χρήση budget</span>
               <strong id="dPct">0%</strong>
+              <div class="progress-bar modern-progress-block">
+                <div class="progress-track">
+                  <div class="progress-fill" id="dBar"></div>
+                </div>
+                <div class="progress-labels">
+                  <span>Χρησιμοποιημένο</span>
+                  <span id="dSpent">€0,00 / €0,00</span>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div class="progress-bar modern-progress-block">
-            <div class="progress-track">
-              <div class="progress-fill" id="dBar"></div>
-            </div>
-            <div class="progress-labels">
-              <span>Χρησιμοποιημένο</span>
-              <span id="dSpent">€0,00 / €0,00</span>
-            </div>
+            <span id="dIncome" class="capvo-hero-income-anchor-v1157" aria-hidden="true">€0,00</span>
           </div>
         </div>
 
@@ -2055,27 +2050,27 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.15.2"></script>
+<script src="js/app-version.js?v=1.15.8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.15.2"></script>
+<script src="js/config.js?v=1.15.8"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.15.2"></script>
-  <script src="js/app/09-wallet-financial-engine.js?v=1.15.2"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.15.2"></script>
-<script src="js/app/02-supabase-data.js?v=1.15.2"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.15.2"></script>
-<script src="js/app/04-reports-archive.js?v=1.15.2"></script>
-<script src="js/app/05-income-pickers.js?v=1.15.2"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.15.2"></script>
-<script src="js/app/07-add-center.js?v=1.15.2"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.15.2"></script>
+<script src="js/app/00-core-state.js?v=1.15.8"></script>
+  <script src="js/app/09-wallet-financial-engine.js?v=1.15.8"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.15.8"></script>
+<script src="js/app/02-supabase-data.js?v=1.15.8"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.15.8"></script>
+<script src="js/app/04-reports-archive.js?v=1.15.8"></script>
+<script src="js/app/05-income-pickers.js?v=1.15.8"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.15.8"></script>
+<script src="js/app/07-add-center.js?v=1.15.8"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.15.8"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.15.2"></script>
-<script src="js/sync.js?v=1.15.2"></script>
-<script src="js/advisor.js?v=1.15.2"></script>
-<script src="js/wallets.js?v=1.15.2"></script>
+<script src="js/cards.js?v=1.15.8"></script>
+<script src="js/sync.js?v=1.15.8"></script>
+<script src="js/advisor.js?v=1.15.8"></script>
+<script src="js/wallets.js?v=1.15.8"></script>
 
 
 
