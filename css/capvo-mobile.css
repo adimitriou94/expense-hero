@@ -15003,3 +15003,164 @@ body.fixed-payment-preview-open{
     margin-bottom: 0 !important;
   }
 }
+
+/* ============================================================
+   CAPVO v1.15.1 — Credit card edit sheet shape/safe scroll fix
+   Scope: #mCC only. No card/debt business logic changes.
+
+   Fixes:
+   - Save button no longer floats over the form content.
+   - Modal keeps proper bottom rounded corners like the premium sheets.
+   - Form content scrolls inside the sheet while the action bar stays stable.
+   ============================================================ */
+#mCC.debt-card-overlay,
+#mCC.debt-card-overlay.active{
+  position:fixed !important;
+  inset:0 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)) !important;
+  box-sizing:border-box !important;
+  touch-action:none !important;
+}
+
+#mCC .debt-card-modal{
+  position:relative !important;
+  width:min(100%,520px) !important;
+  height:auto !important;
+  max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  margin:0 auto !important;
+  padding:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+  border-radius:34px !important;
+  background:
+    radial-gradient(circle at 84% 4%,rgba(124,92,255,.18),transparent 34%),
+    linear-gradient(180deg,#ffffff 0%,#f8f7ff 48%,#f3f5fb 100%) !important;
+  border:1px solid rgba(121,101,255,.18) !important;
+  box-shadow:0 28px 80px rgba(31,41,71,.32) !important;
+  transform:translateY(105%) scale(.985) !important;
+  transition:transform .28s cubic-bezier(.2,.85,.2,1) !important;
+  box-sizing:border-box !important;
+}
+
+#mCC.active .debt-card-modal{
+  transform:translateY(0) scale(1) !important;
+}
+
+#mCC .debt-card-modal::before{
+  content:"" !important;
+  flex:0 0 auto !important;
+  display:block !important;
+  width:42px !important;
+  height:5px !important;
+  border-radius:999px !important;
+  margin:14px auto 12px !important;
+  background:rgba(100,116,139,.22) !important;
+  position:static !important;
+  inset:auto !important;
+  opacity:1 !important;
+}
+
+#mCC .debt-card-scroll-area{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
+  padding:0 16px 14px !important;
+  box-sizing:border-box !important;
+  scrollbar-width:thin !important;
+  scrollbar-color:rgba(99,91,255,.30) transparent !important;
+}
+
+#mCC .debt-card-scroll-area::-webkit-scrollbar{
+  width:5px !important;
+}
+
+#mCC .debt-card-scroll-area::-webkit-scrollbar-track{
+  background:transparent !important;
+}
+
+#mCC .debt-card-scroll-area::-webkit-scrollbar-thumb{
+  background:rgba(99,91,255,.28) !important;
+  border-radius:999px !important;
+}
+
+#mCC .debt-modal-close{
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  z-index:30 !important;
+}
+
+#mCC .debt-modal-hero{
+  margin-top:0 !important;
+}
+
+#mCC .debt-modal-savebar{
+  flex:0 0 auto !important;
+  position:relative !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  z-index:20 !important;
+  margin:0 !important;
+  padding:12px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+  border-radius:0 0 34px 34px !important;
+  background:linear-gradient(180deg,rgba(248,247,255,.16),rgba(248,247,255,.96) 28%,#f3f5fb 100%) !important;
+  border-top:1px solid rgba(121,101,255,.10) !important;
+  box-shadow:0 -12px 30px rgba(35,45,100,.06) !important;
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+  box-sizing:border-box !important;
+}
+
+#mCC .debt-modal-savebar .btn,
+#mCC #btnCC{
+  width:100% !important;
+  height:58px !important;
+  min-height:58px !important;
+  border-radius:20px !important;
+  margin:0 !important;
+}
+
+@media (min-width:680px){
+  #mCC.debt-card-overlay,
+  #mCC.debt-card-overlay.active{
+    align-items:center !important;
+    padding:24px !important;
+  }
+
+  #mCC .debt-card-modal{
+    max-height:min(88vh,820px) !important;
+    border-radius:34px !important;
+  }
+
+  #mCC .debt-modal-savebar{
+    border-radius:0 0 34px 34px !important;
+  }
+}
+
+@media (max-width:390px){
+  #mCC.debt-card-overlay,
+  #mCC.debt-card-overlay.active{
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
+
+  #mCC .debt-card-scroll-area{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  #mCC .debt-modal-savebar{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+}

@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/capvo-icon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/capvo-icon-64.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.15.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/capvo-icon-180.png?v=1.15.1">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- CSS Architecture: CAPVO refactor v2 -->
-  <link rel="stylesheet" href="css/capvo-core.css?v=1.15.0">
-  <link rel="stylesheet" href="css/capvo-components.css?v=1.15.0">
-  <link rel="stylesheet" href="css/capvo-pages.css?v=1.15.0">
-  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.15.0">
-  <link rel="manifest" href="manifest.webmanifest?v=1.15.0">
-  <!-- <link rel="stylesheet" href="style.css?v=1.15.0"> -->
+  <link rel="stylesheet" href="css/capvo-core.css?v=1.15.1">
+  <link rel="stylesheet" href="css/capvo-components.css?v=1.15.1">
+  <link rel="stylesheet" href="css/capvo-pages.css?v=1.15.1">
+  <link rel="stylesheet" href="css/capvo-mobile.css?v=1.15.1">
+  <link rel="manifest" href="manifest.webmanifest?v=1.15.1">
+  <!-- <link rel="stylesheet" href="style.css?v=1.15.1"> -->
 </head>
 
 <body class="auth-pending">
@@ -1701,6 +1701,7 @@
   <div class="modal debt-card-modal" data-debt-type="credit_card">
     <button type="button" class="debt-modal-close" onclick="closeM()" aria-label="Κλείσιμο">×</button>
 
+    <div class="debt-card-scroll-area">
     <div class="debt-modal-hero">
       <div class="debt-modal-icon" id="debtModalIcon">💳</div>
       <div class="debt-modal-heading">
@@ -1813,6 +1814,7 @@
     <div class="debt-modal-error" id="ccFormError" aria-live="polite"></div>
 
     <input type="hidden" id="fCCID">
+    </div>
 
     <div class="debt-modal-savebar">
       <button class="btn btn-primary btn-block" id="btnCC" onclick="saveCC()">Αποθήκευση πιστωτικής</button>
@@ -2053,27 +2055,27 @@
   </div>
 </div>
 
-<script src="js/app-version.js?v=1.15.0"></script>
+<script src="js/app-version.js?v=1.15.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.15.0"></script>
+<script src="js/config.js?v=1.15.1"></script>
 
 <!-- CAPVO core app split. Order matters. -->
-<script src="js/app/00-core-state.js?v=1.15.0"></script>
-  <script src="js/app/09-wallet-financial-engine.js?v=1.15.0"></script>
-<script src="js/app/01-ui-selection-toast.js?v=1.15.0"></script>
-<script src="js/app/02-supabase-data.js?v=1.15.0"></script>
-<script src="js/app/03-render-dashboard-transactions-income.js?v=1.15.0"></script>
-<script src="js/app/04-reports-archive.js?v=1.15.0"></script>
-<script src="js/app/05-income-pickers.js?v=1.15.0"></script>
-<script src="js/app/06-modals-nav-auth.js?v=1.15.0"></script>
-<script src="js/app/07-add-center.js?v=1.15.0"></script>
-<script src="js/app/08-auth-bootstrap.js?v=1.15.0"></script>
+<script src="js/app/00-core-state.js?v=1.15.1"></script>
+  <script src="js/app/09-wallet-financial-engine.js?v=1.15.1"></script>
+<script src="js/app/01-ui-selection-toast.js?v=1.15.1"></script>
+<script src="js/app/02-supabase-data.js?v=1.15.1"></script>
+<script src="js/app/03-render-dashboard-transactions-income.js?v=1.15.1"></script>
+<script src="js/app/04-reports-archive.js?v=1.15.1"></script>
+<script src="js/app/05-income-pickers.js?v=1.15.1"></script>
+<script src="js/app/06-modals-nav-auth.js?v=1.15.1"></script>
+<script src="js/app/07-add-center.js?v=1.15.1"></script>
+<script src="js/app/08-auth-bootstrap.js?v=1.15.1"></script>
 
 <!-- Feature modules kept separate. -->
-<script src="js/cards.js?v=1.15.0"></script>
-<script src="js/sync.js?v=1.15.0"></script>
-<script src="js/advisor.js?v=1.15.0"></script>
-<script src="js/wallets.js?v=1.15.0"></script>
+<script src="js/cards.js?v=1.15.1"></script>
+<script src="js/sync.js?v=1.15.1"></script>
+<script src="js/advisor.js?v=1.15.1"></script>
+<script src="js/wallets.js?v=1.15.1"></script>
 
 
 
