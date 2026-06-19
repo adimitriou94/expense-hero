@@ -520,6 +520,32 @@ function openCardPurchaseFromCard(id){
 }
 
 
+
+function capvoCardPaymentWalletOptions(selectedId=''){
+  const wallets=(typeof capvoActiveWallets==='function'?capvoActiveWallets():(D.wallets||[]))
+    .filter(w=>w && w.isActive!==false)
+    .filter(w=>typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(w):!w.isSavings)
+    .filter(w=>!w.isSavings && w.type!=='savings' && w.budgetRole!=='savings');
+  if(!wallets.length)return '<option value="">Δεν υπάρχει διαθέσιμο wallet</option>';
+  const primary=wallets.find(w=>w.isPrimaryBudget)||wallets.find(w=>w.isDefault)||wallets[0];
+  const effective=selectedId || primary?.id || '';
+  return wallets.map(w=>{
+    const label=`${w.icon||'🏦'} ${w.name||'Λογαριασμός'} · ${typeof fmt==='function'?fmt(w.currentBalance):((Number(w.currentBalance)||0)+'€')}`;
+    return `<option value="${esc(w.id)}" ${String(w.id)===String(effective)?'selected':''}>${esc(label)}</option>`;
+  }).join('');
+}
+function capvoSelectedCardPaymentWallet(){
+  const id=$('cardPaymentWallet')?.value||'';
+  return id && typeof capvoWalletById==='function'?capvoWalletById(id):null;
+}
+function updateCardPaymentWalletHint(){
+  const select=$('cardPaymentWallet');
+  const hint=$('cardPaymentWalletHint');
+  if(!hint)return;
+  const w=select?.value && typeof capvoWalletById==='function'?capvoWalletById(select.value):null;
+  hint.textContent=w?`Διαθέσιμο wallet: ${typeof fmt==='function'?fmt(w.currentBalance):((Number(w.currentBalance)||0)+'€')}`:'Διάλεξε από ποιο διαθέσιμο wallet θα γίνει η πληρωμή.';
+}
+
 function openCardPaymentSheet(id){
   const c=(D.creditCards||[]).find(x=>x.id===id);
   if(!c)return;
@@ -546,6 +572,11 @@ function openCardPaymentSheet(id){
           <div><span>€</span><input type="number" id="cardPaymentAmount" step="0.01" min="0" inputmode="decimal"></div>
           <small id="cardPaymentHint"></small>
         </div>
+        <div class="card-payment-wallet">
+          <label>Πληρωμή από wallet</label>
+          <select id="cardPaymentWallet" onchange="updateCardPaymentWalletHint()"></select>
+          <small id="cardPaymentWalletHint"></small>
+        </div>
         <div class="card-payment-error" id="cardPaymentError"></div>
         <button type="button" id="cardPaymentSubmit" class="card-payment-primary" onclick="saveCardPayment()">Καταχώρηση πληρωμής</button>
       </div>`;
@@ -556,8 +587,12 @@ function openCardPaymentSheet(id){
   $('cardPaymentId').value=id;
   const isLoan=(c.accountType==='loan');
   $('cardPaymentTitle').textContent=c.name||(isLoan?'Πληρωμή δόσης':'Πληρωμή κάρτας');
+  $('cardPaymentSubtitle').textContent='Διάλεξε wallet. Η πληρωμή μειώνει το wallet και την οφειλή της κάρτας.';
   $('cardPaymentAmount').value=Number(c.chosenPay)||effectiveCardPayment(c)||'';
-  $('cardPaymentHint').textContent=`Υπόλοιπο τώρα: ${fmt(cardDisplayDebt(c))}. Η πληρωμή αφαιρείται από το budget και μειώνει την οφειλή.`;
+  $('cardPaymentHint').textContent=`Υπόλοιπο τώρα: ${fmt(cardDisplayDebt(c))}. Η αγορά με κάρτα δεν αλλάζει cash· μόνο αυτή η πληρωμή μειώνει wallet.`;
+  const walletSelect=$('cardPaymentWallet');
+  if(walletSelect){walletSelect.innerHTML=capvoCardPaymentWalletOptions(walletSelect.value||'');}
+  updateCardPaymentWalletHint();
   $('cardPaymentError').textContent='';
   const submit=$('cardPaymentSubmit');
   if(submit){
@@ -642,26 +677,151 @@ async function capvoApplyPaymentToInstallmentPlans(cardId,amount){
   return applied;
 }
 
+
+async function undoCardPayment(txId){
+  const tx=(D.creditCardTransactions||[]).find(t=>String(t.id)===String(txId));
+  if(!tx || !(String(tx.type||'')==='payment' || String(tx.budgetEffectType||tx.budget_effect_type||'')==='card_payment')){
+    showMiniToast?.('Δεν βρήκα πληρωμή κάρτας για αναίρεση.','error');
+    return;
+  }
+
+  const amount=capvoMoney(Number(tx.amount)||0);
+  const card=(D.creditCards||[]).find(c=>String(c.id)===String(tx.cardId||tx.card_id));
+  if(!card || amount<=0){
+    showMiniToast?.('Δεν μπορώ να αναιρέσω αυτή την πληρωμή κάρτας.','error');
+    return;
+  }
+
+  const walletId=tx.walletId||tx.wallet_id||'';
+  const wallet=walletId && typeof capvoWalletById==='function' ? capvoWalletById(walletId) : null;
+  const hasWalletEffect=!!(walletId && wallet && (Number(tx.walletBalanceEffectAmount ?? tx.wallet_balance_effect_amount)||0)<0);
+  const walletBefore=hasWalletEffect ? capvoMoney(Number(wallet.currentBalance)||0) : 0;
+  const walletAfter=hasWalletEffect ? capvoMoney(walletBefore+amount) : 0;
+  const cardBefore=capvoMoney(Number(card.balance)||0);
+  const cardAfter=capvoMoney(cardBefore+amount);
+  const walletName=wallet?.name || tx.walletNameSnapshot || tx.wallet_name_snapshot || 'wallet';
+
+  const confirmed=await showConfirmModal({
+    title:'Αναίρεση πληρωμής κάρτας',
+    message:hasWalletEffect
+      ? `Θέλεις να αναιρέσεις την πληρωμή ${fmt(amount)}; Θα επιστραφούν ${fmt(amount)} στο ${walletName} και θα αυξηθεί ξανά η οφειλή της κάρτας.`
+      : `Θέλεις να αναιρέσεις την πληρωμή ${fmt(amount)}; Θα αυξηθεί ξανά η οφειλή της κάρτας.`,
+    confirmText:'Αναίρεση',
+    cancelText:'Άκυρο'
+  });
+  if(!confirmed)return;
+
+  const ownerUserId=String(getDataOwnerId?.()||getFinanceUserId?.()||'').trim();
+  const previousTx=[...(D.creditCardTransactions||[])];
+  const oldLastPaymentDate=card.lastPaymentDate||'';
+
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Αναιρείται πληρωμή κάρτας...', 'Επιστρέφω wallet και οφειλή κάρτας.'))return;
+
+  let walletUpdated=false;
+  let txDeleted=false;
+  try{
+    if(hasWalletEffect){
+      await capvoUpdateWalletBalance(walletId,walletAfter);
+      walletUpdated=true;
+    }
+
+    card.balance=cardAfter;
+    const remainingPayments=(D.creditCardTransactions||[])
+      .filter(t=>String(t.id)!==String(txId))
+      .filter(t=>String(t.cardId||t.card_id)===String(card.id))
+      .filter(t=>String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment')
+      .sort((a,b)=>String(b.transactionDate||b.transaction_date||b.createdAt||b.created_at||'').localeCompare(String(a.transactionDate||a.transaction_date||a.createdAt||a.created_at||'')));
+    card.lastPaymentDate=remainingPayments[0]?.transactionDate || remainingPayments[0]?.transaction_date || '';
+
+    D.creditCardTransactions=(D.creditCardTransactions||[]).filter(t=>String(t.id)!==String(txId));
+
+    if(ownerUserId && typeof supabaseClient!=='undefined'){
+      const {error}=await supabaseClient
+        .from('credit_card_transactions')
+        .delete()
+        .eq('id',txId)
+        .eq('user_id',ownerUserId);
+      if(error)throw error;
+      txDeleted=true;
+    }
+
+    await save();
+    closeCardTransactionsSheet?.();
+    render();
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η πληρωμή κάρτας αναιρέθηκε.');
+    showMiniToast?.('✅ Η πληρωμή κάρτας αναιρέθηκε');
+  }catch(e){
+    console.error('undoCardPayment failed:',e);
+    card.balance=cardBefore;
+    card.lastPaymentDate=oldLastPaymentDate;
+    D.creditCardTransactions=previousTx;
+    if(walletUpdated){
+      try{await capvoUpdateWalletBalance(walletId,walletBefore);}catch(rollbackErr){console.error('undo card payment wallet rollback failed:',rollbackErr);}
+    }
+    if(txDeleted && ownerUserId && typeof supabaseClient!=='undefined'){
+      try{
+        const payload={
+          id:tx.id,
+          user_id:ownerUserId,
+          card_id:tx.cardId||tx.card_id,
+          type:'payment',
+          amount:Number(tx.amount)||0,
+          transaction_date:tx.transactionDate||tx.transaction_date||todayISO?.()||new Date().toLocaleDateString('en-CA'),
+          description:tx.description||'Πληρωμή κάρτας',
+          category:tx.category||'Πιστωτικές',
+          affects_budget:tx.affectsBudget!==false,
+          budget_effect_type:tx.budgetEffectType||tx.budget_effect_type||'card_payment',
+          wallet_id:tx.walletId||tx.wallet_id||null,
+          wallet_name_snapshot:tx.walletNameSnapshot||tx.wallet_name_snapshot||null,
+          wallet_balance_before:tx.walletBalanceBefore ?? tx.wallet_balance_before ?? null,
+          wallet_balance_after:tx.walletBalanceAfter ?? tx.wallet_balance_after ?? null,
+          wallet_balance_effect_amount:tx.walletBalanceEffectAmount ?? tx.wallet_balance_effect_amount ?? null,
+          updated_at:new Date().toISOString()
+        };
+        await supabaseClient.from('credit_card_transactions').upsert(payload,{onConflict:'id'});
+      }catch(reinsertErr){console.error('undo card payment tx rollback failed:',reinsertErr);}
+    }
+    capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αναιρέσω την πληρωμή κάρτας.');
+    showMiniToast?.('❌ Δεν έγινε αναίρεση πληρωμής κάρτας','error');
+  }finally{
+    if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
+  }
+}
+
 async function saveCardPayment(){
   const id=$('cardPaymentId')?.value||'';
-  const amount=Number($('cardPaymentAmount')?.value)||0;
+  const amount=capvoMoney(Number($('cardPaymentAmount')?.value)||0);
+  const walletId=$('cardPaymentWallet')?.value||'';
   const err=$('cardPaymentError');
   const submit=$('cardPaymentSubmit');
   const c=(D.creditCards||[]).find(x=>x.id===id);
 
+  const showPaymentError=(msg)=>{
+    if(err)err.textContent='';
+    if(typeof showMiniToast==='function')showMiniToast(msg,'error');
+  };
+
   if(submit?.dataset?.saving==='1')return;
   if(err)err.textContent='';
   if(!c)return;
-  if(!amount || amount<=0){
-    if(err)err.textContent='Συμπλήρωσε ποσό πληρωμής.';
+  if(!amount || amount<=0){showPaymentError('Συμπλήρωσε ποσό πληρωμής.');return;}
+  if(amount>cardDisplayDebt(c)){showPaymentError('Το ποσό πληρωμής δεν μπορεί να είναι μεγαλύτερο από το χρέος.');return;}
+  if(!walletId){showPaymentError('Επίλεξε wallet πληρωμής.');return;}
+
+  const wallet=typeof capvoWalletById==='function'?capvoWalletById(walletId):null;
+  if(!wallet || wallet.isActive===false){showPaymentError('Το wallet πληρωμής δεν είναι διαθέσιμο.');return;}
+  const walletCounts=typeof capvoWalletCountsInBudget==='function'?capvoWalletCountsInBudget(wallet):!wallet.isSavings;
+  if(!walletCounts || wallet.isSavings || wallet.type==='savings'){
+    showPaymentError('Διάλεξε ενεργό wallet διαθέσιμου budget για την πληρωμή κάρτας.');
     return;
   }
-  if(amount>cardDisplayDebt(c)){
-    if(err)err.textContent='Το ποσό πληρωμής δεν μπορεί να είναι μεγαλύτερο από το χρέος.';
+  const walletBefore=capvoMoney(Number(wallet.currentBalance)||0);
+  if(walletBefore<amount){
+    showPaymentError(`Ανεπαρκές υπόλοιπο στο ${wallet.name||'wallet'}. Διαθέσιμο: ${fmt(walletBefore)}`);
     return;
   }
 
-  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Καταχωρείται πληρωμή κάρτας...', 'Ενημερώνω χρέος, δόσεις και budget.'))return;
+  if(typeof capvoBeginAppOperation==='function' && !capvoBeginAppOperation('Καταχωρείται πληρωμή κάρτας...', 'Μειώνω wallet, χρέος κάρτας και ενημερώνω κινήσεις.'))return;
 
   if(submit){
     submit.disabled=true;
@@ -672,9 +832,11 @@ async function saveCardPayment(){
   const oldBalance=Number(c.balance)||0;
   const oldChosenPay=Number(c.chosenPay)||0;
   const oldLastPaymentDate=c.lastPaymentDate||'';
+  const oldWalletBalance=walletBefore;
   const planSnapshot=capvoSnapshotInstallmentPlans();
   const basePayment=capvoMoney(Math.min(oldBalance,amount));
   const installmentPayment=capvoMoney(amount-basePayment);
+  const walletAfter=capvoMoney(walletBefore-amount);
 
   c.balance=capvoMoney(Math.max(0,oldBalance-basePayment));
   // Actual payment should not overwrite the planner's chosen monthly payment.
@@ -691,16 +853,25 @@ async function saveCardPayment(){
     description:'Πληρωμή '+(c.name||'κάρτας'),
     category:'Πιστωτικές',
     affectsBudget:true,
-    budgetEffectType:'card_payment'
+    budgetEffectType:'card_payment',
+    walletId,
+    walletNameSnapshot:wallet.name||'Wallet',
+    walletBalanceBefore:walletBefore,
+    walletBalanceAfter:walletAfter,
+    walletBalanceEffectAmount:-amount
   };
 
   if(!Array.isArray(D.creditCardTransactions))D.creditCardTransactions=[];
   D.creditCardTransactions.unshift(tx);
 
   let txPersisted=false;
+  let walletUpdated=false;
   try{
+    await capvoUpdateWalletBalance(walletId,walletAfter);
+    walletUpdated=true;
+
     if(userId && typeof supabaseClient!=='undefined'){
-      const {error}=await supabaseClient.from('credit_card_transactions').upsert({
+      const richPayload={
         id:tx.id,
         user_id:userId,
         card_id:c.id,
@@ -711,8 +882,24 @@ async function saveCardPayment(){
         category:tx.category,
         affects_budget:true,
         budget_effect_type:'card_payment',
+        wallet_id:walletId,
+        wallet_name_snapshot:wallet.name||null,
+        wallet_balance_before:walletBefore,
+        wallet_balance_after:walletAfter,
+        wallet_balance_effect_amount:-amount,
         updated_at:new Date().toISOString()
-      },{onConflict:'id'});
+      };
+      let {error}=await supabaseClient.from('credit_card_transactions').upsert(richPayload,{onConflict:'id'});
+      if(error && /wallet_id|wallet_name_snapshot|wallet_balance_before|wallet_balance_after|wallet_balance_effect_amount/i.test(String(error.message||error.details||''))){
+        const legacyPayload={...richPayload};
+        delete legacyPayload.wallet_id;
+        delete legacyPayload.wallet_name_snapshot;
+        delete legacyPayload.wallet_balance_before;
+        delete legacyPayload.wallet_balance_after;
+        delete legacyPayload.wallet_balance_effect_amount;
+        const retry=await supabaseClient.from('credit_card_transactions').upsert(legacyPayload,{onConflict:'id'});
+        error=retry.error;
+      }
       if(error)throw error;
       txPersisted=true;
     }
@@ -726,7 +913,7 @@ async function saveCardPayment(){
     closeCardTransactionsSheet?.();
     closeCardPlansSheet?.();
     render();
-    capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η πληρωμή κάρτας καταχωρήθηκε.');
+    capvoAppOperationSuccess?.('Ολοκληρώθηκε',`Η πληρωμή κάρτας καταχωρήθηκε από ${wallet.name||'wallet'}.`);
     showMiniToast?.('✅ Η πληρωμή κάρτας καταχωρήθηκε');
 
   }catch(e){
@@ -737,12 +924,15 @@ async function saveCardPayment(){
     capvoRestoreInstallmentPlans(planSnapshot);
     D.creditCardTransactions=(D.creditCardTransactions||[]).filter(t=>String(t.id)!==String(tx.id));
 
+    if(walletUpdated){
+      try{await capvoUpdateWalletBalance(walletId,oldWalletBalance);}catch(rollbackWalletErr){console.error('card payment wallet rollback failed:',rollbackWalletErr);}
+    }
     if(txPersisted && userId && typeof supabaseClient!=='undefined'){
       try{await supabaseClient.from('credit_card_transactions').delete().eq('id',tx.id).eq('user_id',userId);}catch(_e){}
     }
 
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω την πληρωμή κάρτας.');
-    if(err)err.textContent='Δεν μπόρεσα να αποθηκεύσω την πληρωμή.';
+    if(err)err.textContent='';
     showMiniToast?.('❌ Σφάλμα πληρωμής κάρτας','error');
   }finally{
     if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
@@ -790,16 +980,22 @@ function openCardTransactionsSheet(cardId){
     }else{
       list.innerHTML=rows.map(t=>{
         const canDeletePurchase=(t.type==='purchase' || t.type==='installment_purchase') && (t.expenseId || t.installmentPlanId);
+        const canUndoPayment=(String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment') && t.id;
         const deleteAction=t.type==='installment_purchase' && t.installmentPlanId
           ? `deleteInstallmentPlan('${t.installmentPlanId}')`
           : `deleteCardPurchaseFromCard('${t.expenseId||''}')`;
+        const wallet=typeof capvoWalletById==='function'?capvoWalletById(t.walletId||t.wallet_id):null;
+        const walletText=String(t.type||'')==='payment' && (wallet||t.walletNameSnapshot||t.wallet_name_snapshot)
+          ? ` · από ${wallet?.name||t.walletNameSnapshot||t.wallet_name_snapshot}`
+          : '';
         return `<div class="card-transaction-sheet-row type-${esc(t.type||'purchase')}">
           <div class="card-transaction-sheet-main">
             <strong>${esc(t.description||cardTransactionLabel(t))}</strong>
-            <span>${esc(cardTransactionLabel(t))}</span>
+            <span>${esc(cardTransactionLabel(t))}${esc(walletText)}</span>
             <small>${esc(t.transactionDate||'—')}</small>
           </div>
           <div class="card-transaction-sheet-amount">${cardTransactionAmountPrefix(t)}${fmt(t.amount||0)}</div>
+          ${canUndoPayment?`<button type="button" class="card-transaction-delete is-undo" onclick="undoCardPayment('${esc(t.id)}')" aria-label="Αναίρεση πληρωμής">↺</button>`:''}
           ${canDeletePurchase?`<button type="button" class="card-transaction-delete" onclick="${deleteAction}" aria-label="Διαγραφή κίνησης">×</button>`:''}
         </div>`;
       }).join('');

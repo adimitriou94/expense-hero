@@ -835,6 +835,7 @@ function getCurrentCycleActualCardPayments(){
     .filter(t=>isDateInCurrentBudgetCycle(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at))
     .map(t=>{
       const card=typeof cardById==='function'?cardById(t.cardId||t.card_id):null;
+      const wallet=typeof capvoWalletById==='function'?capvoWalletById(t.walletId||t.wallet_id):null;
       const rawDate=t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at||todayISO();
       return {
         id:t.id||('cc_payment_'+gid()),
@@ -842,8 +843,10 @@ function getCurrentCycleActualCardPayments(){
         amount:Number(t.amount)||0,
         category:t.category||'Πιστωτικές',
         date:normalizeDateValue(rawDate)||todayISO(),
-        paymentSourceId:t.cardId||t.card_id||'',
-        paymentSourceName:card?.name||'Πιστωτική κάρτα',
+        paymentSourceId:t.walletId||t.wallet_id||'',
+        paymentSourceName:wallet?.name||t.walletNameSnapshot||t.wallet_name_snapshot||'Wallet',
+        cardId:t.cardId||t.card_id||'',
+        cardName:card?.name||'Πιστωτική κάρτα',
         paymentAccountType:'credit_card_payment',
         isCardPayment:true,
         affectsCashBudget:true
@@ -865,7 +868,8 @@ function getCurrentCycleSavingsBudgetMovements(){
       const type=String(t.type||'').toLowerCase();
       const source=String(t.source||'').toLowerCase();
       const isTransfer=type==='transfer_in' || type==='transfer_out' || source.includes('transfer');
-      if(isTransfer)return null;
+      const isVirtualGoal=source==='goal_manual' || source==='goal_manual_return';
+      if(isTransfer || isVirtualGoal)return null;
 
       const amount=capvoMoney(Number(t.amount)||0);
       if(amount===0)return null;
@@ -876,7 +880,7 @@ function getCurrentCycleSavingsBudgetMovements(){
 
       const goal=savingsGoalById(t.goalId||t.goal_id);
       const abs=Math.abs(amount);
-      const goalName=goal?.name||'Κουμπαράς';
+      const goalName=goal?.name||'Στόχος';
 
       return {
         id:t.id||('savings_'+gid()),
@@ -952,13 +956,13 @@ function capvoMovementTypeLabel(row){
   if(mt==='credit_card_purchase')return 'Αγορά με κάρτα';
   if(mt==='wallet_transfer')return 'Μεταφορά wallet';
   if(mt==='savings_deposit')return 'Αποταμίευση';
-  if(mt==='savings_withdrawal')return 'Επιστροφή κουμπαρά';
+  if(mt==='savings_withdrawal')return 'Αφαίρεση στόχου';
   if(mt==='restricted_expense')return 'Παροχή';
   if(kind==='income')return 'Εισόδημα';
   if(kind==='fixed')return 'Πάγιο';
   if(kind==='cards')return 'Κάρτα';
   if(kind==='wallets')return 'Wallet';
-  if(kind==='savings')return 'Κουμπαράς';
+  if(kind==='savings')return 'Στόχος';
   if(kind==='benefits')return 'Παροχή';
   return 'Έξοδο';
 }
@@ -1071,13 +1075,14 @@ function getCurrentCycleSavingsAllMovements(){
       const amount=capvoMoney(Number(t.amount)||0);
       const abs=Math.abs(amount);
       const isTransfer=type==='transfer_in' || type==='transfer_out' || source.includes('transfer');
+      const isVirtualGoal=source==='goal_manual' || source==='goal_manual_return';
       const isWithdrawal=type==='withdrawal' || (!isTransfer && amount<0);
-      const affectsBudget=!isTransfer;
+      const affectsBudget=!isTransfer && !isVirtualGoal;
       const budgetImpactAmount=affectsBudget ? (isWithdrawal ? -abs : abs) : 0;
-      const goalName=goal?.name||'Κουμπαράς';
+      const goalName=goal?.name||'Στόχος';
 
-      let name='Κίνηση κουμπαρά';
-      let subtitle='Κουμπαράς';
+      let name='Κίνηση στόχου';
+      let subtitle='Στόχος';
       let movementType='savings_movement';
 
       if(isTransfer){
@@ -1087,11 +1092,11 @@ function getCurrentCycleSavingsAllMovements(){
       }else if(isWithdrawal){
         movementType='savings_withdrawal';
         name=`Επιστροφή από ${goalName}`;
-        subtitle='Επιστροφή στο budget';
+        subtitle=isVirtualGoal?'Αφαίρεση από στόχο · Δεν επηρεάζει budget':'Επιστροφή στο budget';
       }else{
         movementType='savings_deposit';
         name=`Μεταφορά σε ${goalName}`;
-        subtitle='Αποταμίευση · Επηρεάζει budget';
+        subtitle=isVirtualGoal?'Προσθήκη σε στόχο · Δεν επηρεάζει budget':'Αποταμίευση · Επηρεάζει budget';
       }
 
       return {
@@ -1242,7 +1247,9 @@ function getCurrentCycleAllMovements(){
       const date=capvoMovementDate(t);
       if(!isDateInCurrentBudgetCycle(date))return null;
       const card=typeof cardById==='function'?cardById(t.cardId||t.card_id):null;
+      const wallet=typeof capvoWalletById==='function'?capvoWalletById(t.walletId||t.wallet_id):null;
       const amount=capvoMoney(Number(t.amount)||0);
+      const walletName=wallet?.name||t.walletNameSnapshot||t.wallet_name_snapshot||'Wallet';
       return {
         id:`card_payment_${t.id||gid()}`,
         sourceId:t.id||'',
@@ -1256,10 +1263,12 @@ function getCurrentCycleAllMovements(){
         category:t.category||'Πιστωτικές',
         date,
         createdAt:t.createdAt||t.created_at||t.transactionDate||t.transaction_date||date,
-        paymentSourceId:t.cardId||t.card_id||'',
-        paymentSourceName:card?.name||'Πιστωτική κάρτα',
+        paymentSourceId:t.walletId||t.wallet_id||'',
+        paymentSourceName:walletName,
+        cardId:t.cardId||t.card_id||'',
+        cardName:card?.name||'Πιστωτική κάρτα',
         paymentAccountType:'credit_card_payment',
-        sourceLabel:'Πληρωμή κάρτας · Επηρεάζει budget',
+        sourceLabel:`Πληρωμή κάρτας · ${walletName} → ${card?.name||'κάρτα'}`,
         canEdit:false,
         canDelete:false,
         readOnly:true,
@@ -1412,11 +1421,36 @@ function plannedCardPaymentTotal(){
     .filter(c=>(Number(c.balance)||0)>0 || (Number(c.chosenPay)||0)>0)
     .reduce((s,c)=>s+effectiveCardPayment(c),0));
 }
+function capvoIsCardPaymentTransaction(t){
+  return !!(t && (String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment'));
+}
+function capvoCardPaymentHasWalletEffect(t){
+  if(!t)return false;
+  const walletId=t.walletId||t.wallet_id||'';
+  const effect=Number(t.walletBalanceEffectAmount ?? t.wallet_balance_effect_amount)||0;
+  return !!walletId && effect<0;
+}
+function capvoCardPaymentNeedsBudgetSubtract(t){
+  // In the wallet model, a card payment that already reduced a wallet must not
+  // be subtracted again from dashboard available cash. Legacy payments without
+  // wallet effect still need to be counted here for backward compatibility.
+  const walletModel=typeof capvoHasWalletBudgetModel==='function' && capvoHasWalletBudgetModel();
+  if(walletModel && capvoCardPaymentHasWalletEffect(t))return false;
+  return true;
+}
 function actualCardPaymentTotal(){
   return capvoMoney((D.creditCardTransactions||[])
     .filter(t=>t && (t.affectsBudget===true || t.affects_budget===true))
-    .filter(t=>String(t.type||'')==='payment' || String(t.budgetEffectType||t.budget_effect_type||'')==='card_payment')
+    .filter(t=>capvoIsCardPaymentTransaction(t))
     .filter(t=>isDateInCurrentBudgetCycle(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at))
+    .reduce((s,t)=>s+(Number(t.amount)||0),0));
+}
+function actualCardPaymentBudgetAdjustmentTotal(){
+  return capvoMoney((D.creditCardTransactions||[])
+    .filter(t=>t && (t.affectsBudget===true || t.affects_budget===true))
+    .filter(t=>capvoIsCardPaymentTransaction(t))
+    .filter(t=>isDateInCurrentBudgetCycle(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at))
+    .filter(t=>capvoCardPaymentNeedsBudgetSubtract(t))
     .reduce((s,t)=>s+(Number(t.amount)||0),0));
 }
 
@@ -1556,9 +1590,13 @@ function capvoLatestFixedExpensePaymentForCurrentCycle(expenseId){
 
 
 function ccPayTotal(){
-  // Budget impact from cards must represent actual payments only.
-  // Planned/minimum card payments stay in the Cards planner and do not reduce dashboard cash.
-  return actualCardPaymentTotal();
+  // Budget formula impact from cards must represent actual payments only.
+  // Wallet-based card payments already reduce wallet balances, so only legacy
+  // payments without wallet effect are subtracted here. Snapshot/statistics can
+  // still use actualCardPaymentTotal() to show all card payments.
+  return typeof actualCardPaymentBudgetAdjustmentTotal==='function'
+    ? actualCardPaymentBudgetAdjustmentTotal()
+    : actualCardPaymentTotal();
 }
 function fixedTotal(){
   // v1.9.6.1: In the wallet model, a fixed-expense payment already reduces

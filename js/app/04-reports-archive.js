@@ -276,7 +276,7 @@ function reportsRenderCycleGrid(items){
     {icon:'🧾',label:'Flexible έξοδα',value:totals.daily,meta:'Καθημερινές budget κινήσεις'},
     {icon:'📌',label:'Πάγια πληρωμένα',value:totals.fixed,meta:'Μόνο όσα πατήθηκαν ως πληρωμένα'},
     {icon:'💳',label:'Πληρωμές καρτών',value:totals.cards,meta:'Actual cash outflow για κάρτες'},
-    {icon:'🏦',label:'Κουμπαράς',value:totals.savingsDeposit,meta:'Μεταφορές που επηρέασαν budget'},
+    {icon:'🏦',label:'Στόχος',value:totals.savingsDeposit,meta:'Μεταφορές που επηρέασαν budget'},
     {icon:'💰',label:'Income / μισθός',value:totals.income,meta:'Καταθέσεις στον κύκλο',positive:true},
     {icon:'🔁',label:'Wallet transfers',value:totals.walletTransfers,meta:'Μεταφορές μεταξύ λογαριασμών',neutral:true}
   ];
@@ -876,6 +876,26 @@ function archiveRowsInRange(start,end){
   });
 }
 
+function archiveCashImpactAmount(row){
+  if(!row)return 0;
+  if(String(row.archiveKind||'')==='benefit')return 0;
+  return Number(row.budgetImpactAmount ?? row.amount)||0;
+}
+
+function archiveBenefitAmount(row){
+  if(!row || String(row.archiveKind||'')!=='benefit')return 0;
+  return Number(row.benefitAmount ?? row.amount)||0;
+}
+
+function archiveBenefitSourceForExpense(row){
+  const sourceId=row?.paymentSourceId||row?.payment_source_id||'';
+  const source=sourceId ? (D.incomeSources||[]).find(s=>String(s.id)===String(sourceId)) : null;
+  if(source && (typeof capvoIsBenefitSource==='function'?capvoIsBenefitSource(source):(source.restriction&&source.restriction!=='none')))return source;
+  const type=String(row?.paymentAccountType||row?.payment_account_type||'').toLowerCase();
+  if(type==='restricted_balance')return source || {name:row?.paymentSourceName||row?.payment_source_name||'Παροχή'};
+  return null;
+}
+
 function archiveBudgetDailyRowsInRange(start,end){
   return archiveRowsInRange(start,end)
     .filter(row=>typeof expenseAffectsCashBudget==='function'?expenseAffectsCashBudget(row):true)
@@ -885,6 +905,29 @@ function archiveBudgetDailyRowsInRange(start,end){
       budgetImpactAmount:typeof capvoMoney==='function'?capvoMoney(Number(row.amount)||0):(Number(row.amount)||0),
       archiveKind:'daily'
     }));
+}
+
+function archiveBenefitRowsInRange(start,end){
+  return archiveRowsInRange(start,end)
+    .map(row=>{
+      const source=archiveBenefitSourceForExpense(row);
+      if(!source)return null;
+      const isCard=!!(row.isCreditCardPurchase || row.is_credit_card_purchase || row.creditCardId || row.credit_card_id || row.installmentPlanId || row.installment_plan_id);
+      if(isCard)return null;
+      const amount=typeof capvoMoney==='function'?capvoMoney(Number(row.amount)||0):(Number(row.amount)||0);
+      if(amount<=0)return null;
+      return {
+        ...row,
+        name:row.name||row.merchantName||row.merchant_name||source.name||'Χρήση παροχής',
+        category:row.category||source.restrictedCategory||source.category||'Παροχές',
+        amount,
+        benefitAmount:amount,
+        budgetImpactAmount:0,
+        archiveKind:'benefit',
+        paymentSourceName:row.paymentSourceName||row.payment_source_name||source.name||'Παροχή'
+      };
+    })
+    .filter(Boolean);
 }
 
 function archiveCardPaymentRowsInRange(start,end){
@@ -929,6 +972,9 @@ function archiveSavingsBudgetRowsInRange(start,end){
       const type=String(t.type||'').toLowerCase();
       const source=String(t.source||'').toLowerCase();
       if(type==='transfer_in' || type==='transfer_out' || source.includes('transfer'))return null;
+      // Since v1.14.0 Goals are virtual tracking. Manual goal deposits/withdrawals
+      // should stay in the goal history and must not pollute archive cash outflows.
+      if(source.includes('goal_manual'))return null;
       const raw=typeof capvoMoney==='function'?capvoMoney(Number(t.amount)||0):(Number(t.amount)||0);
       if(raw===0)return null;
       const abs=Math.abs(raw);
@@ -937,7 +983,7 @@ function archiveSavingsBudgetRowsInRange(start,end){
       const goal=typeof savingsGoalById==='function'?savingsGoalById(t.goalId||t.goal_id):null;
       return {
         id:t.id||`archive_savings_${date}`,
-        name:isWithdrawal?`Επιστροφή από ${goal?.name||'κουμπαρά'}`:`Μεταφορά σε ${goal?.name||'κουμπαρά'}`,
+        name:isWithdrawal?`Επιστροφή από ${goal?.name||'στόχο'}`:`Μεταφορά σε ${goal?.name||'στόχο'}`,
         category:'Αποταμίευση',
         amount:impact,
         budgetImpactAmount:impact,
@@ -952,24 +998,33 @@ function archiveFixedRowsInRange(start,end){
   const s=archiveAsDate(start);
   const e=archiveAsDate(end);
   if(!s||!e)return [];
-  const startKey=typeof capvoDateKey==='function'?capvoDateKey(s):'';
-  return (Array.isArray(D?.fixedExpenses)?D.fixedExpenses:[])
-    .map(f=>{
-      const amount=typeof capvoMoney==='function'?capvoMoney(Number(f.amount)||0):(Number(f.amount)||0);
+
+  return (Array.isArray(D?.fixedExpensePayments)?D.fixedExpensePayments:[])
+    .filter(p=>typeof capvoFixedExpensePaymentIsCountable==='function' ? capvoFixedExpensePaymentIsCountable(p) : String(p.status||'paid')!=='reversed')
+    .map(p=>{
+      const fx=typeof capvoFixedExpensePaymentExpense==='function'
+        ? capvoFixedExpensePaymentExpense(p)
+        : (typeof capvoFixedExpenseById==='function'
+          ? capvoFixedExpenseById(p.fixedExpenseId||p.fixed_expense_id)
+          : (D.fixedExpenses||[]).find(e=>String(e.id)===String(p.fixedExpenseId||p.fixed_expense_id)));
+      if(!fx)return null;
+      const date=typeof normalizeDateValue==='function'
+        ? normalizeDateValue(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||p.createdAt||p.created_at)
+        : String(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||p.createdAt||p.created_at||'').slice(0,10);
+      const d=archiveAsDate(date);
+      if(!d || d<s || d>e)return null;
+      const amount=typeof capvoMoney==='function'?capvoMoney(Number(p.amount)||0):(Number(p.amount)||0);
       if(amount<=0)return null;
-      const created=typeof normalizeDateValue==='function'
-        ? normalizeDateValue(f.createdAt||f.created_at)
-        : String(f.createdAt||f.created_at||'').slice(0,10);
-      const createdDate=created?archiveAsDate(created):null;
-      if(createdDate && createdDate>e)return null;
-      const date=(createdDate && createdDate>=s && createdDate<=e)?created:startKey;
+      const wallet=(p.walletId||p.wallet_id) && typeof capvoWalletById==='function'?capvoWalletById(p.walletId||p.wallet_id):null;
       return {
-        id:f.id||`archive_fixed_${date}`,
-        name:f.name||'Πάγιο έξοδο',
-        category:f.category||'Πάγια',
+        id:p.id||`archive_fixed_payment_${date}`,
+        name:fx.name||'Πληρωμή παγίου',
+        category:fx.category||'Πάγια',
         amount,
         budgetImpactAmount:amount,
         date,
+        paymentSourceName:wallet?.name||'Wallet',
+        notes:p.note||p.notes||'',
         archiveKind:'fixed'
       };
     })
@@ -981,7 +1036,8 @@ function archiveBudgetMovementsInRange(start,end){
     ...archiveBudgetDailyRowsInRange(start,end),
     ...archiveFixedRowsInRange(start,end),
     ...archiveCardPaymentRowsInRange(start,end),
-    ...archiveSavingsBudgetRowsInRange(start,end)
+    ...archiveSavingsBudgetRowsInRange(start,end),
+    ...archiveBenefitRowsInRange(start,end)
   ];
 }
 
@@ -1109,8 +1165,9 @@ function archiveBuildCycles(){
     .map(t=>archiveAsDate(t.transactionDate||t.transaction_date||t.date||t.createdAt||t.created_at)).filter(Boolean);
   const savingsDates=(Array.isArray(D?.savingsTransactions)?D.savingsTransactions:[])
     .map(t=>archiveAsDate(t.createdAt||t.created_at||t.date||t.transactionDate||t.transaction_date)).filter(Boolean);
-  const fixedDates=(Array.isArray(D?.fixedExpenses)?D.fixedExpenses:[])
-    .map(f=>archiveAsDate(f.createdAt||f.created_at)).filter(Boolean);
+  const fixedDates=(Array.isArray(D?.fixedExpensePayments)?D.fixedExpensePayments:[])
+    .filter(p=>typeof capvoFixedExpensePaymentIsCountable==='function' ? capvoFixedExpensePaymentIsCountable(p) : String(p.status||'paid')!=='reversed')
+    .map(p=>archiveAsDate(p.paidAt||p.paid_at||p.paidForDate||p.paid_for_date||p.createdAt||p.created_at)).filter(Boolean);
   const datePool=[current.start,current.end,...stored.flatMap(c=>[c.start,c.end]),...dailyDates,...cardDates,...savingsDates,...fixedDates].filter(Boolean);
 
   if(datePool.length===0)return [];
@@ -1141,11 +1198,12 @@ function archiveBuildCycles(){
 function archiveCycleSnapshot(cycle){
   const movementRows=archiveBudgetMovementsInRange(cycle.start,cycle.end);
   const dailyRows=movementRows.filter(r=>r.archiveKind==='daily');
-  const daily=dailyRows.reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const fixed=movementRows.filter(r=>r.archiveKind==='fixed').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const cards=movementRows.filter(r=>r.archiveKind==='card_payment').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const savings=movementRows.filter(r=>r.archiveKind==='savings').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const total=movementRows.reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
+  const daily=dailyRows.reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const fixed=movementRows.filter(r=>r.archiveKind==='fixed').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const cards=movementRows.filter(r=>r.archiveKind==='card_payment').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const savings=movementRows.filter(r=>r.archiveKind==='savings').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const benefits=movementRows.filter(r=>r.archiveKind==='benefit').reduce((s,e)=>s+archiveBenefitAmount(e),0);
+  const total=movementRows.reduce((s,e)=>s+archiveCashImpactAmount(e),0);
   const income=archiveCycleIncome(cycle);
   const balance=income-total;
   return {
@@ -1165,7 +1223,7 @@ function archiveCycleSnapshot(cycle){
     isStored:cycle.stored,
     dailyRows,
     movementRows,
-    daily,fixed,cards,savings,total,income,balance
+    daily,fixed,cards,savings,benefits,total,income,balance
   };
 }
 
@@ -1175,11 +1233,12 @@ function archiveMonthSnapshot(k){
   const end=new Date(y,(m||1),0,12);
   const movementRows=archiveBudgetMovementsInRange(start,end);
   const dailyRows=movementRows.filter(r=>r.archiveKind==='daily');
-  const daily=dailyRows.reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const fixed=movementRows.filter(r=>r.archiveKind==='fixed').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const cards=movementRows.filter(r=>r.archiveKind==='card_payment').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const savings=movementRows.filter(r=>r.archiveKind==='savings').reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
-  const total=movementRows.reduce((s,e)=>s+(Number(e.budgetImpactAmount??e.amount)||0),0);
+  const daily=dailyRows.reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const fixed=movementRows.filter(r=>r.archiveKind==='fixed').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const cards=movementRows.filter(r=>r.archiveKind==='card_payment').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const savings=movementRows.filter(r=>r.archiveKind==='savings').reduce((s,e)=>s+archiveCashImpactAmount(e),0);
+  const benefits=movementRows.filter(r=>r.archiveKind==='benefit').reduce((s,e)=>s+archiveBenefitAmount(e),0);
+  const total=movementRows.reduce((s,e)=>s+archiveCashImpactAmount(e),0);
   const income=Number(D.income)||0;
   const balance=income-total;
   return {
@@ -1191,7 +1250,7 @@ function archiveMonthSnapshot(k){
     isCurrent:k===curM,
     dailyRows,
     movementRows,
-    daily,fixed,cards,savings,total,income,balance
+    daily,fixed,cards,savings,benefits,total,income,balance
   };
 }
 
@@ -1206,8 +1265,10 @@ function archiveBestWorst(snaps){
 function archiveTopCategories(rows,limit=5){
   const map={};
   (rows||[]).forEach(e=>{
+    const value=archiveCashImpactAmount(e);
+    if(value<=0)return;
     const cat=e.category||'Άλλο';
-    map[cat]=(map[cat]||0)+(Number(e.budgetImpactAmount??e.amount)||0);
+    map[cat]=(map[cat]||0)+value;
   });
   return Object.entries(map)
     .map(([name,amount])=>({name,amount,color:CCLR[name]||'#8b95aa'}))
@@ -1226,6 +1287,58 @@ function archiveDiffLine(label,current,prev,invert=false){
       <span>${label}</span>
       <strong>${pct===null?'νέο':`${sign}${pct}%`}</strong>
     </div>`;
+}
+
+function archiveMovementKindLabel(kind){
+  if(kind==='fixed')return 'Πάγιο πληρωμένο';
+  if(kind==='card_payment')return 'Πληρωμή κάρτας';
+  if(kind==='savings')return 'Στόχος / αποταμίευση';
+  if(kind==='benefit')return 'Παροχή';
+  return 'Έξοδο budget';
+}
+
+function archiveRecentMovementsHtml(rows){
+  const recent=[...(rows||[])]
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
+    .slice(0,6);
+  if(!recent.length)return '<div class="archive-empty-mini">Δεν υπάρχουν πραγματικές κινήσεις σε αυτή την περίοδο.</div>';
+  return `<div class="archive-movement-list">${recent.map(row=>{
+    const kind=String(row.archiveKind||'daily');
+    const isBenefit=kind==='benefit';
+    const amount=isBenefit?archiveBenefitAmount(row):archiveCashImpactAmount(row);
+    const sign=isBenefit?'':(amount>0?'-':'');
+    const title=row.name||row.merchantName||row.merchant_name||archiveMovementKindLabel(kind);
+    const meta=[archiveMovementKindLabel(kind),row.category||'',row.paymentSourceName||''].filter(Boolean).join(' · ');
+    return `<div class="archive-movement-row ${isBenefit?'is-benefit':''}">
+      <div>
+        <strong>${esc(title)}</strong>
+        <span>${esc(meta)}</span>
+      </div>
+      <em>${sign}${fmt(Math.abs(amount))}</em>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function archiveArchivedObjectsHtml(){
+  const wallets=typeof capvoArchivedWallets==='function'?capvoArchivedWallets():[];
+  const goals=typeof archivedSavingsGoals==='function'?archivedSavingsGoals().filter(g=>typeof savingsGoalKind==='function'?savingsGoalKind(g)==='target':true):[];
+  const fixed=(D.fixedExpenseArchive||[]).filter(f=>!!f.deletedAt);
+  const total=wallets.length+goals.length+fixed.length;
+  if(!total)return '';
+  return `<section class="archive-objects-card">
+    <div class="archive-section-head">
+      <div>
+        <span>ARCHIVED ITEMS</span>
+        <h3>Αρχειοθετημένα αντικείμενα</h3>
+      </div>
+    </div>
+    <p>Δεν μπερδεύονται με το οικονομικό ιστορικό. Εδώ απλώς βλέπεις τι έχει κρυφτεί από ενεργές λίστες.</p>
+    <div class="archive-objects-grid">
+      <div><span>Λογαριασμοί</span><strong>${wallets.length}</strong></div>
+      <div><span>Στόχοι</span><strong>${goals.length}</strong></div>
+      <div><span>Πάγια</span><strong>${fixed.length}</strong></div>
+    </div>
+  </section>`;
 }
 
 function archiveExpandedHtml(snap,prev=null){
@@ -1254,11 +1367,19 @@ function archiveExpandedHtml(snap,prev=null){
       </div>
 
       <div class="archive-month-totals">
-        <div><span>Πάγια</span><strong>${fmt(snap.fixed)}</strong></div>
+        <div><span>Πάγια πληρωμένα</span><strong>${fmt(snap.fixed)}</strong></div>
         <div><span>Πληρωμές καρτών</span><strong>${fmt(snap.cards)}</strong></div>
-        <div><span>Αποταμίευση</span><strong>${fmt(snap.savings||0)}</strong></div>
-        <div><span>Κινήσεις budget</span><strong>${fmt(snap.daily)}</strong></div>
+        <div><span>Στόχοι</span><strong>${fmt(snap.savings||0)}</strong></div>
+        <div><span>Έξοδα budget</span><strong>${fmt(snap.daily)}</strong></div>
+        <div><span>Ticket / Voucher</span><strong>${fmt(snap.benefits||0)}</strong></div>
       </div>
+
+      <div class="archive-actual-note">
+        Τα πάγια εδώ είναι μόνο όσα πληρώθηκαν πραγματικά. Τα προγραμματισμένα πάγια δεν μετράνε σαν έξοδο.
+      </div>
+
+      <div class="archive-expanded-title">Τελευταίες πραγματικές κινήσεις</div>
+      ${archiveRecentMovementsHtml(snap.movementRows)}
 
       ${prev?`
         <div class="archive-compare-box">
@@ -1384,8 +1505,8 @@ function renderArchiveTimeline(snaps,{mode}){
 
         <div class="archive-mini-stats">
           <div><span>Έσοδα</span><strong>${fmt(snap.income)}</strong></div>
-          <div><span>Κινήσεις budget</span><strong>${fmt(snap.daily)}</strong></div>
-          <div><span>Σύνολο</span><strong>${fmt(snap.total)}</strong></div>
+          <div><span>Έξοδα budget</span><strong>${fmt(snap.daily)}</strong></div>
+          <div><span>Πραγματικό cash out</span><strong>${fmt(snap.total)}</strong></div>
         </div>
 
         ${open?archiveExpandedHtml(snap,prev):''}
@@ -1401,6 +1522,7 @@ function renderArchiveTimeline(snaps,{mode}){
           <span>Τα έξοδα ομαδοποιούνται με βάση την ημέρα πληρωμής και τις πρόωρες πληρωμές, όχι μόνο με βάση τον ημερολογιακό μήνα.</span>
         </section>`:''}
       ${summaryHtml}
+      ${archiveArchivedObjectsHtml()}
       <section class="archive-timeline-list">
         <div class="archive-section-head">
           <div>

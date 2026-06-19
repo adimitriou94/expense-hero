@@ -2363,7 +2363,7 @@ function go(v,b){
   const target=$(v);
   if(target)target.classList.add('active');
 
-  const mobileMoreViews=new Set(['vCards','vSavings','vAdvisor','vStats','vArchive','vSettings']);
+  const mobileMoreViews=new Set(['vIncome','vCards','vSavings','vAdvisor','vStats','vArchive','vSettings']);
   const activeNavView=mobileMoreViews.has(v) ? 'vMore' : v;
 
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
@@ -3510,7 +3510,7 @@ function capvoWizardDefaultState(){
     fixed:[
       {name:'',amount:'',category:'Στέγαση',dueDay:String(prefs.budgetCycleStartDay||1),todayStatus:'unpaid'}
     ],
-    savingsName:general.name||'Γενική αποταμίευση',
+    savingsName:general.name||'Στόχοι',
     savingsIcon:general.icon||'💰'
   };
 }
@@ -3919,7 +3919,7 @@ function capvoOnboardingUpdateFromInputs(){
     }));
   }
   if(get('obSavingsName')){
-    s.savingsName=(get('obSavingsName')?.value||'Γενική αποταμίευση').trim()||'Γενική αποταμίευση';
+    s.savingsName=(get('obSavingsName')?.value||'Στόχοι').trim()||'Στόχοι';
     s.savingsIcon=(get('obSavingsIcon')?.value||'💰').trim()||'💰';
   }
   window.__capvoOnboarding=s;
@@ -4246,7 +4246,7 @@ function capvoOnboardingStepHtml(s){
         <div class="ob-feature-grid">
           <div class="ob-feature-item"><i class="premium-mini-icon advisor"></i><strong>Σύμβουλος</strong><span>Δες αν κινείσαι σωστά μέσα στον κύκλο.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon reports"></i><strong>Αναφορές</strong><span>Καθαρή εικόνα για έξοδα και συνήθειες.</span></div>
-          <div class="ob-feature-item"><i class="premium-mini-icon savings"></i><strong>Κουμπαράδες</strong><span>Κράτα χρήματα εκτός budget για στόχους.</span></div>
+          <div class="ob-feature-item"><i class="premium-mini-icon savings"></i><strong>Στόχοι</strong><span>Κράτα χρήματα εκτός budget για στόχους.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon quick"></i><strong>Quick Add</strong><span>Γρήγορη καταχώρηση από κινητό.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon wallet"></i><strong>Πηγές πληρωμής</strong><span>Budget, Ticket, Voucher και κάρτες.</span></div>
           <div class="ob-feature-item"><i class="premium-mini-icon cycle"></i><strong>Κύκλοι</strong><span>Έλεγχος μέχρι την επόμενη πληρωμή.</span></div>
@@ -5149,7 +5149,7 @@ async function finishCapvoOnboarding(openTelegramAfter=false){
     }
     if(general){
       await supabaseClient.from('savings_goals').update({
-        name:s.savingsName||'Γενική αποταμίευση',
+        name:s.savingsName||'Στόχοι',
         icon:s.savingsIcon||'💰',
         target_amount:0,
         target_date:null,
