@@ -19,7 +19,15 @@ async function saveToSupabase(){
           user_chat_id:null,
           name:e.name,
           amount:e.amount,
-          category:e.category
+          category:e.category,
+          schedule_type:e.scheduleType||'monthly',
+          due_day:e.dueDay||e.due_day||null,
+          next_due_date:e.nextDueDate||e.next_due_date||null,
+          source_wallet_id:e.sourceWalletId||e.source_wallet_id||null,
+          auto_pay:!!(e.autoPay||e.auto_pay),
+          effective_from_date:e.effectiveFromDate||e.effective_from_date||null,
+          deleted_at:e.deletedAt||e.deleted_at||null,
+          last_paid_at:e.lastPaidAt||e.last_paid_at||null
         })),
         {onConflict:'id'}
       );

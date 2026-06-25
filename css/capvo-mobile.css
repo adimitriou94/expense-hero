@@ -15265,7 +15265,6 @@ body.fixed-payment-preview-open{
   }
 
   #mDaily #btnDaily,
-  #mFixed #btnFixed,
   #mIncomeSource .income-wizard-actions,
   #mIncomeSource .income-modal-actions,
   .fixed-payment-preview-actions{
@@ -15278,6 +15277,16 @@ body.fixed-payment-preview-open{
     padding-top:8px !important;
     background:transparent !important;
     box-shadow:none !important;
+  }
+
+  #mFixed #btnFixed{
+    position:static !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    z-index:auto !important;
+    margin-top:14px !important;
+    padding-top:8px !important;
   }
 
   #mDaily #btnDaily,
