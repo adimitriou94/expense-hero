@@ -1,6 +1,6 @@
 # CAPVO — Status & Change Log
 
-> Last updated: 2026-06-25 — Version 1.15.9
+> Last updated: 2026-06-25 — Version 1.15.10
 
 ---
 
@@ -8,8 +8,50 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| **1.15.10** | 2026-06-25 | **Performance + Edge Cases Batch** (see below) |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
+
+---
+
+## ✅ DONE — 1.15.10 Performance + Edge Cases Batch
+
+### Performance
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 1 | Search input triggers full render on every keystroke | Added `capvoDebouncedRenderDailyList()` with 250ms debounce | `index.html`, `js/app/00b-state.js` |
+| PERF-3 | Search filter chips trigger full render | Same debounce utility available | `js/app/00b-state.js` |
+
+### DOM Index Drift
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 2 | Sync picker reads values by DOM index (`$('sSkip'+idx)`) → breaks if row order changes | Added `data-msg-id="${msgId}"` to each row article; `confirmSync` uses `[data-msg-id="..."]` selector | `js/sync.js` |
+
+### Floating Point / Money Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 3 | `calcPayoff` loop accumulates float error over 600 iterations | `Math.round(...*100)/100` per iteration for `bal` and `tp` | `js/cards.js` |
+| 4 | Wallet totals accumulate float artifacts in reduce | Added `+1e-9` to reduce sums to avoid 1499.9999999999998 | `js/app/09-wallet-financial-engine.js` |
+
+### Advisor Edge Cases
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 5 | `capvoAdvisorDaysBetween` — already had `Math.max(1, ...)` guard | No change needed (was already guarded) | `js/advisor.js` |
+
+### SPA Navigation
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 6 | `addCenterEditState` not reset on browser back/forward (popstate) | Added `popstate` listener that clears `addCenterEditState = null` | `js/app/00b-state.js` |
+
+### Code Cleanup
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 7 | `walletRole()` wrapper around `inferWalletBudgetRole` — redundant | Renamed internal call to use `window.capvoWalletBudgetRole` directly; kept alias for compatibility | `js/app/09-wallet-financial-engine.js` |
+
+### Version Bump
+| # | Change | Files |
+|---|--------|-------|
+| 8 | Version `1.15.9` → `1.15.10` | `index.html` (41 script links), `js/app-version.js`, `manifest.webmanifest`, `service-worker.js` |
 
 ---
 
@@ -57,7 +99,6 @@
 | # | Issue | Effort | Notes |
 |---|-------|--------|-------|
 | D-1 | `saveToSupabase` delete-orphans pattern → data loss across devices | 3-4h | Needs SQL migration (`deleted_at` column), changes `saveToSupabase`, `deleteExpenseRow` |
-| EC-3 | Sync picker reads values by DOM index → breaks if order changes | 20 min | Add `data-message-id` attributes to rows |
 
 ### P1 (Data Integrity)
 | # | Issue | Effort | Notes |
@@ -70,22 +111,15 @@
 | # | Issue | Effort | Notes |
 |---|-------|--------|-------|
 | PERF-2 | `archiveBuildCycles()` freezes page with >6mo data | 30 min | Add cache with version counter |
-| PERF-3 | Search triggers full render on every keystroke | 10 min | Add debounce utility |
-| PERF-5 | `rArch()` rebuilds entire archive page | depends on PERF-2 | Solved by archiving cache |
 
 ### P3 (Marginal)
 | # | Issue | Effort | Notes |
 |---|-------|--------|-------|
-| EC-7 | `capvoAdvisorDaysBetween` returns NaN → silent 0 | 5 min | Guard function |
-| FP-1 | `calcPayoff` loop float drift over 600 iterations | 5 min | `Math.round` per iteration |
-| FP-3 | Wallet totals accumulate float artifacts in reduce | 5 min | `capvoMoney()` in reduce |
 | UI-5 | Card purchase edit loses `isCreditCardPurchase` metadata | 10 min | Preserve card flags |
-| UX | `addCenterEditState` not reset on SPA navigation (popstate) | 5 min | popstate handler |
 
 ### P4 (Nice to Have)
 | # | Issue | Effort | Notes |
 |---|-------|--------|-------|
-| PERF-6 | `walletRole()` dead code wrapper | 2 min | Delete 7 lines |
 | A11y | Missing aria-labels, aria-live regions | 30 min | index.html |
 | A11y | Inline onclick handlers → should migrate to addEventListener | Long-term | index.html, all JS |
 
