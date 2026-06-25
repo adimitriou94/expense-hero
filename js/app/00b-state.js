@@ -2,6 +2,20 @@
 // Constants, D state, wallet helpers, category helpers, auth state
 // Source: 00-core-state.js lines 38-372
 
+// ===== DEBOUNCE UTILITY =====
+function capvoDebounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+window.capvoDebouncedRenderDailyList = capvoDebounce(() => {
+  if (typeof renderDailyList === 'function') renderDailyList();
+}, 250);
+
+// ===== SPA NAVIGATION CLEANUP =====
+window.addEventListener('popstate', () => {
+  if (typeof addCenterEditState !== 'undefined') addCenterEditState = null;
+});
+
 // The PWA manifest already requests portrait-primary. This helper covers
 // browsers/platforms that also support the Screen Orientation API.
 function lockCapvoPortraitOrientation(){

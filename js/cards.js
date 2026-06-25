@@ -266,7 +266,7 @@ function calcPayoff(balance, rate, payment){
   while(bal>0.01 && months<600){
     const i=bal*mr;
     const p=Math.min(payment,bal+i);
-    bal=bal+i-p; tp+=p; months++;
+    bal=Math.round((bal+i-p)*100)/100; tp=Math.round((tp+p)*100)/100; months++;
   }
   return {months,totalPaid:tp,totalInterest:tp-balance,impossible:months>=600};
 }

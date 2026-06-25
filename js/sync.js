@@ -872,7 +872,7 @@ function openSyncPreview(items){
     const dimmed=invalid?'style="opacity:0.45;pointer-events:none"':'';
 
     return`
-      <article class="sync-row capvo-sync-row ${invalid?'skipped':''}" id="syncRow${idx}" data-invalid="${invalid}">
+      <article class="sync-row capvo-sync-row ${invalid?'skipped':''}" id="syncRow${idx}" data-invalid="${invalid}" data-msg-id="${msgId}">
         <div class="sync-row-original capvo-sync-original">
           <span class="capvo-sync-msg-icon">💬</span>
           <div class="capvo-sync-original-copy">
@@ -1070,7 +1070,18 @@ async function confirmSync(...messageIds){
     const msgId=ids[idx];
     if(msgId>maxId)maxId=msgId;
 
-    if($('sSkip'+idx)?.checked){
+    // Use data-msg-id on the row article to avoid DOM index drift
+    const row=document.querySelector('[data-msg-id="'+msgId+'"]');
+    if(!row)continue;
+
+    const chk=row.querySelector('[id^="sSkip"]');
+    const nm=row.querySelector('[id^="sName"]');
+    const am=row.querySelector('[id^="sAmt"]');
+    const ct=row.querySelector('[id^="sCat"]');
+    const dt=row.querySelector('[id^="sDate"]');
+    const py=row.querySelector('[id^="sPay"]');
+
+    if(chk?.checked){
       skippedIds.push(msgId);
       skipped++;
       continue;
@@ -1084,13 +1095,13 @@ async function confirmSync(...messageIds){
       continue;
     }
 
-    const name=String($('sName'+idx)?.value||'').trim();
-    const amount=parseFloat($('sAmt'+idx)?.value);
-    const cat=$('sCat'+idx)?.value||'Άλλο';
+    const name=String(nm?.value||'').trim();
+    const amount=parseFloat(am?.value);
+    const cat=ct?.value||'Άλλο';
     const date=typeof normalizeDateValue==='function'
-      ? normalizeDateValue($('sDate'+idx)?.value)
-      : String($('sDate'+idx)?.value||'').slice(0,10);
-    const paymentSourceId=$('sPay'+idx)?.value||'';
+      ? normalizeDateValue(dt?.value)
+      : String(dt?.value||'').slice(0,10);
+    const paymentSourceId=py?.value||'';
     const paymentSource=paymentSourceById(paymentSourceId);
 
     if(!name||!amount||amount<=0){

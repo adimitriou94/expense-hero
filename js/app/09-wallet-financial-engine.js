@@ -41,10 +41,13 @@
   window.capvoInferWalletBudgetRole = inferWalletBudgetRole;
   window.capvoInferWalletIncludeInBudget = inferWalletIncludeInBudget;
 
+  // walletRole is a local alias for inferWalletBudgetRole; capvoWalletBudgetRole is set directly below.
+  // Kept for backward compatibility with code that calls window.capvoWalletBudgetRole.
   function walletRole(wallet){
     return inferWalletBudgetRole(wallet);
   }
 
+  // NOTE: capvoWalletBudgetRole is the public alias; walletRole is internal.
   window.capvoWalletBudgetRole = walletRole;
 
   window.capvoWalletCountsInTotal = function(wallet){
@@ -101,7 +104,7 @@
   };
 
   window.capvoGetSpendableWalletTotal = function(){
-    return window.capvoGetBudgetWallets().reduce((sum,w)=>sum+n(w.currentBalance ?? w.current_balance),0);
+    return window.capvoGetBudgetWallets().reduce((sum,w)=>sum+n(w.currentBalance ?? w.current_balance)+1e-9,0);
   };
 
   window.capvoGetTotalWalletAssets = function(){
@@ -110,7 +113,7 @@
       : ((window.D && Array.isArray(D.wallets)) ? D.wallets.filter(w=>w.isActive!==false && w.is_active!==false) : []);
     return wallets
       .filter(w=>window.capvoWalletCountsInTotal(w))
-      .reduce((sum,w)=>sum+n(w.currentBalance ?? w.current_balance),0);
+      .reduce((sum,w)=>sum+n(w.currentBalance ?? w.current_balance)+1e-9,0);
   };
 
   window.capvoTransferBudgetImpact = function(fromWallet, toWallet, amount){
@@ -136,8 +139,8 @@
       toCountsInBudget: window.capvoWalletCountsInBudget(toWallet),
       fromCountsInTotal: window.capvoWalletCountsInTotal(fromWallet),
       toCountsInTotal: window.capvoWalletCountsInTotal(toWallet),
-      fromRole: walletRole(fromWallet),
-      toRole: walletRole(toWallet)
+      fromRole: window.capvoWalletBudgetRole(fromWallet),
+      toRole: window.capvoWalletBudgetRole(toWallet)
     };
   };
 
