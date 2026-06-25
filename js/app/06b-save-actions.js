@@ -357,8 +357,20 @@ function capvoSyncFixedScheduleUI(options={}){
 
   const hasExisting=!!String(dateInput?.value||'').trim();
   if(dateInput && (options.force || options.fromSchedule || options.fromDueDay || !hasExisting || !options.preserveDate)){
-    const currentIso=capvoFixedGreekDateToISO(dateInput.value);
-    const ref=currentIso || todayISO?.() || new Date().toLocaleDateString('en-CA');
+    const storedIso=capvoFixedGreekDateToISO(dateInput.value);
+    const todayKey=todayISO?.()||new Date().toLocaleDateString('en-CA');
+
+    if(!options.force){
+      if(storedIso && storedIso>=todayKey){
+        capvoSetFixedNextDueDateInputValue(storedIso);
+        return;
+      }
+      const ref=todayKey;
+      const next=capvoFixedNextDateFromRule(type,dueInput?.value||new Date().getDate(),ref);
+      capvoSetFixedNextDueDateInputValue(next);
+      return;
+    }
+    const ref=todayKey;
     const next=capvoFixedNextDateFromRule(type,dueInput?.value||new Date().getDate(),ref);
     capvoSetFixedNextDueDateInputValue(next);
   }
