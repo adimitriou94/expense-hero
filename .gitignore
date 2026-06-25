@@ -11,6 +11,9 @@ telegram-worker.js
 .env
 .env.local
 
+# Supabase / Cloudflare credentials (local-only)
+js/config.js
+
 # VS Code
 .vscode/
 

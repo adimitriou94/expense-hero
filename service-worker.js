@@ -1,7 +1,7 @@
 /* CAPVO PWA service worker — dynamic dock fix release
    App-shell cache only. Supabase/Cloudflare API requests are never cached. */
 
-const CACHE_NAME = 'capvo-app-shell-v1.15.8';
+const CACHE_NAME = 'capvo-app-shell-v1.15.9';
 const APP_SHELL = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const APP_SHELL = [
   './css/capvo-pages.css',
   './css/capvo-mobile.css',
   './js/app-version.js',
-  './js/config.js',
+  // NOTE: config.js intentionally excluded from SW cache — loaded dynamically after activation
   './js/app/00a-supabase.js',
   './js/app/00b-state.js',
   './js/app/00c1-budget-cycle.js',
