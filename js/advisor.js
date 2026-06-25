@@ -1167,4 +1167,4 @@ function calcHealthScore(needs,wants,savings,housing,debtPay){
 }
 
 // ===== BOOT =====
-initApp();
+if(typeof initApp==='function')initApp();

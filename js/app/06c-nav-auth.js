@@ -723,28 +723,4 @@ async function handleOAuthCallback(){
   }
 }
 
-async function saveTelegramLinkRequest(row, env) {
-  const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/telegram_link_requests`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({
-        chat_id: row.chat_id,
-        code: row.code
-      })
-    }
-  );
-
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error('Telegram link request insert failed: ' + txt);
-  }
-}
-
 // ===== END 06c-nav-auth.js =====

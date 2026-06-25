@@ -66,9 +66,9 @@
 // Do not depend on advisor.js being the last script. initApp has an internal
 // guard, so the later advisor.js call is harmless.
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>initApp(),{once:true});
+  document.addEventListener('DOMContentLoaded',()=>{if(typeof initApp==='function')initApp();},{once:true});
 }else{
-  initApp();
+  if(typeof initApp==='function')initApp();
 }
 
 

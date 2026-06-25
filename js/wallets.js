@@ -886,8 +886,8 @@ async function saveWalletFromSheet(){
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω τον λογαριασμό.');
     showError(e.message||'Δεν αποθηκεύτηκε. Δοκίμασε ξανά.');
     if(btn){btn.disabled=false;btn.textContent=walletSheetMode==='add'?'Προσθήκη':'Αποθήκευση';}
-    walletSheetSubmitting=false;
   }finally{
+    walletSheetSubmitting=false;
     if(typeof capvoEndAppOperation==='function')capvoEndAppOperation(520);
   }
 }
