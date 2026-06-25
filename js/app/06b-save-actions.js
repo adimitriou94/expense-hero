@@ -361,10 +361,19 @@ function capvoSyncFixedScheduleUI(options={}){
     const todayKey=todayISO?.()||new Date().toLocaleDateString('en-CA');
 
     if(!options.force){
+      // When user explicitly changes dueDay or schedule, always recalculate & update the date field
+      if(options.fromDueDay || options.fromSchedule){
+        const ref=todayKey;
+        const next=capvoFixedNextDateFromRule(type,dueInput?.value||new Date().getDate(),ref);
+        capvoSetFixedNextDueDateInputValue(next);
+        return;
+      }
+      // Preserve stored date if it's still >= today (don't auto-advance months)
       if(storedIso && storedIso>=todayKey){
         capvoSetFixedNextDueDateInputValue(storedIso);
         return;
       }
+      // Only recalculate if stored date is in the past
       const ref=todayKey;
       const next=capvoFixedNextDateFromRule(type,dueInput?.value||new Date().getDate(),ref);
       capvoSetFixedNextDueDateInputValue(next);
