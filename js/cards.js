@@ -1397,6 +1397,8 @@ async function delCC(id){
   try{
 
     D.creditCards=D.creditCards.filter(c=>c.id!==id);
+    D.creditCardTransactions=(D.creditCardTransactions||[]).filter(t=>String(t.cardId||'')!==String(id));
+    D.creditCardInstallmentPlans=(D.creditCardInstallmentPlans||[]).filter(p=>String(p.cardId||'')!==String(id));
 
     save();
     render();

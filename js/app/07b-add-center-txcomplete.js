@@ -521,22 +521,7 @@ window.editExp=function(t,id){
   return txCompleteLegacyEditExp ? txCompleteLegacyEditExp(t,id) : undefined;
 };
 
-function closeAddCenterSheet(event){
-  if(event && event.target && event.target.id!=='addCenterSheet')return;
-
-  addCenterEditState=null;
-
-  const submit=document.getElementById('addCenterManualSubmit');
-  if(submit)submit.textContent='Αποθήκευση εξόδου';
-
-  const sheet=document.getElementById('addCenterSheet');
-  sheet?.classList.remove('active');
-
-  if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
-  if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
-
-  document.body.classList.remove('quick-sheet-open','add-center-open');
-}
+// closeAddCenterSheet consolidated in 07a-add-center-core.js
 
 async function saveAddCenterManualExpense(){
   const nameEl=document.getElementById('acDN');

@@ -642,12 +642,12 @@ async function capvoPayFixedExpense(fixedExpenseId,options={}){
       created_at:now
     };
 
+    await capvoUpdateWalletBalance(wallet.id,after);
+
     const {error:paymentError}=await supabaseClient
       .from('fixed_expense_payments')
       .insert(paymentPayload);
     if(paymentError)throw paymentError;
-
-    await capvoUpdateWalletBalance(wallet.id,after);
 
     const updatePayload={
       next_due_date:nextDue||null,

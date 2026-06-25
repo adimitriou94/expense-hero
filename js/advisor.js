@@ -304,7 +304,7 @@ function capvoAdvisorBuildPracticalPlan(ctx){
   },0));
   const recent=capvoAdvisorRecentAverage(allMovements,7);
   const recentAvg=Number(recent.average)||0;
-  const safeForecast=capvoMoney(balance-(safeToday*remainingDays));
+  const safeForecast=capvoMoney(Math.max(0,balance-(safeToday*remainingDays)));
   const currentPaceForecast=capvoMoney(balance-(recentAvg*remainingDays));
   const conservativeForecast=capvoMoney(balance-((recentAvg>0?recentAvg*.70:safeToday*.70)*remainingDays));
   const overspendPerDay=currentPaceForecast<0?capvoMoney(Math.abs(currentPaceForecast)/remainingDays):0;
@@ -706,7 +706,7 @@ function capvoAdvisorBestNextStep(model){
 }
 
 function capvoAdvisorDashboardStatus(model){
-  const daily=model?.practical?.safeToday ?? model?.dailyAllowance ?? 0;
+  const daily=model?.practical?.safeToday!=null?model.practical.safeToday:(model?.dailyAllowance??0);
   const summary=(model && model.income>0) ? `Advisor · ${fmt(Math.max(0,daily))}/ημ.` : 'Advisor';
   if(!model || model.income<=0)return {label:'Setup',tone:'amber',icon:'💡',summary:'Advisor'};
   if(model.balance<0 || model.health.score<38)return {label:'Κίνδυνος',tone:'red',icon:'🚨',summary};

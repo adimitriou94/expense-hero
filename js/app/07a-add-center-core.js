@@ -495,13 +495,26 @@ function openAddCenterSheet(tab='quick',prefill='',errorMessage=''){
 }
 
 function closeAddCenterSheet(event){
-  if(event && event.target && event.target.id!=='addCenterSheet')return;
+  // Overlay background tap: accept if target is root element or overlay div itself
+  if(event && event.target){
+    const root=document.getElementById('addCenterSheet');
+    const isOverlayTap=event.target===root;
+    const isRootTap=event.target.id==='addCenterSheet';
+    if(!isOverlayTap && !isRootTap)return;
+  }
+
+  addCenterEditState=null;
 
   const sheet=document.getElementById('addCenterSheet');
   sheet?.classList.remove('active');
-  closeAddCenterCategoryPicker();
-  closeAddCenterPaymentPicker();
-  document.body.classList.remove('quick-sheet-open','add-center-open');
+
+  const submit=document.getElementById('addCenterManualSubmit');
+  if(submit)submit.textContent='Αποθήκευση εξόδου';
+
+  if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
+  if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
+
+  document.body.classList.remove('quick-sheet-open','add-center-open','add-center-manual-active','add-center-success-active');
 }
 
 

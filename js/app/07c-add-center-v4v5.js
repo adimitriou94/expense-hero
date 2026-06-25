@@ -130,20 +130,8 @@
     },180);
   };
 
-  window.closeAddCenterSheet=function(event){
-    if(event && event.target && event.target.id!=='addCenterSheet')return;
-
-    addCenterEditState=null;
-    document.body.classList.remove('quick-sheet-open','add-center-open','add-center-manual-active','add-center-success-active');
-    acEl('addCenterSheet')?.classList.remove('active');
-    acEl('addCenterSuccess')?.classList.remove('active');
-
-    const submit=acEl('addCenterManualSubmit');
-    if(submit)submit.textContent='Αποθήκευση εξόδου';
-
-    if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
-    if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
-  };
+  // NOTE: closeAddCenterSheet consolidated in 07a-add-center-core.js — no override here
+  // This file intentionally does not redefine it to preserve the single authoritative version.
 
   window.openQuickAddSheet=function(prefill='',errorMessage=''){
     return openAddCenterSheet('quick',prefill,errorMessage);
@@ -287,25 +275,8 @@
     },120);
   };
 
-  window.closeAddCenterSheet=function(event){
-    const overlay=qav5('addCenterSheet');
-    // Close only when tapping the overlay background.
-    // Previously, clicks on suggestion chips/buttons bubbled here and closed the sheet.
-    if(event && event.target !== overlay)return;
-
-    if(typeof addCenterEditState!=='undefined')addCenterEditState=null;
-
-    qav5CleanState();
-    document.body.classList.remove('quick-sheet-open','add-center-open','add-center-manual-active','add-center-success-active');
-    qav5('addCenterSheet')?.classList.remove('active');
-
-    if(typeof closeAddCenterCategoryPicker==='function')closeAddCenterCategoryPicker();
-    if(typeof closeAddCenterPaymentPicker==='function')closeAddCenterPaymentPicker();
-  };
-
-  window.closeQuickAddSheet=function(event){
-    return window.closeAddCenterSheet(event);
-  };
+  // NOTE: closeAddCenterSheet consolidated in 07a-add-center-core.js — no override here
+  // closeQuickAddSheet delegates to the consolidated closeAddCenterSheet
 
   window.openQuickAddSheet=function(prefill='',errorMessage=''){
     return window.openAddCenterSheet('quick',prefill,errorMessage);
