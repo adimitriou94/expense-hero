@@ -573,10 +573,17 @@ function rStats(){
   const elapsed=reportsCurrentCycleElapsedDays();
   const avg=elapsed>0?total/elapsed:0;
 
-  const prevKey=reportsPreviousMonthKey(curM);
-  const prevTotal=reportsAllMonthlyItems(prevKey).reduce((s,e)=>s+reportsBudgetOutAmount(e),0);
-  const prevAvg=prevTotal>0?prevTotal/new Date(Number(prevKey.split('-')[0]),Number(prevKey.split('-')[1]),0).getDate():0;
+  rStatsHeader(total,avg,elapsed,topCategory,topPct,largest);
+  reportsRenderFoundationSections(items);
+  rStatsMerchantAnalysis(items,total);
+  rStatsCategoryBreakdown(total,sorted);
+  rStatsInsights(total,byCategory,topCategory,topPct);
+  rStatsBarChart(cycle);
+}
 
+// ===== Per-section renderers for incremental updates =====
+
+function rStatsHeader(total,avg,elapsed,topCategory,topPct,largest){
   if($('reportsTotal'))$('reportsTotal').textContent=fmt(total);
   if($('reportsTotalDelta'))$('reportsTotalDelta').textContent='τρέχων κύκλος';
   if($('reportsAvgDay'))$('reportsAvgDay').textContent=fmt(avg);
@@ -585,52 +592,60 @@ function rStats(){
   if($('reportsTopPct'))$('reportsTopPct').textContent=`${topPct}% των εξόδων`;
   if($('reportsLargestTx'))$('reportsLargestTx').textContent=fmt(reportsBudgetOutAmount(largest));
   if($('reportsLargestTxMeta'))$('reportsLargestTxMeta').textContent=largest?`${largest.displayTitle||largest.name} · ${reportsShortDate(largest.date)}`:'—';
+}
 
-  reportsRenderFoundationSections(items);
+function rStatsMerchantAnalysis(items,total){
+  const byMerchant=reportsGroupRows(items,e=>e.merchantName||'',reportsBudgetOutAmount);
+  reportsRenderMiniList('reportsMerchantList',byMerchant,total,{empty:'Δεν υπάρχουν merchants/καταστήματα ακόμα.',limit:5,showCount:true});
+}
 
+function rStatsCategoryBreakdown(total,sorted){
   if(sorted.length===0 || total<=0){
     if($('chartCatDonut'))$('chartCatDonut').style.background='#eef2f7';
     if($('chartCat'))$('chartCat').innerHTML='<div class="reports-empty">Δεν υπάρχουν έξοδα για στατιστικά ακόμα.</div>';
     if($('chartCatTotal'))$('chartCatTotal').textContent=fmt(0);
-  }else{
-    let startDeg=0;
-    const gradientParts=sorted.map(([cat,catTotal])=>{
-      const deg=catTotal/total*360;
-      const endDeg=startDeg+deg;
-      const color=CCLR[cat]||'#8b95ad';
-      const part=`${color} ${startDeg.toFixed(2)}deg ${endDeg.toFixed(2)}deg`;
-      startDeg=endDeg;
-      return part;
-    });
-
-    if($('chartCatDonut'))$('chartCatDonut').style.background=`conic-gradient(${gradientParts.join(',')})`;
-    if($('chartCatTotal'))$('chartCatTotal').textContent=fmt(total);
-
-    const visible=sorted.slice(0,5);
-    const extra=sorted.length-visible.length;
-
-    if($('chartCat'))$('chartCat').innerHTML=visible.map(([cat,catTotal])=>{
-      const pct=Math.round(catTotal/total*100);
-      const color=CCLR[cat]||'#8b95ad';
-
-      return`
-        <div class="donut-legend-row reports-category-row">
-          <div class="donut-legend-left">
-            <span class="donut-dot" style="background:${color}"></span>
-            <span>${esc(cat)}</span>
-          </div>
-          <div class="donut-legend-right">
-            <strong>${fmt(catTotal)}</strong>
-            <small>${pct}%</small>
-          </div>
-        </div>`;
-    }).join('') + (extra>0?`
-      <button type="button" class="reports-more-categories" onclick="openReportsAllCategoriesSheet()">
-        + ${extra} ακόμα ${extra===1?'κατηγορία':'κατηγορίες'}
-        <span>›</span>
-      </button>`:'');
+    return;
   }
 
+  let startDeg=0;
+  const gradientParts=sorted.map(([cat,catTotal])=>{
+    const deg=catTotal/total*360;
+    const endDeg=startDeg+deg;
+    const color=CCLR[cat]||'#8b95ad';
+    const part=`${color} ${startDeg.toFixed(2)}deg ${endDeg.toFixed(2)}deg`;
+    startDeg=endDeg;
+    return part;
+  });
+
+  if($('chartCatDonut'))$('chartCatDonut').style.background=`conic-gradient(${gradientParts.join(',')})`;
+  if($('chartCatTotal'))$('chartCatTotal').textContent=fmt(total);
+
+  const visible=sorted.slice(0,5);
+  const extra=sorted.length-visible.length;
+
+  if($('chartCat'))$('chartCat').innerHTML=visible.map(([cat,catTotal])=>{
+    const pct=Math.round(catTotal/total*100);
+    const color=CCLR[cat]||'#8b95ad';
+
+    return`
+      <div class="donut-legend-row reports-category-row">
+        <div class="donut-legend-left">
+          <span class="donut-dot" style="background:${color}"></span>
+          <span>${esc(cat)}</span>
+        </div>
+        <div class="donut-legend-right">
+          <strong>${fmt(catTotal)}</strong>
+          <small>${pct}%</small>
+        </div>
+      </div>`;
+  }).join('') + (extra>0?`
+    <button type="button" class="reports-more-categories" onclick="openReportsAllCategoriesSheet()">
+      + ${extra} ακόμα ${extra===1?'κατηγορία':'κατηγορίες'}
+      <span>›</span>
+    </button>`:'');
+}
+
+function rStatsInsights(total,byCategory,topCategory,topPct){
   const insights=[];
   insights.push({
     icon:'📌',
@@ -679,7 +694,9 @@ function rStats(){
       </div>
     `).join('');
   }
+}
 
+function rStatsBarChart(cycle){
   const movementItems=reportsCurrentMovementItems();
   const days=[];
   const chartEnd=new Date(Math.min(new Date().setHours(12,0,0,0),cycle.end.getTime()));

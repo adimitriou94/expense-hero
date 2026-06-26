@@ -181,8 +181,29 @@ function telegramExpenseId(chatId,messageId){
   return `tg_${chatId}_${messageId}`;
 }
 
-function expenseExistsById(id){
-  return Object.values(D.months||{}).some(m=>(m.daily||[]).some(e=>e.id===id));
+async function expenseExistsById(id){
+  if(Object.values(D.months||{}).some(m=>(m.daily||[]).some(e=>e.id===id)))return true;
+
+  // Not found locally — check Supabase by message_id for multi-device dedup
+  try{
+    const userId=getCurrentDataOwnerId();
+    if(!userId)return false;
+    const msgId=id.replace('tg_','');
+    const {data, error}=await supabaseClient
+      .from('expenses')
+      .select('id')
+      .eq('user_id',userId)
+      .eq('message_id',msgId)
+      .maybeSingle();
+    if(error){
+      console.warn('expenseExistsById Supabase check failed:',error.message);
+      return false;
+    }
+    if(data?.id)return true;
+  }catch(e){
+    console.warn('expenseExistsById Supabase check error:',e);
+  }
+  return false;
 }
 
 async function getSupabaseAccessToken(){
@@ -298,12 +319,21 @@ function syncTokenSimilarity(a,b){
   return dist<=2?1-(dist/maxLen):0;
 }
 
+function syncEscapeRegExp(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+
 function syncTextHasAlias(normalizedText,alias){
   const t=syncNormalizeText(normalizedText);
   const a=syncNormalizeText(alias);
   if(!t||!a)return false;
-  if(t.includes(a))return true;
 
+  // Word-boundary match to avoid substring false positives
+  // e.g. "φαρμα" should NOT match "φαρμακείο"
+  const escaped=syncEscapeRegExp(a);
+  if(escaped.length>1 && new RegExp('\\b'+escaped+'\\b','i').test(t))return true;
+
+  // Fallback: try as whole phrase with partial token similarity
   const aliasTokens=a.split(' ').filter(Boolean);
   const textTokens=t.split(' ').filter(Boolean);
   if(aliasTokens.length===0)return false;
@@ -504,7 +534,9 @@ function syncExtractAmount(text){
   }
 
   if(!amount || amount<=0)return null;
-  return {amount,raw:match[0]};
+  const result={amount,raw:match[0]};
+  if(amount>5000)result.warning='large_amount';
+  return result;
 }
 
 function syncStripPaymentWordsFromName(value,paymentSource){
@@ -598,6 +630,7 @@ function parseExpense(text){
     paymentSourceType:paymentSource?.incomeType||''
   };
 
+  if(amountInfo.warning)expense.warning=amountInfo.warning;
   if(typeof capvoApplyExpenseCategoryMeta==='function')capvoApplyExpenseCategoryMeta(expense);
   if(typeof capvoPrepareDailyExpenseFunding==='function')capvoPrepareDailyExpenseFunding(expense,{preserveBlank:false});
   return expense;
@@ -693,15 +726,15 @@ async function syncFromTelegram(){
 
     const messages=data.messages||[];
 
-    const newMessages=messages.filter(m=>
-      m.text &&
-      !m.text.trim().startsWith('/') &&
-      !expenseExistsById(telegramExpenseId(chatId,m.message_id))
-    );
-
-    const alreadyExisting=messages
-      .filter(m=>expenseExistsById(telegramExpenseId(chatId,m.message_id)))
-      .map(m=>m.message_id);
+    const newMessages=[];
+    const alreadyExisting=[];
+    for(const m of messages){
+      if(!m.text||m.text.trim().startsWith('/')||await expenseExistsById(telegramExpenseId(chatId,m.message_id))){
+        if(m.text)alreadyExisting.push(m.message_id);
+        continue;
+      }
+      newMessages.push(m);
+    }
 
     if(alreadyExisting.length>0){
       await markTelegramMessages(alreadyExisting,'imported');
@@ -829,7 +862,7 @@ document.addEventListener('click',e=>{
     document.querySelectorAll('.capvo-sync-picker.is-open').forEach(p=>p.classList.remove('is-open'));
   }
 });
-function openSyncPreview(items){
+async function openSyncPreview(items){
   let overlay=$('mSyncPreview');
 
   if(!overlay){
@@ -847,8 +880,24 @@ function openSyncPreview(items){
     overlay.innerHTML='<div class="modal modal-wide capvo-sync-review-sheet" id="mSyncPreviewInner"></div>';
   }
 
+  // Batch-check Supabase for existing expenses (multi-device dedup)
+  const supabaseDupes=new Set();
+  const userId=getCurrentDataOwnerId();
+  if(userId && items.length){
+    try{
+      const {data:rows,error}=await supabaseClient
+        .from('expenses')
+        .select('message_id')
+        .in('message_id',items.map(i=>i.message_id))
+        .eq('user_id',userId);
+      if(!error&&rows)rows.forEach(r=>supabaseDupes.add(r.message_id));
+    }catch(e){
+      console.warn('openSyncPreview Supabase check failed:',e);
+    }
+  }
+
   const invalidCount=items.filter(item=>{
-    const duplicate=expenseExistsById(telegramExpenseId(getCurrentChatId(),item.message_id));
+    const duplicate=!!supabaseDupes.has(item.message_id);
     return item.skip||duplicate;
   }).length;
 
@@ -863,9 +912,8 @@ function openSyncPreview(items){
       paymentSourceType:''
     };
 
-    const duplicate=expenseExistsById(
-      telegramExpenseId(getCurrentChatId(),item.message_id)
-    );
+    const duplicate=supabaseDupes.has(item.message_id);
+    const msgId=item.message_id;
 
     const invalid=item.skip||duplicate;
     const skipChecked=invalid?'checked':'';
@@ -882,6 +930,7 @@ function openSyncPreview(items){
           <div class="capvo-sync-badges">
             ${duplicate?'<span class="sync-badge duplicate">Ήδη υπάρχει</span>':''}
             ${item.skip?'<span class="sync-badge invalid">Θέλει έλεγχο</span>':''}
+            ${e.warning==='large_amount'?'<span class="sync-badge large-amount">Προσοχή: μεγάλο ποσό</span>':''}
           </div>
         </div>
 
@@ -1089,7 +1138,7 @@ async function confirmSync(...messageIds){
 
     const id=telegramExpenseId(chatId,msgId);
 
-    if(expenseExistsById(id)){
+    if(await expenseExistsById(id)){
       importedIds.push(msgId);
       skipped++;
       continue;

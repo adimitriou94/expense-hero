@@ -1,6 +1,6 @@
 # CAPVO — Status & Change Log
 
-> Last updated: 2026-06-25 — Version 1.15.10 (deployed)
+> Last updated: 2026-06-25 — Version 1.15.12 (deployed)
 
 ---
 
@@ -152,33 +152,61 @@ git commit -m "description"
 git push origin main
 ```
 
-### Current State (v1.15.10)
+### Current State (v1.15.12)
 
-**Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG.
+**Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG, archive cache, saveFixed/saveCardPayment recovery.
 
-**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), full-page render split (PERF-1), several data integrity and edge cases.
+**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), full-page render split (PERF-1), rStats rebuild (PERF-4), several data integrity and edge cases.
 
 See **PENDING** section below for the full list with effort estimates.
+
+---
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| **1.15.12** | 2026-06-25 | **Data Integrity + Edge Cases Batch** (see below) |
 | **1.15.11** | 2026-06-25 | **Archive Cache + Audit Discoveries** |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
 
 ---
 
-## ✅ DONE — 1.15.11 Data Integrity Quick Wins + Archive Cache
+## ✅ DONE — 1.15.12 Data Integrity + Edge Cases Batch
 
-### Audit Discoveries
+### Data Integrity Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| UI-4 | `saveFixed` — no `fetchAllData` recovery on failure | Added `fetchAllData(userId)` + `render()` in catch block to sync local state with server | `js/app/06b-save-actions.js` |
+| UI-6 | `saveCardPayment` — installment failure leaves inconsistent state | Added `fetchAllData(userId)` + `render()` in catch block to sync local state with server | `js/cards.js` |
+
+### Edge Case Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| EC-1 | `parseExpense` "καφές 150" → 150€ not 1.50€ | Added warning for amounts > 5000 in sync preview | `js/sync.js` |
+| EC-2 | `syncTextHasAlias` substring false positives | Switched to tokenized word-boundary matching | `js/sync.js` |
+| EC-4 | `expenseExistsById` only checks local D.months | Added Supabase query for duplicate detection by message_id | `js/sync.js` |
+| UI-5 | Card purchase edit loses `isCreditCardPurchase` metadata | Preserve card purchase flags in `txCompleteFillManualForm`, prevent payment source change | `js/app/07b-add-center-txcomplete.js` |
+
+### Performance
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| PERF-4 | `rStats()` rebuilds EVERY report section on every call | Split into per-section renders: `rStatsCategoryBreakdown()`, `rStatsMerchantAnalysis()`, `rStatsInsights()` — only called when reports page is active | `js/app/04a-reports.js` |
+
+---
+
+## 🔄 IN PROGRESS — 1.15.11 Data Integrity Quick Wins
+
+> **Audit done 2026-06-25:** Reviewed 3 quick wins from pending list. 2 were already fixed in code from older sessions.
+
+### Already Fixed (discovered during audit)
 | # | Issue | Status |
 |---|-------|--------|
 | D-3 | `capvoApplyCycleAmountToWallet` wrong order | ✅ **Already fixed** — upsert income → wallet → mark (line 585→593→595 in `02b-data-save.js`) |
 | EC-10 | `capvoAdvisorDaysBetween` NaN guard | ✅ **Already fixed** — `Math.max(1, ...)` at line 22 in `advisor.js` |
 
-### New Fixes
+### New Fixes (1.15.11)
 | # | Issue | Fix | File |
 |---|-------|-----|------|
 | 1 | `archiveBuildCycles()` freezes page with >6mo data (6720+ iterations) | Added versioned cache (`__archiveCacheVersion`) with `capvoArchiveCacheVersion()` + `capvoInvalidateArchiveCache()`. Cache invalidated on every saveToSupabase() and deleteExpenseRow(). ~50x+ speedup on archive page. | `js/app/04b-archive.js`, `02b-data-save.js`, `06b-save-actions.js` |
@@ -186,7 +214,7 @@ See **PENDING** section below for the full list with effort estimates.
 ### Still Pending
 | # | Issue | Status |
 |---|-------|--------|
-| D-1 | `saveToSupabase` delete-orphans → data loss across devices | ❌ Still present in 3 tables — needs SQL migration |
+| D-1 | `saveToSupabase` delete-orphans → data loss | ❌ Still present in 3 tables — needs SQL migration |
 | EC-6 | `deleteExpenseRow` partial failure in rollback chain | ⚠️ Has rollback but no retry — marginal |
 
 ---
@@ -280,9 +308,8 @@ See **PENDING** section below for the full list with effort estimates.
 ### P0 (Critical / High — Data Integrity)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
-| D-1 | `saveToSupabase` delete-orphans pattern → data loss across devices | 3-4h | FIX-ACTION 2.1, CODE_REVIEW D-1 | Needs SQL migration (`deleted_at` column) |
+| D-1 | `saveToSupabase` delete-orphans pattern → data loss across devices | 3-4h | FIX-ACTION 2.1, CODE_REVIEW D-1 | Needs SQL migration (`deleted_at` column), changes `saveToSupabase`, `deleteExpenseRow` |
 | D-2 | `capvoUpdateWalletBalance` TOCTOU race — no `updated_at` check | 30 min | CODE_REVIEW D-7 | Two tabs overwrite silently |
-| D-3 | `capvoApplyCycleAmountToWallet` wallet update before income marking | 15 min | FIX-ACTION 2.3, CODE_REVIEW D-3 | Upsert income row first, then wallet, then mark |
 | D-4 | Telegram sync optimistic local mutation before server confirm | 30 min | CODE_REVIEW D-8 | Move `D.months` mutation after server save |
 | D-5 | `deleteInstallmentPlan` — cascade deletes non-atomic | 1h | CODE_REVIEW D-5 | Needs DB-level cascade or RPC transaction |
 
@@ -291,32 +318,20 @@ See **PENDING** section below for the full list with effort estimates.
 |---|-------|--------|--------|-------|
 | EC-5 | `createPaidTodayCycle` — double-click between tabs | 15 min | CODE_REVIEW EC-5 | DB-level ON CONFLICT WHERE NOT wallet_deposit_applied |
 | EC-9 | `saveWalletFromSheet` primary flag clearing race | 15 min | CODE_REVIEW EC-9 | `updated_at` version check on clearing UPDATE |
-| UI-4 | `saveFixed` — no `fetchAllData` recovery on failure | 10 min | FIX-ACTION 2.5, CODE_REVIEW UI-4 | Add `fetchAllData(userId)` + `render()` to catch |
-| UI-6 | `saveCardPayment` — installment failure leaves inconsistent state | 15 min | CODE_REVIEW D-6 | Add `fetchAllData(userId)` to catch block |
+| EC-6 | `deleteExpenseRow` partial failure in rollback chain | 15 min | CODE_REVIEW EC-8 | Retry on wallet rollback failure |
 
 ### P2 (Performance)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
 | PERF-1 | `render()` rebuilds ENTIRE page on every data change | 1-2h | CODE_REVIEW PERF-1 | Split to per-section renders |
-| PERF-4 | `rStats()` rebuilds EVERY report section | 30 min | CODE_REVIEW PERF-4 | Split into per-section renders |
 
 ### P3 (Marginal — Money / UI)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
 | FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | **Already fixed** — `capvoAdvisorSum` with raw amounts (line 409) ✅ |
-| UI-5 | `txCompleteFillManualForm` card purchases lose `isCreditCardPurchase` metadata | 10 min | CODE_REVIEW UI-5 | Preserve card purchase flags, prevent payment source change |
 | PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions |
 
-### P4 (Edge Cases)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| EC-1 | `parseExpense` "καφές 150" → 150€ not 1.50€ | 10 min | CODE_REVIEW EC-1 | Add warning for amounts > 5000 in sync preview |
-| EC-2 | `syncTextHasAlias` substring false positives | 15 min | CODE_REVIEW EC-2 | Word-boundary or tokenized matching |
-| EC-4 | `expenseExistsById` only checks local D.months, not Supabase | 15 min | CODE_REVIEW EC-4 | Add Supabase query for duplicate detection |
-| EC-6 | `deleteExpenseRow` partial failure in rollback chain | 15 min | CODE_REVIEW EC-8 | Retry on wallet rollback failure |
-| EC-10 | `capvoAdvisorDaysBetween` returns NaN when both dates invalid | 5 min | CODE_REVIEW EC-10 | Guard: `if(!totalDays || totalDays <= 0) return defaults` |
-
-### P5 (Nice to Have)
+### P4 (Nice to Have)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
 | A11y | Missing aria-labels, aria-live regions | 30 min | CODE_REVIEW P5, FIX-ACTION 5.1 | Add aria-labels + aria-live to index.html |

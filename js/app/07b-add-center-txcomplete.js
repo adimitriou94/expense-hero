@@ -166,6 +166,10 @@ function txCompleteFillManualForm(e,{edit=false}={}){
   const notesEl=document.getElementById('acDNotes');
   const submit=document.getElementById('addCenterManualSubmit');
 
+  // Detect card-purchase state before overwriting anything.
+  const isCardPurchase=e.isCreditCardPurchase===true||e.paymentAccountType==='credit_card';
+  const originalCardId=e.creditCardId||e.paymentSourceId||'';
+
   if(nameEl)nameEl.value=e.name||'';
   if(amountEl)amountEl.value=Number(e.amount||0);
   if(typeof setAddCenterCategoryFromExpense==='function')setAddCenterCategoryFromExpense(e);
@@ -175,6 +179,12 @@ function txCompleteFillManualForm(e,{edit=false}={}){
   if(payEl)payEl.value=e.walletId||e.paymentSourceId||'';
   if(dateEl)dateEl.value=e.date||addCenterToday();
   if(notesEl)notesEl.value=e.notes||'';
+
+  // Preserve credit-card-purchase metadata for the save function.
+  const cardIdEl=document.getElementById('acDCreditCardId');
+  const cardFlagEl=document.getElementById('acDIsCreditCardPurchase');
+  if(cardIdEl)cardIdEl.value=originalCardId;
+  if(cardFlagEl)cardFlagEl.value=String(isCardPurchase);
 
   if(typeof syncAddCenterCategoryPicker==='function')syncAddCenterCategoryPicker();
   if(typeof syncAddCenterPaymentPicker==='function')syncAddCenterPaymentPicker();
@@ -554,6 +564,18 @@ async function saveAddCenterManualExpense(){
   const editing=addCenterEditState?.type==='daily';
   const id=editing ? addCenterEditState.id : gid();
 
+  // --- Credit-card purchase preservation ---
+  // When editing a card purchase, read the hidden fields set by txCompleteFillManualForm.
+  // If the payment source was changed away from the card, force the card metadata back.
+  let storedCardId='';
+  let storedIsCardPurchase=false;
+  if(editing){
+    const cardIdEl=document.getElementById('acDCreditCardId');
+    const cardFlagEl=document.getElementById('acDIsCreditCardPurchase');
+    storedCardId=cardIdEl?.value||'';
+    storedIsCardPurchase=cardFlagEl?.value==='true';
+  }
+
   if(!name){
     addCenterManualSaveToast('Συμπλήρωσε τίτλο εξόδου.');
     nameEl?.focus();
@@ -597,7 +619,7 @@ async function saveAddCenterManualExpense(){
     }
   }
 
-  const expense=typeof makeCreditCardExpensePayload==='function'
+  let expense=typeof makeCreditCardExpensePayload==='function'
     ? makeCreditCardExpensePayload({
         id,
         name,
@@ -626,6 +648,23 @@ async function saveAddCenterManualExpense(){
         paymentSourceName:paymentSource?.name||'',
         paymentSourceType:paymentSource?.incomeType||''
       };
+
+  // --- Restore card-purchase metadata when editing a card purchase ---
+  // If the expense was originally a credit card purchase but the user changed
+  // the payment source (or if normalizeCreditCardExpensePayload reset the flags),
+  // force the card metadata back so the edit round-trip is lossless.
+  if(editing && storedIsCardPurchase && storedCardId){
+    expense={
+      ...expense,
+      isCreditCardPurchase:true,
+      paymentAccountType:'credit_card',
+      creditCardId:storedCardId,
+      purchaseMode:'normal',
+      installmentCount:null,
+      interestFree:true,
+      installmentRate:0
+    };
+  }
 
   const monthKey=date.substring(0,7);
   ensM(monthKey);
