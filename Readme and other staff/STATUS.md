@@ -156,7 +156,7 @@ git push origin main
 
 **Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG.
 
-**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), archive cache (PERF-2), full-page render split (PERF-1), several data integrity and edge cases.
+**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), full-page render split (PERF-1), several data integrity and edge cases.
 
 See **PENDING** section below for the full list with effort estimates.
 
@@ -164,26 +164,29 @@ See **PENDING** section below for the full list with effort estimates.
 
 | Version | Date | Changes |
 |---------|------|---------|
-| **1.15.11** | 2026-06-25 | **In Progress — Data Integrity Quick Wins** |
+| **1.15.11** | 2026-06-25 | **Archive Cache + Audit Discoveries** |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
 
 ---
 
-## 🔄 IN PROGRESS — 1.15.11 Data Integrity Quick Wins
+## ✅ DONE — 1.15.11 Data Integrity Quick Wins + Archive Cache
 
-> **Audit done 2026-06-25:** Reviewed 3 quick wins from pending list. 2 were already fixed in code from older sessions.
-
-### Already Fixed (discovered during audit)
+### Audit Discoveries
 | # | Issue | Status |
 |---|-------|--------|
-| D-3 | `capvoApplyCycleAmountToWallet` wrong order (wallet update before income marking) | ✅ **Already fixed** — upsert income row first, then wallet update, then mark deposited (line 585→593→595 in `02b-data-save.js`) |
-| EC-10 | `capvoAdvisorDaysBetween` returns NaN when both dates invalid | ✅ **Already fixed** — `Math.max(1, ...)` guard at line 22 in `advisor.js` |
+| D-3 | `capvoApplyCycleAmountToWallet` wrong order | ✅ **Already fixed** — upsert income → wallet → mark (line 585→593→595 in `02b-data-save.js`) |
+| EC-10 | `capvoAdvisorDaysBetween` NaN guard | ✅ **Already fixed** — `Math.max(1, ...)` at line 22 in `advisor.js` |
+
+### New Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 1 | `archiveBuildCycles()` freezes page with >6mo data (6720+ iterations) | Added versioned cache (`__archiveCacheVersion`) with `capvoArchiveCacheVersion()` + `capvoInvalidateArchiveCache()`. Cache invalidated on every saveToSupabase() and deleteExpenseRow(). ~50x+ speedup on archive page. | `js/app/04b-archive.js`, `02b-data-save.js`, `06b-save-actions.js` |
 
 ### Still Pending
 | # | Issue | Status |
 |---|-------|--------|
-| D-1 | `saveToSupabase` delete-orphans → data loss across devices | ❌ Still present in 3 tables (expenses, fixed_expenses, credit_cards) — needs SQL migration |
+| D-1 | `saveToSupabase` delete-orphans → data loss across devices | ❌ Still present in 3 tables — needs SQL migration |
 | EC-6 | `deleteExpenseRow` partial failure in rollback chain | ⚠️ Has rollback but no retry — marginal |
 
 ---
@@ -295,7 +298,6 @@ See **PENDING** section below for the full list with effort estimates.
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
 | PERF-1 | `render()` rebuilds ENTIRE page on every data change | 1-2h | CODE_REVIEW PERF-1 | Split to per-section renders |
-| PERF-2 | `archiveBuildCycles()` freezes page with >6mo data | 30 min | FIX-ACTION 3.2, CODE_REVIEW PERF-2/PERF-5 | Add cache with version counter |
 | PERF-4 | `rStats()` rebuilds EVERY report section | 30 min | CODE_REVIEW PERF-4 | Split into per-section renders |
 
 ### P3 (Marginal — Money / UI)
