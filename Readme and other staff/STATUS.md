@@ -4,6 +4,162 @@
 
 ---
 
+## 📖 App Overview — Quick Reference
+
+> **Use this section when handing the project to another AI session.** Paste it at the top of a new chat so the assistant understands the full context.
+
+### What CAPVO Does
+
+**CAPVO** ("Track. Understand. Control.") is a **mobile-first personal expense tracker** built entirely with vanilla JS, plain CSS, and a single HTML file. Written 100% in Greek.
+
+**Core Features:**
+- **Dashboard** — Monthly budget balance, spent vs income, progress bar, salary tracking, quick-add expense
+- **Transactions (Κινήσεις)** — Daily expenses list with search, filters (expenses, fixed, cards, wallets, savings, income, 7-day)
+- **Wallets (Λογαριασμοί)** — Multi-account management (bank, cash, prepaid, savings, investment). Wallet transfers
+- **Income (Εξτρα Έσοδα)** — Extra income sources with donut charts
+- **Cards & Debts (Κάρτες & Οφειλές)** — Credit card/loan management, installment plans (ατόκες δόσεις), payment scheduling, payoff calculators
+- **Advisor (Σύμβουλος)** — Financial health engine: 0-100 score, card debt advice, 50/30/20 rule, daily recommendations
+- **Reports (Στατιστικά)** — Monthly KPIs, category breakdown, merchant analysis
+- **Archive (Αρχείο)** — Historical budget cycles
+- **Settings** — Telegram sync, backup/export/import (JSON), budget configuration
+- **Savings Goals (Στόχοι)** — Savings targets with progress tracking
+- **Telegram Bot** — Text/voice expense entry via @myexpense_hero_tracker_bot, Whisper voice transcription, fuzzy category matching
+
+### Architecture
+
+**No build system** — pure static files. No webpack/Vite/npm.
+
+**Stack:**
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vanilla JS (ES6+), plain HTML/CSS |
+| Styling | Plain CSS in 4 files |
+| PWA | Service worker, manifest.webmanifest |
+| Backend/DB | Supabase (PostgreSQL) via CDN |
+| Auth | Supabase Auth + Google OAuth, PKCE flow |
+| Serverless | Cloudflare Workers — Telegram webhook, sync |
+| AI | Cloudflare Workers AI (OpenAI Whisper) — voice→text |
+| APIs | Telegram Bot API, nager.date (Greek holidays), Google Fonts |
+| Hosting | GitHub Pages |
+
+**Data Model:** 24 Supabase tables, all with Row Level Security (RLS) using `auth.uid() = user_id`. No cross-user data access possible.
+
+### Current File Structure
+
+```
+Application/
+  index.html                     # Single HTML SPA shell (~2100 lines)
+  manifest.webmanifest           # PWA manifest
+  service-worker.js              # App-shell cache (excludes config.js)
+  worker.js                      # Cloudflare Worker (Telegram webhook)
+
+  css/
+    capvo-core.css               # Variables, reset, app shell, branding
+    capvo-components.css         # Auth, Telegram, Quick Add, mobile nav
+    capvo-pages.css              # Dashboard, transactions, income, cards, advisor, reports, archive, settings
+    capvo-mobile.css             # Mobile/final overrides
+
+  js/
+    index.html (inline <script>) # CONFIG object — SUPABASE_URL, SUPABASE_ANON_KEY, WORKER_URL
+    index.html (inline <script>) # Object.freeze(CONFIG)
+
+    js/app/                      # Core modules — 27 files loaded in numbered order
+      00a-supabase.js            # Supabase client, constants
+      00b-state.js               # Global D state, wallet/category helpers, debounce, SPA nav
+      00c1-budget-cycle.js       # Budget cycle manager
+      00c2-holiday-salary.js     # Holiday salary / 13th-month
+      00c3-fixed-budget.js       # Fixed budget config
+      01-ui-selection-toast.js   # Bulk select, toast, confirm modal
+      02a-data-fetch.js          # Supabase fetch operations
+      02b-data-save.js           # Supabase save/delete operations
+      02c-wallet-settings.js     # Wallet balance, fixed expense payments
+      03a-dashboard.js           # Dashboard render, wallet cards
+      03b-transactions.js        # Transaction list render
+      03c1-income-sources.js     # Income page render
+      03c2-savings-goals.js      # Savings goals render
+      04a-reports.js             # Reports/statistics
+      04b-archive.js             # Archive/history
+      05-income-pickers.js       # Income picker UI
+      06a-modal-ui.js            # Modal open/close, helpers
+      06b-save-actions.js        # Validate/save/delete actions
+      06c-nav-auth.js            # Navigation router, auth, Telegram
+      06d1-misc-ui.js            # Quick add, misc UI
+      06d2a-onboarding-flow.js   # Onboarding wizard flow
+      06d2b-onboarding-render.js # Onboarding wizard render
+      06d3-finishing.js          # Finishing touches, legacy cleanup
+      07a-add-center-core.js     # Quick/Manual tabs, pickers, form
+      07b-add-center-txcomplete.js # Transaction completion
+      07c-add-center-v4v5.js     # V4 Premium + V5 Hotfix
+      08-auth-bootstrap.js       # Auth bootstrap, initApp guard
+      09-wallet-financial-engine.js # Wallet financial calculations
+
+    cards.js                     # Credit card & debt planner (~500 lines)
+    sync.js                      # Telegram sync, expense parsing (~450 lines)
+    advisor.js                   # Financial advisor engine (~500 lines)
+    wallets.js                   # Wallet UI, transfers (~300 lines)
+
+    js/legacy/
+      app.monolith.backup.js     # Full pre-refactor monolith (~5217 lines)
+      06-modals-nav-auth.js.backup
+```
+
+### Configuration & Credentials
+
+| Item | Location | Notes |
+|------|----------|-------|
+| `CONFIG` object (SUPABASE_URL, SUPABASE_ANON_KEY, WORKER_URL) | **Inline in `index.html`** | Replaced `js/config.js` in v1.15.10 after it was removed from git |
+| Supabase Service Role Key | Cloudflare Worker (`worker.js`) only | Never in client code |
+| Telegram Bot Token | Cloudflare Worker (`worker.js`) only | Never in client code |
+| Google OAuth Client ID | Supabase Dashboard | PKCE flow, no client secrets |
+
+**⚠️ IMPORTANT:** `js/config.js` was **removed from git** and replaced with inline CONFIG. **Never** restore `js/config.js` as a file — it causes 404 on deployment. If you need to update credentials, edit the inline `<script>` in `index.html`.
+
+### Version Management
+
+Version is defined in **4 places** and must be bumped together:
+1. `js/app-version.js` — `window.CAPVO_VERSION` + `window.CAPVO_CACHE_VERSION`
+2. `index.html` — `?v=VERSION` on all 41 script/style links
+3. `manifest.webmanifest` — `"version"` field
+4. `service-worker.js` — `CACHE_NAME` constant
+
+---
+
+## 🤖 AI Session Instructions
+
+> **Paste this entire file at the start of a new AI chat.** It contains everything needed to understand the project state and continue work.
+
+### How to Work on This Project
+
+1. **Always read STATUS.md first** — it has the complete list of what's done and what's pending
+2. **Every change must be committed locally** — never push without explicit user approval
+3. **Test before pushing** — always tell the user what to test, then wait for confirmation
+4. **Update STATUS.md with every change** — this is the single source of truth
+5. **The CONFIG object is inline in index.html** — never try to use an external config.js file
+6. **Supabase anon key is public by design** — it's safe to be in the HTML; RLS protects all data
+7. **Service worker caches APP_SHELL only** — config.js is excluded; API requests are never cached
+8. **Script load order in index.html is critical** — the numbered modules depend on each other
+9. **No build system** — all files are plain static; changes are live after GitHub Pages deploy
+10. **Legacy backup exists** — `js/legacy/app.monolith.backup.js` has the pre-refactor monolith if needed
+
+### Git Workflow
+
+```bash
+# Commit only — never push without asking
+git add -A
+git commit -m "description"
+
+# Only push when user says: "push"
+git push origin main
+```
+
+### Current State (v1.15.10)
+
+**Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG.
+
+**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), archive cache (PERF-2), full-page render split (PERF-1), several data integrity and edge cases.
+
+See **PENDING** section below for the full list with effort estimates.
+
 ## Version History
 
 | Version | Date | Changes |
