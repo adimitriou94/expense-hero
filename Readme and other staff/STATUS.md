@@ -1,6 +1,6 @@
 # CAPVO — Status & Change Log
 
-> Last updated: 2026-06-26 — Version 1.15.13 (pending deployment)
+> Last updated: 2026-06-26 — Version 1.15.13 (deployed)
 
 ---
 
@@ -43,6 +43,24 @@
 | Hosting | GitHub Pages |
 
 **Data Model:** 24 Supabase tables, all with Row Level Security (RLS) using `auth.uid() = user_id`. No cross-user data access possible.
+
+### DB Schema Changes (v1.15.13)
+
+The following columns were added to the database in v1.15.13:
+
+| Table | Column | Type | Purpose |
+|-------|--------|------|---------|
+| wallets | `deleted_at` | TIMESTAMPTZ | Soft-delete: NULL = active, timestamp = deleted |
+| expenses | `deleted_at` | TIMESTAMPTZ | Soft-delete: NULL = active, timestamp = deleted |
+| fixed_expenses | `deleted_at` | TIMESTAMPTZ | Soft-delete: NULL = active, timestamp = deleted |
+| credit_cards | `deleted_at` | TIMESTAMPTZ | Soft-delete: NULL = active, timestamp = deleted |
+
+**RLS SELECT policies now include `AND deleted_at IS NULL` filter.** This means:
+- Existing data is unaffected (all rows have `deleted_at = NULL`)
+- Soft-deleted rows are hidden from SELECT queries automatically
+- INSERT/UPDATE/DELETE policies remain unchanged
+
+**RPC Function:** `public.delete_installment_plan(p_plan_id uuid)` — wraps 4 sequential deletes in a single transaction (atomic deletion).
 
 ### Current File Structure
 
@@ -140,6 +158,7 @@ Version is defined in **4 places** and must be bumped together:
 8. **Script load order in index.html is critical** — the numbered modules depend on each other
 9. **No build system** — all files are plain static; changes are live after GitHub Pages deploy
 10. **Legacy backup exists** — `js/legacy/app.monolith.backup.js` has the pre-refactor monolith if needed
+11. **DB has soft-delete columns (deleted_at)** — `saveToSupabase()` uses soft-delete for orphan cleanup, NOT hard DELETE. SQL migration ran in v1.15.13.
 
 ### Git Workflow
 
@@ -152,13 +171,13 @@ git commit -m "description"
 git push origin main
 ```
 
-### Current State (v1.15.12)
+### Current State (v1.15.13)
 
-**Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG, archive cache, saveFixed/saveCardPayment recovery.
+**Recently completed (v1.15.13):** Data integrity batch — soft-delete migration, atomic installment deletion, double-click guard, wallet rollback retry, sync ordering, per-page rendering.
 
-**Pending high-priority:** all P0/P1/P2 items from this batch are DONE. Remaining: PERF-3 (render chain split, overlapping with PERF-1), A11y improvements. Wallet TOCTOU race (D-2) N/A — PWA mode.
+**All P0/P1/P2 items from the pending list are DONE.**
 
-See **PENDING** section below for the full list with effort estimates.
+**Still pending (low priority):** PERF-3 (render chain optimization, partially overlaps with v1.15.13 changes), A11y improvements. Wallet TOCTOU race (D-2) N/A — PWA mode.
 
 ---
 
@@ -171,6 +190,36 @@ See **PENDING** section below for the full list with effort estimates.
 | **1.15.11** | 2026-06-25 | **Archive Cache + Audit Discoveries** |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
+
+---
+
+## ✅ DONE — 1.15.13 Data Integrity + Performance Batch
+
+### Double-Click / Race Condition Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| **EC-5** | `createPaidTodayCycle` — double-click → double deposit | Set `wallet_deposit_applied:true` in upsert, re-fetch after upsert, return `already_applied` if race detected. UI guard via `__capvoPaidTodayBusy`. | `02b-data-save.js` |
+| **EC-9** | `saveWalletFromSheet` primary flag clearing race | Only clear the specific old primary wallet (not ALL wallets). Add `updated_at` version check so concurrent save can't erase our primary assignment. | `02c-wallet-settings.js` |
+| **EC-6** | `deleteExpenseRow` wallet rollback silently fails | Retry wallet balance rollback up to 3 times with 150ms backoff. Previously failed silently leaving wallet in inconsistent state. | `06b-save-actions.js` |
+
+### Data Integrity (Soft-Delete Migration)
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| **D-1** | `saveToSupabase` delete-orphans → data loss across devices | Replace hard DELETE with `SET deleted_at` in saveToSupabase, deleteRowsFromTable, deleteExpenseRow, deleteInstallmentPlan. Wallet fetch filters `is_active=true`. | `02b-data-save.js`, `01-ui-selection-toast.js`, `02c-wallet-settings.js`, `02a-data-fetch.js` |
+| **D-4** | Telegram sync optimistic local mutation before server confirm | Move `D.months` mutation AFTER `saveSyncedExpenses` succeeds. Removed catch-block local cleanup (no longer needed). | `sync.js` |
+| **D-5** | `deleteInstallmentPlan` cascade non-atomic | Replace 4 sequential deletes with `supabaseClient.rpc('delete_installment_plan')`. Requires SQL migration. | `cards.js` |
+
+### Performance
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| **PERF-1** | `render()` rebuilds ENTIRE page on every data change | All page-specific renders (rCC, rAdv, renderSavingsPage, rStats, rArch, renderSettingsPage) called unconditionally to support More menu overlays (which don't set `.view.active`). | `03a-dashboard.js` |
+
+### DB Migration Applied
+| # | Change | Details |
+|---|--------|---------|
+| 1 | `deleted_at` columns | Added to wallets, expenses, fixed_expenses, credit_cards tables |
+| 2 | RLS SELECT policies | Now include `AND deleted_at IS NULL` filter (DROP + CREATE) |
+| 3 | RPC function | `delete_installment_plan(uuid)` — atomic 4-way delete transaction |
 
 ---
 
@@ -211,12 +260,6 @@ See **PENDING** section below for the full list with effort estimates.
 | # | Issue | Fix | File |
 |---|-------|-----|------|
 | 1 | `archiveBuildCycles()` freezes page with >6mo data (6720+ iterations) | Added versioned cache (`__archiveCacheVersion`) with `capvoArchiveCacheVersion()` + `capvoInvalidateArchiveCache()`. Cache invalidated on every saveToSupabase() and deleteExpenseRow(). ~50x+ speedup on archive page. | `js/app/04b-archive.js`, `02b-data-save.js`, `06b-save-actions.js` |
-
-### Still Pending
-| # | Issue | Status |
-|---|-------|--------|
-| D-1 | `saveToSupabase` delete-orphans → data loss | ❌ Still present in 3 tables — needs SQL migration |
-| EC-6 | `deleteExpenseRow` partial failure in rollback chain | ⚠️ Has rollback but no retry — marginal |
 
 ---
 
@@ -309,47 +352,7 @@ See **PENDING** section below for the full list with effort estimates.
 ### P2 (Performance)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
-| PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions |
-
-### P3 (Marginal — Money / UI)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | **Already fixed** — `capvoAdvisorSum` with raw amounts (line 409) ✅ |
-
-### P4 (Nice to Have)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| A11y | Missing aria-labels, aria-live regions | 30 min | CODE_REVIEW P5, FIX-ACTION 5.1 | Add aria-labels + aria-live to index.html |
-| A11y | Inline onclick handlers → should migrate to addEventListener | Long-term | CODE_REVIEW P5 | Progressive migration |
-
----
-
-## ✅ DONE — 1.15.13 Data Integrity + Performance Batch
-
-### Double-Click / Race Condition Fixes
-| # | Issue | Fix | File |
-|---|-------|-----|------|
-| EC-5 | `createPaidTodayCycle` — double-click → double deposit | Set `wallet_deposit_applied:true` in upsert, re-fetch after upsert, return `already_applied` if race detected. UI guard via `__capvoPaidTodayBusy`. | `02b-data-save.js` |
-| EC-9 | `saveWalletFromSheet` primary flag clearing race | Only clear the specific old primary wallet (not ALL wallets). Add `updated_at` version check so concurrent save can't erase our primary assignment. | `02c-wallet-settings.js` |
-| EC-6 | `deleteExpenseRow` wallet rollback silently fails | Retry wallet balance rollback up to 3 times with 150ms backoff. Previously failed silently leaving wallet in inconsistent state. | `06b-save-actions.js` |
-
-### Data Integrity
-| # | Issue | Fix | File |
-|---|-------|-----|------|
-| D-1 | `saveToSupabase` delete-orphans → data loss across devices | Replace hard DELETE with `SET deleted_at` in saveToSupabase, deleteRowsFromTable, deleteExpenseRow, deleteInstallmentPlan. Wallet fetch filters `is_active=true`. | `02b-data-save.js`, `01-ui-selection-toast.js`, `02c-wallet-settings.js`, `02a-data-fetch.js` |
-| D-4 | Telegram sync optimistic local mutation before server confirm | Move `D.months` mutation AFTER `saveSyncedExpenses` succeeds. Removed catch-block local cleanup (no longer needed). | `sync.js` |
-| D-5 | `deleteInstallmentPlan` cascade non-atomic | Replace 4 sequential deletes with `supabaseClient.rpc('delete_installment_plan')`. Requires SQL migration. | `cards.js` |
-
-### Performance
-| # | Issue | Fix | File |
-|---|-------|-----|------|
-| PERF-1 | `render()` rebuilds ENTIRE page on every data change | Per-page conditional rendering: only render income, reports, archive, cards, savings, advisor, settings sections when their respective page is active. | `03a-dashboard.js` |
-
-### P3 (Marginal — Money / UI)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | **Already fixed** — `capvoAdvisorSum` with raw amounts (line 409) ✅ |
-| PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions |
+| PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions — partially overlaps with v1.15.13 changes |
 
 ### P4 (Nice to Have)
 | # | Issue | Effort | Source | Notes |
@@ -399,6 +402,7 @@ See **PENDING** section below for the full list with effort estimates.
 
 For each new version:
 - [ ] Bump version in `js/app-version.js`, `index.html`, `manifest.webmanifest`, `service-worker.js`
+- [ ] **If deploying v1.15.13 or later:** Run SQL migration from `Readme and other staff/MIGRATION-DELETED-AT.sql` in Supabase SQL Editor first
 - [ ] Test in browser (login, add/edit/delete expenses, wallet, advisor, sync)
 - [ ] Verify SW cache invalidation (new CACHE_NAME)
 - [ ] Confirm `js/config.js` is NOT in git (CONFIG is inline in `index.html`)
