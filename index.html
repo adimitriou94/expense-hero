@@ -2052,7 +2052,16 @@
 
 <script src="js/app-version.js?v=1.15.10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=1.15.10"></script>
+<script>
+  // Inline config — replaces js/config.js (which was removed from git)
+  // Supabase anon key is public by design (RLS protects data)
+  window.CONFIG = {
+    SUPABASE_URL: 'https://gqjejalqoruclppraxus.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_PjKnfKJQKXrsoqW8sQe5Uw_ItxjbraS',
+    WORKER_URL: 'https://blue-breeze-e6c5.adimitriou94.workers.dev/',
+  };
+  Object.freeze(window.CONFIG);
+</script>
 
 <!-- CAPVO core app split. Order matters. -->
 <script src="js/app/00a-supabase.js?v=1.15.10"></script>
