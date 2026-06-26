@@ -8,6 +8,21 @@ let archiveExpandedItem = '';
 let archiveViewMode = localStorage.getItem('capvoArchiveMode') || 'cycles';
 if(!['cycles','months'].includes(archiveViewMode))archiveViewMode='cycles';
 
+// ===== CACHE LAYER for archiveBuildCycles =====
+// Prevents expensive re-computation on every render. Bump __archiveCacheVersion when data changes.
+let __archiveCacheVersion = 0;
+let __archiveCached = null;
+window.capvoArchiveCacheVersion = () => __archiveCacheVersion;
+window.capvoInvalidateArchiveCache = () => { __archiveCacheVersion++; __archiveCached = null; };
+function archiveBuildCyclesCached(){
+  if(__archiveCached && __archiveCached.version === __archiveCacheVersion){
+    return __archiveCached.data;
+  }
+  const data = archiveBuildCycles();
+  __archiveCached = { version: __archiveCacheVersion, data };
+  return data;
+}
+
 function archiveMonthName(k){
   const [y,mo]=String(k).split('-');
   return (MG[(parseInt(mo)||1)-1]||mo)+' '+y;
@@ -726,7 +741,7 @@ function rArch(){
     return;
   }
 
-  const cycles=archiveBuildCycles();
+  const cycles=archiveBuildCyclesCached();
   if(cycles.length===0){
     list.innerHTML=`${archiveModeSwitchHtml()}${archiveEmptyHtml(true)}`;
     return;

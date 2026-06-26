@@ -779,6 +779,8 @@ async function delExp(t,id){
     capvoAppOperationSuccess?.('Ολοκληρώθηκε','Η εγγραφή διαγράφηκε.');
     showMiniToast('✅ Η εγγραφή διαγράφηκε');
 
+    // Invalidate archive cycle cache after delete
+    if(typeof capvoInvalidateArchiveCache==='function')capvoInvalidateArchiveCache();
   }catch(e){
     console.error('Delete error:',e);
 

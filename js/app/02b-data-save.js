@@ -164,6 +164,8 @@ async function saveToSupabase(){
     );
     throw e;
   }
+  // Invalidate archive cycle cache after successful save — data has changed
+  if(typeof capvoInvalidateArchiveCache==='function')capvoInvalidateArchiveCache();
 }
 
 
