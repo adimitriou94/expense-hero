@@ -164,9 +164,27 @@ See **PENDING** section below for the full list with effort estimates.
 
 | Version | Date | Changes |
 |---------|------|---------|
-| **1.15.10** | 2026-06-25 | **Performance + Edge Cases + Config Inline** (see below) |
+| **1.15.11** | 2026-06-25 | **In Progress — Data Integrity Quick Wins** |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
+
+---
+
+## 🔄 IN PROGRESS — 1.15.11 Data Integrity Quick Wins
+
+> **Audit done 2026-06-25:** Reviewed 3 quick wins from pending list. 2 were already fixed in code from older sessions.
+
+### Already Fixed (discovered during audit)
+| # | Issue | Status |
+|---|-------|--------|
+| D-3 | `capvoApplyCycleAmountToWallet` wrong order (wallet update before income marking) | ✅ **Already fixed** — upsert income row first, then wallet update, then mark deposited (line 585→593→595 in `02b-data-save.js`) |
+| EC-10 | `capvoAdvisorDaysBetween` returns NaN when both dates invalid | ✅ **Already fixed** — `Math.max(1, ...)` guard at line 22 in `advisor.js` |
+
+### Still Pending
+| # | Issue | Status |
+|---|-------|--------|
+| D-1 | `saveToSupabase` delete-orphans → data loss across devices | ❌ Still present in 3 tables (expenses, fixed_expenses, credit_cards) — needs SQL migration |
+| EC-6 | `deleteExpenseRow` partial failure in rollback chain | ⚠️ Has rollback but no retry — marginal |
 
 ---
 
