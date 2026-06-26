@@ -122,7 +122,7 @@
 ### P3 (Marginal — Money / UI)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
-| FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | Use `capvoAdvisorSum` with raw amounts |
+| FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | **Already fixed** — `capvoAdvisorSum` with raw amounts (line 409) ✅ |
 | UI-5 | `txCompleteFillManualForm` card purchases lose `isCreditCardPurchase` metadata | 10 min | CODE_REVIEW UI-5 | Preserve card purchase flags, prevent payment source change |
 | PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions |
 

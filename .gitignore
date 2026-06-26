@@ -20,3 +20,6 @@ js/config.js
 # Logs
 *.log
 
+# Documentation folder (ignore everything)
+Readme and other staff/
+
