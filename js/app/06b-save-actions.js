@@ -742,7 +742,15 @@ async function deleteExpenseRow(type,id){
       return;
     }catch(e){
       if(walletRollback?.rollback){
-        try{await walletRollback.rollback();}catch(rollbackErr){console.error('delete daily wallet rollback failed:',rollbackErr);}
+        let rollbackOk=false;
+        for(let retry=0;retry<3&&!rollbackOk;retry++){
+          try{await walletRollback.rollback();rollbackOk=true;}
+          catch(rollbackErr){
+            console.warn(`delete daily wallet rollback attempt ${retry+1}/3 failed:`,rollbackErr);
+            if(retry<2)await new Promise(r=>setTimeout(r,150));
+          }
+        }
+        if(!rollbackOk)console.error('delete daily wallet rollback failed after retries:',walletRollback.rollback);
       }
       throw e;
     }

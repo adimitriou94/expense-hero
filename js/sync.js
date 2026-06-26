@@ -1216,10 +1216,6 @@ async function confirmSync(...messageIds){
   }
 
   pendingExpenses.forEach(({msgId,expense,paymentSource})=>{
-    const monthKey=expense.date.substring(0,7);
-    ensM(monthKey);
-    D.months[monthKey].daily.push(expense);
-
     newExpenseRows.push({
       id:expense.id,
       user_id:dataOwnerId,
@@ -1280,6 +1276,13 @@ async function confirmSync(...messageIds){
       }
       await saveSyncedExpenses(newExpenseRows);
       localStorage.setItem('needs_data_reload','1');
+
+      // Only mutate local state after server confirms the save (D-4 fix).
+      pendingExpenses.forEach(({expense})=>{
+        const monthKey=expense.date.substring(0,7);
+        ensM(monthKey);
+        D.months[monthKey].daily.push(expense);
+      });
     }
 
     statusEl.textContent='Ενημέρωση Telegram messages...';
@@ -1316,13 +1319,6 @@ async function confirmSync(...messageIds){
     if(walletBatchRollback){
       try{await walletBatchRollback();}catch(rollbackErr){console.error('confirmSync wallet rollback failed:',rollbackErr);}
     }
-    try{
-      pendingExpenses.forEach(({expense})=>{
-        Object.values(D.months||{}).forEach(m=>{
-          m.daily=(m.daily||[]).filter(x=>String(x.id)!==String(expense.id));
-        });
-      });
-    }catch(cleanErr){console.error('confirmSync local cleanup failed:',cleanErr);}
 
     statusEl.style.display='block';
     statusEl.className='sync-status error';

@@ -42,22 +42,24 @@ async function deleteRowsFromTable(table,ids){
   const token=currentSession?.access_token;
   if(!token)throw new Error('Δεν υπάρχει ενεργό session.');
 
-  const filter=ids.map(id=>`"${id}"`).join(',');
+  const filter=ids.map(id=>`"id"=eq.${id}`).join(',');
 
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),10000);
 
   try{
     const res=await fetch(
-      `${CONFIG.SUPABASE_URL}/rest/v1/${table}?id=in.(${filter})`,
+      `${CONFIG.SUPABASE_URL}/rest/v1/${table}?${filter}`,
       {
-        method:'DELETE',
+        method:'PATCH',
         headers:{
           apikey:CONFIG.SUPABASE_ANON_KEY,
           Authorization:'Bearer '+token,
+          'Content-Type':'application/json',
           Prefer:'return=minimal'
         },
-        signal:controller.signal
+        signal:controller.signal,
+        body:JSON.stringify({deleted_at:new Date().toISOString()})
       }
     );
 

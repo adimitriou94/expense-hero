@@ -488,14 +488,30 @@ async function capvoSaveWallet(walletData){
   const isNew=!walletData.id;
   const id=walletData.id||crypto.randomUUID();
 
-  // If setting as default / primary, clear the previous flags first.
-  if(walletData.isDefault || walletData.isPrimaryBudget){
+  // If setting as default / primary, clear the previous primary flag atomically.
+  // Only clear the specific wallet that IS the current primary, using updated_at
+  // as a version guard so a concurrent save won't erase our primary assignment.
+  if(walletData.isPrimaryBudget){
+    const {data:currentPrimary,error:findErr}=await supabaseClient
+      .from('wallets')
+      .select('id,updated_at')
+      .eq('user_id',ownerUserId)
+      .eq('is_primary_budget',true)
+      .limit(1);
+    if(!findErr && currentPrimary?.[0]){
+      const oldPrimary=currentPrimary[0];
+      const {error:clearErr}=await supabaseClient
+        .from('wallets')
+        .update({is_primary_budget:false,updated_at:new Date().toISOString()})
+        .eq('id',oldPrimary.id)
+        .eq('updated_at',oldPrimary.updated_at);
+      if(clearErr)throw clearErr;
+    }
+  }
+  if(walletData.isDefault){
     await supabaseClient
       .from('wallets')
-      .update({
-        ...(walletData.isDefault ? {is_default:false} : {}),
-        ...(walletData.isPrimaryBudget ? {is_primary_budget:false} : {})
-      })
+      .update({is_default:false})
       .eq('user_id',ownerUserId);
   }
 
@@ -542,10 +558,10 @@ async function capvoDeleteWallet(walletId){
   const ownerUserId=getFinanceUserId();
   if(!ownerUserId)throw new Error('Missing user');
 
-  // Soft delete (set inactive) instead of hard delete to preserve history
+  // Soft delete (set inactive + deleted_at) instead of hard delete to preserve history (D-1)
   const {error}=await supabaseClient
     .from('wallets')
-    .update({is_active:false, updated_at:new Date().toISOString()})
+    .update({is_active:false, deleted_at:new Date().toISOString(), updated_at:new Date().toISOString()})
     .eq('id',walletId)
     .eq('user_id',ownerUserId);
 

@@ -1,6 +1,6 @@
 # CAPVO — Status & Change Log
 
-> Last updated: 2026-06-25 — Version 1.15.12 (deployed)
+> Last updated: 2026-06-26 — Version 1.15.13 (pending deployment)
 
 ---
 
@@ -156,7 +156,7 @@ git push origin main
 
 **Recently completed:** Security fixes, wallet state management, closeAddCenterSheet consolidation, card payment order, advisor float fixes, sync picker DOM index fix, search debounce, wallet reduce float fix, popstate cleanup, inline CONFIG, archive cache, saveFixed/saveCardPayment recovery.
 
-**Pending high-priority:** delete-orphans data loss (D-1), wallet TOCTOU race (D-2), full-page render split (PERF-1), rStats rebuild (PERF-4), several data integrity and edge cases.
+**Pending high-priority:** all P0/P1/P2 items from this batch are DONE. Remaining: PERF-3 (render chain split, overlapping with PERF-1), A11y improvements. Wallet TOCTOU race (D-2) N/A — PWA mode.
 
 See **PENDING** section below for the full list with effort estimates.
 
@@ -166,6 +166,7 @@ See **PENDING** section below for the full list with effort estimates.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| **1.15.13** | 2026-06-26 | **Data Integrity + Performance Batch** (see below) |
 | **1.15.12** | 2026-06-25 | **Data Integrity + Edge Cases Batch** (see below) |
 | **1.15.11** | 2026-06-25 | **Archive Cache + Audit Discoveries** |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
@@ -305,25 +306,44 @@ See **PENDING** section below for the full list with effort estimates.
 
 ## 📋 PENDING — What's Still Left
 
-### P0 (Critical / High — Data Integrity)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| D-1 | `saveToSupabase` delete-orphans pattern → data loss across devices | 3-4h | FIX-ACTION 2.1, CODE_REVIEW D-1 | Needs SQL migration (`deleted_at` column), changes `saveToSupabase`, `deleteExpenseRow` |
-| D-2 | `capvoUpdateWalletBalance` TOCTOU race — no `updated_at` check | 30 min | CODE_REVIEW D-7 | Two tabs overwrite silently |
-| D-4 | Telegram sync optimistic local mutation before server confirm | 30 min | CODE_REVIEW D-8 | Move `D.months` mutation after server save |
-| D-5 | `deleteInstallmentPlan` — cascade deletes non-atomic | 1h | CODE_REVIEW D-5 | Needs DB-level cascade or RPC transaction |
-
-### P1 (Data Integrity)
-| # | Issue | Effort | Source | Notes |
-|---|-------|--------|--------|-------|
-| EC-5 | `createPaidTodayCycle` — double-click between tabs | 15 min | CODE_REVIEW EC-5 | DB-level ON CONFLICT WHERE NOT wallet_deposit_applied |
-| EC-9 | `saveWalletFromSheet` primary flag clearing race | 15 min | CODE_REVIEW EC-9 | `updated_at` version check on clearing UPDATE |
-| EC-6 | `deleteExpenseRow` partial failure in rollback chain | 15 min | CODE_REVIEW EC-8 | Retry on wallet rollback failure |
-
 ### P2 (Performance)
 | # | Issue | Effort | Source | Notes |
 |---|-------|--------|--------|-------|
-| PERF-1 | `render()` rebuilds ENTIRE page on every data change | 1-2h | CODE_REVIEW PERF-1 | Split to per-section renders |
+| PERF-3 | Split `render()` to per-section calls (not full chain) | 1-2h | FIX-ACTION 3.3 | Call only relevant render functions |
+
+### P3 (Marginal — Money / UI)
+| # | Issue | Effort | Source | Notes |
+|---|-------|--------|--------|-------|
+| FP-4 | `savingsNet` double-counts withdrawals in advisor | 10 min | FIX-ACTION 4.2, CODE_REVIEW FP-4 | **Already fixed** — `capvoAdvisorSum` with raw amounts (line 409) ✅ |
+
+### P4 (Nice to Have)
+| # | Issue | Effort | Source | Notes |
+|---|-------|--------|--------|-------|
+| A11y | Missing aria-labels, aria-live regions | 30 min | CODE_REVIEW P5, FIX-ACTION 5.1 | Add aria-labels + aria-live to index.html |
+| A11y | Inline onclick handlers → should migrate to addEventListener | Long-term | CODE_REVIEW P5 | Progressive migration |
+
+---
+
+## ✅ DONE — 1.15.13 Data Integrity + Performance Batch
+
+### Double-Click / Race Condition Fixes
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| EC-5 | `createPaidTodayCycle` — double-click → double deposit | Set `wallet_deposit_applied:true` in upsert, re-fetch after upsert, return `already_applied` if race detected. UI guard via `__capvoPaidTodayBusy`. | `02b-data-save.js` |
+| EC-9 | `saveWalletFromSheet` primary flag clearing race | Only clear the specific old primary wallet (not ALL wallets). Add `updated_at` version check so concurrent save can't erase our primary assignment. | `02c-wallet-settings.js` |
+| EC-6 | `deleteExpenseRow` wallet rollback silently fails | Retry wallet balance rollback up to 3 times with 150ms backoff. Previously failed silently leaving wallet in inconsistent state. | `06b-save-actions.js` |
+
+### Data Integrity
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| D-1 | `saveToSupabase` delete-orphans → data loss across devices | Replace hard DELETE with `SET deleted_at` in saveToSupabase, deleteRowsFromTable, deleteExpenseRow, deleteInstallmentPlan. Wallet fetch filters `is_active=true`. | `02b-data-save.js`, `01-ui-selection-toast.js`, `02c-wallet-settings.js`, `02a-data-fetch.js` |
+| D-4 | Telegram sync optimistic local mutation before server confirm | Move `D.months` mutation AFTER `saveSyncedExpenses` succeeds. Removed catch-block local cleanup (no longer needed). | `sync.js` |
+| D-5 | `deleteInstallmentPlan` cascade non-atomic | Replace 4 sequential deletes with `supabaseClient.rpc('delete_installment_plan')`. Requires SQL migration. | `cards.js` |
+
+### Performance
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| PERF-1 | `render()` rebuilds ENTIRE page on every data change | Per-page conditional rendering: only render income, reports, archive, cards, savings, advisor, settings sections when their respective page is active. | `03a-dashboard.js` |
 
 ### P3 (Marginal — Money / UI)
 | # | Issue | Effort | Source | Notes |
