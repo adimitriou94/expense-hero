@@ -20,6 +20,7 @@ js/config.js
 # Logs
 *.log
 
-# Documentation folder (ignore everything)
-Readme and other staff/
+# Documentation folder (only STATUS.md is tracked, all others ignored)
+Readme and other staff/*
+!Readme and other staff/STATUS.md
 
