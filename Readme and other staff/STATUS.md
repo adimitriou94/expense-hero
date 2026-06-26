@@ -1,6 +1,6 @@
 # CAPVO — Status & Change Log
 
-> Last updated: 2026-06-25 — Version 1.15.10
+> Last updated: 2026-06-25 — Version 1.15.10 (deployed)
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
-| **1.15.10** | 2026-06-25 | **Performance + Edge Cases Batch** (see below) |
+| **1.15.10** | 2026-06-25 | **Performance + Edge Cases + Config Inline** (see below) |
 | **1.15.9** | 2026-06-25 | **Security + Bug Fixes Batch** (see below) |
 | 1.15.8 | — | Previous release |
 
@@ -48,10 +48,15 @@
 |---|-------|-----|------|
 | 7 | `walletRole()` wrapper around `inferWalletBudgetRole` — redundant | Renamed internal call to use `window.capvoWalletBudgetRole` directly; kept alias for compatibility | `js/app/09-wallet-financial-engine.js` |
 
+### Config / Deployment
+| # | Issue | Fix | File |
+|---|-------|-----|------|
+| 9 | `js/config.js` removed from git → 404 on deployment | Replaced external `config.js` with inline `<script> window.CONFIG = {...} </script>` in `index.html` | `index.html` |
+
 ### Version Bump
 | # | Change | Files |
 |---|--------|-------|
-| 8 | Version `1.15.9` → `1.15.10` | `index.html` (41 script links), `js/app-version.js`, `manifest.webmanifest`, `service-worker.js` |
+| 10 | Version `1.15.9` → `1.15.10` | `index.html` (41 script links), `js/app-version.js`, `manifest.webmanifest`, `service-worker.js` |
 
 ---
 
@@ -60,7 +65,7 @@
 ### Security
 | # | Issue | Fix | File |
 |---|-------|-----|------|
-| 1 | config.js tracked in git + exposed Supabase anon key | Added to `.gitignore`, `git rm --cached`, removed from SW `APP_SHELL`, bumped `CACHE_NAME` to v1.15.9 | `.gitignore`, `service-worker.js` |
+| 1 | config.js tracked in git + exposed Supabase anon key | Added to `.gitignore`, `git rm --cached`, removed from SW `APP_SHELL`, replaced with inline `<script> window.CONFIG = {...} </script>` in `index.html` (anon key is public by design — RLS protects data) | `index.html`, `.gitignore`, `service-worker.js` |
 | 2 | Dead `SUPABASE_SERVICE_ROLE_KEY` reference in client code | Deleted entire `saveTelegramLinkRequest` function (23 lines) | `js/app/06c-nav-auth.js` |
 
 ### Critical Bug Fixes
@@ -185,7 +190,7 @@ For each new version:
 - [ ] Bump version in `js/app-version.js`, `index.html`, `manifest.webmanifest`, `service-worker.js`
 - [ ] Test in browser (login, add/edit/delete expenses, wallet, advisor, sync)
 - [ ] Verify SW cache invalidation (new CACHE_NAME)
-- [ ] Confirm `js/config.js` is NOT in git (`git ls-files js/config.js` should return nothing)
+- [ ] Confirm `js/config.js` is NOT in git (CONFIG is inline in `index.html`)
 - [ ] Push to GitHub Pages
 
 ---
