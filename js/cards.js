@@ -931,6 +931,7 @@ async function saveCardPayment(){
       try{await supabaseClient.from('credit_card_transactions').delete().eq('id',tx.id).eq('user_id',userId);}catch(_e){}
     }
 
+    try{await fetchAllData(userId);render();}catch(reloadErr){console.error('Reload after saveCardPayment failure failed:',reloadErr);}
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω την πληρωμή κάρτας.');
     if(err)err.textContent='';
     showMiniToast?.('❌ Σφάλμα πληρωμής κάρτας','error');

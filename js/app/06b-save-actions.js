@@ -591,6 +591,7 @@ async function saveFixed(){
 
   }catch(e){
     console.error('saveFixed failed:',e);
+    try{await fetchAllData(userId);render();}catch(reloadErr){console.error('Reload after saveFixed failure failed:',reloadErr);}
     capvoAppOperationError?.('Δεν ολοκληρώθηκε','Δεν μπόρεσα να αποθηκεύσω το πάγιο.');
     showMiniToast(
       '❌ Αποτυχία αποθήκευσης',
