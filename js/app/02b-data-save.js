@@ -36,14 +36,14 @@ async function saveToSupabase(){
 
     const {data:dbFixed,error:fixedFetchError}=await supabaseClient
       .from('fixed_expenses')
-      .select('id,deleted_at')
+      .select('id')
       .eq('user_id',ownerUserId);
     if(fixedFetchError)throw fixedFetchError;
 
     const fixedIds=new Set(D.fixedExpenses.map(e=>e.id));
-    const fixedToSoftDelete=(dbFixed||[]).filter(e=>!fixedIds.has(e.id)&&!e.deleted_at).map(e=>e.id);
-    if(fixedToSoftDelete.length>0){
-      const {error}=await supabaseClient.from('fixed_expenses').update({deleted_at:new Date().toISOString()}).in('id',fixedToSoftDelete);
+    const fixedToDelete=(dbFixed||[]).filter(e=>!fixedIds.has(e.id)).map(e=>e.id);
+    if(fixedToDelete.length>0){
+      const {error}=await supabaseClient.from('fixed_expenses').delete().in('id',fixedToDelete);
       if(error)throw error;
     }
 
@@ -80,14 +80,14 @@ async function saveToSupabase(){
 
     const {data:dbCards,error:cardsFetchError}=await supabaseClient
       .from('credit_cards')
-      .select('id,deleted_at')
+      .select('id')
       .eq('user_id',ownerUserId);
     if(cardsFetchError)throw cardsFetchError;
 
     const cardIds=new Set(D.creditCards.map(c=>c.id));
-    const cardsToSoftDelete=(dbCards||[]).filter(c=>!cardIds.has(c.id)&&!c.deleted_at).map(c=>c.id);
-    if(cardsToSoftDelete.length>0){
-      const {error}=await supabaseClient.from('credit_cards').update({deleted_at:new Date().toISOString()}).in('id',cardsToSoftDelete);
+    const cardsToDelete=(dbCards||[]).filter(c=>!cardIds.has(c.id)).map(c=>c.id);
+    if(cardsToDelete.length>0){
+      const {error}=await supabaseClient.from('credit_cards').delete().in('id',cardsToDelete);
       if(error)throw error;
     }
 
@@ -140,19 +140,19 @@ async function saveToSupabase(){
 
     const {data:dbExpenses,error:expensesFetchError}=await supabaseClient
       .from('expenses')
-      .select('id,deleted_at')
+      .select('id')
       .eq('user_id',ownerUserId);
     if(expensesFetchError)throw expensesFetchError;
 
     const dbIds=new Set((dbExpenses||[]).map(e=>e.id));
     const appIds=new Set(allDaily.map(e=>e.id));
-    const toSoftDelete=[...dbIds].filter(id=>!appIds.has(id)&&!dbExpenses.find(e=>e.id===id)?.deleted_at);
+    const toDelete=[...dbIds].filter(id=>!appIds.has(id));
 
-    if(toSoftDelete.length>0){
+    if(toDelete.length>0){
       const {error}=await supabaseClient
         .from('expenses')
-        .update({deleted_at:new Date().toISOString()})
-        .in('id',toSoftDelete);
+        .delete()
+        .in('id',toDelete);
       if(error)throw error;
     }
 
@@ -525,15 +525,13 @@ async function capvoFetchCycleIncomeRow(ownerUserId,cycleId,incomeSourceId){
 }
 
 async function capvoUpsertCycleIncomeWithWallet(payload){
-  const upsertPayload={...payload, wallet_deposit_applied:true};
-
   const {error}=await supabaseClient
     .from('budget_cycle_incomes')
-    .upsert(upsertPayload,{onConflict:'cycle_id,income_source_id'});
+    .upsert(payload,{onConflict:'cycle_id,income_source_id'});
   if(!error)return {error:null,legacy:false};
 
   if(/destination_wallet_id|wallet_deposit_applied|wallet_balance_before|wallet_balance_after|wallet_deposit_applied_at/i.test(String(error.message||error.details||''))){
-    const legacyPayload={...upsertPayload};
+    const legacyPayload={...payload};
     delete legacyPayload.destination_wallet_id;
     delete legacyPayload.wallet_deposit_applied;
     delete legacyPayload.wallet_deposit_applied_at;
@@ -543,10 +541,6 @@ async function capvoUpsertCycleIncomeWithWallet(payload){
       .from('budget_cycle_incomes')
       .upsert(legacyPayload,{onConflict:'cycle_id,income_source_id'});
     return {error:retry.error,legacy:true};
-  }
-
-  if(/unique.*constraint|unique.*index|duplicate.*income_source/i.test(String(error.message||''))){
-    return {error:null,legacy:false,alreadyApplied:true};
   }
 
   return {error,legacy:false};
@@ -593,11 +587,6 @@ async function capvoApplyCycleAmountToWallet({ownerUserId,cycle,wallet,amount,in
   const upsert=await capvoUpsertCycleIncomeWithWallet(incomePayload);
   if(upsert.error)throw upsert.error;
   if(upsert.legacy)return {applied:false,reason:'migration_missing',wallet,amount:value};
-
-  const afterUpsert=await capvoFetchCycleIncomeRow(ownerUserId,cycle.id,rowKey);
-  if(afterUpsert?.wallet_deposit_applied){
-    return {applied:false,reason:'already_applied',wallet,amount:value};
-  }
 
   const current=capvoWalletById(wallet.id)||wallet;
   const before=Number(current.currentBalance)||0;
@@ -830,16 +819,6 @@ function capvoMonthlySalaryAlreadyRecorded(walletId,periodStartKey){
 }
 
 async function createPaidTodayCycle(){
-  if(window.__capvoPaidTodayBusy){return;}
-  window.__capvoPaidTodayBusy=true;
-  try{
-    return await _createPaidTodayCycle();
-  }finally{
-    window.__capvoPaidTodayBusy=false;
-  }
-}
-
-async function _createPaidTodayCycle(){
   const ownerUserId=getFinanceUserId();
   if(!ownerUserId){showMiniToast('Δεν βρέθηκε συνδεδεμένος χρήστης.','error');return;}
 

@@ -1079,14 +1079,13 @@ async function deleteInstallmentPlan(planId){
   if(!confirmed)return;
   const card=(D.creditCards||[]).find(c=>String(c.id)===String(plan.cardId));
   const originalBalance=Number(card?.balance)||0;
-  const userId=getDataOwnerId?.();
-
   try{
-    // D-5: Atomic deletion via RPC transaction — prevents partial deletes
-    // that leave orphaned items/plans/transactions in the database.
+    const userId=getDataOwnerId?.();
     if(userId && typeof supabaseClient!=='undefined'){
-      const {error:rpcErr}=await supabaseClient.rpc('delete_installment_plan', {p_plan_id:planId});
-      if(rpcErr)throw rpcErr;
+      await supabaseClient.from('credit_card_installment_items').delete().eq('plan_id',planId);
+      await supabaseClient.from('credit_card_installment_plans').delete().eq('id',planId);
+      if(plan.originalTransactionId)await supabaseClient.from('credit_card_transactions').delete().eq('id',plan.originalTransactionId);
+      if(plan.originalExpenseId)await supabaseClient.from('expenses').delete().eq('id',plan.originalExpenseId);
     }
     if(card)card.balance=originalBalance;
     D.creditCardInstallmentPlans=(D.creditCardInstallmentPlans||[]).filter(p=>String(p.id)!==String(planId));

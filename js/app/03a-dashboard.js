@@ -90,19 +90,15 @@ function render(){
   renderMobileCategoryInsights();
   if(typeof renderQuickRepeatChips==='function') renderQuickRepeatChips();
   if(typeof renderWalletCards==='function') renderWalletCards();
+  if($('incomeList')) renderIncomePage();
 
-  // PER-1: Render all page-specific sections (sub-pages opened from More menu
-  // don't set .view.active, so conditional rendering was breaking them)
-  renderIncomePage?.();
-  rStats?.();
-  rArch?.();
-  rCC?.();
-  renderSavingsPage?.();
-  rAdv?.();
-  renderSettingsPage?.();
+  rStats();
+  rArch();
 
-  // Budget cycle manager is always visible on dashboard
-  renderBudgetCycleManager?.();
+  if(typeof rCC==='function') rCC();
+  if(typeof renderSavingsPage==='function') renderSavingsPage();
+  if(typeof rAdv==='function') rAdv();
+  renderSettingsPage();
 }
 
 

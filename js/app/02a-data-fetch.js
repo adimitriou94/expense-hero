@@ -423,7 +423,6 @@ async function fetchAllData(userId){
       .from('wallets')
       .select('*')
       .eq('user_id',ownerUserId)
-      .eq('is_active',true)
       .order('sort_order',{ascending:true});
 
     if(errWallets){
